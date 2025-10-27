@@ -19,10 +19,12 @@ pillow = "*"
 torch = { version = ">=2.5.1", index = "https://download.pytorch.org/whl/cu124" }
 torchvision = { version = ">=0.20.1", index = "https://download.pytorch.org/whl/cu124" }
 triton-kernels = { git = "https://github.com/triton-lang/triton.git", rev = "v3.5.0", subdirectory = "python/triton_kernels" }
+flash-attn = "==2.7.4.post1"
 
 [tool.pixi.dependencies]
 # Ensure a Python version compatible with current PyTorch wheels
 python = ">=3.11,<3.13"
+ninja = "*"
 
 [tool.pixi.system-requirements]
 cuda = "12.0"
@@ -30,6 +32,7 @@ cuda = "12.0"
 [tool.pixi.pypi-options]
 # Prefer vLLM nightly wheels for latest features
 extra-index-urls = ["https://wheels.vllm.ai/nightly"]
+no-build-isolation = ["flash-attn"]
 
 [tool.pixi.tasks]
 install-vllm-nightly = { cmd = "bash scripts/install-vllm-nightly.sh" }

@@ -88,6 +88,32 @@ llm-perf-opt/
 
 *Coming soon - detailed setup and usage instructions will be added*
 
+## Profiling Requirements (Nsight Systems)
+
+To capture end‑to‑end GPU/CPU timelines while running DeepSeek‑OCR and other workloads, we use NVIDIA Nsight Systems (`nsys`). Please install it so profiling commands work locally.
+
+Preferred install order (where applicable): uv (PyPI) > pixi/conda‑forge > apt > direct .deb
+
+- Nsight Systems (nsys)
+  - Ubuntu (recommended):
+    - `sudo apt-get update && sudo apt-get install -y nsight-systems nsight-systems-target`
+  - Or download from NVIDIA Developer if apt isn’t available: https://developer.nvidia.com/nsight-systems
+  - Verify: `nsys --version`
+
+- Optional: Nsight Compute (ncu) for per‑kernel analysis
+  - pixi/conda‑forge: `pixi add nsight-compute -c conda-forge`
+  - Verify: `ncu --version`
+
+- Optional: NVTX annotations for readable timelines
+  - `uv pip install -U nvtx`
+
+Example capture:
+
+```
+nsys profile --trace=cuda,nvtx,osrt -o tmp/nsys/deepseek \
+  pixi run python tests/manual/deepseek_ocr_hf_manual.py
+```
+
 ## Contributing
 
 Contributions are welcome! This project is in early stages and we're building the foundation.
