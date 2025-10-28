@@ -1,0 +1,109 @@
+openapi: 3.0.3
+info:
+  title: llm-perf-opt Profiling API
+  version: 0.1.0
+servers:
+  - url: http://localhost:8080
+paths:
+  /profile/stage1:
+    post:
+      summary: Run LLM profiling for DeepSeek‑OCR
+      operationId: runLLMProfile
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LLMProfileRequest'
+      responses:
+        '202':
+          description: Accepted – profiling started
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LLMProfileAccepted'
+  /reports/{run_id}:
+    get:
+      summary: Get LLM profiling report summary
+      operationId: getLLMProfileReport
+      parameters:
+        - in: path
+          name: run_id
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Report found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LLMProfileReportSummary'
+        '404':
+          description: Report not found
+components:
+  schemas:
+    LLMProfileRequest:
+      type: object
+      required: [model_path, input_dir]
+      properties:
+        model_path:
+          type: string
+          description: Absolute path or local HF repo for DeepSeek‑OCR
+        input_dir:
+          type: string
+          description: Absolute path to image directory (10–20 images)
+        repeats:
+          type: integer
+          default: 3
+        use_flash_attn:
+          type: boolean
+          default: true
+        device:
+          type: string
+          default: cuda:0
+        max_new_tokens:
+          type: integer
+          default: 64
+    LLMProfileAccepted:
+      type: object
+      properties:
+        run_id:
+          type: string
+        status:
+          type: string
+          enum: [queued, running]
+        artifacts_dir:
+          type: string
+          description: Absolute path for artifacts under repo tmp/
+    LLMProfileReportSummary:
+      type: object
+      properties:
+        run_id:
+          type: string
+        mfu_model_level:
+          type: number
+          format: float
+        mfu_per_stage:
+          type: object
+          additionalProperties:
+            type: number
+            format: float
+        top_operators:
+          type: array
+          items:
+            type: object
+            properties:
+              op_name: { type: string }
+              total_time_ms: { type: number, format: float }
+              cuda_time_ms: { type: number, format: float }
+              calls: { type: integer }
+        aggregates:
+          type: object
+          additionalProperties:
+            type: object
+            properties:
+              mean: { type: number, format: float }
+              std: { type: number, format: float }
+        notes:
+          type: string

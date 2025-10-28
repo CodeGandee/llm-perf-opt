@@ -87,12 +87,11 @@ llm-perf-opt/
 │   ├── github/
 │   └── hf/
 ├── src/
-│   ├── llmprof/          # Profiling package (profiling/, runners/, data/)
-│   │   ├── profiling/
-│   │   │   └── parsers/
-│   │   ├── runners/
-│   │   └── data/
-│   └── llm_perf_opt/     # Project-specific package scaffolding
+│   └── llm_perf_opt/     # Unified project package
+│       ├── profiling/
+│       │   └── parsers/
+│       ├── runners/
+│       └── data/
 ├── scripts/              # Utility scripts (symlinks, dataset prep, snapshots)
 ├── tests/                # Tests (manual/unit/integration as needed)
 ├── docs/                 # Documentation and guides

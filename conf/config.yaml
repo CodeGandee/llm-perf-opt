@@ -1,0 +1,14 @@
+# Top-level Hydra defaults for Stage 1 profiling
+
+defaults:
+  - dataset: omnidocbench
+  - model: deepseek_ocr
+  - _self_
+
+# Global knobs (basic configuration only)
+experiment: stage1
+repeats: 3               # total rounds to run
+device: cuda:0           # target device
+use_flash_attn: true     # enable flash attention if available
+max_new_tokens: 64       # fallback generate cap
+

@@ -1,0 +1,6 @@
+# Model config: DeepSeek-OCR
+
+name: deepseek_ocr
+path: ${hydra:runtime.cwd}/models/deepseek-ocr
+dtype: bf16
+

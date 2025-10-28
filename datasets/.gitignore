@@ -1,0 +1,4 @@
+# Ignore dataset source-data symlinks or directories (external data)
+*/source-data
+*/source-data/**
+

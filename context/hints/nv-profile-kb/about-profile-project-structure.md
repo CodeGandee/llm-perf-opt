@@ -6,12 +6,19 @@ This guide provides a comprehensive reference structure for a systematic LLM pro
 
 **Important**: All code examples, configuration patterns, and directory structures in this guide are **recommendations**, not requirements. Your project should adapt and modify these patterns to fit your specific needs, constraints, and preferences. Use this as a starting point and reference, not as a rigid specification.
 
+### Placeholder Naming Convention
+
+Throughout this guide, placeholder names are shown in angle brackets:
+- `<your-project>` or `<your-project-name>`: Your project name (e.g., `llm-profiler`, `gpu-bench`)
+- `<your_project>`: Your Python package name using underscores (e.g., `llmprof`, `gpu_bench`)
+- Replace these placeholders with your actual project/package names when implementing
+
 ---
 
 # Complete Project Layout
 
 ```
-llm-profiler/
+<your-project>/
 ├── pyproject.toml                 # Pixi env + tasks + project metadata
 ├── conf/                          # Hydra config tree (config groups)
 │   ├── config.yaml                # top-level defaults list
@@ -57,7 +64,7 @@ llm-profiler/
 │       ├── meta-llama/Llama-3/    # submodule (git LFS!) OR snapshot dir
 │       └── Qwen/Qwen2.5/          # idem
 ├── src/
-│   └── llmprof/
+│   └── <your_project>/
 │       ├── __init__.py
 │       ├── cli.py                 # @hydra.main entry, route to runners & profiling
 │       ├── profiling/
@@ -102,7 +109,7 @@ What it is: single manifest for project metadata, dependencies, Pixi workspace, 
 
 ```toml
 [project]
-name = "llm-profiler"
+name = "<your-project-name>"
 version = "0.1.0"
 requires-python = ">=3.10"
 dependencies = ["torch", "omegaconf", "hydra-core"]
@@ -113,7 +120,7 @@ platforms = ["linux-64"]
 
 [tool.pixi.tasks]
 # Replace <your command> with your actual CLI
-profile = "python -m llmprof.cli experiment=baseline profiling=minimal"
+profile = "python -m <your_project>.cli experiment=baseline profiling=minimal"
 nsys    = "nsys profile -o runs/nsys <your command>"
 ncu     = "ncu -o runs/ncu <your command>"
 ```
@@ -244,6 +251,19 @@ Should document:
 - Any preprocessing steps or transformations applied
 - Usage examples
 
+- First-level directory tree of `source-data/` (top-level only), for quick
+  orientation. Example:
+
+  ```
+  source-data/
+  ├── images/
+  ├── pdfs/
+  ├── README.md
+  ├── README_EN.md
+  ├── metafile.yaml
+  └── OmniDocBench.json
+  ```
+
 ### Variant directories (e.g., `subset-1k/`, `tokenized-gpt2/`)
 Store processed versions of the dataset:
 - **Subsets**: Smaller samples for quick testing (e.g., `subset-1k/`, `dev-split/`)
@@ -258,6 +278,17 @@ transform: "Random sample of 1000 examples from training set"
 size:
   samples: 1000
   disk_mb: 47.5
+```
+
+### Git Ignore for External Source Data
+
+Keep external dataset content out of version control by ignoring `source-data`
+symlinks/directories at the dataset root. Place the following in
+`datasets/.gitignore`:
+
+```gitignore
+*/source-data
+*/source-data/**
 ```
 
 ## Example: Complete Dataset Entry
@@ -352,11 +383,11 @@ The following are example implementations showing recommended patterns. Your pro
 
 ## Core Implementation Files
 
-### `src/llmprof/profiling/harness.py`
+### `src/<your_project>/profiling/harness.py`
 
 Drop in the harness we built earlier (NVTX context manager, `run_torch_profiler`, `NVMLSampler`, and the "advise NSYS/NCU command" helpers). PyTorch Profiler & NVTX usage matches the official docs/workflows. ([PyTorch Docs][5])
 
-### `src/llmprof/runners/base.py`
+### `src/<your_project>/runners/base.py`
 
 ```python
 from abc import ABC, abstractmethod
@@ -372,7 +403,7 @@ class Runner(ABC):
     def decode(self, num_new_tokens: int): ...
 ```
 
-### `src/llmprof/runners/pytorch_runner.py` (sketch)
+### `src/<your_project>/runners/pytorch_runner.py` (sketch)
 
 ```python
 import torch
@@ -396,20 +427,20 @@ class PyTorchRunner(Runner):
             pass
 ```
 
-### `src/llmprof/cli.py` (Hydra entry + profiling glue)
+### `src/<your_project>/cli.py` (Hydra entry + profiling glue)
 
 ```python
 import os
 import hydra
 from omegaconf import DictConfig, OmegaConf
 
-from llmprof.profiling.harness import (
+from <your_project>.profiling.harness import (
     nvtx_range, NVMLSampler, run_torch_profiler, prof_to_csv
 )
 
 def build_runner(cfg):
     if cfg.runtime.type == "pytorch":
-        from llmprof.runners.pytorch_runner import PyTorchRunner
+        from <your_project>.runners.pytorch_runner import PyTorchRunner
         return PyTorchRunner(cfg)
     # elif cfg.runtime.type == "tensorrtllm": ...
     raise ValueError(f"Unknown runtime: {cfg.runtime.type}")
