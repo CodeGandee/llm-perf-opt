@@ -74,15 +74,34 @@ This project aims to provide tools and methodologies for:
 
 ```
 llm-perf-opt/
-├── benchmarks/          # Benchmark suites and test cases
-├── optimization/        # Optimization techniques and implementations
-├── profiling/          # Profiling tools and utilities
-├── analysis/           # Analysis scripts and visualization tools
-├── docs/               # Documentation and guides
-├── configs/            # Configuration files for different hardware
-├── results/            # Benchmark results and reports
-└── examples/           # Example use cases and tutorials
+├── conf/                 # Hydra config groups (defaults, model, dataset, runtime, hardware, profiling)
+│   ├── hydra/
+│   ├── model/
+│   ├── dataset/
+│   ├── runtime/
+│   ├── hardware/
+│   └── profiling/
+├── models/               # Weights/tokenizers (symlinks or submodules; prefer symlinks)
+├── datasets/             # Dataset roots, variants, metadata and docs
+├── third_party/          # Read-only upstream references (symlinks or submodules)
+│   ├── github/
+│   └── hf/
+├── src/
+│   ├── llmprof/          # Profiling package (profiling/, runners/, data/)
+│   │   ├── profiling/
+│   │   │   └── parsers/
+│   │   ├── runners/
+│   │   └── data/
+│   └── llm_perf_opt/     # Project-specific package scaffolding
+├── scripts/              # Utility scripts (symlinks, dataset prep, snapshots)
+├── tests/                # Tests (manual/unit/integration as needed)
+├── docs/                 # Documentation and guides
+├── context/              # Knowledge base and hints
+├── magic-context/        # Speckit templates and guidance
+└── .specify/             # Speckit constitution/templates
 ```
+
+Each subdirectory contains a README describing its purpose.
 
 ## Getting Started
 

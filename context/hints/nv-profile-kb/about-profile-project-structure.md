@@ -1,12 +1,14 @@
-**Question**
-If I setup a profiling project, targeted to sysmetically profile different LLMs (they are symlinked into project subdir), for python, using pixi as env management tool, with pyproject.toml as pixi manifest file, using hydra+omegaconf to manage configurations, how to structure this project?
+# LLM Profiling Project Structure Guide
 
-**Answer**
-Perfect—here’s a clean, opinionated scaffold you can drop in and extend. It uses **Pixi** (with `pyproject.toml` as the manifest), **Hydra+OmegaConf** for configs/sweeps, and slots in the profiling harness we discussed (PyTorch profiler + NVTX + NVML + NSYS/NCU helpers).
+This guide provides a comprehensive reference structure for a systematic LLM profiling project using **Pixi** (with `pyproject.toml` as the manifest), **Hydra+OmegaConf** for configuration management, and comprehensive profiling tools (PyTorch profiler + NVTX + NVML + Nsight Systems/Compute).
+
+## About This Guide
+
+**Important**: All code examples, configuration patterns, and directory structures in this guide are **recommendations**, not requirements. Your project should adapt and modify these patterns to fit your specific needs, constraints, and preferences. Use this as a starting point and reference, not as a rigid specification.
 
 ---
 
-# Project layout
+# Complete Project Layout
 
 ```
 llm-profiler/
@@ -19,6 +21,10 @@ llm-profiler/
 │   │   ├── qwen2_5_7b.yaml
 │   │   ├── llama3_70b.yaml
 │   │   └── …                      # add more here
+│   ├── dataset/                   # dataset configurations
+│   │   ├── openwebtext.yaml
+│   │   ├── c4.yaml
+│   │   └── …
 │   ├── runtime/                   # framework/runtime layer
 │   │   ├── pytorch.yaml
 │   │   ├── vllm.yaml
@@ -28,9 +34,28 @@ llm-profiler/
 │   └── profiling/                 # what to collect
 │       ├── minimal.yaml
 │       └── full.yaml
-├── models/                        # symlinks to weight dirs live here
+├── models/                        # model weights/tokenizers (symlinks or submodules)
 │   ├── qwen2_5_7b -> /data/weights/qwen2_5_7b/
 │   └── llama3_70b -> /data/weights/llama3_70b/
+├── datasets/                      # dataset organization
+│   ├── openwebtext/               # example dataset
+│   │   ├── source-data -> /data/datasets/openwebtext/  # symlink to official dataset
+│   │   ├── metadata.yaml          # dataset metadata (size, version, license, etc.)
+│   │   ├── README.md              # documentation for this dataset
+│   │   ├── subset-1k/             # variant: 1k sample subset
+│   │   └── tokenized-gpt2/        # variant: preprocessed with GPT-2 tokenizer
+│   └── c4/                        # another dataset
+│       ├── source-data -> /data/datasets/c4/
+│       ├── metadata.yaml
+│       ├── README.md
+│       └── en-validation/         # variant: English validation split
+├── third_party/                   # reference sources (read-only; symlinks or submodules)
+│   ├── github/                    # GitHub repos (Transformers, vLLM, TRT-LLM, Flash-Attn…)
+│   │   ├── transformers/          # submodule / subtree / sparse clone
+│   │   └── vllm/
+│   └── hf/                        # Hugging Face repos (git+LFS) or hub snapshots
+│       ├── meta-llama/Llama-3/    # submodule (git LFS!) OR snapshot dir
+│       └── Qwen/Qwen2.5/          # idem
 ├── src/
 │   └── llmprof/
 │       ├── __init__.py
@@ -41,97 +66,83 @@ llm-profiler/
 │       │   ├── nsight_ncu.py      # thin wrappers (optional)
 │       │   └── parsers/
 │       │       └── cublas_log.py  # GEMM M/N/K→FLOPs (optional)
-│       └── runners/
-│           ├── base.py            # Runner interface
-│           ├── pytorch_runner.py  # vanilla torch/vLLM glue (select one)
-│           └── tensorrtllm_runner.py
+│       ├── runners/
+│       │   ├── base.py            # Runner interface
+│       │   ├── pytorch_runner.py  # vanilla torch/vLLM glue (select one)
+│       │   └── tensorrtllm_runner.py
+│       └── data/
+│           ├── dataset_utils.py   # dataset loading utilities
+│           └── preprocessors.py   # data preprocessing functions
 ├── scripts/
 │   ├── make_symlinks.sh           # convenience: link external weight dirs into models/
+│   ├── snapshot_hf.py             # HF Hub snapshot utility for reference code
+│   ├── prepare_dataset.py         # dataset preparation/variant creation
 │   └── sanity.sh                  # quick smoke runs
 └── README.md
 ```
 
-Why this shape?
+## Design Rationale
 
-* **Hydra** wants grouped configs under `conf/<group>/<option>.yaml`, with a top-level `defaults` list; it also lets you **template the output/run directory** (e.g., `runs/${experiment}/${model.name}/…`) so every run is self-contained and reproducible. ([Hydra][1])
-* **Pixi** can use **`pyproject.toml`** as the single manifest and supports **tasks** (handy shortcuts like `pixi run profile`). ([Prefix Dev][2])
+* **Hydra** grouped configs under `conf/<group>/<option>.yaml` enable composable, swappable configurations with top-level `defaults` list; the templated output/run directory pattern (e.g., `runs/${experiment}/${model.name}/…`) ensures every run is self-contained and reproducible. ([Hydra][1])
+* **Pixi** can use **`pyproject.toml`** as a single manifest with **tasks** for common operations like `pixi run profile`. ([Prefix Dev][2])
+* **`third_party/`** provides a clear boundary for vendored reference code. It can
+  be a collection of symlinks to local checkouts or Git submodules/subtrees; the
+  key is treating it as read-only.
+* **`models/`** can be symlinks to external storage or tracked via Git submodules
+  when using small repos/LFS pointers. Prefer symlinks for large weight files.
+* **`datasets/` structure** organizes both original data (via symlinks) and derived variants (subsets, preprocessed versions) in a consistent, documented manner, with metadata and per-dataset documentation making it easy to track provenance and transformations.
 
----
+# Configuration Files
 
-# `pyproject.toml` (Pixi as manifest + tasks)
+These are example configurations demonstrating the recommended patterns. Customize them to match your project's tooling, dependencies, and workflow preferences.
+
+## `pyproject.toml` (what it is and a minimal example)
+
+What it is: single manifest for project metadata, dependencies, Pixi workspace, and convenient tasks (so you can run `pixi run <task>`).
 
 ```toml
 [project]
 name = "llm-profiler"
 version = "0.1.0"
 requires-python = ">=3.10"
-dependencies = [
-  "torch",                # pick the CUDA build you need
-  "omegaconf",
-  "hydra-core",
-  "pynvml",
-  "rich",
-  "pandas",
-]
+dependencies = ["torch", "omegaconf", "hydra-core"]
 
 [tool.pixi.workspace]
-channels  = ["conda-forge"]      # add "nvidia" channel if you want CUDA toolkit via conda
-platforms = ["linux-64"]         # add others as needed
+channels  = ["conda-forge"]
+platforms = ["linux-64"]
 
-# If you prefer conda packages for some tools:
-[tool.pixi.dependencies]
-python = ">=3.10"
-
-# Handy shortcuts: `pixi run <task>`
 [tool.pixi.tasks]
-# pure Python run (no external profilers) with full profiling config
-profile = "python -m llmprof.cli experiment=baseline profiling=full"
-
-# Nsight Systems (NVTX-gated capture). Open .qdrep in the GUI.
-nsys = """
-nsys profile --trace=cuda,nvtx,osrt --capture-range=nvtx --capture-range-end=nvtx \
-  -o runs/nsys python -m llmprof.cli experiment=baseline profiling.nsys.enable=true
-"""
-
-# Nsight Compute deep-dive (adjust metrics/kernels later)
-ncu = """
-ncu --target-processes all --set full \
-  --metrics sm__pipe_tensor_op_hmma_cycles_active.avg.pct_of_peak_sustained_active,\
-sm__throughput.avg.pct_of_peak_sustained_elapsed,gpu__dram_throughput.avg.pct_of_peak_sustained_elapsed,\
-dram__bytes_read.sum,dram__bytes_write.sum,lts__t_sector_hit_rate.pct \
-  -o runs/ncu python -m llmprof.cli experiment=baseline profiling.ncu.enable=true
-"""
+# Replace <your command> with your actual CLI
+profile = "python -m llmprof.cli experiment=baseline profiling=minimal"
+nsys    = "nsys profile -o runs/nsys <your command>"
+ncu     = "ncu -o runs/ncu <your command>"
 ```
 
-Pixi will happily append its sections into `pyproject.toml` (`[tool.pixi.workspace]`, `[tool.pixi.tasks]`, etc.). ([Prefix Dev][2])
+Keep tasks short and descriptive; add more as needed. ([Prefix Dev][2])
 
----
+## Hydra Configuration Structure
 
-# Hydra configs
-
-## `conf/config.yaml` (top-level “defaults”)
+### `conf/config.yaml` (what it is: top‑level defaults/composition)
 
 ```yaml
-# Compose the final config from groups:
+# Compose from config groups (swap via CLI)
 defaults:
   - hydra: default
-  - model: qwen2_5_7b
+  - model: <name>
   - runtime: pytorch
-  - hardware: single_gpu
   - profiling: minimal
   - _self_
 experiment: baseline
 ```
 
-Hydra’s **defaults list** composes configs from groups; you can swap any piece via CLI overrides (e.g., `model=llama3_70b profiling=full`). ([Hydra][3])
+Hydra's **defaults list** composes configs from groups; you can swap any piece via CLI overrides (e.g., `model=llama3_70b dataset=c4 profiling=full`). ([Hydra][3])
 
-## `conf/hydra/default.yaml` (run dir & behavior)
+### `conf/hydra/default.yaml` (what it is: run directory & job behavior)
 
 ```yaml
 hydra:
   run:
-    # one directory per run (microseconds avoids collisions on fast launchers)
-    dir: runs/${experiment}/${model.name}/${now:%Y-%m-%d_%H-%M-%S-%f}
+    dir: runs/${experiment}/${model.name}/${now:%Y-%m-%d_%H-%M-%S}
   job:
     name: ${experiment}
     chdir: true
@@ -139,77 +150,213 @@ hydra:
 
 These fields control where Hydra writes `.hydra/` configs, logs, and where your code runs (CWD). ([Hydra][4])
 
-## `conf/model/qwen2_5_7b.yaml`
+### `conf/model/<name>.yaml` (what it is: model identity & location)
 
 ```yaml
 name: qwen2_5_7b
-# Point to a symlink under ./models (models/qwen2_5_7b -> /abs/path/on/disk)
-path: ${oc.env:PROJECT_ROOT,${hydra:runtime.cwd}}/models/qwen2_5_7b
+path: ${hydra:runtime.cwd}/models/qwen2_5_7b   # symlink, folder, or submodule
 dtype: bf16
-max_seq_len: 4096
-tokenizer: ${model.path}
 ```
 
-## `conf/runtime/pytorch.yaml`
+### `conf/dataset/<name>.yaml` (what it is: dataset root and optional variant)
+
+```yaml
+name: openwebtext
+root: ${hydra:runtime.cwd}/datasets/openwebtext
+variant: null  # e.g., "subset-1k" or null for source-data
+```
+
+### `conf/runtime/pytorch.yaml` (what it is: runtime and basic parameters)
 
 ```yaml
 type: pytorch
-impl: "vanilla"   # or "vllm"
 batch_size: 1
 num_new_tokens: 64
-nvtx_ranges: true
-torch_profiler:
-  enabled: true
-  warmup: 5
-  steps: 50
+torch_profiler: { enabled: false }
 ```
 
-## `conf/hardware/single_gpu.yaml`
+### `conf/hardware/single_gpu.yaml` (what it is: device selection)
 
 ```yaml
 device_index: 0
-power_limit_w: null   # set to e.g. 250 for power-capped runs
 ```
 
-## `conf/profiling/minimal.yaml`
+### `conf/profiling/minimal.yaml` (what it is: profiler toggles)
 
 ```yaml
 nsys: { enable: false }
 ncu:  { enable: false }
-nvml: { enable: true, interval_s: 0.5 }
-outputs:
-  write_ops_csv: true
+nvml: { enable: true }
 ```
 
-## `conf/profiling/full.yaml`
+### `conf/profiling/full.yaml` (what it is: enable profilers with options)
 
 ```yaml
-nsys:
-  enable: true
-  args: "--trace=cuda,nvtx,osrt --capture-range=nvtx --capture-range-end=nvtx"
-ncu:
-  enable: true
-  metrics: >
-    sm__pipe_tensor_op_hmma_cycles_active.avg.pct_of_peak_sustained_active,
-    sm__throughput.avg.pct_of_peak_sustained_elapsed,
-    gpu__dram_throughput.avg.pct_of_peak_sustained_elapsed,
-    dram__bytes_read.sum,dram__bytes_write.sum,lts__t_sector_hit_rate.pct
-nvml:
-  enable: true
-  interval_s: 0.2
-outputs:
-  write_ops_csv: true
+nsys: { enable: true, args: "<nsys args>" }
+ncu:  { enable: true }
+nvml: { enable: true }
 ```
 
----
+# Datasets Directory Structure
 
-# Minimal code you need
+The `datasets/` directory organizes both original datasets and their derived variants in a consistent, well-documented structure.
 
-## `src/llmprof/profiling/harness.py`
+## Directory Organization Pattern
 
-Drop in the harness we built earlier (NVTX context manager, `run_torch_profiler`, `NVMLSampler`, and the “advise NSYS/NCU command” helpers). PyTorch Profiler & NVTX usage matches the official docs/workflows. ([PyTorch Docs][5])
+Each dataset follows this structure:
 
-## `src/llmprof/runners/base.py`
+```
+datasets/
+└── <dataset-name>/
+    ├── source-data -> /path/to/original/dataset  # Symlink to the official/downloaded dataset
+    ├── metadata.yaml                              # Dataset metadata
+    ├── README.md                                  # Documentation
+    └── <variant-name>/                            # Processed variants (optional)
+        ├── data/                                  # Variant data files
+        └── metadata.yaml                          # Variant-specific metadata (optional)
+```
+
+## Key Files and Their Purposes
+
+### `source-data` (symlink)
+- Points to the actual location of the downloaded/official dataset
+- Keeps large data files outside the repo while maintaining easy access
+- Allows different environments to point to different storage locations
+
+### `metadata.yaml` (what it is: dataset facts for provenance)
+
+Short example:
+
+```yaml
+name: openwebtext
+version: "1.0"
+source: https://huggingface.co/datasets/openwebtext
+splits: { train: 8013769 }
+notes: "Downloaded with HF datasets; source-data is read-only."
+```
+
+### `README.md`
+Should document:
+- Dataset overview and purpose
+- Source and licensing information
+- How to obtain/download the original data
+- Available variants and their purposes
+- Any preprocessing steps or transformations applied
+- Usage examples
+
+### Variant directories (e.g., `subset-1k/`, `tokenized-gpt2/`)
+Store processed versions of the dataset:
+- **Subsets**: Smaller samples for quick testing (e.g., `subset-1k/`, `dev-split/`)
+- **Preprocessed**: Tokenized, normalized, or otherwise transformed data (e.g., `tokenized-gpt2/`, `cleaned/`)
+- **Format conversions**: Different file formats or organizations (e.g., `parquet/`, `tfrecord/`)
+
+Each variant can have its own `metadata.yaml` documenting:
+```yaml
+parent: source-data
+created: "2024-01-20"
+transform: "Random sample of 1000 examples from training set"
+size:
+  samples: 1000
+  disk_mb: 47.5
+```
+
+## Example: Complete Dataset Entry
+
+```
+datasets/openwebtext/
+├── source-data -> /data/datasets/openwebtext/
+├── metadata.yaml
+├── README.md
+├── subset-1k/                    # Small subset for testing
+│   ├── data/
+│   │   └── samples.jsonl
+│   └── metadata.yaml
+├── tokenized-gpt2/               # Preprocessed with GPT-2 tokenizer
+│   ├── data/
+│   │   ├── train.bin
+│   │   └── val.bin
+│   └── metadata.yaml
+└── analysis/                     # Optional: analysis artifacts
+    ├── statistics.json
+    └── samples.html
+```
+
+## Dataset Management Workflows
+
+### Adding a new dataset
+
+1. Download/obtain the dataset to your storage location (e.g., `/data/datasets/mydataset/`)
+2. Create dataset directory: `mkdir -p datasets/mydataset`
+3. Create symlink: `ln -s /data/datasets/mydataset datasets/mydataset/source-data`
+4. Create `metadata.yaml` with dataset information
+5. Create `README.md` with documentation
+6. Add corresponding Hydra config: `conf/dataset/mydataset.yaml`
+
+### Creating a variant
+
+1. Run preprocessing script: `python scripts/prepare_dataset.py --dataset openwebtext --variant subset-1k`
+2. The script creates `datasets/openwebtext/subset-1k/` with processed data
+3. Optionally create variant metadata: `datasets/openwebtext/subset-1k/metadata.yaml`
+4. Use in Hydra config: `dataset=openwebtext dataset.variant=subset-1k`
+
+### Recommended scripts (`scripts/prepare_dataset.py` example structure)
+
+```python
+# scripts/prepare_dataset.py
+import argparse
+from pathlib import Path
+import yaml
+
+def create_subset(dataset_root: Path, variant_name: str, num_samples: int):
+    """Create a subset variant of a dataset."""
+    source = dataset_root / "source-data"
+    variant_dir = dataset_root / variant_name
+    variant_dir.mkdir(exist_ok=True)
+
+    # Your subsetting logic here
+    # ...
+
+    # Write metadata
+    metadata = {
+        "parent": "source-data",
+        "created": datetime.now().isoformat(),
+        "transform": f"Random sample of {num_samples} examples",
+        "size": {"samples": num_samples}
+    }
+    with open(variant_dir / "metadata.yaml", "w") as f:
+        yaml.dump(metadata, f)
+
+if __name__ == "__main__":
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--dataset", required=True)
+    parser.add_argument("--variant", required=True)
+    parser.add_argument("--num-samples", type=int, default=1000)
+    args = parser.parse_args()
+
+    dataset_root = Path("datasets") / args.dataset
+    create_subset(dataset_root, args.variant, args.num_samples)
+```
+
+## Best Practices
+
+1. **Keep source data read-only**: Never modify files under `source-data/`
+2. **Document transformations**: Each variant should have clear documentation of what was done
+3. **Use consistent naming**: Follow patterns like `subset-{size}`, `tokenized-{tokenizer}`, `split-{split_name}`
+4. **Track provenance**: Include creation dates, parent references, and transformation details in metadata
+5. **Symlink external storage**: Keep large files outside the repo, use symlinks for access
+6. **Version control metadata**: Commit `metadata.yaml` and `README.md`, but typically `.gitignore` the actual data files
+
+# Code Structure
+
+The following are example implementations showing recommended patterns. Your project should implement these according to its specific requirements.
+
+## Core Implementation Files
+
+### `src/llmprof/profiling/harness.py`
+
+Drop in the harness we built earlier (NVTX context manager, `run_torch_profiler`, `NVMLSampler`, and the "advise NSYS/NCU command" helpers). PyTorch Profiler & NVTX usage matches the official docs/workflows. ([PyTorch Docs][5])
+
+### `src/llmprof/runners/base.py`
 
 ```python
 from abc import ABC, abstractmethod
@@ -225,7 +372,7 @@ class Runner(ABC):
     def decode(self, num_new_tokens: int): ...
 ```
 
-## `src/llmprof/runners/pytorch_runner.py` (sketch)
+### `src/llmprof/runners/pytorch_runner.py` (sketch)
 
 ```python
 import torch
@@ -249,7 +396,7 @@ class PyTorchRunner(Runner):
             pass
 ```
 
-## `src/llmprof/cli.py` (Hydra entry + profiling glue)
+### `src/llmprof/cli.py` (Hydra entry + profiling glue)
 
 ```python
 import os
@@ -306,50 +453,207 @@ if __name__ == "__main__":
 
 This keeps your **end-to-end phases NVTX-annotated** for Nsight Systems (`--capture-range=nvtx`) and dumps a **PyTorch Profiler** Chrome trace + `ops.csv` when enabled. ([NVIDIA Docs][6])
 
----
+### `scripts/snapshot_hf.py`
 
-# Typical flows
+```python
+# Utility to snapshot HF repos into third_party/hf/ (source files only, no weights)
+from huggingface_hub import snapshot_download
 
-* **Plain run (minimal stats):**
+snapshot_download(
+    repo_id="Qwen/Qwen2.5",
+    local_dir="third_party/hf/Qwen/Qwen2.5",
+    allow_patterns=["*.py", "LICENSE*"],  # keep only source, not big weights
+    revision="main"                        # or specific commit/revision
+)
+```
 
-  ```
-  pixi run profile
-  ```
+# Managing External Dependencies (Reference Source Code)
 
-* **Nsight Systems timeline** (NVTX-gated):
+The `third_party/` directory houses upstream model implementations as read-only reference code. Here are four recommended approaches to manage these dependencies. Choose the approach that best fits your workflow:
 
-  ```
-  pixi run nsys
-  ```
+## Option 1: Git Submodules (Recommended for Pinning)
 
-  (Uses `--capture-range=nvtx` so only your labeled region is captured.) ([NVIDIA Docs][6])
+**Add & pin reference repos:**
 
-* **Nsight Compute deep-dive** (kernel metrics for roofline/MFU):
+```bash
+git submodule add https://github.com/huggingface/transformers third_party/github/transformers
+git submodule add https://github.com/vllm-project/vllm      third_party/github/vllm
+git submodule update --init --recursive
 
-  ```
-  pixi run ncu
-  ```
+# Pin to a specific commit for reproducibility
+git -C third_party/github/transformers checkout <commit-sha>
+git -C third_party/github/vllm checkout <commit-sha>
+git add .gitmodules third_party/github
+git commit -m "Add reference sources as submodules"
+```
 
-  Tweak metrics/filters as you focus on attention/GEMMs. ([NVIDIA Docs][7])
+**Hide local edits in status (reference-only behavior):**
 
-* **Swap models/runtimes via Hydra overrides:**
+```bash
+git config -f .gitmodules submodule.third_party/github/transformers.ignore dirty
+git config -f .gitmodules submodule.third_party/github/vllm.ignore dirty
+git add .gitmodules && git commit -m "Ignore dirty submodule worktrees"
+```
 
-  ```
-  pixi run profile model=llama3_70b runtime=vllm profiling=full
-  ```
+**Shallow/fast clones for large repos:**
 
----
+```bash
+git submodule update --init --depth 1 -- third_party/github/transformers
+```
 
-# Notes & tips
+([Git Submodules][1], [Git Documentation][3])
 
-* **Config groups** scale well: add `profiling/{minimal,full,roofline-only}`; `hardware/{single_gpu,multi_gpu}`; `runtime/{pytorch,vllm,tensorrtllm}`; `model/*`. Hydra’s defaults list is the switchboard; you get reproducible runs and easy sweeps. ([Hydra][1])
-* **Run directory pattern** is fully yours (`hydra.run.dir`), so all artifacts—NVML CSV, `ops.csv`, TensorBoard trace, NSYS `.qdrep`, NCU reports—land under `runs/<exp>/<model>/<timestamp>`. ([Hydra][4])
-* If you monitor nodes continuously, pair this with **DCGM Exporter** (Prometheus `/metrics`) for fleet-level GPU telemetry; it complements per-run files. ([NVIDIA Docs][8])
-* Keep **`models/` as symlinks**; your YAML just points to `${model.path}`—no code changes when you rotate weight stores.
+## Option 2: Git Subtree (Normal Folder, No Submodule UX)
 
----
+```bash
+git subtree add --prefix third_party/github/transformers \
+  https://github.com/huggingface/transformers main --squash
 
-If you want, I can fill in a **ready-to-run `harness.py`** file in `src/llmprof/profiling/` (about ~150 lines) and a **`pytorch_runner.py`** that exercises a tiny HF model so you can smoke-test the pipeline end-to-end.
+# Later update:
+git subtree pull --prefix third_party/github/transformers \
+  https://github.com/huggingface/transformers main --squash
+```
+
+Subtrees behave like regular directories with no `.gitmodules`, at the cost of larger superproject history. ([Debian Manpages][4])
+
+## Option 3: Sparse-Checkout (For Parts of Giant Monorepos)
+
+If you only need specific paths (e.g., `src/transformers/models/llama/`):
+
+```bash
+git clone https://github.com/huggingface/transformers third_party/github/transformers
+cd third_party/github/transformers
+git sparse-checkout init --cone
+git sparse-checkout set src/transformers/models/llama
+```
+
+This keeps your working tree tiny while the repo remains complete. ([Git Sparse-Checkout][5])
+
+## Option 0: Symlinks (Fastest Pointer)
+
+If you already have local checkouts or shared code on disk, create simple
+symlinks under `third_party/`:
+
+```bash
+ln -s /opt/src/transformers third_party/github/transformers
+ln -s /opt/src/vllm         third_party/github/vllm
+```
+
+Pros: no Git metadata in your repo, very quick to set up. Cons: not portable for
+collaborators unless they replicate the layout.
+
+## Option 4: Hugging Face Hub Snapshots (No Git History)
+
+For model repos on the Hub that include reference implementation files alongside weights:
+
+```python
+# scripts/snapshot_hf.py
+from huggingface_hub import snapshot_download
+
+snapshot_download(
+    repo_id="Qwen/Qwen2.5",
+    local_dir="third_party/hf/Qwen/Qwen2.5",
+    allow_patterns=["*.py", "LICENSE*"],  # keep only source, not big weights
+    revision="main"                        # or specific commit/revision
+)
+```
+
+This uses HF's content-addressed cache and avoids Git LFS entirely. ([Hugging Face Docs][6])
+
+## Guard Rails (Optional but Handy)
+
+* **Pre-commit**: Add hooks so contributors don't accidentally edit `third_party/**` or add new submodules without review. ([pre-commit.com][8])
+* **.gitmodules defaults**: Set `submodule.<name>.update = none` for truly frozen submodules, and `submodule.<name>.ignore = dirty` for quiet status. ([Git gitmodules][9])
+* **Licenses**: Copy upstream `LICENSE` files alongside the referenced code to keep compliance obvious.
+
+## Which Option When?
+
+* **You want history + easy pinning** → **Submodules** (default)
+* **You want a normal folder, no special Git UX** → **Subtree**
+* **You only need a slice of a big monorepo** → **Sparse-checkout**
+* **You just want reference `.py` files from HF, no weights** → **Hub snapshot**
+
+# Typical Workflows
+
+These are example workflows using the recommended structure. Adapt commands and patterns to your project's needs.
+
+## Profiling Operations
+
+**Plain run (minimal stats):**
+
+```bash
+pixi run profile
+```
+
+**Nsight Systems timeline** (NVTX-gated):
+
+```bash
+pixi run nsys
+```
+
+Uses `--capture-range=nvtx` so only your labeled region is captured. ([NVIDIA Docs][6])
+
+**Nsight Compute deep-dive** (kernel metrics for roofline/MFU):
+
+```bash
+pixi run ncu
+```
+
+Tweak metrics/filters as you focus on attention/GEMMs. ([NVIDIA Docs][7])
+
+**Swap models/runtimes via Hydra overrides:**
+
+```bash
+pixi run profile model=llama3_70b runtime=vllm profiling=full
+```
+
+## External Dependency Management
+
+**Initialize submodules:**
+
+```bash
+pixi run externals:init
+```
+
+**Update submodules:**
+
+```bash
+pixi run externals:update
+```
+
+**Snapshot HF reference code:**
+
+```bash
+pixi run externals:snapshot
+```
+
+# Key Design Principles
+
+These principles are **recommendations** based on common patterns. Adapt them to your project's specific requirements:
+
+* **Config groups** provide composability: patterns like `profiling/{minimal,full,roofline-only}`; `hardware/{single_gpu,multi_gpu}`; `runtime/{pytorch,vllm,tensorrtllm}`; `model/*`; `dataset/*` can be mixed and matched. Hydra's defaults list enables reproducible runs and easy parameter sweeps. ([Hydra][1])
+* **Run directory templates** (via `hydra.run.dir`) can organize all artifacts—NVML CSV, `ops.csv`, TensorBoard traces, NSYS `.qdrep`, NCU reports—under structured paths like `runs/<exp>/<model>/<timestamp>`. ([Hydra][4])
+* **Reference code pinning** via `third_party/` (using submodules/subtrees/snapshots) keeps experiments reproducible and audit-friendly by tracking exact upstream versions.
+* **Symlinked external assets**: Both `models/` (weights) and `datasets/` (data) use symlinks to external storage, decoupling the repo from large binary files and enabling flexible storage management.
+* **Dataset variants** provide a structured way to maintain original data alongside preprocessed versions, subsets, and transformations, with metadata tracking provenance.
+* **Optional monitoring**: For continuous node monitoring, tools like **DCGM Exporter** (Prometheus `/metrics`) complement per-run profiling artifacts with fleet-level GPU telemetry. ([NVIDIA Docs][8])
+
+# Summary
+
+This guide presents a comprehensive reference structure for LLM profiling projects. Remember:
+
+- **All patterns are recommendations**: Adapt the structure, configurations, and workflows to your specific needs
+- **Key organizational principles**:
+  - Use Hydra for composable, reproducible configurations
+  - Symlink external assets (models, datasets) to decouple from large files
+  - Track reference code in `third_party/` for reproducibility
+  - Organize datasets with source data + documented variants
+  - Structure runs with templated output directories
+- **Flexibility is essential**: Your project may require different tools, different structures, or different workflows—that's expected and encouraged
+
+Use this as a starting point and evolve it based on your requirements, team preferences, and constraints.
+
+# References
 
 [1]: https://hydra.cc/docs/tutorials/basic/your_first_app/config_groups/?utm_source=chatgpt.com "Grouping config files"
 [2]: https://prefix-dev.github.io/pixi/dev/python/pyproject_toml/ "pyproject.toml - Pixi by prefix.dev"
@@ -359,201 +663,4 @@ If you want, I can fill in a **ready-to-run `harness.py`** file in `src/llmprof/
 [6]: https://docs.nvidia.com/nsight-systems/UserGuide/index.html?utm_source=chatgpt.com "User Guide — nsight-systems"
 [7]: https://docs.nvidia.com/nsight-compute/NsightComputeCli/index.html?utm_source=chatgpt.com "4. Nsight Compute CLI"
 [8]: https://docs.nvidia.com/datacenter/cloud-native/gpu-telemetry/latest/dcgm-exporter.html?utm_source=chatgpt.com "DCGM Exporter — NVIDIA GPU Telemetry 1.0.0 ..."
-
----
-
-**Question**
-we also need a place to put the model source code (from github/hugging face), as implementation reference, we may symlink or checkout official source as submodules
-
-**Answer**
-Great call. Add a **vendor-style area** to your repo and treat upstream model repos as **reference code** that’s pinned and reproducible. Below is an opinionated structure + ready-to-use commands that support both **Git submodules** and **alternatives** (subtree, sparse-checkout, HF Hub snapshots). I’ll also show where it plugs into your Pixi/Hydra setup.
-
----
-
-# Folder layout (extended)
-
-```
-llm-profiler/
-├── third_party/                 # reference sources live here (read-only in practice)
-│   ├── github/                  # GitHub repos (Transformers, vLLM, TRT-LLM, Flash-Attn…)
-│   │   ├── transformers/        # submodule / subtree / sparse clone
-│   │   └── vllm/
-│   └── hf/                      # Hugging Face repos (git+LFS) or hub snapshots
-│       ├── meta-llama/Llama-3/  # submodule (git LFS!) OR snapshot dir
-│       └── Qwen/Qwen2.5/        # idem
-├── models/                      # your weights symlinks (unchanged)
-├── conf/                        # Hydra configs (unchanged)
-├── src/llmprof/…                # code (unchanged)
-└── pyproject.toml               # Pixi tasks below will manage third_party/
-```
-
-**Why a dedicated `third_party/`?** Keeps a clean boundary, makes it obvious what’s vendored, and lets you wire pre-commit rules to **discourage edits** there (see hook idea below).
-
----
-
-# Option 1 — Git submodules (recommended for source you want to pin)
-
-**Add & pin (example: Transformers + vLLM):**
-
-```bash
-git submodule add https://github.com/huggingface/transformers third_party/github/transformers
-git submodule add https://github.com/vllm-project/vllm      third_party/github/vllm
-git submodule update --init --recursive
-# (Optionally pin to a specific commit for reproducibility)
-git -C third_party/github/transformers checkout <commit-sha>
-git -C third_party/github/vllm checkout <commit-sha>
-git add .gitmodules third_party/github
-git commit -m "Add reference sources as submodules"
-```
-
-Submodules make the superproject track an **exact commit** of each dependency and are first-class in Git. (Pro Git book; official submodule docs.) ([Git][1])
-
-**Don’t show local edits in `git status` (reference-only behavior):**
-
-```bash
-# Hide “dirty” submodule worktrees in status (commit your .gitmodules change)
-git config -f .gitmodules submodule.third_party/github/transformers.ignore dirty
-git config -f .gitmodules submodule.third_party/github/vllm.ignore dirty
-git add .gitmodules && git commit -m "Ignore dirty submodule worktrees"
-```
-
-`ignore=dirty` (or `all`) prevents submodule worktree changes from cluttering `git status`—you’ll still see when the **submodule HEAD** changes, which is what you care about. (Documented in `git status` and discussion around `--ignore-submodules`.) ([Git][2])
-
-**Shallow/fast clones (big repos):**
-
-```bash
-git submodule update --init --depth 1 -- third_party/github/transformers
-```
-
-(Depth works for speed; bump or remove depth when you need history.) Submodule fundamentals and knobs are in the official docs. ([Git][3])
-
----
-
-# Option 2 — Git subtree (if you want a normal folder, no submodule UX)
-
-```bash
-git subtree add --prefix third_party/github/transformers \
-  https://github.com/huggingface/transformers main --squash
-# Later update:
-git subtree pull --prefix third_party/github/transformers \
-  https://github.com/huggingface/transformers main --squash
-```
-
-Subtrees **behave like regular dirs** (no `.gitmodules`, no submodule commands), at the cost of a bigger superproject history. Good if you dislike submodule ergonomics. (man page + tutorials). ([Debian Manpages][4])
-
----
-
-# Option 3 — Sparse-checkout (for *parts* of giant monorepos)
-
-If you only need, say, `src/transformers/models/llama/`:
-
-```bash
-git clone https://github.com/huggingface/transformers third_party/github/transformers
-cd third_party/github/transformers
-git sparse-checkout init --cone
-git sparse-checkout set src/transformers/models/llama
-```
-
-This keeps your working tree tiny while the repo remains complete under the hood. (Official sparse-checkout docs + GitHub write-up.) ([Git][5])
-
----
-
-# Option 4 — Hugging Face Hub snapshots (no git history, read-only)
-
-For model repos on the Hub (many include **reference implementation files** alongside weights), you can snapshot specific files/dirs into `third_party/hf/**`:
-
-```python
-# scripts/snapshot_hf.py
-from huggingface_hub import snapshot_download
-snapshot_download(
-    repo_id="Qwen/Qwen2.5",
-    local_dir="third_party/hf/Qwen/Qwen2.5",
-    allow_patterns=["*.py", "LICENSE*"],  # keep only source, not big weights
-    revision="main"                        # or specific commit/revision
-)
-```
-
-This uses HF’s **content-addressed cache** and is simple for *reference code only*. (Docs for `huggingface_hub` download & cache behavior.) ([Hugging Face][6])
-
-> If you submodule an HF repo instead, remember **Git LFS** is required to fetch large files/weights; snapshots avoid LFS entirely if you filter to `.py` only. (Git LFS overview.) ([GitHub Docs][7])
-
----
-
-## Pixi tasks to manage externals
-
-Add to your existing `pyproject.toml`:
-
-```toml
-[tool.pixi.tasks]
-# Initialize / update submodules
-externals:init = "git submodule update --init --recursive"
-externals:update = "git submodule update --remote --merge --recursive"
-
-# Optional: pull/refresh HF snapshots of source-only files
-externals:snapshot = "python scripts/snapshot_hf.py"
-
-# For giant repos you want sparsified
-externals:sparse-transformers = """
-bash -lc '
-cd third_party/github/transformers && \
-git sparse-checkout init --cone && \
-git sparse-checkout set src/transformers/models/llama
-'"""
-```
-
-Now you can do:
-
-```
-pixi run externals:init
-pixi run externals:snapshot
-```
-
----
-
-## Hydra config pointers
-
-Reference these sources inside your model configs to make links explicit:
-
-```yaml
-# conf/model/llama3_70b.yaml
-name: llama3_70b
-impl_src:
-  transformers_dir: ${oc.env:PROJECT_ROOT,${hydra:runtime.cwd}}/third_party/github/transformers
-  notes: "Reference implementation; do not modify. Pinned via submodule."
-hf_src:
-  repo_dir: ${oc.env:PROJECT_ROOT,${hydra:runtime.cwd}}/third_party/hf/meta-llama/Llama-3
-```
-
-This keeps your **experiment** and **reference code** traceable in the run artifacts Hydra writes.
-
----
-
-## Guard rails (optional but handy)
-
-* **Pre-commit**: add hooks so contributors don’t accidentally edit `third_party/**` or add new submodules without review.
-  Install pre-commit and use a simple “forbid changes under path” hook. (pre-commit docs + patterns discussion.) ([pre-commit.com][8])
-* **.gitmodules defaults**: you can set `submodule.<name>.update = none` if you truly want them frozen by default, and `submodule.<name>.ignore = dirty` for quiet status. (gitmodules reference.) ([Git][9])
-* **Licenses**: copy upstream `LICENSE` files alongside the referenced code to keep compliance obvious—HF snapshots example above includes `LICENSE*`.
-
----
-
-## Which option when?
-
-* **You want history + easy pinning** → **Submodules**. (Default.) ([Git][3])
-* **You want a normal folder, no special Git UX** → **Subtree**. ([Debian Manpages][4])
-* **You only need a slice of a big monorepo** → **Sparse-checkout**. ([Git][5])
-* **You just want reference `.py` files from HF, no weights** → **Hub snapshot**. ([Hugging Face][6])
-
-All four play nicely with your **Pixi + Hydra** scaffold from earlier; they only affect how `third_party/**` is populated and pinned.
-
-If you tell me the exact repos you want (e.g., `transformers`, `flash-attention`, `tensorrt-llm`, `vllm`, specific HF model repos), I can drop in the **exact submodule adds**, a **sparse set** for Transformers’ LLaMA/Qwen code paths, and a **`snapshot_hf.py`** that pulls only the implementation files you care about.
-
-[1]: https://git-scm.com/book/en/v2/Git-Tools-Submodules?utm_source=chatgpt.com "Submodules"
-[2]: https://git-scm.com/docs/git-status/2.11.4?utm_source=chatgpt.com "Git - git-status Documentation"
-[3]: https://git-scm.com/docs/git-submodule?utm_source=chatgpt.com "Git - git-submodule Documentation"
-[4]: https://manpages.debian.org/testing/git-man/git-subtree.1.en.html?utm_source=chatgpt.com "git-subtree(1) — git-man — Debian testing"
-[5]: https://git-scm.com/docs/git-sparse-checkout?utm_source=chatgpt.com "git-sparse-checkout Documentation"
-[6]: https://huggingface.co/docs/huggingface_hub/en/guides/download?utm_source=chatgpt.com "Download files from the Hub"
-[7]: https://docs.github.com/repositories/working-with-files/managing-large-files/about-git-large-file-storage?utm_source=chatgpt.com "About Git Large File Storage"
-[8]: https://pre-commit.com/?utm_source=chatgpt.com "pre-commit"
 [9]: https://git-scm.com/docs/gitmodules?utm_source=chatgpt.com "Git - gitmodules Documentation"

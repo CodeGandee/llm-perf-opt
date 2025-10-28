@@ -12,7 +12,7 @@ Guidelines
 - Never modify input images; write results under ./tmp
 
 Prereqs: torch, transformers, tokenizers, einops, addict, easydict, pillow;
-optional: flash-attn. Uses offline files from external/dsocr-hf.
+optional: flash-attn. Uses offline files from models/deepseek-ocr.
 """
 
 from __future__ import annotations
@@ -25,7 +25,7 @@ import torch
 from transformers import AutoModel, AutoTokenizer  # type: ignore[import-untyped]
 
 # Configuration via env vars
-MODEL_ID = os.environ.get("DSOCR_MODEL", str(Path("external/dsocr-hf").resolve()))
+MODEL_ID = os.environ.get("DSOCR_MODEL", str(Path("models/deepseek-ocr").resolve()))
 DEVICE_STR = os.environ.get("DSOCR_DEVICE")
 USE_FLASH_ATTN = os.environ.get("DSOCR_USE_FLASH_ATTN", "1").lower() not in ("0", "false", "no")
 
@@ -94,7 +94,7 @@ try:
 except Exception as e:  # noqa: BLE001
     print(f"[warn] dtype/device move failed ({e}), using default precision/device")
 
-# Prompt (from external/dsocr-hf README)
+# Prompt (from models/deepseek-ocr README)
 PROMPT = "<image>\n<|grounding|>Convert the document to markdown. "
 
 # Iterate images; prefer custom .infer when available

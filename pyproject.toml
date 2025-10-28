@@ -1,6 +1,6 @@
 [project]
 authors = [{name = "igamenovoer", email = "igamenovoer@xx.com"}]
-dependencies = ["transformers==4.46.3", "tokenizers==0.20.3", "einops>=0.8.1,<0.9", "addict>=2.4.0,<3", "easydict>=1.13,<2", "mypy>=1.18.2,<2", "ruff>=0.14.2,<0.15"]
+dependencies = ["transformers==4.46.3", "tokenizers==0.20.3", "einops>=0.8.1,<0.9", "addict>=2.4.0,<3", "easydict>=1.13,<2", "mypy>=1.18.2,<2", "ruff>=0.14.2,<0.15", "nvtx>=0.2.13,<0.3"]
 name = "llm-perf-opt"
 requires-python = ">= 3.11"
 version = "0.1.0"
@@ -25,6 +25,7 @@ flash-attn = "==2.7.4.post1"
 # Ensure a Python version compatible with current PyTorch wheels
 python = ">=3.11,<3.13"
 ninja = "*"
+nsight-compute = ">=2025.2.1.3,<2026"
 
 [tool.pixi.system-requirements]
 cuda = "12.0"

@@ -598,11 +598,170 @@ If you’re serving through Triton or have a cluster, you can also run **DCGM Ex
 
 ### Install notes
 
+This section covers installation of profiling-specific tools on Ubuntu (tested on 22.04 and 24.04). Assumes you already have NVIDIA drivers and CUDA Toolkit installed.
+
+#### Prerequisites Check
+
 ```bash
-pip install torch  # pick the CUDA build that matches your driver
-pip install nvidia-ml-py3
-# Nsight Systems/Compute are part of NVIDIA toolchain; install via your CUDA/Nsight packages.
+# Verify NVIDIA driver and CUDA are installed
+nvidia-smi          # Should show GPU info
+nvcc --version      # Should show CUDA version
 ```
+
+#### 1. Install Nsight Systems
+
+**Option A: Download from NVIDIA Developer (Latest version, recommended)**
+
+```bash
+# Visit https://developer.nvidia.com/nsight-systems/get-started
+# Download the .deb file for your Ubuntu version
+
+# Example installation (replace with current version):
+wget https://developer.download.nvidia.com/devtools/nsight-systems/2024_4/nsight-systems-2024.4.1_2024.4.1.76-1_amd64.deb
+sudo dpkg -i nsight-systems-2024.4.1_2024.4.1.76-1_amd64.deb
+sudo apt --fix-broken install  # if there are dependency issues
+```
+
+**Option B: Included with CUDA Toolkit**
+
+If you installed the full CUDA package, `nsys` should already be available:
+```bash
+nsys --version
+```
+
+**Option C: Ubuntu Repository (may be older)**
+
+```bash
+sudo apt install nsight-systems
+```
+
+**System requirement**: Nsight Systems requires write permission to `/var/lock`:
+```bash
+ls -ld /var/lock          # Check current permissions
+sudo chmod 755 /var/lock  # Fix if needed
+```
+
+#### 2. Install Nsight Compute
+
+**Option A: Download from NVIDIA Developer (Latest version, recommended)**
+
+```bash
+# Visit https://developer.nvidia.com/tools-overview/nsight-compute/get-started
+# Download the .deb file for your Ubuntu version
+
+# Example installation (replace with current version):
+wget https://developer.download.nvidia.com/devtools/nsight-compute/2024_3/ncu_2024.3.0.13_amd64.deb
+sudo dpkg -i ncu_2024.3.0.13_amd64.deb
+sudo apt --fix-broken install  # if there are dependency issues
+```
+
+**Option B: Included with CUDA Toolkit**
+
+If you installed the full CUDA package, `ncu` should already be available:
+```bash
+ncu --version
+```
+
+**Option C: Ubuntu Repository (may be older)**
+
+```bash
+sudo apt install nsight-compute
+```
+
+**Option D: Via Conda**
+
+```bash
+conda install nvidia::nsight-compute
+```
+
+#### 3. Install Python Dependencies
+
+**PyTorch with CUDA support (includes NVTX)**
+
+NVTX (NVIDIA Tools Extension) for profiling is included in PyTorch's CUDA builds via `torch.cuda.nvtx`. Install PyTorch with CUDA support:
+
+```bash
+# Visit https://pytorch.org/get-started/locally/ for the latest command
+# Example for CUDA 12.1:
+pip install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu121
+
+# For CUDA 12.4:
+pip install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu124
+
+# For CUDA 11.8:
+pip install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu118
+```
+
+Verify NVTX is available:
+```bash
+python -c "import torch; from torch.cuda import nvtx; print('NVTX available')"
+```
+
+**NVIDIA ML Python bindings (NVML/pynvml)**
+
+For GPU monitoring (utilization, power, clocks, memory):
+
+```bash
+# Install official NVIDIA ML Python bindings
+pip install nvidia-ml-py
+
+# Alternative (older, now wraps nvidia-ml-py):
+pip install nvidia-ml-py3
+```
+
+Note: `pynvml` package is now deprecated. Use `nvidia-ml-py` (official) or `nvidia-ml-py3` (maintained fork).
+
+Verify NVML is available:
+```bash
+python -c "import pynvml; pynvml.nvmlInit(); print('NVML initialized successfully')"
+```
+
+**Optional: TensorBoard for viewing PyTorch Profiler traces**
+
+```bash
+pip install tensorboard
+```
+
+#### 4. Verify Installation
+
+```bash
+# Check profiling tools
+nsys --version
+ncu --version
+
+# Test Python environment
+python -c "import torch; print(f'PyTorch {torch.__version__}, CUDA available: {torch.cuda.is_available()}, CUDA version: {torch.version.cuda}')"
+python -c "import pynvml; pynvml.nvmlInit(); print('NVML initialized successfully')"
+```
+
+#### Troubleshooting
+
+**If `nsys` or `ncu` are not found:**
+```bash
+# Check if tools are in your CUDA installation
+ls /usr/local/cuda/bin/{nsys,ncu}
+
+# If present, ensure CUDA bin is in PATH:
+export PATH=/usr/local/cuda/bin:$PATH
+# Add to ~/.bashrc to make permanent
+```
+
+**If PyTorch doesn't detect CUDA:**
+```bash
+# Check CUDA driver vs PyTorch CUDA version compatibility
+nvidia-smi  # Check driver version (e.g., CUDA 12.2)
+python -c "import torch; print(torch.version.cuda)"  # Must be compatible
+# If incompatible, reinstall PyTorch with matching CUDA version
+```
+
+**For GUI tools on remote servers:**
+- Use X forwarding: `ssh -X user@server`
+- Or run CLI-only and copy `.qdrep`/`.ncu-rep` files to local machine for GUI viewing
+
+#### References
+- Nsight Systems: https://developer.nvidia.com/nsight-systems/get-started
+- Nsight Compute: https://developer.nvidia.com/tools-overview/nsight-compute/get-started
+- PyTorch Installation: https://pytorch.org/get-started/locally/
 
 ---
 
