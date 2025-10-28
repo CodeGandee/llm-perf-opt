@@ -2,6 +2,22 @@
 
 **Phase**: 3 | **Feature**: Basic Profiling for DeepSeek‑OCR (Stage 1) | **Tasks**: T020–T027
 
+## Summary of Implementation
+
+This phase has been implemented end-to-end according to the plan and tasks (T020–T027):
+
+- Runner switched to a Hydra-based entry using `conf/config.yaml` with dataset/model configs (`conf/dataset/omnidocbench.yaml`, `conf/model/deepseek_ocr.yaml`).
+- NVTX segmentation (prefill/decode) is applied via `DeepSeekOCRSession.run_inference` and exercised by the runner.
+- A representative inference is wrapped with PyTorch Profiler (CPU+CUDA when available) to collect operator-level stats; top‑K exported to `operators.md`.
+- Repeated runs over the dataset are executed; per-image timings (prefill/decode), tokens, and decode throughput are aggregated (mean/std).
+- MFU (model-level and per-stage decode) is estimated using `profiling/mfu.py` with an analytic FLOPs/token approximation and a coarse peak TFLOPs lookup from `profiling/hw.py`.
+- Artifacts are written under `tmp/stage1/<run_id>/`: `report.md`, `operators.md`, and `metrics.json`.
+- Tasks T020–T027 are marked complete in the feature `tasks.md`.
+
+Notes/limits for Stage 1:
+- Prefill MFU is conservatively set to 0.0 pending refined encoder compute modeling (deferred to later stages).
+- Decode context length uses a default window (e.g., 512) for FLOPs/token; future refinement will log/measure the actual context.
+
 ## Files
 
 ### Modified

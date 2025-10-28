@@ -44,3 +44,4 @@ no-build-isolation = ["flash-attn"]
 [tool.pixi.tasks]
 install-vllm-nightly = { cmd = "bash scripts/install-vllm-nightly.sh" }
 verify-vllm = { cmd = "python - <<'PY'\nimport vllm, torch, PIL; print('vllm', vllm.__version__); print('torch', torch.__version__); print('pillow', PIL.__version__)\nPY" }
+bench-stage1 = { cmd = "python tests/manual/manual_stage1_benchmark.py" }

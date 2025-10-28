@@ -1,0 +1,4 @@
+- dataset=omnidocbench
+- model=deepseek_ocr
+- repeats=1
+- device=cuda:0

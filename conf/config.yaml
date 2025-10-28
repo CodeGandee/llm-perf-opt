@@ -12,3 +12,14 @@ device: cuda:0           # target device
 use_flash_attn: true     # enable flash attention if available
 max_new_tokens: 64       # fallback generate cap
 
+# Hydra run/output directory aligns with Stage 1 artifacts
+hydra:
+  run:
+    dir: ${hydra:runtime.cwd}/tmp/stage1/${now:%Y%m%d-%H%M%S}
+  output_subdir: null
+  job:
+    chdir: true
+
+# Output controls
+outputs:
+  save_predictions: false   # save generated text per image for later comparison

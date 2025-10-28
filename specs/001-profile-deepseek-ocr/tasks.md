@@ -27,14 +27,14 @@ Spec: /data2/huangzhe/code/llm-perf-opt/specs/001-profile-deepseek-ocr/spec.md
 ## Phase 3 — User Story 1 (P1): Stage 1 Profiling Report
 Goal: Stage segmentation, operator summary, MFU (model-level and per-stage) present for a representative run; repeated runs aggregate.
 
-- [ ] T020 [US1] Integrate NVTX segmentation (prefill/decode) around DeepSeek‑OCR calls in /data2/huangzhe/code/llm-perf-opt/src/llm_perf_opt/runners/llm_profile_runner.py
-- [ ] T021 [P] [US1] Add PyTorch profiler (CPU+CUDA) context and collect operator stats in /data2/huangzhe/code/llm-perf-opt/src/llm_perf_opt/runners/llm_profile_runner.py
-- [ ] T022 [P] [US1] Compute per-stage timings and throughput in /data2/huangzhe/code/llm-perf-opt/src/llm_perf_opt/runners/llm_profile_runner.py
-- [ ] T023 [P] [US1] Implement MFU estimator (model-level and per-stage) using /data2/huangzhe/code/llm-perf-opt/src/llm_perf_opt/profiling/mfu.py
-- [ ] T024 [P] [US1] Export operator top‑K summary (Markdown/JSON) via /data2/huangzhe/code/llm-perf-opt/src/llm_perf_opt/profiling/export.py
-- [ ] T025 [US1] Support repeated passes, aggregate mean/std via /data2/huangzhe/code/llm-perf-opt/src/llm_perf_opt/profiling/aggregate.py
-- [ ] T026 [US1] Write report.md with stage timings, operator summary, MFU to /data2/huangzhe/code/llm-perf-opt/tmp/stage1/<run_id>/report.md
-- [ ] T027 [US1] Persist raw metrics (JSON) for reproducibility to /data2/huangzhe/code/llm-perf-opt/tmp/stage1/<run_id>/metrics.json
+- [X] T020 [US1] Integrate NVTX segmentation (prefill/decode) around DeepSeek‑OCR calls in /data2/huangzhe/code/llm-perf-opt/src/llm_perf_opt/runners/llm_profile_runner.py
+- [X] T021 [P] [US1] Add PyTorch profiler (CPU+CUDA) context and collect operator stats in /data2/huangzhe/code/llm-perf-opt/src/llm_perf_opt/runners/llm_profile_runner.py
+- [X] T022 [P] [US1] Compute per-stage timings and throughput in /data2/huangzhe/code/llm-perf-opt/src/llm_perf_opt/runners/llm_profile_runner.py
+- [X] T023 [P] [US1] Implement MFU estimator (model-level and per-stage) using /data2/huangzhe/code/llm-perf-opt/src/llm_perf_opt/profiling/mfu.py
+- [X] T024 [P] [US1] Export operator top‑K summary (Markdown/JSON) via /data2/huangzhe/code/llm-perf-opt/src/llm_perf_opt/profiling/export.py
+- [X] T025 [US1] Support repeated passes, aggregate mean/std via /data2/huangzhe/code/llm-perf-opt/src/llm_perf_opt/profiling/aggregate.py
+- [X] T026 [US1] Write report.md with stage timings, operator summary, MFU to /data2/huangzhe/code/llm-perf-opt/tmp/stage1/<run_id>/report.md
+- [X] T027 [US1] Persist raw metrics (JSON) for reproducibility to /data2/huangzhe/code/llm-perf-opt/tmp/stage1/<run_id>/metrics.json
 
 ## Phase 4 — User Story 2 (P2): Stakeholder Summary
 Goal: Concise summary of top cost centers and stage attribution; plain language recommendations.

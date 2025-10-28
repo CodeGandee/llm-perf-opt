@@ -1,63 +1,434 @@
-"""CLI entry skeleton for LLM profiling.
+"""Stage 1 profiling runner (Hydra entry).
 
-This module defines a thin CLI that parses arguments for the LLM profiling
-workflow. Core wiring to the profiling session is added in foundational phases.
+Implements Phase 3 (US1) of the Stage 1 profiling workflow:
 
-Functions
----------
-build_parser
-    Construct the argument parser for the CLI.
-main
-    Entry point that parses CLI arguments.
+- Uses Hydra to configure dataset/model/runtime.
+- Executes DeepSeek‑OCR via :class:`~llm_perf_opt.runners.dsocr_session.DeepSeekOCRSession`.
+- Wraps one representative run in PyTorch Profiler (CPU+CUDA) to collect
+  operator‑level statistics.
+- Aggregates repeated runs and estimates MFU (model‑level and per‑stage).
+- Writes artifacts (report.md, metrics.json, operators.md) under tmp/stage1/<run_id>/.
+
+This module is intentionally lightweight and delegates reusable helpers to the
+``profiling`` package. It aims to be clear and single‑purpose for Stage 1.
 """
 
 from __future__ import annotations
 
-import argparse
+from dataclasses import dataclass
+import logging
+from datetime import datetime
+import json
+from pathlib import Path
+from typing import Any, Iterable, Iterator
+
+import hydra
+from omegaconf import DictConfig
+import torch
+from torch.profiler import ProfilerActivity, profile  # type: ignore[attr-defined]
+
+from hydra.core.hydra_config import HydraConfig
+from llm_perf_opt.profiling.aggregate import mean_std
+from llm_perf_opt.profiling.export import top_n_operators, write_operator_markdown
+from llm_perf_opt.profiling.hw import get_device_name, get_peak_tflops
+from llm_perf_opt.profiling.mfu import estimate_decode_flops_per_token, mfu as mfu_ratio
+from llm_perf_opt.runners.dsocr_session import DeepSeekOCRSession
 
 
-def build_parser() -> argparse.ArgumentParser:
-    """Build an ``argparse`` parser for the profile runner.
+# -----------------------------
+# Filesystem and input helpers
+# -----------------------------
+
+def _read_filelist(root: str, filelist: str) -> list[Path]:
+    """Read a newline‑delimited file list; resolve relative entries to ``root``.
+
+    Parameters
+    ----------
+    root : str
+        Dataset root directory.
+    filelist : str
+        Path to a newline‑separated list of file paths (absolute or relative to ``root``).
 
     Returns
     -------
-    argparse.ArgumentParser
-        Configured parser instance.
+    list[Path]
+        Absolute paths to files that exist. Non‑existent entries are filtered out.
     """
 
-    parser = argparse.ArgumentParser(description="LLM Profile Runner (Stage 1)")
-    parser.add_argument("--model-path", required=True, help="Absolute path to model directory")
-    parser.add_argument("--input-dir", required=True, help="Absolute path to input images directory")
-    parser.add_argument("--repeats", type=int, default=3, help="Number of repeated passes")
-    parser.add_argument("--device", default="cuda:0", help="Target device, e.g., cuda:0")
-    parser.add_argument("--use-flash-attn", type=int, default=1, help="1 to enable flash-attn if available")
-    parser.add_argument("--max-new-tokens", type=int, default=64, help="Max new tokens for fallback generate")
-    return parser
+    fp = Path(filelist)
+    if not fp.is_absolute():
+        fp = Path(root) / filelist
+    lines = [ln.strip() for ln in fp.read_text(encoding="utf-8").splitlines() if ln.strip()]
+    out: list[Path] = []
+    for ln in lines:
+        p = Path(ln)
+        p = p if p.is_absolute() else (Path(root) / ln)
+        try:
+            rp = p.resolve()
+            if rp.exists():
+                out.append(rp)
+        except Exception:
+            continue
+    return out
 
 
-def main() -> None:  # pragma: no cover - thin CLI wrapper
-    """Parse CLI arguments.
+def _iter_images(root: str, fallback_patterns: list[str], subset_filelist: str | None) -> Iterable[Path]:
+    """Yield image paths from a subset filelist or fallback glob patterns.
 
-    Notes
-    -----
-    Wiring into the profiling session is added in foundational phases; this
-    function currently validates argument parsing only.
+    If ``subset_filelist`` is provided, it is read relative to ``root`` (unless
+    absolute). Otherwise, glob patterns relative to ``root`` are used.
     """
 
-    parser = build_parser()
-    args = parser.parse_args()
+    if subset_filelist:
+        return _read_filelist(root, subset_filelist)
+    rp = Path(root)
+    out: list[Path] = []
+    for pat in fallback_patterns:
+        out.extend(sorted(rp.glob(pat)))
+    # De‑dup while preserving order
+    seen: set[Path] = set()
+    uniq: list[Path] = []
+    for p in out:
+        if p not in seen:
+            uniq.append(p)
+            seen.add(p)
+    return [pp.resolve() for pp in uniq]
 
-    # Wire session in foundational phase: keep it minimal
-    from llm_perf_opt.runners.dsocr_session import DeepSeekOCRSession
 
+# -----------------------------
+# Profiling and aggregation
+# -----------------------------
+
+@dataclass
+class ImageRun:
+    image_path: str
+    prefill_ms: float
+    decode_ms: float
+    tokens: int
+
+
+def _collect_operator_records(prof: Any) -> list[dict]:
+    """Extract operator‑level summaries from a PyTorch profiler object.
+
+    Returns a list of dicts with keys: ``op_name``, ``total_time_ms``,
+    ``cuda_time_ms``, ``calls``.
+    """
+
+    records: list[dict] = []
+    try:
+        for evt in prof.key_averages():  # type: ignore[attr-defined]
+            # Some events may lack CUDA time; use 0.0
+            total_ms = (
+                float(
+                    getattr(evt, "self_cpu_time_total", 0.0)
+                    + getattr(evt, "cpu_time_total", 0.0)
+                )
+                / 1000.0
+            )
+            cuda_ms = (
+                float(
+                    getattr(evt, "self_cuda_time_total", 0.0)
+                    + getattr(evt, "cuda_time_total", 0.0)
+                )
+                / 1000.0
+            )
+            calls = int(getattr(evt, "count", 0))
+            name = str(getattr(evt, "key", getattr(evt, "name", "")))
+            if not name:
+                continue
+            records.append(
+                {
+                    "op_name": name,
+                    "total_time_ms": max(total_ms, 0.0),
+                    "cuda_time_ms": max(cuda_ms, 0.0),
+                    "calls": max(calls, 0),
+                }
+            )
+    except Exception:
+        # Fail‑open: return what we collected
+        pass
+    return records
+
+
+def _infer_model_dims(model: object) -> tuple[int, int, int]:
+    """Best‑effort extraction of (d_model, d_ff, n_layers) from a HF model config.
+
+    Falls back to (1024, 4096, 24) if unavailable.
+    """
+
+    try:
+        cfg = getattr(model, "config", None)
+        if cfg is not None:
+            d_model = int(getattr(cfg, "hidden_size", getattr(cfg, "d_model", 1024)))
+            d_ff = int(getattr(cfg, "intermediate_size", getattr(cfg, "ffn_dim", 4096)))
+            n_layers = int(getattr(cfg, "num_hidden_layers", getattr(cfg, "n_layer", 24)))
+            return d_model, d_ff, n_layers
+    except Exception:
+        pass
+    return 1024, 4096, 24
+
+
+def _summarize_runs(runs: list[ImageRun], model_obj: object, peak_tflops: float) -> dict:
+    """Compute aggregates and MFU estimates from per‑image runs.
+
+    Model‑level MFU is computed from decode throughput and an analytical
+    FLOPs/token estimate. Per‑stage MFU provides ``decode`` using the same
+    logic and sets ``prefill`` to 0.0 as a conservative placeholder for Stage 1.
+    """
+
+    if not runs:
+        raise ValueError("No runs to summarize")
+
+    prefill_vals = [r.prefill_ms for r in runs]
+    decode_vals = [r.decode_ms for r in runs]
+    tokens_vals = [float(max(r.tokens, 1)) for r in runs]
+    dec_tokens_per_s = [tok / (ms / 1000.0) for tok, ms in zip(tokens_vals, decode_vals)]
+
+    prefill_mean, prefill_std = mean_std(prefill_vals)
+    decode_mean, decode_std = mean_std(decode_vals)
+    tokens_mean, tokens_std = mean_std(tokens_vals)
+    tps_mean, tps_std = mean_std(dec_tokens_per_s)
+
+    d_model, d_ff, n_layers = _infer_model_dims(model_obj)
+    ctx_len = 512  # Stage 1 default; refine in later stages with actual decode context
+    flops_per_token = estimate_decode_flops_per_token(d_model, d_ff, n_layers, ctx_len)
+    mfu_model = mfu_ratio(tokens_per_s=tps_mean, flops_per_token=flops_per_token, peak_tflops=peak_tflops)
+    mfu_per_stage = {
+        "prefill": 0.0,  # placeholder (Stage 1)
+        "decode": mfu_ratio(tokens_per_s=tps_mean, flops_per_token=flops_per_token, peak_tflops=peak_tflops),
+    }
+
+    return {
+        "aggregates": {
+            "prefill_ms": {"mean": prefill_mean, "std": prefill_std},
+            "decode_ms": {"mean": decode_mean, "std": decode_std},
+            "tokens": {"mean": tokens_mean, "std": tokens_std},
+            "tokens_per_s": {"mean": tps_mean, "std": tps_std},
+        },
+        "mfu_model_level": mfu_model,
+        "mfu_per_stage": mfu_per_stage,
+        "model_dims": {"d_model": d_model, "d_ff": d_ff, "n_layers": n_layers, "ctx_len": ctx_len},
+        "peak_tflops": peak_tflops,
+    }
+
+
+def _write_outputs(artifacts_dir: Path, summary: dict, operator_records: list[dict], top_k: int = 20) -> None:
+    """Write report.md, operators.md, and metrics.json under ``artifacts_dir``.
+
+    Parameters
+    ----------
+    artifacts_dir : Path
+        Destination directory (created if missing).
+    summary : dict
+        Summary dictionary from ``_summarize_runs``.
+    operator_records : list[dict]
+        Raw operator records to export as a Markdown top‑K table.
+    top_k : int, default=20
+        Number of operator rows to include.
+    """
+
+    artifacts_dir.mkdir(parents=True, exist_ok=True)
+    # Operators
+    operators_md_path = artifacts_dir / "operators.md"
+    write_operator_markdown(operator_records, str(operators_md_path), top_k=top_k)
+
+    # Report
+    report_path = artifacts_dir / "report.md"
+    aggr = summary.get("aggregates", {})
+    mfu_model = float(summary.get("mfu_model_level", 0.0))
+    mfu_stages = summary.get("mfu_per_stage", {})
+    lines = [
+        "# Stage 1 Profiling Report",
+        "",
+        f"- Timestamp: {datetime.utcnow().isoformat()}Z",
+        f"- Device: {get_device_name()}",
+        f"- Peak TFLOPs (est.): {float(summary.get('peak_tflops', 0.0)):.2f}",
+        "",
+        "## Aggregates",
+        (
+            "- Prefill ms: "
+            f"mean={aggr.get('prefill_ms',{}).get('mean',0):.3f}, "
+            f"std={aggr.get('prefill_ms',{}).get('std',0):.3f}"
+        ),
+        (
+            "- Decode ms: "
+            f"mean={aggr.get('decode_ms',{}).get('mean',0):.3f}, "
+            f"std={aggr.get('decode_ms',{}).get('std',0):.3f}"
+        ),
+        f"- Tokens: mean={aggr.get('tokens',{}).get('mean',0):.1f}, std={aggr.get('tokens',{}).get('std',0):.1f}",
+        (
+            "- Tokens/s: "
+            f"mean={aggr.get('tokens_per_s',{}).get('mean',0):.3f}, "
+            f"std={aggr.get('tokens_per_s',{}).get('std',0):.3f}"
+        ),
+        "",
+        "## MFU",
+        f"- Model-level MFU: {mfu_model:.6f}",
+        (
+            "- Per-stage MFU: "
+            f"prefill={float(mfu_stages.get('prefill',0.0)):.6f}, "
+            f"decode={float(mfu_stages.get('decode',0.0)):.6f}"
+        ),
+        "",
+        "## Operators",
+        f"See operators table: {operators_md_path.name}",
+        "",
+    ]
+    report_path.write_text("\n".join(lines) + "\n", encoding="utf-8")
+
+    # Metrics (JSON)
+    metrics_path = artifacts_dir / "metrics.json"
+    with metrics_path.open("w", encoding="utf-8") as f:
+        json.dump(summary, f, indent=2)
+
+
+# -----------------------------
+# Hydra entry
+# -----------------------------
+
+@hydra.main(version_base=None, config_path="../../../conf", config_name="config")
+def main(cfg: DictConfig) -> None:  # pragma: no cover - CLI orchestrator
+    """Hydra entry point for Stage 1 profiling.
+
+    The runner selects a representative image for operator profiling and then
+    performs repeated runs across the chosen dataset to compute aggregates and
+    MFU estimates. Artifacts are saved under ``tmp/stage1/<run_id>/``.
+    """
+
+    # Enable warnings capture so they surface in Hydra log file
+    logging.captureWarnings(True)
+    logger = logging.getLogger(__name__)
+
+    # Build session
     session = DeepSeekOCRSession.from_local(
-        model_path=args.model_path,
-        device=args.device,
-        use_flash_attn=bool(int(args.use_flash_attn)),
+        model_path=cfg.model.path,
+        device=cfg.device,
+        use_flash_attn=bool(cfg.use_flash_attn),
     )
 
-    # Image discovery happens in the next phase; for now just validate session
-    _ = session.device
+    # Discover images
+    images = list(
+        _iter_images(
+            cfg.dataset.root,
+            list(cfg.dataset.fallback_patterns),
+            cfg.dataset.get("subset_filelist"),
+        )
+    )
+    if not images:
+        raise RuntimeError(f"No images found in dataset root: {cfg.dataset.root}")
+
+    # Prepare output dir (Hydra run dir configured to Stage 1 artifacts path)
+    artifacts_dir = Path(HydraConfig.get().run.dir)
+    logger.info(
+        "Stage1 profiling start | device=%s repeats=%s model=%s dataset_root=%s artifacts_dir=%s",
+        cfg.device,
+        int(cfg.repeats),
+        cfg.model.path,
+        cfg.dataset.root,
+        str(artifacts_dir),
+    )
+    logger.info("Discovered %d images for dataset", len(images))
+
+    # Device peak TFLOPs (coarse table)
+    device_name = get_device_name()
+    precision = str(getattr(cfg.model, "dtype", "bf16"))
+    peak = get_peak_tflops(device_name, precision)
+
+    # Representative operator profile on the first image
+    operator_records: list[dict] = []
+    rep_image = str(images[0])
+    activities = [ProfilerActivity.CPU]
+    if torch.cuda.is_available():
+        activities.append(ProfilerActivity.CUDA)
+    try:
+        with profile(activities=activities) as prof:  # type: ignore[call-arg]
+            logger.info("Profiling representative image: %s", rep_image)
+            _ = session.run_inference(
+                image_path=rep_image,
+                prompt="<image>\n<|grounding|>Convert the document to markdown.",
+                max_new_tokens=int(cfg.max_new_tokens),
+            )
+        operator_records = _collect_operator_records(prof)
+        logger.info("Collected %d operator records", len(operator_records))
+    except Exception:
+        operator_records = []  # Fail‑open for environments without profiler
+
+    # Repeated runs across dataset
+    runs: list[ImageRun] = []
+    repeats = int(cfg.repeats)
+    max_new_tokens = int(cfg.max_new_tokens)
+    images_iter: Iterator[Path] = iter(images)
+    save_preds = bool(getattr(cfg, "outputs", {}).get("save_predictions", False))
+    pred_f = None
+    if save_preds:
+        pred_path = artifacts_dir / "predictions.jsonl"
+        pred_f = pred_path.open("w", encoding="utf-8")
+        logger.info("Saving predictions to %s", str(pred_path))
+    for i in range(repeats):
+        # Cycle through images if repeats > len(images)
+        try:
+            img = next(images_iter)
+        except StopIteration:
+            images_iter = iter(images)
+            img = next(images_iter)
+        logger.info("Repeat %d/%d | image=%s", i + 1, repeats, str(img))
+        res = session.run_inference(
+            image_path=str(img),
+            prompt="<image>\n<|grounding|>Convert the document to markdown.",
+            max_new_tokens=max_new_tokens,
+            return_text=save_preds,
+        )
+        runs.append(
+            ImageRun(
+                image_path=str(img),
+                prefill_ms=float(res.get("prefill_ms", 0.0)),
+                decode_ms=float(res.get("decode_ms", 0.0)),
+                tokens=int(res.get("tokens", 0)),
+            )
+        )
+        if save_preds and pred_f is not None and isinstance(res.get("text"), str):
+            try:
+                # JSONL entry: {"image": <abs path>, "text": <generated>}
+                import json as _json  # local import to avoid top-level import penalty
+
+                _json.dump({"image": str(img), "text": res.get("text")}, pred_f, ensure_ascii=False)
+                pred_f.write("\n")
+            except Exception:
+                logger.exception("Failed to write prediction for image=%s", str(img))
+
+    # Summarize + outputs
+    summary = _summarize_runs(runs, getattr(session, "m_model", None), peak)
+    if pred_f is not None:
+        try:
+            pred_f.close()
+        except Exception:
+            pass
+    aggr = summary.get("aggregates", {})
+    logger.info(
+        (
+            "Aggregates | prefill_ms=%.3f±%.3f decode_ms=%.3f±%.3f tokens=%.1f±%.1f tps=%.3f±%.3f"
+        ),
+        float(aggr.get("prefill_ms", {}).get("mean", 0.0)),
+        float(aggr.get("prefill_ms", {}).get("std", 0.0)),
+        float(aggr.get("decode_ms", {}).get("mean", 0.0)),
+        float(aggr.get("decode_ms", {}).get("std", 0.0)),
+        float(aggr.get("tokens", {}).get("mean", 0.0)),
+        float(aggr.get("tokens", {}).get("std", 0.0)),
+        float(aggr.get("tokens_per_s", {}).get("mean", 0.0)),
+        float(aggr.get("tokens_per_s", {}).get("std", 0.0)),
+    )
+    logger.info(
+        "MFU | model=%.6f decode=%.6f",
+        float(summary.get("mfu_model_level", 0.0)),
+        float(summary.get("mfu_per_stage", {}).get("decode", 0.0)),
+    )
+    _write_outputs(artifacts_dir, summary, top_n_operators(operator_records, n=20), top_k=20)
+    logger.info(
+        "Wrote artifacts | report=%s operators=%s metrics=%s",
+        str(artifacts_dir / "report.md"),
+        str(artifacts_dir / "operators.md"),
+        str(artifacts_dir / "metrics.json"),
+    )
 
 
 if __name__ == "__main__":  # pragma: no cover
