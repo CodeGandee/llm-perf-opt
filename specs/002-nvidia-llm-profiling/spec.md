@@ -13,6 +13,12 @@
   - Data models use attrs (default) or pydantic (for web schemas), no business logic
 -->
 
+## Clarifications
+
+### Session 2025-10-29
+
+- Q: Nsight Compute scope for Stage 2 → A: Use nsys for the full run; run ncu on top-N kernels only (auto-selected) to capture key counters while keeping overhead bounded.
+
 ## User Scenarios & Testing *(mandatory)*
 
 <!--
@@ -113,6 +119,7 @@ As an ML engineer, I want to apply the profiling workflow to different LLMs with
 - **FR-007**: The system MUST provide utilization estimates (e.g., MFU) leveraging available static compute estimations and measured timings and document assumptions used.
 - **FR-008**: The system MUST handle missing tooling gracefully, emitting actionable guidance and partial artifacts when full profiling cannot run.
 - **FR-009**: The system MUST include at least one manual test flow under `tests/manual/stage2_profile/` that guides users through a complete profiling session and verification of artifacts.
+- **FR-010**: The default deep profiling flow MUST use Nsight Systems for the full run and run Nsight Compute on the top‑N kernels only (auto‑selected from total time) to capture utilization/occupancy/memory counters within the overhead target.
 
 ### Key Entities *(include if feature involves data)*
 
