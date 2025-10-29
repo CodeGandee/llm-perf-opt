@@ -48,23 +48,24 @@ As a performance engineer, I want to run a deep profiling session for the curren
 
 ---
 
-### User Story 2 - Apply to Other LLMs (Priority: P2)
+### User Story 2 - Export Top GPU Kernels for DeepSeek-OCR (Priority: P2)
 
-As an ML engineer, I want to apply the profiling workflow to different LLMs without code changes so that I can compare models and architectures under the same methodology.
+As a performance engineer, I want a ranked table of GPU kernels for DeepSeek-OCR with total time, calls, and mean ms (sorted by total) so that I can attribute CUDA time accurately and pinpoint kernel-level bottlenecks.
 
-**Why this priority**: Cross-model comparability allows broader optimization impact and reuse of Stage 2 workflows beyond the initial target.
+**Why this priority**: Operator-level CUDA time can appear as zero due to attribution at the kernel level; a kernels table is essential for actionable insights.
 
-**Independent Test**: Point the profiler to a different model path/configuration and generate the same set of artifacts with correct model metadata and stage timing coverage.
+**Independent Test**: Running the profiling session generates a `kernels.md` artifact alongside `operators.md`, listing top kernels sorted by total time with calls and mean ms.
 
 **Acceptance Scenarios**:
 
-1. **Given** a different LLM target with valid inputs, **When** a profiling run is executed, **Then** artifacts are produced with accurate model identifiers and stage coverage consistent with the framework’s schema.
+1. **Given** a completed DeepSeek-OCR profiling run, **When** artifacts are written, **Then** a `kernels.md` file exists with a correctly formatted table including kernel name, device, total ms, calls, and mean ms.
+2. **Given** the kernel table, **When** reviewing the top entries, **Then** the highest total-time kernels correspond to the largest contributors in the trace and help explain operator-level 0 CUDA time observations.
 
 ---
 
 ### User Story 3 - Stakeholder Report with Actionable Tables (Priority: P3)
 
-As a stakeholder, I want a concise report that summarizes environment details, aggregate timings, per-stage timing, top operators and top kernels in tables, plus an executive summary, so that I can quickly see where time is spent and what to fix.
+As a stakeholder, I want a concise report for DeepSeek-OCR that summarizes environment details, aggregate timings, per-stage timing, top operators and top kernels in tables, plus an executive summary, so that I can quickly see where time is spent and what to fix.
 
 **Why this priority**: Non-technical stakeholders need clear tables and brief summaries to drive decisions.
 
@@ -77,6 +78,18 @@ As a stakeholder, I want a concise report that summarizes environment details, a
 ---
 
 [Add more user stories as needed, each with an assigned priority]
+
+### User Story 4 - Apply to Other LLMs (Priority: P4)
+
+As an ML engineer, I want to apply the profiling workflow to different LLMs without code changes so that I can compare models and architectures under the same methodology.
+
+**Why this priority**: Cross-model comparability is valuable but secondary to first completing DeepSeek-OCR profiling.
+
+**Independent Test**: Point the profiler to a different model path/configuration and generate the same set of artifacts with correct model metadata and stage timing coverage.
+
+**Acceptance Scenarios**:
+
+1. **Given** a different LLM target with valid inputs, **When** a profiling run is executed, **Then** artifacts are produced with accurate model identifiers and stage coverage consistent with the framework’s schema.
 
 ### Edge Cases
 
