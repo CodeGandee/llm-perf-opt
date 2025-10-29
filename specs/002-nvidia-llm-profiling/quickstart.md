@@ -5,27 +5,36 @@
 - NVIDIA GPU with compatible driver; CUDA 12.4
 - Nsight Systems (`nsys`) and Nsight Compute (`ncu`) installed and on PATH
 - Pixi environment set up for this repo
+- Never use system Python; always run via `pixi run ...`
 
 ## Run a Profiling Session
 
-1) Launch environment
+1) Run Stage 2 profile (Deep mode)
 
 ```
-pixi shell
-```
-
-2) Run Stage 2 profile (Deep mode)
-
-```
-# Example: uses fixed inputs manifest and deep mode
+# Uses fixed inputs manifest and deep mode
 pixi run stage2-profile -- +run.mode=deep +inputs.manifest=/abs/path/to/inputs.yaml
 ```
 
-3) Inspect artifacts (latest run dir under `tmp/stage2/<run_id>/`):
+2) Inspect artifacts (latest run dir under `tmp/stage2/<run_id>/`):
 - `report.md`, `stakeholder_summary.md`
 - `operators.md` and `kernels.md` (sorted by total, includes mean ms)
 - `env.json`, `inputs.yaml`, `config.yaml`
 - `nsys` timeline (`.qdrep`) and `ncu` summaries (CSV/JSON)
+
+## Running Python Scripts (via Pixi)
+
+- One‑off module run (example):
+
+```
+pixi run python -m llm_perf_opt.runners.llm_profile_runner profiling.enabled=true 'profiling.activities=[cpu,cuda]'
+```
+
+- Quick environment check:
+
+```
+pixi run python -c "import torch; print(torch.__version__)"
+```
 
 ## Notes
 
@@ -36,4 +45,3 @@ pixi run stage2-profile -- +run.mode=deep +inputs.manifest=/abs/path/to/inputs.y
 ```
 pixi run stage2-profile -- +run.mode=light
 ```
-
