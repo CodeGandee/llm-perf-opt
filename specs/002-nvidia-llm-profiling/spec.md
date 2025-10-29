@@ -1,6 +1,6 @@
 # Feature Specification: Stage 2 — NVIDIA-Backed Deep LLM Profiling
 
-**Feature Branch**: `001-nvidia-llm-profiling`  
+**Feature Branch**: `002-nvidia-llm-profiling`  
 **Created**: 2025-10-29  
 **Status**: Draft  
 **Input**: User description: "in-depth profiling LLM with nvidia tools, with deepseek-ocr being our current profiling target, but the tools and framework we develop shall be able to applied to other LLMs. check context/plans/plan-deep-profile-llm.md , we already done with stage 1, now we move to stage 2, we will be using nvidia tools to inspect the runtime computational resource utilization, and identify the bottleneck of performance, in order to find out how to optimize it. Stage 1 implementation records are in context/tasks/001-profile-deepseek-ocr/, this is an iterative development, so we shall follow previous framework and add functionalities."
@@ -125,4 +125,3 @@ As a stakeholder, I want a concise report that summarizes environment details, a
 - Stage 1 outputs (NVTX ranges, baseline runtime) exist and can be reused as the foundation for Stage 2.
 - Datasets and model checkpoints are locally accessible and valid for the selected LLM target.
 - Long, exhaustive traces can be substituted with reduced-detail modes to respect overhead constraints when needed.
-

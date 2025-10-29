@@ -2,7 +2,7 @@
 
 **Purpose**: Validate specification completeness and quality before proceeding to planning
 **Created**: 2025-10-29
-**Feature**: specs/001-nvidia-llm-profiling/spec.md
+**Feature**: specs/002-nvidia-llm-profiling/spec.md
 
 ## Content Quality
 
