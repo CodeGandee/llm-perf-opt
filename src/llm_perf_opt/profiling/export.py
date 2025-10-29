@@ -14,13 +14,13 @@ build_summary
 
 from __future__ import annotations
 
-from typing import Iterable, Any
+from typing import Iterable, Any, TypedDict
 from pathlib import Path
 from datetime import datetime
 from mdutils.mdutils import MdUtils  # type: ignore[import-untyped]
 
 
-def top_n_operators(records: Iterable[dict], n: int = 10) -> list[dict]:
+def top_n_operators(records: Iterable[OperatorRecord], n: int = 10) -> list[OperatorRecord]:
     """Return top-N operator dicts by ``total_time_ms``.
 
     Parameters
@@ -41,7 +41,7 @@ def top_n_operators(records: Iterable[dict], n: int = 10) -> list[dict]:
     return sorted_recs[:n]
 
 
-def write_operator_markdown(records: Iterable[dict], path: str, top_k: int = 20) -> None:
+def write_operator_markdown(records: Iterable[OperatorRecord], path: str, top_k: int = 20) -> None:
     """Write a top‑K operator summary as a Markdown table using mdutils.
 
     Parameters
@@ -80,7 +80,7 @@ def write_operator_markdown(records: Iterable[dict], path: str, top_k: int = 20)
 
 def write_stakeholder_summary(
     path: str,
-    top_ops: list[dict],
+    top_ops: list[OperatorRecord],
     stage_takeaways: dict[str, str],
     stats: dict | None = None,
 ) -> None:
@@ -139,8 +139,8 @@ def write_stakeholder_summary(
         rows_aggr.append(["Tokens/s", f"{tps_m:.3f}", f"{tps_s:.3f}"])
         aggr_header = ["Metric", "Mean", "Std"]
         aggr_table: list[str] = aggr_header.copy()
-        for r in rows_aggr:
-            aggr_table.extend(r)
+        for aggr_row in rows_aggr:
+            aggr_table.extend(aggr_row)
         md.new_header(level=2, title="Aggregates")
         md.new_table(columns=3, rows=len(rows_aggr) + 1, text=aggr_table, text_align="center")
 
@@ -161,8 +161,8 @@ def write_stakeholder_summary(
             if rows_stage:
                 st_header = ["Stage", "Mean (ms)", "Std (ms)"]
                 st_table: list[str] = st_header.copy()
-                for r in rows_stage:
-                    st_table.extend(r)
+                for stage_row in rows_stage:
+                    st_table.extend(stage_row)
                 md.new_header(level=2, title="Per-Stage Timings (ms)")
                 md.new_table(columns=3, rows=len(rows_stage) + 1, text=st_table, text_align="center")
                 # Show 'vision' as a note line with attribution (inside prefill)
@@ -187,8 +187,8 @@ def write_stakeholder_summary(
         ]
         mfu_header = ["Scope", "MFU"]
         mfu_table: list[str] = mfu_header.copy()
-        for r in rows_mfu:
-            mfu_table.extend(r)
+        for mfu_row in rows_mfu:
+            mfu_table.extend(mfu_row)
         md.new_header(level=2, title="MFU")
         md.new_table(columns=2, rows=len(rows_mfu) + 1, text=mfu_table, text_align="center")
 
@@ -210,20 +210,20 @@ def write_stakeholder_summary(
     if not top_ops:
         md.new_paragraph("No operator records available. See operators.md for details if present.")
     else:
-        rows = top_ops
+        op_rows: list[OperatorRecord] = list(top_ops)
         header = ["Operator", "Total ms", "CUDA ms", "Calls", "Mean ms"]
         table_data: list[str] = header.copy()
-        for r in rows:
+        for op_row in op_rows:
             table_data.extend(
                 [
-                    str(r.get("op_name", "")),
-                    f"{float(r.get('total_time_ms', 0.0)):.3f}",
-                    f"{float(r.get('cuda_time_ms', 0.0)):.3f}",
-                    str(int(r.get("calls", 0))),
-                    f"{(float(r.get('total_time_ms', 0.0)) / max(1, int(r.get('calls', 0)))):.6f}",
+                    str(op_row.get("op_name", "")),
+                    f"{float(op_row.get('total_time_ms', 0.0)):.3f}",
+                    f"{float(op_row.get('cuda_time_ms', 0.0)):.3f}",
+                    str(int(op_row.get("calls", 0))),
+                    f"{(float(op_row.get('total_time_ms', 0.0)) / max(1, int(op_row.get('calls', 0)))):.6f}",
                 ]
             )
-        md.new_table(columns=5, rows=len(rows) + 1, text=table_data, text_align="center")
+        md.new_table(columns=5, rows=len(op_rows) + 1, text=table_data, text_align="center")
 
     # Recommendations (template)
     md.new_header(level=2, title="Recommendations")
@@ -480,3 +480,9 @@ def write_static_compute_fvcore_table(
         with open(output_path, "w", encoding="utf-8") as f:
             f.write("# Static Compute Analysis (fvcore)\n\n")
             f.write(f"Error generating fvcore table: {e}\n")
+class OperatorRecord(TypedDict, total=False):
+    op_name: str
+    total_time_ms: float
+    cuda_time_ms: float
+    calls: int
+    mean_ms: float

@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+# ruff: noqa: E402
 """Quick test script for DeepseekOCRStaticAnalyzer.
 
 This script demonstrates how to use the static analyzer class with a
@@ -116,12 +117,12 @@ def main():
     print("-" * 80)
 
     total = report.get("total", {})
-    print(f"\nTotal Model:")
+    print("\nTotal Model:")
     print(f"  Parameters: {float(total.get('params', 0)) / 1e6:.2f}M")
     print(f"  FLOPs: {float(total.get('flops', 0)) / 1e9:.2f}G")
     print(f"  Activations: {float(total.get('activations', 0)) / 1e6:.2f}M")
 
-    print(f"\nPer-Stage Breakdown:")
+    print("\nPer-Stage Breakdown:")
     stages = report.get("stages", {})
     for stage_name in ["sam", "clip", "projector", "prefill", "decode"]:
         if stage_name not in stages:

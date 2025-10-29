@@ -33,6 +33,7 @@ from llm_perf_opt.profiling.export import (
     top_n_operators,
     write_operator_markdown,
     write_stakeholder_summary,
+    OperatorRecord,
 )
 from llm_perf_opt.profiling.hw import get_device_name, get_peak_tflops, write_env_json
 from llm_perf_opt.profiling.mfu import compute_stage_mfu
@@ -120,14 +121,14 @@ class ImageRun:
     projector_ms: float = 0.0
 
 
-def _collect_operator_records(prof: Any) -> list[dict]:
+def _collect_operator_records(prof: Any) -> list[OperatorRecord]:
     """Extract operator‑level summaries from a PyTorch profiler object.
 
     Returns a list of dicts with keys: ``op_name``, ``total_time_ms``,
     ``cuda_time_ms``, ``calls``.
     """
 
-    records: list[dict] = []
+    records: list[OperatorRecord] = []
     try:
         for evt in prof.key_averages(group_by_input_shape=False):  # type: ignore[attr-defined]
             # Some events may lack CUDA time; use 0.0
@@ -260,7 +261,7 @@ def _summarize_runs(runs: list[ImageRun], model_obj: object, peak_tflops: float,
     }
 
 
-def _write_outputs(artifacts_dir: Path, summary: dict, operator_records: list[dict], top_k: int = 20) -> None:
+def _write_outputs(artifacts_dir: Path, summary: dict, operator_records: list[OperatorRecord], top_k: int = 20) -> None:
     """Write report.md, operators.md, and metrics.json under ``artifacts_dir``.
 
     Parameters
@@ -720,7 +721,7 @@ def main(cfg: DictConfig) -> None:  # pragma: no cover - CLI orchestrator
                 break
 
     # Representative operator profile on the first image
-    operator_records: list[dict] = []
+    operator_records: list[OperatorRecord] = []
     rep_image = str(images[0])
     prof_cfg = getattr(cfg, "profiling", {})
     sel_acts = [str(x).lower() for x in list(prof_cfg.get("activities", ["cpu", "cuda"]))]

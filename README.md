@@ -106,6 +106,20 @@ Each subdirectory contains a README describing its purpose.
 
 *Coming soon - detailed setup and usage instructions will be added*
 
+## CLI Usage (Stage 1 Profiling)
+
+Run the Stage 1 profiling runner with Pixi. This collects prefill/decode timings, operator summaries, and MFU, and writes artifacts under `tmp/stage1/<run_id>/`.
+
+```bash
+pixi run python -m llm_perf_opt.runners.llm_profile_runner \
+  model.path=/data2/huangzhe/code/llm-perf-opt/models/deepseek-ocr \
+  dataset.root=/data2/huangzhe/code/llm-perf-opt/data/samples \
+  repeats=3 device=cuda:0 infer.max_new_tokens=64 \
+  'profiling.activities=[cpu,cuda]'
+```
+
+Artifacts include `report.md`, `operators.md`, `metrics.json`, `stakeholder_summary.md`, and reproducibility files (`env.json`, `inputs.yaml`, `assumptions.md`).
+
 ## Profiling Requirements (Nsight Systems)
 
 To capture end‑to‑end GPU/CPU timelines while running DeepSeek‑OCR and other workloads, we use NVIDIA Nsight Systems (`nsys`). Please install it so profiling commands work locally.

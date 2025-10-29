@@ -53,10 +53,10 @@ Goal: Identify input set and assumptions to repeat Stage 1 profiling and compare
 
 ## Final Phase — Polish & Cross-Cutting
 
-- [ ] T050 Add NumPy‑style docstrings and examples to public APIs in /data2/huangzhe/code/llm-perf-opt/src/llm_perf_opt/**
-- [ ] T051 Ensure full typing; mypy & ruff clean in /data2/huangzhe/code/llm-perf-opt/pyproject.toml
-- [ ] T052 [P] Add CLI usage snippet to README in /data2/huangzhe/code/llm-perf-opt/README.md
-- [ ] T053 [P] Write manual validation steps documenting independent tests in /data2/huangzhe/code/llm-perf-opt/specs/001-profile-deepseek-ocr/quickstart.md
+- [X] T050 Add NumPy‑style docstrings and examples to public APIs in /data2/huangzhe/code/llm-perf-opt/src/llm_perf_opt/**
+- [X] T051 Ensure full typing; mypy & ruff clean in /data2/huangzhe/code/llm-perf-opt/pyproject.toml
+- [X] T052 [P] Add CLI usage snippet to README in /data2/huangzhe/code/llm-perf-opt/README.md
+- [X] T053 [P] Write manual validation steps documenting independent tests in /data2/huangzhe/code/llm-perf-opt/specs/001-profile-deepseek-ocr/quickstart.md
 
 ---
 

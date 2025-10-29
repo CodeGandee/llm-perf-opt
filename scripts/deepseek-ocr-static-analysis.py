@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+# ruff: noqa: E402
 """DeepSeek-OCR: Per-Stage Static Computational Analysis
 
 This script runs comprehensive static analysis on the DeepSeek-OCR model using
@@ -149,7 +150,7 @@ def main():
     print(f"\nModel path: {args.model}")
     print(f"Device: {args.device}")
     print(f"Output dir: {output_dir}")
-    print(f"\nAnalysis configuration:")
+    print("\nAnalysis configuration:")
     print(f"  Base size: {args.base_size}")
     print(f"  Image size: {args.image_size}")
     print(f"  Sequence length: {args.seq_len}")
@@ -234,12 +235,12 @@ def main():
     print("-" * 80)
 
     total = report.get("total", {})
-    print(f"\nTotal Model:")
+    print("\nTotal Model:")
     print(f"  Parameters: {float(total.get('params', 0)) / 1e6:.2f}M")
     print(f"  FLOPs: {float(total.get('flops', 0)) / 1e9:.2f}G")
     print(f"  Activations: {float(total.get('activations', 0)) / 1e6:.2f}M")
 
-    print(f"\nPer-Stage Breakdown:")
+    print("\nPer-Stage Breakdown:")
     stages = report.get("stages", {})
     for stage_name in ["sam", "clip", "projector", "prefill", "decode"]:
         if stage_name not in stages:

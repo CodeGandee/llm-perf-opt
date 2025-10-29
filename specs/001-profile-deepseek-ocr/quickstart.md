@@ -38,24 +38,25 @@ pixi run python /data2/huangzhe/code/llm-perf-opt/tests/manual/deepseek_ocr_hf_m
 
 Outputs are written under `/data2/huangzhe/code/llm-perf-opt/tmp/dsocr_outputs` to respect the current project convention.
 
-## 4) Stage 1 profiling workflow (design)
+## 4) Stage 1 profiling workflow (run)
 
-The Stage 1 runner will:
-- Add NVTX ranges: `prefill` for the first forward pass after tensors are on device, and `decode` for the token-by-token loop.
-- Wrap execution with PyTorch Profiler (CPU+CUDA), export operator summaries.
-- Compute MFU (model-level and per-stage) using tokens/sec and analytical FLOPs/token approximations.
-- Support repeated runs (default 3) and report mean/std.
+The Stage 1 runner does the following:
+- Adds NVTX ranges for `prefill` and `decode` and optional sub‑stage hooks (SAM/CLIP/projector).
+- Wraps a representative run with PyTorch Profiler (CPU+CUDA) and exports operator summaries.
+- Computes MFU (model‑level and per‑stage) using static analyzer FLOPs and measured timings.
+- Supports repeated runs (default 3) and reports mean/std.
 
-Planned CLI (to be implemented in Phase 2):
+CLI:
 
 ```bash
 pixi run python -m llm_perf_opt.runners.llm_profile_runner \
-  --model-path /data2/huangzhe/code/llm-perf-opt/models/deepseek-ocr \
-  --input-dir  /data2/huangzhe/code/llm-perf-opt/data/samples \
-  --repeats 3 --device cuda:0 --use-flash-attn 1
+  model.path=/data2/huangzhe/code/llm-perf-opt/models/deepseek-ocr \
+  dataset.root=/data2/huangzhe/code/llm-perf-opt/data/samples \
+  repeats=3 device=cuda:0 infer.max_new_tokens=64 \
+  'profiling.activities=[cpu,cuda]'
 ```
 
-Artifacts will be written under `/data2/huangzhe/code/llm-perf-opt/tmp/stage1/<run_id>/` (not `runs/` yet) and summarized in the Stage 1 report. Hydra configs under `conf/` will be introduced in a later phase to align with the structure guide.
+Artifacts are written under `/data2/huangzhe/code/llm-perf-opt/tmp/stage1/<run_id>/` and summarized in the Stage 1 report.
 
 ## 5) Interpreting results
 
@@ -73,3 +74,14 @@ Each run emits additional files under the run directory to help reproduce and co
 - `assumptions.md`: Run assumptions (device, repeats, decoding and preprocessing params, profiling settings).
 
 To rerun with the same setup, point the runner at the same dataset subset and device, keeping the decoding/preprocess values equal to those in `assumptions.md`.
+
+## 7) Manual Validation (T053)
+
+1. Prepare 10–20 images under `/data2/huangzhe/code/llm-perf-opt/data/samples`.
+2. Run the CLI with `repeats=3` using the command above.
+3. Verify the following files exist under the latest run directory:
+   - `report.md` with aggregates and MFU section
+   - `operators.md` with a Top‑K operator table (including Mean ms column)
+   - `stakeholder_summary.md` with Environment, Aggregates, Per‑Stage Timings, MFU, and Top Operators tables
+   - `metrics.json` with aggregates and MFU fields
+   - `env.json`, `inputs.yaml`, and `assumptions.md`

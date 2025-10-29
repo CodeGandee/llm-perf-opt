@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+# ruff: noqa: E402
 """Inspect DeepSeek-OCR model structure to find vision modules."""
 
 import sys

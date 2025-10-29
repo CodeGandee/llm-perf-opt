@@ -11,9 +11,7 @@ from __future__ import annotations
 
 import logging
 import math
-from collections import Counter
 from dataclasses import dataclass, field
-from pathlib import Path
 from typing import Any, Optional
 
 import torch
@@ -491,7 +489,7 @@ class DeepseekOCRStaticAnalyzer:
         stage_flops = 0.0
         stage_acts = 0.0
         stage_params = 0
-        stage_ops: Counter = Counter()
+        stage_ops: dict[str, float] = {}
 
         for mod_name, flops in by_module.items():
             # Check if module name matches any of our stage prefixes
@@ -502,7 +500,8 @@ class DeepseekOCRStaticAnalyzer:
                 # Operator breakdown for this module
                 if mod_name in by_module_and_operator:
                     for op, op_flops in by_module_and_operator[mod_name].items():
-                        stage_ops[op] += float(op_flops)
+                        prev = float(stage_ops.get(op, 0.0))
+                        stage_ops[op] = prev + float(op_flops)
 
         return StageAnalysisResult(
             stage_name=stage_name,
