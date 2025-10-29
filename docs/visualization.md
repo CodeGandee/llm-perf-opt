@@ -13,8 +13,11 @@ Outputs per image
 - `viz/<stem>/result.mmd`
 - `viz/<stem>/images/*.jpg` (if any)
 
+Stakeholder report visuals
+- `stakeholder_summary.md` presents tables (Environment, Aggregates, Per‑Stage Timings, MFU, Top Operators).
+- Vision timing is shown as a note line: `Vision = sam + clip + projector (nested within prefill)` to avoid implying a separate top‑level stage.
+
 Troubleshooting misaligned boxes
 - Ensure you are decoding with special tokens preserved.
 - Confirm the input image dimensions used when mapping 0..999 → pixels.
 - Compare our `result_with_boxes.jpg` against vendor output from `scripts/deepseek-ocr-infer-one.py`.
-

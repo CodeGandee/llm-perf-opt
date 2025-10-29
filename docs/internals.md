@@ -13,7 +13,9 @@ Runner (`llm_profile_runner.py`)
 - Discovers images (`dataset.root` + `fallback_patterns` or `subset_filelist`).
 - Profiles a representative image with PyTorch profiler; collects operator records.
 - Repeats runs over dataset; aggregates timings and MFU.
-- Writes `report.md`, `operators.md`, `metrics.json` and optional predictions/viz/`llm_profile_runner.log`.
+- Writes `report.md`, `operators.md`, `metrics.json`, `stakeholder_summary.md` and optional predictions/viz/`llm_profile_runner.log`.
+- Writes reproducibility artifacts: `env.json`, `inputs.yaml`, `assumptions.md`.
+- Runs a static analyzer to estimate per‑stage FLOPs; uses those with measured times to compute improved MFU (prefill total FLOPs; decode per‑token FLOPs × tokens; vision from sam+clip+projector).
 
 Configuration structure
 - `conf/model/<name>/arch/<name>.default.yaml` — architecture + preprocessing
@@ -23,7 +25,8 @@ Configuration structure
 NVTX ranges
 - High-level ranges for prefill/decode (`profiling/nvtx_utils.py`).
 - Optional submodule hooks for SAM/CLIP/projector in the session (forward pre/post hooks).
+- These enable clear stage timing and help correlate with Nsight tools.
 
 MFU estimation
-- Simple analytical FLOPs/token based on model config; per-stage MFU: decode only for Stage 1.
-
+- Analyzer‑based FLOPs: `DeepseekOCRStaticAnalyzer` (fvcore + analytic fallbacks) provides stage FLOPs.
+- Per‑stage MFU uses analyzer FLOPs with measured stage times; model‑level MFU sums prefill + decode FLOPs over their combined time (vision nested within prefill, not double counted).

@@ -57,7 +57,7 @@ def write_operator_markdown(records: Iterable[dict], path: str, top_k: int = 20)
 
     rows = top_n_operators(list(records), n=top_k)
     # mdutils expects a flattened list row-wise (including header)
-    header = ["op_name", "total_time_ms", "cuda_time_ms", "calls"]
+    header = ["op_name", "total_time_ms", "cuda_time_ms", "calls", "mean_ms"]
     table_data: list[str] = header.copy()
     for r in rows:
         table_data.extend(
@@ -66,6 +66,7 @@ def write_operator_markdown(records: Iterable[dict], path: str, top_k: int = 20)
                 f"{float(r.get('total_time_ms', 0.0)):.3f}",
                 f"{float(r.get('cuda_time_ms', 0.0)):.3f}",
                 str(int(r.get("calls", 0))),
+                f"{(float(r.get('total_time_ms', 0.0)) / max(1, int(r.get('calls', 0)))):.6f}",
             ]
         )
 
@@ -73,7 +74,7 @@ def write_operator_markdown(records: Iterable[dict], path: str, top_k: int = 20)
     md = MdUtils(file_name=file_base)
     md.new_header(level=1, title="Operator Summary (Top‑K)")
     md.new_paragraph(f"Rows: {len(rows)} (k={int(top_k)})")
-    md.new_table(columns=4, rows=len(rows) + 1, text=table_data, text_align="center")
+    md.new_table(columns=5, rows=len(rows) + 1, text=table_data, text_align="center")
     md.create_md_file()
 
 
@@ -210,7 +211,7 @@ def write_stakeholder_summary(
         md.new_paragraph("No operator records available. See operators.md for details if present.")
     else:
         rows = top_ops
-        header = ["Operator", "Total ms", "CUDA ms", "Calls"]
+        header = ["Operator", "Total ms", "CUDA ms", "Calls", "Mean ms"]
         table_data: list[str] = header.copy()
         for r in rows:
             table_data.extend(
@@ -219,9 +220,10 @@ def write_stakeholder_summary(
                     f"{float(r.get('total_time_ms', 0.0)):.3f}",
                     f"{float(r.get('cuda_time_ms', 0.0)):.3f}",
                     str(int(r.get("calls", 0))),
+                    f"{(float(r.get('total_time_ms', 0.0)) / max(1, int(r.get('calls', 0)))):.6f}",
                 ]
             )
-        md.new_table(columns=4, rows=len(rows) + 1, text=table_data, text_align="center")
+        md.new_table(columns=5, rows=len(rows) + 1, text=table_data, text_align="center")
 
     # Recommendations (template)
     md.new_header(level=2, title="Recommendations")

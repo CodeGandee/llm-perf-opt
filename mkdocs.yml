@@ -20,6 +20,7 @@ nav:
   - Artifacts: artifacts.md
   - Visualization: visualization.md
   - Internals: internals.md
+  - Analyzer & MFU: analyzer-mfu.md
   - Troubleshooting: troubleshooting.md
 
 markdown_extensions:
@@ -32,4 +33,3 @@ markdown_extensions:
 
 plugins:
   - search
-

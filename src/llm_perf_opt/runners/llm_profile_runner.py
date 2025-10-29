@@ -149,12 +149,14 @@ def _collect_operator_records(prof: Any) -> list[dict]:
             name = str(getattr(evt, "key", getattr(evt, "name", "")))
             if not name:
                 continue
+            mean_ms = (total_ms / max(calls, 1)) if total_ms > 0 else 0.0
             records.append(
                 {
                     "op_name": name,
                     "total_time_ms": max(total_ms, 0.0),
                     "cuda_time_ms": max(cuda_ms, 0.0),
                     "calls": max(calls, 0),
+                    "mean_ms": float(mean_ms),
                 }
             )
     except Exception:
@@ -749,6 +751,12 @@ def main(cfg: DictConfig) -> None:  # pragma: no cover - CLI orchestrator
                     downsample_ratio=int(getattr(cfg.model, "preprocess", {}).get("downsample_ratio", 4)),
                 ),
             )
+            # Ensure all CUDA work is complete so GPU timings are captured by the profiler
+            try:
+                if torch.cuda.is_available() and any(a == ProfilerActivity.CUDA for a in activities):
+                    torch.cuda.synchronize()
+            except Exception:
+                pass
         operator_records = _collect_operator_records(prof)
         logger.info("Collected %d operator records", len(operator_records))
     except Exception:

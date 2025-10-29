@@ -17,3 +17,7 @@ Hydra override errors
 Where are logs?
 - Each run writes `llm_profile_runner.log` under `tmp/stage1/<run_id>/`.
 
+PyTorch profiler shows 0 CUDA time for many ops
+- Expected behavior: device time is attributed to kernel entries (e.g., `cudaLaunchKernel`, `flash_attn::*`), not necessarily to high‑level `aten::*` rows.
+- Mitigation: we call `torch.cuda.synchronize()` at the end of the profiled block to flush GPU work. Consider adding a “Top GPU Kernels” view or use Nsight for kernel‑level timing.
+- See: `context/summaries/issue-pytorch-profiler-zero-cuda-time.md`.

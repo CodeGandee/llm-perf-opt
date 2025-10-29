@@ -50,9 +50,15 @@ def get_peak_tflops(device_name: str, precision: str = "bf16") -> float:
     """
 
     table = {
+        # Values are dense Tensor Core FP16/BF16 peak where applicable,
+        # otherwise FP16/FP32 non‑tensor as noted in docs. See
+        # context/hints/nv-profile-kb/peak-tflops-reference.md
         "NVIDIA H100": 990.0,
         "NVIDIA A100": 312.0,
         "NVIDIA GeForce RTX 4090": 330.0,
+        # Source: Tom's Hardware (Tensor TFLOPS FP16 (sparsity) 142 (285));
+        # we use dense FP16 TC ≈ 142 for MFU denominator on 3090.
+        "NVIDIA GeForce RTX 3090": 142.0,
     }
     for key, val in table.items():
         if key in device_name:
