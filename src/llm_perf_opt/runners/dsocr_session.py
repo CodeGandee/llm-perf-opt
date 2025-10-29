@@ -33,6 +33,7 @@ class DeepSeekOCRSession:
         self.m_device: Optional[torch.device] = None
         self.m_dtype: Optional[torch.dtype] = torch.bfloat16
         self.m_nvtx_hooks: list[Any] = []
+        self.m_stage_time_ms: dict[str, float] = {"sam": 0.0, "clip": 0.0, "projector": 0.0}
 
     @property
     def device(self) -> Optional[torch.device]:
@@ -119,11 +120,20 @@ class DeepSeekOCRSession:
             if mod is None:
                 return
             try:
+                import time
                 def _pre(_m, _inp):
                     nvtx.push_range(label)
+                    _m.__dict__["__nvtx_t0"] = time.perf_counter()
 
                 def _post(_m, _inp, _out):
                     nvtx.pop_range()
+                    try:
+                        t0 = _m.__dict__.pop("__nvtx_t0", None)
+                        if t0 is not None:
+                            dt = (time.perf_counter() - float(t0)) * 1000.0
+                            self.m_stage_time_ms[label] = self.m_stage_time_ms.get(label, 0.0) + float(dt)
+                    except Exception:
+                        pass
 
                 h1 = mod.register_forward_pre_hook(_pre)
                 h2 = mod.register_forward_hook(_post)
@@ -296,6 +306,7 @@ class DeepSeekOCRSession:
 
         # Prefill: first forward pass
         t0 = perf_counter()
+        self._reset_stage_time_accum()
         with prefill_range():
             if use_pre:
                 inputs = {"input_ids": input_ids}
@@ -343,6 +354,7 @@ class DeepSeekOCRSession:
 
         input_len = int(inputs["input_ids"].shape[-1])
         tokens = int(out.shape[-1] - input_len)
+        vision_ms = float(self.get_vision_time_ms())
         text: str | None = None
         if return_text:
             try:
@@ -361,7 +373,63 @@ class DeepSeekOCRSession:
             "prefill_ms": float(prefill_ms),
             "decode_ms": float(decode_ms),
             "tokens": int(tokens),
+            "prefill_len": int(input_len),
+            "vision_ms": float(vision_ms),
         }
+        # Include sub-stage timings if available from NVTX hooks
+        try:
+            result["sam_ms"] = float(self.m_stage_time_ms.get("sam", 0.0))
+            result["clip_ms"] = float(self.m_stage_time_ms.get("clip", 0.0))
+            result["projector_ms"] = float(self.m_stage_time_ms.get("projector", 0.0))
+        except Exception:
+            pass
         if return_text and text is not None:
             result["text"] = text
         return result
+    def _reset_stage_time_accum(self) -> None:
+        self.m_stage_time_ms = {"sam": 0.0, "clip": 0.0, "projector": 0.0}
+
+    def get_vision_time_ms(self) -> float:
+        return float(self.m_stage_time_ms.get("sam", 0.0) + self.m_stage_time_ms.get("clip", 0.0) + self.m_stage_time_ms.get("projector", 0.0))
+
+    def estimate_static_compute(self, image_h: int = 1024, image_w: int = 1024, seq_len: int = 1024) -> dict:
+        """Best-effort static compute report using fvcore + analytic formulas.
+
+        Returns params and rough FLOPs estimates for vision/prefill/decode.
+        """
+
+        report: dict[str, object] = {"notes": "fvcore used where feasible; some blocks analytic"}
+        try:
+            total = 0
+            trainable = 0
+            if self.m_model is not None:
+                for p in self.m_model.parameters():
+                    n = int(p.numel())
+                    total += n
+                    if p.requires_grad:
+                        trainable += n
+            report["params"] = {"total": int(total), "trainable": int(trainable)}
+        except Exception:
+            report["params"] = {"total": 0, "trainable": 0}
+
+        # Attempt fvcore FLOPs for lm_head projection as a proxy
+        try:
+            from fvcore.nn import FlopCountAnalysis  # type: ignore[import-untyped]
+            import torch
+            if self.m_model is not None:
+                head = getattr(self.m_model, "lm_head", None)
+                hidden_size = int(getattr(getattr(self.m_model, "config", object()), "hidden_size", 1024))
+                if head is not None:
+                    x = torch.randn(1, 1, hidden_size, device=self.m_device or torch.device("cpu"), dtype=torch.float32)
+                    fca = FlopCountAnalysis(head, (x,))
+                    flops = float(fca.total())
+                else:
+                    flops = 0.0
+                report["decode"] = {"flops_per_token_proj_only": flops}
+        except Exception:
+            report.setdefault("decode", {})
+
+        # Add placeholders for vision/prefill; full fvcore across custom modules may not work
+        report.setdefault("vision", {"flops": 0.0})
+        report.setdefault("prefill", {"flops_per_seq": 0.0, "flops_per_token_avg": 0.0})
+        return report

@@ -84,3 +84,17 @@ def capture_env() -> dict:
     except Exception:  # pragma: no cover - optional dependency path
         info["transformers"] = None
     return info
+
+
+def write_env_json(path: str) -> None:
+    """Write environment snapshot to a JSON file.
+
+    Parameters
+    ----------
+    path : str
+        Destination file path for the JSON content.
+    """
+
+    import json
+    with open(path, "w", encoding="utf-8") as f:
+        json.dump(capture_env(), f, indent=2)

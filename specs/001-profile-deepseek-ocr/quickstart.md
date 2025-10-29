@@ -63,3 +63,13 @@ Artifacts will be written under `/data2/huangzhe/code/llm-perf-opt/tmp/stage1/<r
 - Operator summary: Review top operators by total time and CUDA time.
 - MFU: Check model-level and per-stage MFU; expect stability within ±10% across repeats.
 - Stakeholder notes: Confirm top cost centers and stage attribution are clearly stated.
+
+## 6) Reproducibility artifacts (US3)
+
+Each run emits additional files under the run directory to help reproduce and compare results:
+
+- `inputs.yaml`: Absolute input image paths with basic metadata (width/height/size) and the dataset selection used.
+- `env.json`: Minimal environment snapshot (GPU, CUDA, torch, transformers).
+- `assumptions.md`: Run assumptions (device, repeats, decoding and preprocessing params, profiling settings).
+
+To rerun with the same setup, point the runner at the same dataset subset and device, keeping the decoding/preprocess values equal to those in `assumptions.md`.

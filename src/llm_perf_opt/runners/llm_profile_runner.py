@@ -23,16 +23,21 @@ from pathlib import Path
 from typing import Any, Iterable, Iterator
 
 import hydra
-from omegaconf import DictConfig
+from omegaconf import DictConfig, OmegaConf
 import torch
 from torch.profiler import ProfilerActivity, profile  # type: ignore[attr-defined]
 
 from hydra.core.hydra_config import HydraConfig
 from llm_perf_opt.profiling.aggregate import mean_std
-from llm_perf_opt.profiling.export import top_n_operators, write_operator_markdown
-from llm_perf_opt.profiling.hw import get_device_name, get_peak_tflops
-from llm_perf_opt.profiling.mfu import estimate_decode_flops_per_token, mfu as mfu_ratio
+from llm_perf_opt.profiling.export import (
+    top_n_operators,
+    write_operator_markdown,
+    write_stakeholder_summary,
+)
+from llm_perf_opt.profiling.hw import get_device_name, get_peak_tflops, write_env_json
+from llm_perf_opt.profiling.mfu import compute_stage_mfu
 from llm_perf_opt.runners.dsocr_session import DeepSeekOCRSession
+from llm_perf_opt.runners.dsocr_analyzer import DeepseekOCRStaticAnalyzer, AnalysisConfig
 from PIL import Image  # type: ignore[import-untyped]
 from llm_perf_opt.visualize.annotations import render_vendor_style, write_vendor_result_mmd
 from mdutils.mdutils import MdUtils  # type: ignore[import-untyped]
@@ -108,6 +113,11 @@ class ImageRun:
     prefill_ms: float
     decode_ms: float
     tokens: int
+    prefill_len: int
+    vision_ms: float
+    sam_ms: float = 0.0
+    clip_ms: float = 0.0
+    projector_ms: float = 0.0
 
 
 def _collect_operator_records(prof: Any) -> list[dict]:
@@ -171,7 +181,7 @@ def _infer_model_dims(model: object) -> tuple[int, int, int]:
     return 1024, 4096, 24
 
 
-def _summarize_runs(runs: list[ImageRun], model_obj: object, peak_tflops: float) -> dict:
+def _summarize_runs(runs: list[ImageRun], model_obj: object, peak_tflops: float, ctx_len_mode: str = "auto", ctx_len_fixed: int | None = None, vision_flops: float | None = None, model_window: int | None = None) -> dict:
     """Compute aggregates and MFU estimates from per‑image runs.
 
     Model‑level MFU is computed from decode throughput and an analytical
@@ -193,13 +203,45 @@ def _summarize_runs(runs: list[ImageRun], model_obj: object, peak_tflops: float)
     tps_mean, tps_std = mean_std(dec_tokens_per_s)
 
     d_model, d_ff, n_layers = _infer_model_dims(model_obj)
-    ctx_len = 512  # Stage 1 default; refine in later stages with actual decode context
-    flops_per_token = estimate_decode_flops_per_token(d_model, d_ff, n_layers, ctx_len)
-    mfu_model = mfu_ratio(tokens_per_s=tps_mean, flops_per_token=flops_per_token, peak_tflops=peak_tflops)
-    mfu_per_stage = {
-        "prefill": 0.0,  # placeholder (Stage 1)
-        "decode": mfu_ratio(tokens_per_s=tps_mean, flops_per_token=flops_per_token, peak_tflops=peak_tflops),
-    }
+    # Use averages across runs for a representative MFU calculation
+    prefill_len_mean = int(mean_std([r.prefill_len for r in runs])[0])
+    tokens_mean_int = int(tokens_mean)
+    # Compute per-stage MFU with improved context selection
+    stage = compute_stage_mfu(
+        prefill_ms=prefill_mean,
+        decode_ms=decode_mean,
+        vision_ms=float(mean_std([r.vision_ms for r in runs])[0]),
+        prefill_len=prefill_len_mean,
+        new_tokens=tokens_mean_int,
+        d_model=d_model,
+        d_ff=d_ff,
+        n_layers=n_layers,
+        peak_tflops=peak_tflops,
+        ctx_len_mode=ctx_len_mode,
+        ctx_len_fixed=ctx_len_fixed,
+        model_window=model_window,
+        vision_flops=vision_flops,
+    )
+
+    # Stage-wise timing aggregates (include only present stages)
+    def _stage_stats(vals: list[float]) -> tuple[float, float] | None:
+        if any(v > 0.0 for v in vals):
+            return mean_std(vals)
+        return None
+
+    stage_ms: dict[str, dict] = {}
+    for key, vals in (
+        ("prefill", prefill_vals),
+        ("decode", decode_vals),
+        ("vision", [r.vision_ms for r in runs]),
+        ("sam", [getattr(r, "sam_ms", 0.0) for r in runs]),
+        ("clip", [getattr(r, "clip_ms", 0.0) for r in runs]),
+        ("projector", [getattr(r, "projector_ms", 0.0) for r in runs]),
+    ):
+        stats = _stage_stats([float(v) for v in vals])
+        if stats is not None:
+            m, s = stats
+            stage_ms[key] = {"mean": m, "std": s}
 
     return {
         "aggregates": {
@@ -207,10 +249,11 @@ def _summarize_runs(runs: list[ImageRun], model_obj: object, peak_tflops: float)
             "decode_ms": {"mean": decode_mean, "std": decode_std},
             "tokens": {"mean": tokens_mean, "std": tokens_std},
             "tokens_per_s": {"mean": tps_mean, "std": tps_std},
+            "stage_ms": stage_ms,
         },
-        "mfu_model_level": mfu_model,
-        "mfu_per_stage": mfu_per_stage,
-        "model_dims": {"d_model": d_model, "d_ff": d_ff, "n_layers": n_layers, "ctx_len": ctx_len},
+        "mfu_model_level": float(stage.model_level),
+        "mfu_per_stage": {"prefill": float(stage.prefill), "decode": float(stage.decode), "vision": float(stage.vision)},
+        "model_dims": {"d_model": d_model, "d_ff": d_ff, "n_layers": n_layers},
         "peak_tflops": peak_tflops,
     }
 
@@ -269,6 +312,7 @@ def _write_outputs(artifacts_dir: Path, summary: dict, operator_records: list[di
         f"- Model-level MFU: {mfu_model:.6f}",
         (
             "- Per-stage MFU: "
+            f"vision={float(mfu_stages.get('vision',0.0)):.6f}, "
             f"prefill={float(mfu_stages.get('prefill',0.0)):.6f}, "
             f"decode={float(mfu_stages.get('decode',0.0)):.6f}"
         ),
@@ -283,6 +327,99 @@ def _write_outputs(artifacts_dir: Path, summary: dict, operator_records: list[di
     metrics_path = artifacts_dir / "metrics.json"
     with metrics_path.open("w", encoding="utf-8") as f:
         json.dump(summary, f, indent=2)
+
+    # Stakeholder summary (US2)
+    aggr = summary.get("aggregates", {}) if isinstance(summary.get("aggregates"), dict) else {}
+    prefill_mean = float(aggr.get("prefill_ms", {}).get("mean", 0.0))
+    decode_mean = float(aggr.get("decode_ms", {}).get("mean", 0.0))
+    tps_mean = float(aggr.get("tokens_per_s", {}).get("mean", 0.0))
+    mfu_model = float(summary.get("mfu_model_level", 0.0))
+    mfu_stages = summary.get("mfu_per_stage", {}) if isinstance(summary.get("mfu_per_stage"), dict) else {}
+    mfu_decode = float(mfu_stages.get("decode", 0.0))
+    mfu_prefill = float(mfu_stages.get("prefill", 0.0))
+    mfu_vision = float(mfu_stages.get("vision", 0.0))
+
+    stage_msgs: dict[str, str] = {}
+    if decode_mean >= max(1.0, prefill_mean) * 1.2:
+        stage_msgs["decode"] = (
+            f"Decode dominates runtime (≈ {decode_mean:.1f} ms per run). "
+            f"Tokens/s ≈ {tps_mean:.2f}; MFU(decode) ≈ {mfu_decode:.6f}."
+        )
+    elif prefill_mean >= max(1.0, decode_mean) * 1.2:
+        stage_msgs["prefill"] = (
+            f"Prefill dominates runtime (≈ {prefill_mean:.1f} ms per run). "
+            f"MFU(prefill) ≈ {mfu_prefill:.6f}."
+        )
+    else:
+        stage_msgs["decode"] = (
+            f"Decode and prefill comparable (decode ≈ {decode_mean:.1f} ms). "
+            f"Tokens/s ≈ {tps_mean:.2f}; MFU(decode) ≈ {mfu_decode:.6f}."
+        )
+        stage_msgs["prefill"] = f"Prefill ≈ {prefill_mean:.1f} ms; MFU(prefill) ≈ {mfu_prefill:.6f}."
+    if mfu_vision > 0.0:
+        stage_msgs["vision"] = f"Vision compute contributes to MFU ≈ {mfu_vision:.6f}."
+    stage_msgs["model"] = f"Model-level MFU ≈ {mfu_model:.6f}."
+
+    stakeholder_path = artifacts_dir / "stakeholder_summary.md"
+    try:
+        stats_payload = {
+            "aggregates": aggr,
+            "mfu_model": mfu_model,
+            "mfu_stages": mfu_stages,
+            "peak_tflops": float(summary.get("peak_tflops", 0.0)),
+            "device": get_device_name(),
+        }
+        write_stakeholder_summary(
+            str(stakeholder_path),
+            top_ops=top_n_operators(operator_records, n=top_k),
+            stage_takeaways=stage_msgs,
+            stats=stats_payload,
+        )
+    except Exception:
+        # Fail-open: if writing summary fails, continue without blocking US1 artifacts
+        pass
+
+
+def _write_static_compute(artifacts_dir: Path, static_compute: dict) -> None:
+    """Write static compute report to JSON and Markdown using mdutils."""
+
+    try:
+        # JSON
+        sp = artifacts_dir / "static_compute.json"
+        with sp.open("w", encoding="utf-8") as jf:
+            json.dump(static_compute, jf, indent=2)
+
+        # Markdown
+        mp = artifacts_dir / "static_compute.md"
+        file_base = str(mp)[:-3]
+        md = MdUtils(file_name=file_base)
+        md.new_header(level=1, title="Static Compute Report (best-effort)")
+        params = static_compute.get("params", {}) if isinstance(static_compute.get("params"), dict) else {}
+        md.new_list(
+            items=[
+                f"Params total: {int(params.get('total', 0))}",
+                f"Params trainable: {int(params.get('trainable', 0))}",
+            ]
+        )
+        decode = static_compute.get("decode", {}) if isinstance(static_compute.get("decode"), dict) else {}
+        vision = static_compute.get("vision", {}) if isinstance(static_compute.get("vision"), dict) else {}
+        prefill = static_compute.get("prefill", {}) if isinstance(static_compute.get("prefill"), dict) else {}
+        md.new_header(level=2, title="Vision")
+        md.new_list(items=[f"FLOPs (approx): {float(vision.get('flops', 0.0)):.3e}"])
+        md.new_header(level=2, title="Prefill")
+        md.new_list(
+            items=[
+                f"FLOPs per seq (approx): {float(prefill.get('flops_per_seq', 0.0)):.3e}",
+                f"FLOPs/token avg (approx): {float(prefill.get('flops_per_token_avg', 0.0)):.3e}",
+            ]
+        )
+        md.new_header(level=2, title="Decode")
+        if "flops_per_token_proj_only" in decode:
+            md.new_list(items=[f"FLOPs/token (proj only, fvcore): {float(decode.get('flops_per_token_proj_only', 0.0)):.3e}"])
+        md.new_paragraph(str(static_compute.get("notes", "")))
+        md.create_md_file()
+    except Exception:
+        pass
 
 
 def _clean_prediction_text(text: str, strip_special: bool) -> str:
@@ -387,6 +524,104 @@ def _write_predictions_outputs(
     md.create_md_file()
 
 
+def _write_inputs_yaml(artifacts_dir: Path, images: list[Path], dataset_root: str, subset_filelist: str | None) -> None:
+    """Write inputs.yaml listing absolute image paths with basic metadata using OmegaConf."""
+
+    records: list[dict] = []
+    for p in images:
+        try:
+            st = p.stat()
+            width = height = None
+            try:
+                with Image.open(p) as im:
+                    width, height = im.size
+            except Exception:
+                width = height = None
+            records.append(
+                {
+                    "path": str(p.resolve()),
+                    "bytes": int(getattr(st, "st_size", 0)),
+                    "width": int(width) if width is not None else None,
+                    "height": int(height) if height is not None else None,
+                }
+            )
+        except Exception:
+            continue
+    payload = {
+        "dataset_root": str(dataset_root),
+        "subset_filelist": str(subset_filelist) if subset_filelist else None,
+        "count": len(records),
+        "images": records,
+    }
+    yml = OmegaConf.to_yaml(payload)
+    (artifacts_dir / "inputs.yaml").write_text(yml, encoding="utf-8")
+
+
+def _write_assumptions_md(artifacts_dir: Path, cfg: DictConfig) -> None:
+    """Write assumptions.md using mdutils (no raw string writes)."""
+
+    file_base = str(artifacts_dir / "assumptions")
+    md = MdUtils(file_name=file_base)
+    md.new_header(level=1, title="Run Assumptions")
+    md.new_list(
+        items=[
+            f"Device: {getattr(cfg, 'device', 'cuda:0')}",
+            f"Repeats: {int(getattr(cfg, 'repeats', 1))}",
+            "Batch size: 1",
+            f"Model path: {getattr(getattr(cfg, 'model', {}), 'path', '')}",
+        ]
+    )
+
+    md.new_header(level=2, title="Decoding Params")
+    infer = getattr(cfg, "infer", {})
+    md.new_list(
+        items=[
+            f"max_new_tokens: {int(getattr(infer, 'max_new_tokens', 64))}",
+            f"temperature: {float(getattr(infer, 'temperature', 0.0))}",
+            f"no_repeat_ngram_size: {int(getattr(infer, 'no_repeat_ngram_size', 0))}",
+            f"do_sample: {bool(getattr(infer, 'do_sample', False))}",
+            f"context_len_mode: {str(getattr(infer, 'context_len_mode', 'auto'))}",
+            f"context_len_fixed: {int(getattr(infer, 'context_len_fixed', 0)) or 'null'}",
+        ]
+    )
+
+    md.new_header(level=2, title="Preprocess Params")
+    pre = getattr(getattr(cfg, "model", {}), "preprocess", {})
+    md.new_list(
+        items=[
+            f"enable: {bool(getattr(pre, 'enable', True))}",
+            f"base_size: {int(getattr(pre, 'base_size', 1024))}",
+            f"image_size: {int(getattr(pre, 'image_size', 640))}",
+            f"crop_mode: {bool(getattr(pre, 'crop_mode', False))}",
+            f"patch_size: {int(getattr(pre, 'patch_size', 16))}",
+            f"downsample_ratio: {int(getattr(pre, 'downsample_ratio', 4))}",
+        ]
+    )
+
+    md.new_header(level=2, title="Profiling Settings")
+    prof = getattr(cfg, "profiling", {})
+    acts = ",".join([str(x) for x in list(getattr(prof, "activities", ["cpu", "cuda"]))])
+    md.new_list(
+        items=[
+            f"activities: [{acts}]",
+            f"rep_max_new_tokens: {int(getattr(prof, 'rep_max_new_tokens', 64))}",
+            f"warmup_rounds: {int(getattr(prof, 'warmup_rounds', 0))}",
+            f"warmup_synthetic: {bool(getattr(prof, 'warmup_synthetic', True))}",
+        ]
+    )
+
+    md.new_header(level=2, title="Dataset Selection")
+    ds = getattr(cfg, "dataset", {})
+    md.new_list(
+        items=[
+            f"root: {getattr(ds, 'root', '')}",
+            f"subset_filelist: {getattr(ds, 'subset_filelist', 'null')}",
+        ]
+    )
+
+    md.create_md_file()
+
+
 # -----------------------------
 # Hydra entry
 # -----------------------------
@@ -449,6 +684,38 @@ def main(cfg: DictConfig) -> None:  # pragma: no cover - CLI orchestrator
     device_name = get_device_name()
     precision = str(getattr(cfg.model, "dtype", "bf16"))
     peak = get_peak_tflops(device_name, precision)
+
+    # Optional warmup rounds
+    prof_cfg = getattr(cfg, "profiling", {})
+    warmup_rounds = int(prof_cfg.get("warmup_rounds", 0))
+    warmup_synth = bool(prof_cfg.get("warmup_synthetic", True))
+    if warmup_rounds > 0:
+        logger.info("Warmup: rounds=%d synthetic=%s", warmup_rounds, warmup_synth)
+        from PIL import Image  # type: ignore[import-untyped]
+        tmp_img = artifacts_dir / "_warmup.png"
+        if warmup_synth:
+            base_size = int(getattr(cfg.model, "preprocess", {}).get("base_size", 1024))
+            Image.new("RGB", (base_size, base_size), color=(127, 127, 127)).save(tmp_img)
+            wimg = str(tmp_img)
+        else:
+            wimg = str(images[0])
+        for _ in range(warmup_rounds):
+            try:
+                _ = session.run_inference(
+                    image_path=wimg,
+                    prompt="<image>\\n<|grounding|>Convert the document to markdown.",
+                    max_new_tokens=8,
+                    preprocess=dict(
+                        enable=bool(getattr(cfg.model, "preprocess", {}).get("enable", True)),
+                        base_size=int(getattr(cfg.model, "preprocess", {}).get("base_size", 1024)),
+                        image_size=int(getattr(cfg.model, "preprocess", {}).get("image_size", 640)),
+                        crop_mode=bool(getattr(cfg.model, "preprocess", {}).get("crop_mode", False)),
+                        patch_size=int(getattr(cfg.model, "preprocess", {}).get("patch_size", 16)),
+                        downsample_ratio=int(getattr(cfg.model, "preprocess", {}).get("downsample_ratio", 4)),
+                    ),
+                )
+            except Exception:
+                break
 
     # Representative operator profile on the first image
     operator_records: list[dict] = []
@@ -536,6 +803,11 @@ def main(cfg: DictConfig) -> None:  # pragma: no cover - CLI orchestrator
                 prefill_ms=float(res.get("prefill_ms", 0.0)),
                 decode_ms=float(res.get("decode_ms", 0.0)),
                 tokens=int(res.get("tokens", 0)),
+                prefill_len=int(res.get("prefill_len", 0)),
+                vision_ms=float(res.get("vision_ms", 0.0)),
+                sam_ms=float(res.get("sam_ms", 0.0)),
+                clip_ms=float(res.get("clip_ms", 0.0)),
+                projector_ms=float(res.get("projector_ms", 0.0)),
             )
         )
         if save_preds and isinstance(res.get("text"), str):
@@ -558,7 +830,106 @@ def main(cfg: DictConfig) -> None:  # pragma: no cover - CLI orchestrator
             )
 
     # Summarize + outputs
-    summary = _summarize_runs(runs, getattr(session, "m_model", None), peak)
+    # Static compute via analyzer (preferred) with fallback
+    static_report: dict = {}
+    try:
+        # We'll fill seq_len after we compute prefill length mean; compute summary first to get it
+        pass
+    except Exception:
+        pass
+
+    summary = _summarize_runs(
+        runs,
+        getattr(session, "m_model", None),
+        peak,
+        ctx_len_mode=str(getattr(cfg, "infer", {}).get("context_len_mode", "auto")),
+        ctx_len_fixed=int(getattr(cfg, "infer", {}).get("context_len_fixed", 0)) or None,
+        vision_flops=None,
+        model_window=None,
+    )
+
+    # Compute improved MFU using static analyzer
+    try:
+        pre_cfg = getattr(getattr(cfg, "model", {}), "preprocess", {})
+        prefill_len_mean = int(summary.get("aggregates", {}).get("tokens", {}).get("mean", 0) or 0)
+        # Use actual input prefill length from runs if available
+        try:
+            prefill_len_mean = int(mean_std([r.prefill_len for r in runs])[0])
+        except Exception:
+            pass
+        analyzer = DeepseekOCRStaticAnalyzer(session)
+        aconf = AnalysisConfig(
+            image_h=int(pre_cfg.get("base_size", 1024)),
+            image_w=int(pre_cfg.get("base_size", 1024)),
+            base_size=int(pre_cfg.get("base_size", 1024)),
+            image_size=int(pre_cfg.get("image_size", 640)),
+            seq_len=max(prefill_len_mean, 1),
+            crop_mode=bool(pre_cfg.get("crop_mode", True)),
+            patch_size=int(pre_cfg.get("patch_size", 16)),
+            downsample_ratio=int(pre_cfg.get("downsample_ratio", 4)),
+            use_analytic_fallback=True,
+            use_synthetic_inputs=True,
+        )
+        static_report = analyzer.generate_report(aconf)
+        # Extract stage flops
+        stages = static_report.get("stages", {}) if isinstance(static_report.get("stages"), dict) else {}
+        def _stage_flops(name: str) -> float:
+            st = stages.get(name, {}) if isinstance(stages.get(name), dict) else {}
+            # Prefer analytic for decode (per-token), otherwise flops
+            if name == "decode":
+                return float(st.get("flops_analytic", st.get("flops", 0.0)) or 0.0)
+            if name == "prefill":
+                return float(st.get("flops_analytic", st.get("flops", 0.0)) or 0.0)
+            return float(st.get("flops", 0.0) or 0.0)
+
+        prefill_flops_total = _stage_flops("prefill")
+        decode_flops_per_token = _stage_flops("decode")
+        vision_flops_total = _stage_flops("sam") + _stage_flops("clip") + _stage_flops("projector")
+
+        aggr = summary.get("aggregates", {}) if isinstance(summary.get("aggregates"), dict) else {}
+        pf_ms = float(aggr.get("prefill_ms", {}).get("mean", 0.0))
+        dc_ms = float(aggr.get("decode_ms", {}).get("mean", 0.0))
+        vn_ms = float(aggr.get("stage_ms", {}).get("vision", {}).get("mean", 0.0)) if isinstance(aggr.get("stage_ms", {}), dict) else 0.0
+        toks_mean = float(aggr.get("tokens", {}).get("mean", 0.0))
+
+        # MFU calculations (TFLOPs utilization)
+        def _mfu(flops: float, ms: float) -> float:
+            if ms <= 0.0 or peak <= 0.0:
+                return 0.0
+            achieved_tflops = (flops / 1e12) / (ms / 1000.0)
+            return float(achieved_tflops / peak)
+
+        mfu_prefill = _mfu(prefill_flops_total, pf_ms)
+        mfu_decode = _mfu(decode_flops_per_token * max(toks_mean, 1.0), dc_ms)
+        mfu_vision = _mfu(vision_flops_total, vn_ms) if vn_ms > 0.0 else 0.0
+        # Overall model-level MFU across prefill+decode (avoid double counting vision)
+        total_flops = prefill_flops_total + decode_flops_per_token * max(toks_mean, 1.0)
+        total_time_s = (pf_ms + dc_ms) / 1000.0 if (pf_ms + dc_ms) > 0 else 0.0
+        mfu_model = (total_flops / 1e12) / total_time_s / peak if total_time_s > 0 and peak > 0 else summary.get("mfu_model_level", 0.0)
+
+        # Update summary MFUs with improved estimates
+        summary["mfu_per_stage"] = {
+            "prefill": float(mfu_prefill),
+            "decode": float(mfu_decode),
+            "vision": float(mfu_vision),
+        }
+        summary["mfu_model_level"] = float(mfu_model)
+
+        # Write detailed static compute report (JSON+MD)
+        try:
+            from llm_perf_opt.profiling.export import write_static_compute_json, write_static_compute_markdown
+            write_static_compute_json(static_report, artifacts_dir / "static_compute.json")
+            write_static_compute_markdown(static_report, artifacts_dir / "static_compute.md")
+        except Exception:
+            pass
+    except Exception:
+        # Fall back to previous simple static report path
+        static_compute = {}
+        try:
+            static_compute = session.estimate_static_compute()
+            _write_static_compute(artifacts_dir, static_compute)
+        except Exception:
+            pass
     if save_preds and preds_for_outputs:
         _write_predictions_outputs(
             artifacts_dir,
@@ -593,6 +964,25 @@ def main(cfg: DictConfig) -> None:  # pragma: no cover - CLI orchestrator
         str(artifacts_dir / "operators.md"),
         str(artifacts_dir / "metrics.json"),
     )
+
+    # US3: Reproducibility artifacts
+    try:
+        write_env_json(str(artifacts_dir / "env.json"))
+    except Exception:
+        pass
+    try:
+        _write_inputs_yaml(
+            artifacts_dir,
+            images,
+            dataset_root=str(cfg.dataset.root),
+            subset_filelist=str(cfg.dataset.get("subset_filelist")) if cfg.dataset.get("subset_filelist") else None,
+        )
+    except Exception:
+        pass
+    try:
+        _write_assumptions_md(artifacts_dir, cfg)
+    except Exception:
+        pass
 
 
 if __name__ == "__main__":  # pragma: no cover

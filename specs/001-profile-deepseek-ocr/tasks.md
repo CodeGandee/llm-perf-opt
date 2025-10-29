@@ -39,17 +39,17 @@ Goal: Stage segmentation, operator summary, MFU (model-level and per-stage) pres
 ## Phase 4 — User Story 2 (P2): Stakeholder Summary
 Goal: Concise summary of top cost centers and stage attribution; plain language recommendations.
 
-- [ ] T030 [US2] Generate stakeholder_summary.md from metrics to /data2/huangzhe/code/llm-perf-opt/tmp/stage1/<run_id>/stakeholder_summary.md
-- [ ] T031 [P] [US2] Extract top‑N operators and stage attribution using /data2/huangzhe/code/llm-perf-opt/src/llm_perf_opt/profiling/export.py
-- [ ] T032 [US2] Add recommendations section template to /data2/huangzhe/code/llm-perf-opt/tmp/stage1/<run_id>/stakeholder_summary.md
+- [X] T030 [US2] Generate stakeholder_summary.md from metrics to /data2/huangzhe/code/llm-perf-opt/tmp/stage1/<run_id>/stakeholder_summary.md
+- [X] T031 [P] [US2] Extract top‑N operators and stage attribution using /data2/huangzhe/code/llm-perf-opt/src/llm_perf_opt/profiling/export.py
+- [X] T032 [US2] Add recommendations section template to /data2/huangzhe/code/llm-perf-opt/tmp/stage1/<run_id>/stakeholder_summary.md
 
 ## Phase 5 — User Story 3 (P3): Reproducible Inputs & Notes
 Goal: Identify input set and assumptions to repeat Stage 1 profiling and compare results.
 
-- [ ] T040 [US3] Emit input list (absolute paths) and image metadata to /data2/huangzhe/code/llm-perf-opt/tmp/stage1/<run_id>/inputs.yaml
-- [ ] T041 [P] [US3] Capture environment info (GPU, CUDA, torch, transformers) to /data2/huangzhe/code/llm-perf-opt/tmp/stage1/<run_id>/env.json using /data2/huangzhe/code/llm-perf-opt/src/llm_perf_opt/profiling/hw.py
-- [ ] T042 [US3] Persist run assumptions (batch size, decoding params) to /data2/huangzhe/code/llm-perf-opt/tmp/stage1/<run_id>/assumptions.md
-- [ ] T043 [US3] Update quickstart with reproducibility notes in /data2/huangzhe/code/llm-perf-opt/specs/001-profile-deepseek-ocr/quickstart.md
+- [X] T040 [US3] Emit input list (absolute paths) and image metadata to /data2/huangzhe/code/llm-perf-opt/tmp/stage1/<run_id>/inputs.yaml
+- [X] T041 [P] [US3] Capture environment info (GPU, CUDA, torch, transformers) to /data2/huangzhe/code/llm-perf-opt/tmp/stage1/<run_id>/env.json using /data2/huangzhe/code/llm-perf-opt/src/llm_perf_opt/profiling/hw.py
+- [X] T042 [US3] Persist run assumptions (batch size, decoding params) to /data2/huangzhe/code/llm-perf-opt/tmp/stage1/<run_id>/assumptions.md
+- [X] T043 [US3] Update quickstart with reproducibility notes in /data2/huangzhe/code/llm-perf-opt/specs/001-profile-deepseek-ocr/quickstart.md
 
 ## Final Phase — Polish & Cross-Cutting
 

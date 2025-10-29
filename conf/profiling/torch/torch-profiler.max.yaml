@@ -17,3 +17,5 @@ with_stack: true
 group_by_input_shape: true
 
 rep_max_new_tokens: 128
+warmup_rounds: 3
+warmup_synthetic: false

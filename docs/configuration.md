@@ -51,9 +51,9 @@ PyTorch profiler presets (profiling/torch)
 
 Switching presets
 ```
-profiling/torch/torch-profiler@profiling=torch-profiler.min      # fastest
-profiling/torch/torch-profiler@profiling=torch-profiler.default  # balanced (default)
-profiling/torch/torch-profiler@profiling=torch-profiler.max      # most detailed
+profiling/torch@profiling=torch-profiler.min      # fastest
+profiling/torch@profiling=torch-profiler.default  # balanced (default)
+profiling/torch@profiling=torch-profiler.max      # most detailed
 ```
 
 Notes

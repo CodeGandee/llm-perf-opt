@@ -100,3 +100,26 @@ PY
 
 ## References
 - Spec (US3): `/data2/huangzhe/code/llm-perf-opt/specs/001-profile-deepseek-ocr/spec.md`
+
+## Summary of Work Done
+
+- `env.json` support:
+  - Added `write_env_json(path)` in `src/llm_perf_opt/profiling/hw.py`.
+  - Runner writes `env.json` under `tmp/stage1/<run_id>/`.
+
+- `inputs.yaml` support:
+  - Runner now writes `inputs.yaml` using OmegaConf to YAML with fields: `dataset_root`, `subset_filelist`, `count`, and `images` (list of `{path,width,height,bytes}` for each absolute input path).
+
+- `assumptions.md` support:
+  - Runner generates Markdown via mdutils capturing: device, repeats, batch size, model path, decoding and preprocessing parameters, profiling settings, and dataset selection.
+
+- Documentation:
+  - Appended a "Reproducibility artifacts" section to `specs/001-profile-deepseek-ocr/quickstart.md` describing `inputs.yaml`, `env.json`, and `assumptions.md` and how to reuse them.
+
+- Tasks marked complete:
+  - Updated `specs/001-profile-deepseek-ocr/tasks.md` to mark T040–T043 as `[X]`.
+
+- Aggregates and summary enhancements:
+  - `metrics.json` now includes `aggregates.stage_ms` with mean/std for available stages (`prefill`, `decode`, and if present `vision`, `sam`, `clip`, `projector`).
+  - Stakeholder summary renders a "Per‑Stage Timings (ms)" table from this data.
+  - MFU now leverages `DeepseekOCRStaticAnalyzer` for stage FLOPs (prefill total, decode per‑token, vision from sub‑stages), improving model‑level and per‑stage estimates.

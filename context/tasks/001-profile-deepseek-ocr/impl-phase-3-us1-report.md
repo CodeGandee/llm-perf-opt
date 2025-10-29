@@ -25,6 +25,36 @@ This phase has been implemented end-to-end according to the plan and tasks (T020
   - Crops saved to `viz/<stem>/images/` and a vendor‑like `result.mmd` is written with image references.
 - Added `llm_profile_runner.log` file under each run directory for step‑by‑step logs.
 
+### Revision Tasks (MFU Accuracy)
+For record, the following Phase 3 revision tasks have been proposed and partially implemented. See `context/tasks/001-profile-deepseek-ocr/revision-phase-3-mfu-compute.md`.
+- Add configurable context length controls for MFU (`infer.context_len_mode`, `infer.context_len_fixed`).
+- Add warmup rounds to profiling presets (`profiling/torch/torch-profiler.*.yaml`: `warmup_rounds`, `warmup_synthetic`).
+- Compute and emit a static compute report via `fvcore` (best-effort) and mdutils; preliminary API added in `DeepSeekOCRSession.estimate_static_compute()`.
+- Compute per‑stage MFU (vision/prefill/decode) using improved FLOPs estimates and measured timings; report now includes per‑stage MFU.
+
+### What’s Done (since last update)
+- Config + CLI
+  - Introduced Hydra profiling presets under `conf/profiling/torch/` and wired defaults in `conf/config.yaml`.
+  - Added `infer.context_len_mode` (`auto|max|fixed`) and `infer.context_len_fixed` to control decode context length in MFU.
+- Session & MFU
+  - dsocr_session now records per‑module times (SAM/CLIP/Projector) via NVTX hooks; exposes `vision_ms` per run.
+  - dsocr_session returns `prefill_len` and `vision_ms`; runner records them in `ImageRun`.
+  - mfu.py extended with `estimate_prefill_flops_total`, context length selection, and `compute_stage_mfu` to produce per‑stage + model‑level MFU.
+- Runner behavior
+  - Added warmup rounds (synthetic or real) before representative profiling, controlled by profiling preset.
+  - Representative profiling respects profiling preset: activities, record_shapes, profile_memory, with_stack, token cap.
+  - Summarization now uses improved MFU logic (context length, per‑stage MFU) and writes a static compute report alongside other artifacts.
+- Static compute outputs
+  - Wrote `static_compute.json` and `static_compute.md` into each run directory (best‑effort; fvcore coverage to be expanded).
+- Reporting
+  - report.md now shows per‑stage MFU (vision/prefill/decode) and the existing model‑level MFU.
+
+Artifacts example: `tmp/stage1/<run_id>/`
+- `report.md`, `operators.md`, `metrics.json`
+- `predictions.jsonl`, `predictions.md`, vendor‑style viz in `viz/`
+- `llm_profile_runner.log`
+- `static_compute.json`, `static_compute.md`
+
 Notes/limits for Stage 1:
 - Prefill MFU is conservatively set to 0.0 pending refined encoder compute modeling (deferred to later stages).
 - Decode context length uses a default window (e.g., 512) for FLOPs/token; future refinement will log/measure the actual context.

@@ -19,3 +19,5 @@ group_by_input_shape: false # lighter aggregation in key_averages
 
 # Keep representative profiling quick to avoid heavy CPU aggregation
 rep_max_new_tokens: 64
+warmup_rounds: 2          # number of warmup runs before profiling
+warmup_synthetic: true    # if true, warmup uses synthetic inputs

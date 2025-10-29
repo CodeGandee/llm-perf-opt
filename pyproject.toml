@@ -49,6 +49,7 @@ bench-stage1-inproc = { cmd = "python tests/manual/manual_stage1_benchmark_inpro
 dsocr-infer-one = { cmd = "python scripts/deepseek-ocr-infer-one.py -i \"${INPUT}\" -o \"${OUTPUT}\"" }
 docs-serve = { cmd = "mkdocs serve -a 127.0.0.1:8000" }
 docs-build = { cmd = "mkdocs build" }
+stage1-run = { cmd = "python -m llm_perf_opt.runners.llm_profile_runner dataset.subset_filelist=/data2/huangzhe/code/llm-perf-opt/datasets/omnidocbench/subsets/dev-20.txt device=cuda:0 repeats=3 infer.max_new_tokens=64 'profiling.activities=[cpu,cuda]'" }
 
 [tool.ruff]
 target-version = "py311"
