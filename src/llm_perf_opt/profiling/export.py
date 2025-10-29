@@ -11,6 +11,7 @@ write_operator_markdown
 from __future__ import annotations
 
 from typing import Iterable
+from mdutils.mdutils import MdUtils  # type: ignore[import-untyped]
 
 
 def top_n_operators(records: Iterable[dict], n: int = 20) -> list[dict]:
@@ -35,23 +36,36 @@ def top_n_operators(records: Iterable[dict], n: int = 20) -> list[dict]:
 
 
 def write_operator_markdown(records: Iterable[dict], path: str, top_k: int = 20) -> None:
-    """Write a top-K operator summary as a Markdown table.
+    """Write a top‑K operator summary as a Markdown table using mdutils.
 
     Parameters
     ----------
     records : Iterable[dict]
         Operator dictionaries to summarize.
     path : str
-        Destination file path (created/overwritten).
+        Destination file path (created/overwritten). Accepts ``.md`` suffix; it is stripped
+        to satisfy mdutils' file naming (which appends ``.md`` automatically).
     top_k : int, default=20
         Number of rows to include in the output table.
     """
 
     rows = top_n_operators(list(records), n=top_k)
-    lines = ["| op_name | total_time_ms | cuda_time_ms | calls |", "|---|---:|---:|---:|"]
+    # mdutils expects a flattened list row-wise (including header)
+    header = ["op_name", "total_time_ms", "cuda_time_ms", "calls"]
+    table_data: list[str] = header.copy()
     for r in rows:
-        lines.append(
-            f"| {r.get('op_name','')} | {r.get('total_time_ms',0):.3f} | {r.get('cuda_time_ms',0):.3f} | {int(r.get('calls',0))} |"
+        table_data.extend(
+            [
+                str(r.get("op_name", "")),
+                f"{float(r.get('total_time_ms', 0.0)):.3f}",
+                f"{float(r.get('cuda_time_ms', 0.0)):.3f}",
+                str(int(r.get("calls", 0))),
+            ]
         )
-    with open(path, "w", encoding="utf-8") as f:
-        f.write("\n".join(lines) + "\n")
+
+    file_base = path[:-3] if path.endswith(".md") else path
+    md = MdUtils(file_name=file_base)
+    md.new_header(level=1, title="Operator Summary (Top‑K)")
+    md.new_paragraph(f"Rows: {len(rows)} (k={int(top_k)})")
+    md.new_table(columns=4, rows=len(rows) + 1, text=table_data, text_align="center")
+    md.create_md_file()

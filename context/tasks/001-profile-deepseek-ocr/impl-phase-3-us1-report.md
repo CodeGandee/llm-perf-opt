@@ -6,13 +6,24 @@
 
 This phase has been implemented end-to-end according to the plan and tasks (T020–T027):
 
-- Runner switched to a Hydra-based entry using `conf/config.yaml` with dataset/model configs (`conf/dataset/omnidocbench.yaml`, `conf/model/deepseek_ocr.yaml`).
+- Runner switched to a Hydra-based entry using `conf/config.yaml` with dataset and model configs (`conf/dataset/omnidocbench.yaml`, `conf/model/deepseek_ocr/arch/deepseek_ocr.default.yaml`, `conf/model/deepseek_ocr/infer/deepseek_ocr.default.yaml`).
 - NVTX segmentation (prefill/decode) is applied via `DeepSeekOCRSession.run_inference` and exercised by the runner.
 - A representative inference is wrapped with PyTorch Profiler (CPU+CUDA when available) to collect operator-level stats; top‑K exported to `operators.md`.
 - Repeated runs over the dataset are executed; per-image timings (prefill/decode), tokens, and decode throughput are aggregated (mean/std).
 - MFU (model-level and per-stage decode) is estimated using `profiling/mfu.py` with an analytic FLOPs/token approximation and a coarse peak TFLOPs lookup from `profiling/hw.py`.
 - Artifacts are written under `tmp/stage1/<run_id>/`: `report.md`, `operators.md`, and `metrics.json`.
 - Tasks T020–T027 are marked complete in the feature `tasks.md`.
+
+### Phase 3 updates (vendor-parity and outputs)
+- Added Hydra config grouping for DeepSeek‑OCR to match vendor defaults:
+  - `conf/model/deepseek_ocr/arch/deepseek_ocr.default.yaml` (preprocess: base=1024, image=640, crop_mode=true)
+  - `conf/model/deepseek_ocr/infer/deepseek_ocr.default.yaml` (temperature=0.0, max_new_tokens=8192, no_repeat_ngram_size=20)
+- Fixed runner to read `cfg.infer.max_new_tokens` in both representative profile and repeats.
+- Session preprocessing updated to replicate vendor `dynamic_preprocess` tile selection and image‑token span sizing.
+- Visualization/export now follows vendor `infer(save_results=True)` behavior:
+  - Annotated image saved as `result_with_boxes.jpg` under per‑image `viz/<stem>/`.
+  - Crops saved to `viz/<stem>/images/` and a vendor‑like `result.mmd` is written with image references.
+- Added `llm_profile_runner.log` file under each run directory for step‑by‑step logs.
 
 Notes/limits for Stage 1:
 - Prefill MFU is conservatively set to 0.0 pending refined encoder compute modeling (deferred to later stages).
@@ -27,7 +38,8 @@ Notes/limits for Stage 1:
 ### Created (Hydra configuration)
 - `/data2/huangzhe/code/llm-perf-opt/conf/config.yaml` (top‑level defaults)
 - `/data2/huangzhe/code/llm-perf-opt/conf/dataset/omnidocbench.yaml` (dataset config)
-- `/data2/huangzhe/code/llm-perf-opt/conf/model/deepseek_ocr.yaml` (model config)
+- `/data2/huangzhe/code/llm-perf-opt/conf/model/deepseek_ocr/arch/deepseek_ocr.default.yaml` (architecture)
+- `/data2/huangzhe/code/llm-perf-opt/conf/model/deepseek_ocr/infer/deepseek_ocr.default.yaml` (inference defaults)
 
 ### Created (runtime artifacts)
 - `/data2/huangzhe/code/llm-perf-opt/tmp/stage1/<run_id>/report.md`
@@ -45,7 +57,8 @@ Hydra configs to add:
 # /data2/huangzhe/code/llm-perf-opt/conf/config.yaml
 defaults:
   - dataset: omnidocbench
-  - model: deepseek_ocr
+  - model/deepseek_ocr/arch: deepseek_ocr.default
+  - model/deepseek_ocr/infer: deepseek_ocr.default
   - _self_
 
 experiment: stage1
@@ -68,7 +81,7 @@ fallback_patterns:
 ```
 
 ```yaml
-# /data2/huangzhe/code/llm-perf-opt/conf/model/deepseek_ocr.yaml
+# /data2/huangzhe/code/llm-perf-opt/conf/model/deepseek_ocr/arch/deepseek_ocr.default.yaml
 name: deepseek_ocr
 path: ${hydra:runtime.cwd}/models/deepseek-ocr
 dtype: bf16
@@ -182,7 +195,7 @@ graph LR
 ```bash
 cd /data2/huangzhe/code/llm-perf-opt
 pixi run python -m llm_perf_opt.runners.llm_profile_runner \
-  dataset=omnidocbench model=deepseek_ocr repeats=2 device=cuda:0
+  dataset=omnidocbench model/deepseek_ocr/arch=deepseek_ocr.default model/deepseek_ocr/infer=deepseek_ocr.default repeats=2 device=cuda:0
 ```
 
 Dataset note: OmniDocBench images are under `/data2/huangzhe/code/llm-perf-opt/datasets/omnidocbench/source-data/images`.

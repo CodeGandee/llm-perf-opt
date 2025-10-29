@@ -33,6 +33,9 @@ from llm_perf_opt.profiling.export import top_n_operators, write_operator_markdo
 from llm_perf_opt.profiling.hw import get_device_name, get_peak_tflops
 from llm_perf_opt.profiling.mfu import estimate_decode_flops_per_token, mfu as mfu_ratio
 from llm_perf_opt.runners.dsocr_session import DeepSeekOCRSession
+from PIL import Image  # type: ignore[import-untyped]
+from llm_perf_opt.visualize.annotations import render_vendor_style, write_vendor_result_mmd
+from mdutils.mdutils import MdUtils  # type: ignore[import-untyped]
 
 
 # -----------------------------
@@ -116,7 +119,7 @@ def _collect_operator_records(prof: Any) -> list[dict]:
 
     records: list[dict] = []
     try:
-        for evt in prof.key_averages():  # type: ignore[attr-defined]
+        for evt in prof.key_averages(group_by_input_shape=False):  # type: ignore[attr-defined]
             # Some events may lack CUDA time; use 0.0
             total_ms = (
                 float(
@@ -282,6 +285,108 @@ def _write_outputs(artifacts_dir: Path, summary: dict, operator_records: list[di
         json.dump(summary, f, indent=2)
 
 
+def _clean_prediction_text(text: str, strip_special: bool) -> str:
+    """Return a human-friendlier variant of the model output text.
+
+    If ``strip_special`` is true, remove common end tokens and trim whitespace,
+    while preserving structural tokens like table tags.
+    """
+
+    if not isinstance(text, str):
+        return ""
+    s = text
+    # Known EOS marker from model impl
+    s = s.replace("<｜end▁of▁sentence｜>", "").strip()
+    if strip_special:
+        # Minimal cleanup: remove stray nulls and excessive whitespace
+        s = s.replace("\x00", "").strip()
+    return s
+
+
+def _write_predictions_outputs(
+    artifacts_dir: Path,
+    preds: list[dict],
+    make_gallery: bool,
+    max_images: int | None,
+    thumb_width: int,
+) -> None:
+    """Write predictions.jsonl and an optional Markdown gallery with thumbnails."""
+
+    # JSONL
+    pj = artifacts_dir / "predictions.jsonl"
+    with pj.open("w", encoding="utf-8") as f:
+        for rec in preds:
+            json.dump(rec, f, ensure_ascii=False)
+            f.write("\n")
+
+    if not make_gallery:
+        return
+
+    # Gallery (Markdown) with local thumbnails for portability
+    # Organize vendor-style annotated assets per image under viz/<stem>/
+    viz_root = artifacts_dir / "viz"
+    viz_root.mkdir(parents=True, exist_ok=True)
+    thumb_dir = viz_root / "_thumbs"
+    thumb_dir.mkdir(parents=True, exist_ok=True)
+    md = MdUtils(file_name=str((artifacts_dir / "predictions").as_posix()))
+    md.new_header(level=1, title="Predictions Gallery")
+
+    count = 0
+    for rec in preds:
+        if max_images is not None and count >= int(max_images):
+            break
+        img_path = Path(str(rec.get("image", "")))
+        text_raw = str(rec.get("text_raw", ""))
+        text_clean = str(rec.get("text_clean", ""))
+        # Render vendor-style annotations (result_with_boxes.jpg + images/) per-image subdir
+        annotated_img_rel = None
+        if img_path.is_file():
+            try:
+                per_image_dir = viz_root / img_path.stem
+                per_image_dir.mkdir(parents=True, exist_ok=True)
+                out_annotated = render_vendor_style(str(img_path), text_raw, str(per_image_dir))
+                # Also write vendor-style result.mmd next to annotated image
+                try:
+                    _ = write_vendor_result_mmd(text_raw, str(per_image_dir))
+                except Exception:
+                    pass
+                annotated_img_rel = out_annotated.relative_to(artifacts_dir)
+            except Exception:
+                annotated_img_rel = None
+        if img_path.is_file():
+            try:
+                im = Image.open(img_path).convert("RGB")
+                w, h = im.size
+                if w > thumb_width:
+                    ratio = thumb_width / float(w)
+                    im = im.resize((thumb_width, int(h * ratio)))
+                thumb_name = img_path.stem + ".jpg"
+                thumb_path = thumb_dir / thumb_name
+                im.save(thumb_path, format="JPEG", quality=90)
+                rel_thumb = thumb_path.relative_to(artifacts_dir)
+                md.new_header(level=2, title=img_path.name)
+                md.new_paragraph(f"![{img_path.name}]({rel_thumb.as_posix()})")
+                if annotated_img_rel is not None:
+                    md.new_paragraph("Annotated (with boxes)")
+                    md.new_paragraph(f"![annotated]({annotated_img_rel.as_posix()})")
+            except Exception:
+                md.new_header(level=2, title=img_path.name)
+        else:
+            md.new_header(level=2, title=img_path.name)
+
+        md.new_paragraph("**Prediction (clean)**")
+        md.new_line("```text")
+        md.new_line(text_clean)
+        md.new_line("```")
+        md.new_paragraph("Raw (with specials)")
+        md.new_line("```text")
+        md.new_line(text_raw)
+        md.new_line("```")
+        count += 1
+
+    md.create_md_file()
+
+
 # -----------------------------
 # Hydra entry
 # -----------------------------
@@ -319,6 +424,17 @@ def main(cfg: DictConfig) -> None:  # pragma: no cover - CLI orchestrator
 
     # Prepare output dir (Hydra run dir configured to Stage 1 artifacts path)
     artifacts_dir = Path(HydraConfig.get().run.dir)
+    # Set up a file logger for easier debugging of runs
+    try:
+        artifacts_dir.mkdir(parents=True, exist_ok=True)
+        fh = logging.FileHandler(artifacts_dir / "llm_profile_runner.log", encoding="utf-8")
+        fmt = logging.Formatter("%(asctime)s %(levelname)s %(name)s: %(message)s")
+        fh.setFormatter(fmt)
+        root_logger = logging.getLogger()
+        root_logger.setLevel(logging.INFO)
+        root_logger.addHandler(fh)
+    except Exception:
+        pass
     logger.info(
         "Stage1 profiling start | device=%s repeats=%s model=%s dataset_root=%s artifacts_dir=%s",
         cfg.device,
@@ -337,16 +453,34 @@ def main(cfg: DictConfig) -> None:  # pragma: no cover - CLI orchestrator
     # Representative operator profile on the first image
     operator_records: list[dict] = []
     rep_image = str(images[0])
-    activities = [ProfilerActivity.CPU]
-    if torch.cuda.is_available():
+    prof_cfg = getattr(cfg, "profiling", {})
+    sel_acts = [str(x).lower() for x in list(prof_cfg.get("activities", ["cpu", "cuda"]))]
+    activities = []
+    if "cpu" in sel_acts:
+        activities.append(ProfilerActivity.CPU)
+    if "cuda" in sel_acts and torch.cuda.is_available():
         activities.append(ProfilerActivity.CUDA)
     try:
-        with profile(activities=activities) as prof:  # type: ignore[call-arg]
+        # Keep rep profile bounded; honor profiling config caps and switches
+        rep_cap = int(getattr(getattr(cfg, 'profiling', {}), 'rep_max_new_tokens', 64))
+        rep_max_new = int(min(int(getattr(cfg, "infer", {}).get("max_new_tokens", 64)), rep_cap))
+        record_shapes = bool(prof_cfg.get("record_shapes", False))
+        profile_memory = bool(prof_cfg.get("profile_memory", False))
+        with_stack = bool(prof_cfg.get("with_stack", False))
+        with profile(activities=activities if activities else [ProfilerActivity.CPU], record_shapes=record_shapes, profile_memory=profile_memory, with_stack=with_stack) as prof:  # type: ignore[call-arg]
             logger.info("Profiling representative image: %s", rep_image)
             _ = session.run_inference(
                 image_path=rep_image,
                 prompt="<image>\n<|grounding|>Convert the document to markdown.",
-                max_new_tokens=int(cfg.max_new_tokens),
+                max_new_tokens=rep_max_new,
+                preprocess=dict(
+                    enable=bool(getattr(cfg.model, "preprocess", {}).get("enable", True)),
+                    base_size=int(getattr(cfg.model, "preprocess", {}).get("base_size", 1024)),
+                    image_size=int(getattr(cfg.model, "preprocess", {}).get("image_size", 640)),
+                    crop_mode=bool(getattr(cfg.model, "preprocess", {}).get("crop_mode", False)),
+                    patch_size=int(getattr(cfg.model, "preprocess", {}).get("patch_size", 16)),
+                    downsample_ratio=int(getattr(cfg.model, "preprocess", {}).get("downsample_ratio", 4)),
+                ),
             )
         operator_records = _collect_operator_records(prof)
         logger.info("Collected %d operator records", len(operator_records))
@@ -356,14 +490,18 @@ def main(cfg: DictConfig) -> None:  # pragma: no cover - CLI orchestrator
     # Repeated runs across dataset
     runs: list[ImageRun] = []
     repeats = int(cfg.repeats)
-    max_new_tokens = int(cfg.max_new_tokens)
+    max_new_tokens = int(getattr(cfg, "infer", {}).get("max_new_tokens", 64))
     images_iter: Iterator[Path] = iter(images)
     save_preds = bool(getattr(cfg, "outputs", {}).get("save_predictions", False))
-    pred_f = None
+    strip_special = bool(getattr(cfg.outputs, "predictions", {}).get("strip_special_tokens", False)) if hasattr(cfg, "outputs") else False
+    viz_cfg = getattr(cfg.outputs, "visualization", {}) if hasattr(cfg, "outputs") else {}
+    make_gallery = bool(viz_cfg.get("enable", True))
+    max_images = viz_cfg.get("max_images", 16)
+    max_images = None if max_images in (None, "null") else int(max_images)
+    thumb_w = int(viz_cfg.get("thumbnail_width", 480))
+    preds_for_outputs: list[dict] = []
     if save_preds:
-        pred_path = artifacts_dir / "predictions.jsonl"
-        pred_f = pred_path.open("w", encoding="utf-8")
-        logger.info("Saving predictions to %s", str(pred_path))
+        logger.info("Saving predictions to %s", str(artifacts_dir / "predictions.jsonl"))
     for i in range(repeats):
         # Cycle through images if repeats > len(images)
         try:
@@ -377,6 +515,20 @@ def main(cfg: DictConfig) -> None:  # pragma: no cover - CLI orchestrator
             prompt="<image>\n<|grounding|>Convert the document to markdown.",
             max_new_tokens=max_new_tokens,
             return_text=save_preds,
+            preprocess=dict(
+                enable=bool(getattr(cfg.model, "preprocess", {}).get("enable", True)),
+                base_size=int(getattr(cfg.model, "preprocess", {}).get("base_size", 1024)),
+                image_size=int(getattr(cfg.model, "preprocess", {}).get("image_size", 640)),
+                crop_mode=bool(getattr(cfg.model, "preprocess", {}).get("crop_mode", False)),
+                patch_size=int(getattr(cfg.model, "preprocess", {}).get("patch_size", 16)),
+                downsample_ratio=int(getattr(cfg.model, "preprocess", {}).get("downsample_ratio", 4)),
+            ),
+            infer=dict(
+                temperature=float(getattr(cfg, "infer", {}).get("temperature", 0.0)),
+                max_new_tokens=int(getattr(cfg, "infer", {}).get("max_new_tokens", max_new_tokens)),
+                no_repeat_ngram_size=int(getattr(cfg, "infer", {}).get("no_repeat_ngram_size", 0)),
+                do_sample=bool(getattr(cfg, "infer", {}).get("do_sample", False)),
+            ),
         )
         runs.append(
             ImageRun(
@@ -386,23 +538,35 @@ def main(cfg: DictConfig) -> None:  # pragma: no cover - CLI orchestrator
                 tokens=int(res.get("tokens", 0)),
             )
         )
-        if save_preds and pred_f is not None and isinstance(res.get("text"), str):
-            try:
-                # JSONL entry: {"image": <abs path>, "text": <generated>}
-                import json as _json  # local import to avoid top-level import penalty
-
-                _json.dump({"image": str(img), "text": res.get("text")}, pred_f, ensure_ascii=False)
-                pred_f.write("\n")
-            except Exception:
-                logger.exception("Failed to write prediction for image=%s", str(img))
+        if save_preds and isinstance(res.get("text"), str):
+            text_raw = str(res.get("text"))
+            text_clean = _clean_prediction_text(text_raw, strip_special=strip_special)
+            preds_for_outputs.append(
+                {
+                    "image": str(img),
+                    "text_raw": text_raw,
+                    "text_clean": text_clean,
+                    "prefill_ms": float(res.get("prefill_ms", 0.0)),
+                    "decode_ms": float(res.get("decode_ms", 0.0)),
+                    "tokens": int(res.get("tokens", 0)),
+                    "tokens_per_s": (
+                        (float(res.get("tokens", 0)) / (float(res.get("decode_ms", 1.0)) / 1000.0))
+                        if float(res.get("decode_ms", 0.0)) > 0
+                        else 0.0
+                    ),
+                }
+            )
 
     # Summarize + outputs
     summary = _summarize_runs(runs, getattr(session, "m_model", None), peak)
-    if pred_f is not None:
-        try:
-            pred_f.close()
-        except Exception:
-            pass
+    if save_preds and preds_for_outputs:
+        _write_predictions_outputs(
+            artifacts_dir,
+            preds_for_outputs,
+            make_gallery=make_gallery,
+            max_images=max_images,
+            thumb_width=thumb_w,
+        )
     aggr = summary.get("aggregates", {})
     logger.info(
         (

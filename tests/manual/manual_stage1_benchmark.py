@@ -79,7 +79,8 @@ cmd = [
     "-m",
     "llm_perf_opt.runners.llm_profile_runner",
     "dataset=omnidocbench",
-    "model=deepseek_ocr",
+    "model/deepseek_ocr/arch@model=deepseek_ocr.default",
+    "model/deepseek_ocr/infer@infer=deepseek_ocr.default",
     f"repeats={REPEATS}",
     f"device={DEVICE}",
 ]
@@ -112,4 +113,3 @@ else:
             print("\n".join(report.read_text(encoding="utf-8").splitlines()[:20]))
         except Exception as exc:  # pragma: no cover - display aid
             print("[manual] Could not preview report:", exc)
-

@@ -1,66 +1,35 @@
-site_name: LLM Performance Optimization
-site_description: A comprehensive framework for evaluating LLM runtime performance
-site_author: igamenovoer
-repo_url: https://github.com/igamenovoer/llm-perf-opt
-repo_name: igamenovoer/llm-perf-opt
+site_name: LLM Perf Opt
+site_description: Profiling and benchmarking pipeline for DeepSeek‑OCR (Stage 1)
+repo_name: llm-perf-opt
+repo_url: https://example.invalid/llm-perf-opt
 
 theme:
   name: material
-  palette:
-    - scheme: default
-      primary: indigo
-      accent: indigo
-      toggle:
-        icon: material/brightness-7
-        name: Switch to dark mode
-    - scheme: slate
-      primary: indigo
-      accent: indigo
-      toggle:
-        icon: material/brightness-4
-        name: Switch to light mode
+  language: en
   features:
-    - navigation.instant
-    - navigation.tracking
-    - navigation.tabs
     - navigation.sections
-    - navigation.expand
-    - search.suggest
-    - search.highlight
+    - navigation.top
     - content.code.copy
-
-markdown_extensions:
-  - pymdownx.highlight:
-      anchor_linenums: true
-  - pymdownx.inlinehilite
-  - pymdownx.snippets
-  - pymdownx.superfences
-  - pymdownx.tabbed:
-      alternate_style: true
-  - admonition
-  - pymdownx.details
-  - pymdownx.arithmatex:
-      generic: true
-  - attr_list
-  - md_in_html
-  - tables
+    - toc.integrate
 
 nav:
-  - Home: index.md
-  - Getting Started:
-    - Installation: getting-started/installation.md
-    - Quick Start: getting-started/quick-start.md
-  - User Guide:
-    - Overview: guide/overview.md
-  - API Reference:
-    - API: api/reference.md
-  - Development:
-    - Contributing: development/contributing.md
+  - Overview: index.md
+  - Getting Started: getting-started.md
+  - Configuration: configuration.md
+  - Running: running.md
+  - Artifacts: artifacts.md
+  - Visualization: visualization.md
+  - Internals: internals.md
+  - Troubleshooting: troubleshooting.md
+
+markdown_extensions:
+  - admonition
+  - codehilite
+  - footnotes
+  - tables
+  - toc:
+      permalink: true
 
 plugins:
   - search
-  - mkdocstrings:
-      handlers:
-        python:
-          options:
-            docstring_style: google
+

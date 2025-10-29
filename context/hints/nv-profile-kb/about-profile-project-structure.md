@@ -24,10 +24,14 @@ Throughout this guide, placeholder names are shown in angle brackets:
 │   ├── config.yaml                # top-level defaults list
 │   ├── hydra/
 │   │   └── default.yaml           # run dir/job name/chdir pattern
-│   ├── model/                     # LLM choices (point to local symlinks)
-│   │   ├── qwen2_5_7b.yaml
-│   │   ├── llama3_70b.yaml
-│   │   └── …                      # add more here
+│   ├── model/                     # Model configs grouped by arch/infer variants
+│   │   └── <model-name>/
+│   │       ├── arch/
+│   │       │   ├── <model-name>.default.yaml     # architecture & preprocessing defaults
+│   │       │   └── <model-name>.<arch-variant>.yaml
+│   │       └── infer/
+│   │           ├── <model-name>.default.yaml     # inference defaults (match vendor)
+│   │           └── <model-name>.<inference-variant>.yaml
 │   ├── dataset/                   # dataset configurations
 │   │   ├── openwebtext.yaml
 │   │   ├── c4.yaml
@@ -135,7 +139,8 @@ Keep tasks short and descriptive; add more as needed. ([Prefix Dev][2])
 # Compose from config groups (swap via CLI)
 defaults:
   - hydra: default
-  - model: <name>
+  - model/<model-name>/arch: <model-name>.default
+  - model/<model-name>/infer: <model-name>.default
   - runtime: pytorch
   - profiling: minimal
   - _self_
@@ -157,12 +162,30 @@ hydra:
 
 These fields control where Hydra writes `.hydra/` configs, logs, and where your code runs (CWD). ([Hydra][4])
 
-### `conf/model/<name>.yaml` (what it is: model identity & location)
+### `conf/model/<model-name>/arch/<model-name>.<arch-variant>.yaml` (architecture & preprocessing)
 
 ```yaml
-name: qwen2_5_7b
-path: ${hydra:runtime.cwd}/models/qwen2_5_7b   # symlink, folder, or submodule
-dtype: bf16
+model:
+  name: qwen2_5_7b
+  path: ${hydra:runtime.cwd}/models/qwen2_5_7b   # symlink, folder, or submodule
+  dtype: bf16
+  preprocess:
+    enable: true
+    base_size: 1024
+    image_size: 640
+    crop_mode: true
+    patch_size: 16
+    downsample_ratio: 4
+```
+
+### `conf/model/<model-name>/infer/<model-name>.<inference-variant>.yaml` (inference defaults)
+
+```yaml
+infer:
+  temperature: 0.0
+  max_new_tokens: 8192
+  no_repeat_ngram_size: 20
+  do_sample: false
 ```
 
 ### `conf/dataset/<name>.yaml` (what it is: dataset root and optional variant)

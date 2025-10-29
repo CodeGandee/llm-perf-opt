@@ -17,6 +17,7 @@ import torch
 from transformers import AutoModel, AutoTokenizer  # type: ignore[import-untyped]
 
 from llm_perf_opt.profiling.nvtx_utils import decode_range, prefill_range
+import nvtx  # type: ignore[import-untyped]
 
 
 class DeepSeekOCRSession:
@@ -31,6 +32,7 @@ class DeepSeekOCRSession:
         self.m_tokenizer: Optional[Any] = None
         self.m_device: Optional[torch.device] = None
         self.m_dtype: Optional[torch.dtype] = torch.bfloat16
+        self.m_nvtx_hooks: list[Any] = []
 
     @property
     def device(self) -> Optional[torch.device]:
@@ -92,7 +94,46 @@ class DeepSeekOCRSession:
         inst.m_model = model
         inst.m_tokenizer = tokenizer
         inst.m_device = dev
+        try:
+            inst._install_nvtx_stage_hooks()
+        except Exception:
+            # Best-effort; NVTX hooks are optional
+            pass
         return inst
+
+    def _install_nvtx_stage_hooks(self) -> None:
+        """Attach NVTX ranges to key submodules (SAM, CLIP, projector).
+
+        This mirrors the paper's stages and allows profiler views to attribute
+        time to these blocks even when the logic is inside the model.
+        """
+
+        if self.m_model is None:
+            return
+
+        core = getattr(self.m_model, "model", None)
+        if core is None:
+            return
+
+        def _attach(mod: Any, label: str) -> None:
+            if mod is None:
+                return
+            try:
+                def _pre(_m, _inp):
+                    nvtx.push_range(label)
+
+                def _post(_m, _inp, _out):
+                    nvtx.pop_range()
+
+                h1 = mod.register_forward_pre_hook(_pre)
+                h2 = mod.register_forward_hook(_post)
+                self.m_nvtx_hooks.extend([h1, h2])
+            except Exception:
+                pass
+
+        _attach(getattr(core, "sam_model", None), "sam")
+        _attach(getattr(core, "vision_model", None), "clip")
+        _attach(getattr(core, "projector", None), "projector")
 
     @torch.inference_mode()
     def run_inference(
@@ -101,6 +142,8 @@ class DeepSeekOCRSession:
         prompt: str,
         max_new_tokens: int = 64,
         return_text: bool = False,
+        preprocess: Optional[dict] = None,
+        infer: Optional[dict] = None,
     ) -> dict:
         """Run NVTX-segmented inference on a single image.
 
@@ -116,24 +159,156 @@ class DeepSeekOCRSession:
         img_abs = str(Path(image_path).resolve())
         logger.info("Session inference start | image=%s max_new_tokens=%d", img_abs, int(max_new_tokens))
 
-        # Construct minimal image placeholders for DeepSeek‑OCR HF path.
-        # The HF implementation expects image tensors in kwargs. For Stage 1,
-        # we provide zeroed tensors to bypass the heavy vision stack while
-        # preserving code paths and shapes. This yields representative timings
-        # without requiring full image preprocessing here.
-        zeros_ori = torch.zeros((1, 3, 640, 640), dtype=self.m_dtype or torch.bfloat16, device=self.m_device)
-        zeros_crop = torch.zeros((1, 3, 1024, 1024), dtype=self.m_dtype or torch.bfloat16, device=self.m_device)
-        images = [(zeros_crop, zeros_ori)]
-        images_spatial_crop = torch.zeros((1, 2), dtype=torch.long, device=self.m_device)
+        # Build inputs: either full preprocessing (default) or placeholder path
+        use_pre = True
+        base_size = 1024
+        image_size = 640
+        crop_mode = False
+        patch_size = 16
+        downsample_ratio = 4
+        if preprocess is not None:
+            use_pre = bool(preprocess.get("enable", True))
+            base_size = int(preprocess.get("base_size", base_size))
+            image_size = int(preprocess.get("image_size", image_size))
+            crop_mode = bool(preprocess.get("crop_mode", crop_mode))
+            patch_size = int(preprocess.get("patch_size", patch_size))
+            downsample_ratio = int(preprocess.get("downsample_ratio", downsample_ratio))
+
+        if use_pre:
+            # Load and normalize image
+            from PIL import Image, ImageOps  # local import to avoid hard dep at import time
+            from torchvision import transforms  # type: ignore[import-untyped]
+
+            img = Image.open(img_abs).convert("RGB")
+            img = ImageOps.exif_transpose(img)
+            mean = (0.5, 0.5, 0.5)
+            tfm = transforms.Compose([
+                transforms.ToTensor(),
+                transforms.Normalize(mean=mean, std=mean),
+            ])
+
+            # Global padded view -> BF16 tensor
+            global_view = ImageOps.pad(img, (base_size, base_size), color=tuple(int(x * 255) for x in mean))
+            images_ori = tfm(global_view).to(self.m_dtype or torch.bfloat16)
+            images_ori = images_ori.unsqueeze(0).to(self.m_device)  # [1,3,H,W]
+
+            # Local crops (optional via crop_mode) — align with vendor dynamic_preprocess
+            images_spatial_crop = torch.tensor([[1, 1]], dtype=torch.long, device=self.m_device)
+            if crop_mode:
+                # Re-implement vendor dynamic_preprocess selection
+                orig_w, orig_h = img.size
+                aspect_ratio = orig_w / float(orig_h)
+                # Candidate ratios where blocks in [2..9]
+                target_ratios = sorted({
+                    (i, j)
+                    for n in range(2, 10)
+                    for i in range(1, n + 1)
+                    for j in range(1, n + 1)
+                    if (i * j) <= 9 and (i * j) >= 2
+                }, key=lambda x: x[0] * x[1])
+
+                def _closest_ratio(ratio_list: list[tuple[int, int]]) -> tuple[int, int]:
+                    best = (1, 1)
+                    best_diff = float("inf")
+                    area = orig_w * orig_h
+                    for (w_r, h_r) in ratio_list:
+                        target_ar = w_r / float(h_r)
+                        diff = abs(aspect_ratio - target_ar)
+                        if diff < best_diff:
+                            best = (w_r, h_r)
+                            best_diff = diff
+                        elif diff == best_diff:
+                            if area > 0.5 * image_size * image_size * w_r * h_r:
+                                best = (w_r, h_r)
+                    return best
+
+                w_crop, h_crop = _closest_ratio(target_ratios)
+                target_w = image_size * w_crop
+                target_h = image_size * h_crop
+                resized = img.resize((target_w, target_h))
+                crops = []
+                for i in range(w_crop * h_crop):
+                    c = i % (target_w // image_size)
+                    r = i // (target_w // image_size)
+                    box = (c * image_size, r * image_size, (c + 1) * image_size, (r + 1) * image_size)
+                    crops.append(resized.crop(box))
+                images_spatial_crop = torch.tensor([[w_crop, h_crop]], dtype=torch.long, device=self.m_device)
+                crop_tensors = [tfm(c).to(self.m_dtype or torch.bfloat16) for c in crops]
+                images_crop = (
+                    torch.stack(crop_tensors, dim=0).to(self.m_device)
+                    if crop_tensors
+                    else torch.zeros((1, 3, base_size, base_size), dtype=self.m_dtype or torch.bfloat16, device=self.m_device)
+                )
+            else:
+                images_crop = torch.zeros((1, 3, base_size, base_size), dtype=self.m_dtype or torch.bfloat16, device=self.m_device)
+                w_crop = h_crop = 1
+            images = [(images_crop, images_ori)]
+
+            # Build input_ids and images_seq_mask aligned to <image> span
+            IMAGE_TOKEN_ID = 128815
+            text_splits = prompt.split("<image>")
+            tokenized_str: list[int] = []
+            mask_list: list[bool] = []
+
+            for text_piece in text_splits[:-1]:
+                toks = self.m_tokenizer.encode(text_piece, add_special_tokens=False)
+                tokenized_str += toks
+                mask_list += [False] * len(toks)
+
+                # Mirror vendor token span sizing
+                import math as _math
+                num_queries = _math.ceil((image_size // patch_size) / downsample_ratio)
+                num_queries_base = _math.ceil((base_size // patch_size) / downsample_ratio)
+                # Base tokens (global view)
+                tokenized_image = ([IMAGE_TOKEN_ID] * num_queries_base + [IMAGE_TOKEN_ID]) * num_queries_base
+                tokenized_image += [IMAGE_TOKEN_ID]
+                # Local crops (if any)
+                if crop_mode and (w_crop > 1 or h_crop > 1):
+                    tokenized_image += (
+                        ([IMAGE_TOKEN_ID] * (num_queries * w_crop) + [IMAGE_TOKEN_ID]) * (num_queries * h_crop)
+                    )
+                tokenized_str += tokenized_image
+                mask_list += [True] * len(tokenized_image)
+
+            toks_tail = self.m_tokenizer.encode(text_splits[-1], add_special_tokens=False)
+            tokenized_str = [0] + tokenized_str + toks_tail  # BOS=0
+            mask_list = [False] + mask_list + [False] * len(toks_tail)
+
+            input_ids = torch.tensor(tokenized_str, dtype=torch.long, device=self.m_device).unsqueeze(0)
+            images_seq_mask = torch.tensor(mask_list, dtype=torch.bool, device=self.m_device).unsqueeze(0)
+            logger.info(
+                "Preprocess | base=%d img=%d crop=%s grid=%dx%d input_len=%d",
+                int(base_size),
+                int(image_size),
+                str(bool(crop_mode)),
+                int(w_crop),
+                int(h_crop),
+                int(input_ids.shape[-1]),
+            )
+        else:
+            # Placeholder tensors (no vision fusion)
+            zeros_ori = torch.zeros((1, 3, 640, 640), dtype=self.m_dtype or torch.bfloat16, device=self.m_device)
+            zeros_crop = torch.zeros((1, 3, 1024, 1024), dtype=self.m_dtype or torch.bfloat16, device=self.m_device)
+            images = [(zeros_crop, zeros_ori)]
+            images_spatial_crop = torch.zeros((1, 2), dtype=torch.long, device=self.m_device)
+            images_seq_mask = None
+            input_ids = self.m_tokenizer(prompt, return_tensors="pt").to(self.m_device)["input_ids"]
 
         # Prefill: first forward pass
         t0 = perf_counter()
         with prefill_range():
-            inputs = self.m_tokenizer(prompt, return_tensors="pt").to(self.m_device)
+            if use_pre:
+                inputs = {"input_ids": input_ids}
+            else:
+                nvtx.push_range("tokenizer")
+                try:
+                    inputs = self.m_tokenizer(prompt, return_tensors="pt").to(self.m_device)
+                finally:
+                    nvtx.pop_range()
             _ = self.m_model(
                 **inputs,
                 images=images,
-                images_seq_mask=None,
+                images_seq_mask=images_seq_mask,
                 images_spatial_crop=images_spatial_crop,
             )
         prefill_ms = (perf_counter() - t0) * 1000.0
@@ -142,12 +317,27 @@ class DeepSeekOCRSession:
         # Decode: greedy generation
         t1 = perf_counter()
         with decode_range():
+            gen_kwargs: dict[str, object] = {
+                "max_new_tokens": int(max_new_tokens),
+                "eos_token_id": getattr(self.m_tokenizer, "eos_token_id", None),
+            }
+            if infer is not None:
+                for k in ("temperature", "no_repeat_ngram_size", "do_sample", "top_p", "top_k"):
+                    if k in infer:
+                        gen_kwargs[k] = infer[k]
+            # Provide attention mask to silence warnings and match vendor behavior
+            attention_mask = None
+            try:
+                attention_mask = torch.ones_like(input_ids, dtype=torch.long, device=self.m_device)
+            except Exception:
+                attention_mask = None
             out = self.m_model.generate(
                 **inputs,
                 images=images,
-                images_seq_mask=None,
+                images_seq_mask=images_seq_mask,
                 images_spatial_crop=images_spatial_crop,
-                max_new_tokens=max_new_tokens,
+                attention_mask=attention_mask,
+                **gen_kwargs,
             )
         decode_ms = (perf_counter() - t1) * 1000.0
 

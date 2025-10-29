@@ -134,7 +134,7 @@ try:
         _ = session.run_inference(
             image_path=str(images[0]),
             prompt="<image>\n<|grounding|>Convert the document to markdown.",
-            max_new_tokens=int(cfg.max_new_tokens),
+            max_new_tokens=int(getattr(cfg, "infer", {}).get("max_new_tokens", 64)),
         )
     operator_records = _collect_operator_records(prof)
 except Exception:
@@ -143,7 +143,7 @@ except Exception:
 
 # Repeats across dataset
 runs: list[ImageRun] = []
-max_new_tokens = int(cfg.max_new_tokens)
+max_new_tokens = int(getattr(cfg, "infer", {}).get("max_new_tokens", 64))
 for i in range(int(cfg.repeats)):
     img = images[i % len(images)]
     res = session.run_inference(
