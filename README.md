@@ -120,6 +120,12 @@ pixi run python -m llm_perf_opt.runners.llm_profile_runner \
 
 Artifacts include `report.md`, `operators.md`, `metrics.json`, `stakeholder_summary.md`, and reproducibility files (`env.json`, `inputs.yaml`, `assumptions.md`).
 
+Static analyzer (optional)
+- By default, the runner performs a static model analysis to refine MFU and writes `static_compute.json` / `static_compute.md`.
+- To disable for faster runs, either:
+  - Use the Pixi task: `pixi run stage1-run-no-static`
+  - Or pass a Hydra override while running: `runners=stage1.no-static`
+
 ## Profiling Requirements (Nsight Systems)
 
 To capture end‑to‑end GPU/CPU timelines while running DeepSeek‑OCR and other workloads, we use NVIDIA Nsight Systems (`nsys`). Please install it so profiling commands work locally.

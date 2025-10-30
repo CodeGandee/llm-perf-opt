@@ -73,6 +73,7 @@ pixi.lock
 # Temporary files
 tmp/
 *.tmp
+tmp/stage2/
 
 # Documentation builds
 site/

@@ -10,6 +10,11 @@ Core files
 - `metrics.json` — machine‑readable summary (includes `aggregates.stage_ms` with prefill/decode and sub‑stages if present)
 - `stakeholder_summary.md` — stakeholder tables: Environment, Aggregates, Per‑Stage Timings (ms), MFU, Top Operators, Recommendations
 
+Static analysis (optional)
+- When enabled via runner config, the runner writes:
+  - `static_compute.json` — detailed analyzer report (per‑stage FLOPs, params, activations)
+  - `static_compute.md` — human‑readable summary of the analyzer report
+
 Reproducibility
 - `env.json` — GPU/CUDA/torch/transformers versions
 - `inputs.yaml` — dataset selection and absolute image paths with width/height/bytes

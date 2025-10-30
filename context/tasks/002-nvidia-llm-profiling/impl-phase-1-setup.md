@@ -81,3 +81,11 @@ pixi run python -c "print('stage2-profile' in open('pyproject.toml').read())"
 - Spec: specs/002-nvidia-llm-profiling/spec.md
 - Tasks: specs/002-nvidia-llm-profiling/tasks.md
 - Hint: context/hints/nv-profile-kb/howto-manage-nsys-ncu-processes-for-llm.md
+
+## Summary
+- Created vendor wrappers: `src/llm_perf_opt/profiling/vendor/nsys.py`, `src/llm_perf_opt/profiling/vendor/ncu.py`
+- Added Pixi task: `stage2-profile` in `pyproject.toml`
+- Verified runner config present: `conf/runner/stage2.yaml` (mode, top_n_kernels, artifacts.stage2_dir)
+- Seeded manual tests doc: `tests/manual/stage2_profile/README.md`
+- Appended ignore rule: `tmp/stage2/` in `.gitignore`
+- Updated `specs/002-nvidia-llm-profiling/tasks.md` to mark T001–T006 as completed

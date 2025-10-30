@@ -1,0 +1,8 @@
+# Runner defaults for Stage 1
+analysis:
+  static:
+    enabled: true
+    write_reports: true
+    use_analytic_fallback: true
+    use_synthetic_inputs: true
+

@@ -67,9 +67,10 @@ Formula sketch
 - See `get_peak_tflops(...)` in `src/llm_perf_opt/profiling/hw.py` and references in `context/hints/nv-profile-kb/peak-tflops-reference.md`.
 
 ## Repro and Outputs
-- Runner writes static analysis artifacts alongside benchmarks: `static_compute.json` and `static_compute.md`, plus `metrics.json` and summary pages containing MFU tables.
+- When enabled, the runner writes static analysis artifacts alongside benchmarks: `static_compute.json` and `static_compute.md`, plus `metrics.json` and summary pages containing MFU tables.
 - To run a representative pipeline:
-  - `pixi run stage1-run`
+  - `pixi run stage1-run` (static analyzer enabled by default)
+  - Disable static analyzer for faster iteration: `pixi run stage1-run-no-static` or `runners=stage1.no-static`
   - Optionally override peak TFLOPs: `MFU_PEAK_TFLOPS=142 pixi run stage1-run`
 - See `docs/running.md` and `docs/artifacts.md` for artifact locations and formats.
 

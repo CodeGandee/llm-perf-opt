@@ -22,12 +22,12 @@ Path Conventions
 
 Purpose: Project initialization and basic structure for Stage 2
 
-- [ ] T001 Create vendor wrapper module for Nsight Systems in `src/llm_perf_opt/profiling/vendor/nsys.py`
-- [ ] T002 [P] Create vendor wrapper module for Nsight Compute in `src/llm_perf_opt/profiling/vendor/ncu.py`
-- [ ] T003 Add Pixi task `stage2-profile` in `pyproject.toml` under `[tool.pixi.tasks]`
-- [ ] T004 [P] Add runner config for Stage 2 in `conf/runner/stage2.yaml` (keys: `run.mode={deep,light}`, `run.top_n_kernels`, `artifacts.stage2_dir`) — reserve `conf/profiling/*` for external profiler presets (torch/nsys/ncu)
-- [ ] T005 [P] Create manual tests directory and seed doc in `tests/manual/stage2_profile/README.md`
-- [ ] T006 [P] Add `tmp/stage2/` ignore rule in `.gitignore`
+ - [X] T001 Create vendor wrapper module for Nsight Systems in `src/llm_perf_opt/profiling/vendor/nsys.py`
+ - [X] T002 [P] Create vendor wrapper module for Nsight Compute in `src/llm_perf_opt/profiling/vendor/ncu.py`
+ - [X] T003 Add Pixi task `stage2-profile` in `pyproject.toml` under `[tool.pixi.tasks]`
+ - [X] T004 [P] Add runner config for Stage 2 in `conf/runner/stage2.yaml` (keys: `run.mode={deep,light}`, `run.top_n_kernels`, `artifacts.stage2_dir`) — reserve `conf/profiling/*` for external profiler presets (torch/nsys/ncu)
+ - [X] T005 [P] Create manual tests directory and seed doc in `tests/manual/stage2_profile/README.md`
+ - [X] T006 [P] Add `tmp/stage2/` ignore rule in `.gitignore`
 
 ---
 

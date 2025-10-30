@@ -10,6 +10,8 @@ defaults:
   # PyTorch profiler preset (min/default/max) under profiling/torch/
   # Mount under key `torch_profiler` to avoid confusion with Nsight profiling
   - profiling/torch@torch_profiler: torch-profiler.default
+  # Runner configuration (toggle static analysis, etc.)
+  - runners: stage1.default
   - _self_
 
 # Global knobs (basic configuration only)

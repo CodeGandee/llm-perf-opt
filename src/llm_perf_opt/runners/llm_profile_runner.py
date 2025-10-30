@@ -869,88 +869,99 @@ def main(cfg: DictConfig) -> None:  # pragma: no cover - CLI orchestrator
         model_window=None,
     )
 
-    # Compute improved MFU using static analyzer
-    try:
-        pre_cfg = getattr(getattr(cfg, "model", {}), "preprocess", {})
-        prefill_len_mean = int(summary.get("aggregates", {}).get("tokens", {}).get("mean", 0) or 0)
-        # Use actual input prefill length from runs if available
+    # Compute improved MFU using static analyzer (guarded by runner config)
+    # Support either mounting under root (analysis.static) or under runners group (runners.analysis.static)
+    analysis = getattr(cfg, "analysis", None)
+    if analysis is None or (hasattr(analysis, "_is_none") and analysis._is_none()):  # type: ignore[attr-defined]
+        runners_node = getattr(cfg, "runners", None)
+        if runners_node is not None and hasattr(runners_node, "analysis"):
+            analysis = getattr(runners_node, "analysis")
+    if analysis is None:
+        analysis = {}
+    static_cfg = getattr(analysis, "static", {})
+    if bool(getattr(static_cfg, "enabled", True)):
         try:
-            prefill_len_mean = int(mean_std([r.prefill_len for r in runs])[0])
+            pre_cfg = getattr(getattr(cfg, "model", {}), "preprocess", {})
+            prefill_len_mean = int(summary.get("aggregates", {}).get("tokens", {}).get("mean", 0) or 0)
+            # Use actual input prefill length from runs if available
+            try:
+                prefill_len_mean = int(mean_std([r.prefill_len for r in runs])[0])
+            except Exception:
+                pass
+            analyzer = DeepseekOCRStaticAnalyzer(session)
+            aconf = AnalysisConfig(
+                image_h=int(pre_cfg.get("base_size", 1024)),
+                image_w=int(pre_cfg.get("base_size", 1024)),
+                base_size=int(pre_cfg.get("base_size", 1024)),
+                image_size=int(pre_cfg.get("image_size", 640)),
+                seq_len=max(prefill_len_mean, 1),
+                crop_mode=bool(pre_cfg.get("crop_mode", True)),
+                patch_size=int(pre_cfg.get("patch_size", 16)),
+                downsample_ratio=int(pre_cfg.get("downsample_ratio", 4)),
+                use_analytic_fallback=bool(getattr(static_cfg, "use_analytic_fallback", True)),
+                use_synthetic_inputs=bool(getattr(static_cfg, "use_synthetic_inputs", True)),
+            )
+            static_report = analyzer.generate_report(aconf)
+            # Extract stage flops
+            stages = static_report.get("stages", {}) if isinstance(static_report.get("stages"), dict) else {}
+            def _stage_flops(name: str) -> float:
+                st = stages.get(name, {}) if isinstance(stages.get(name), dict) else {}
+                # Prefer analytic for decode (per-token), otherwise flops
+                if name == "decode":
+                    return float(st.get("flops_analytic", st.get("flops", 0.0)) or 0.0)
+                if name == "prefill":
+                    return float(st.get("flops_analytic", st.get("flops", 0.0)) or 0.0)
+                return float(st.get("flops", 0.0) or 0.0)
+
+            prefill_flops_total = _stage_flops("prefill")
+            decode_flops_per_token = _stage_flops("decode")
+            vision_flops_total = _stage_flops("sam") + _stage_flops("clip") + _stage_flops("projector")
+
+            aggr = summary.get("aggregates", {}) if isinstance(summary.get("aggregates"), dict) else {}
+            pf_ms = float(aggr.get("prefill_ms", {}).get("mean", 0.0))
+            dc_ms = float(aggr.get("decode_ms", {}).get("mean", 0.0))
+            vn_ms = float(aggr.get("stage_ms", {}).get("vision", {}).get("mean", 0.0)) if isinstance(aggr.get("stage_ms", {}), dict) else 0.0
+            toks_mean = float(aggr.get("tokens", {}).get("mean", 0.0))
+
+            # MFU calculations (TFLOPs utilization)
+            def _mfu(flops: float, ms: float) -> float:
+                if ms <= 0.0 or peak <= 0.0:
+                    return 0.0
+                achieved_tflops = (flops / 1e12) / (ms / 1000.0)
+                return float(achieved_tflops / peak)
+
+            mfu_prefill = _mfu(prefill_flops_total, pf_ms)
+            mfu_decode = _mfu(decode_flops_per_token * max(toks_mean, 1.0), dc_ms)
+            mfu_vision = _mfu(vision_flops_total, vn_ms) if vn_ms > 0.0 else 0.0
+            # Overall model-level MFU across prefill+decode (avoid double counting vision)
+            total_flops = prefill_flops_total + decode_flops_per_token * max(toks_mean, 1.0)
+            total_time_s = (pf_ms + dc_ms) / 1000.0 if (pf_ms + dc_ms) > 0 else 0.0
+            mfu_model = (total_flops / 1e12) / total_time_s / peak if total_time_s > 0 and peak > 0 else summary.get("mfu_model_level", 0.0)
+
+            # Update summary MFUs with improved estimates
+            summary["mfu_per_stage"] = {
+                "prefill": float(mfu_prefill),
+                "decode": float(mfu_decode),
+                "vision": float(mfu_vision),
+            }
+            summary["mfu_model_level"] = float(mfu_model)
+
+            # Write detailed static compute report (JSON+MD) if allowed
+            try:
+                if bool(getattr(static_cfg, "write_reports", True)):
+                    from llm_perf_opt.profiling.export import write_static_compute_json, write_static_compute_markdown
+                    write_static_compute_json(static_report, artifacts_dir / "static_compute.json")
+                    write_static_compute_markdown(static_report, artifacts_dir / "static_compute.md")
+            except Exception:
+                pass
         except Exception:
-            pass
-        analyzer = DeepseekOCRStaticAnalyzer(session)
-        aconf = AnalysisConfig(
-            image_h=int(pre_cfg.get("base_size", 1024)),
-            image_w=int(pre_cfg.get("base_size", 1024)),
-            base_size=int(pre_cfg.get("base_size", 1024)),
-            image_size=int(pre_cfg.get("image_size", 640)),
-            seq_len=max(prefill_len_mean, 1),
-            crop_mode=bool(pre_cfg.get("crop_mode", True)),
-            patch_size=int(pre_cfg.get("patch_size", 16)),
-            downsample_ratio=int(pre_cfg.get("downsample_ratio", 4)),
-            use_analytic_fallback=True,
-            use_synthetic_inputs=True,
-        )
-        static_report = analyzer.generate_report(aconf)
-        # Extract stage flops
-        stages = static_report.get("stages", {}) if isinstance(static_report.get("stages"), dict) else {}
-        def _stage_flops(name: str) -> float:
-            st = stages.get(name, {}) if isinstance(stages.get(name), dict) else {}
-            # Prefer analytic for decode (per-token), otherwise flops
-            if name == "decode":
-                return float(st.get("flops_analytic", st.get("flops", 0.0)) or 0.0)
-            if name == "prefill":
-                return float(st.get("flops_analytic", st.get("flops", 0.0)) or 0.0)
-            return float(st.get("flops", 0.0) or 0.0)
-
-        prefill_flops_total = _stage_flops("prefill")
-        decode_flops_per_token = _stage_flops("decode")
-        vision_flops_total = _stage_flops("sam") + _stage_flops("clip") + _stage_flops("projector")
-
-        aggr = summary.get("aggregates", {}) if isinstance(summary.get("aggregates"), dict) else {}
-        pf_ms = float(aggr.get("prefill_ms", {}).get("mean", 0.0))
-        dc_ms = float(aggr.get("decode_ms", {}).get("mean", 0.0))
-        vn_ms = float(aggr.get("stage_ms", {}).get("vision", {}).get("mean", 0.0)) if isinstance(aggr.get("stage_ms", {}), dict) else 0.0
-        toks_mean = float(aggr.get("tokens", {}).get("mean", 0.0))
-
-        # MFU calculations (TFLOPs utilization)
-        def _mfu(flops: float, ms: float) -> float:
-            if ms <= 0.0 or peak <= 0.0:
-                return 0.0
-            achieved_tflops = (flops / 1e12) / (ms / 1000.0)
-            return float(achieved_tflops / peak)
-
-        mfu_prefill = _mfu(prefill_flops_total, pf_ms)
-        mfu_decode = _mfu(decode_flops_per_token * max(toks_mean, 1.0), dc_ms)
-        mfu_vision = _mfu(vision_flops_total, vn_ms) if vn_ms > 0.0 else 0.0
-        # Overall model-level MFU across prefill+decode (avoid double counting vision)
-        total_flops = prefill_flops_total + decode_flops_per_token * max(toks_mean, 1.0)
-        total_time_s = (pf_ms + dc_ms) / 1000.0 if (pf_ms + dc_ms) > 0 else 0.0
-        mfu_model = (total_flops / 1e12) / total_time_s / peak if total_time_s > 0 and peak > 0 else summary.get("mfu_model_level", 0.0)
-
-        # Update summary MFUs with improved estimates
-        summary["mfu_per_stage"] = {
-            "prefill": float(mfu_prefill),
-            "decode": float(mfu_decode),
-            "vision": float(mfu_vision),
-        }
-        summary["mfu_model_level"] = float(mfu_model)
-
-        # Write detailed static compute report (JSON+MD)
-        try:
-            from llm_perf_opt.profiling.export import write_static_compute_json, write_static_compute_markdown
-            write_static_compute_json(static_report, artifacts_dir / "static_compute.json")
-            write_static_compute_markdown(static_report, artifacts_dir / "static_compute.md")
-        except Exception:
-            pass
-    except Exception:
-        # Fall back to previous simple static report path
-        static_compute = {}
-        try:
-            static_compute = session.estimate_static_compute()
-            _write_static_compute(artifacts_dir, static_compute)
-        except Exception:
-            pass
+            # Fall back to previous simple static report path
+            static_compute = {}
+            try:
+                static_compute = session.estimate_static_compute()
+                _write_static_compute(artifacts_dir, static_compute)
+            except Exception:
+                pass
     if save_preds and preds_for_outputs:
         _write_predictions_outputs(
             artifacts_dir,
