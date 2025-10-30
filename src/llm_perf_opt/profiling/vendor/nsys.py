@@ -28,6 +28,16 @@ def build_nsys_cmd(
     nvtx_capture
         NVTX capture expression (e.g., "range@LLM").
 
+    Example
+    -------
+    To profile the Stage 1 runner without static analyzer (recommended for Nsight runs):
+    >>> work = [
+    ...     'python', '-m', 'llm_perf_opt.runners.llm_profile_runner',
+    ...     'dataset.subset_filelist=/abs/dev-20.txt', 'device=cuda:0', 'repeats=1',
+    ...     'infer.max_new_tokens=64', 'runners=stage1.no-static'
+    ... ]
+    >>> cmd = build_nsys_cmd(Path('tmp/stage2/run/nsys'), work)
+
     Returns
     -------
     list[str]
@@ -44,4 +54,3 @@ def build_nsys_cmd(
         "-o",
         str(out_base),
     ] + list(work_argv)
-

@@ -34,35 +34,92 @@ def get_device_name(index: int = 0) -> str:
 
 
 def get_peak_tflops(device_name: str, precision: str = "bf16") -> float:
-    """Return a coarse theoretical peak TFLOPs for known devices.
+    """Return theoretical peak TFLOPs for known devices based on precision.
 
     Parameters
     ----------
     device_name : str
         Friendly GPU device name.
     precision : str, default='bf16'
-        Numeric precision context (informational only in this stub).
+        Numeric precision: 'fp32', 'fp16', 'bf16', or 'tf32'.
+        For 'bf16', returns FP16 Tensor Core performance.
 
     Returns
     -------
     float
         TFLOPs value. Falls back to ``MFU_PEAK_TFLOPS`` env var, or ``100`` if unset.
+
+    Notes
+    -----
+    FP16/BF16 values are dense Tensor Core performance (not sparse).
+    FP32 values are CUDA core performance.
+    Data sources: NVIDIA official specs, TechPowerUp, Tom's Hardware (2025).
+    See context/hints/nv-profile-kb/peak-tflops-reference.md for details.
     """
 
+    # Nested table: device -> precision -> TFLOPS
     table = {
-        # Values are dense Tensor Core FP16/BF16 peak where applicable,
-        # otherwise FP16/FP32 non‑tensor as noted in docs. See
-        # context/hints/nv-profile-kb/peak-tflops-reference.md
-        "NVIDIA H100": 990.0,
-        "NVIDIA A100": 312.0,
-        "NVIDIA GeForce RTX 4090": 330.0,
-        # Source: Tom's Hardware (Tensor TFLOPS FP16 (sparsity) 142 (285));
-        # we use dense FP16 TC ≈ 142 for MFU denominator on 3090.
-        "NVIDIA GeForce RTX 3090": 142.0,
+        # Data Center GPUs
+        "NVIDIA H100 SXM": {
+            "fp32": 67.0,
+            "fp16": 1979.0,  # Tensor Core
+            "bf16": 1979.0,  # Tensor Core
+            "tf32": 989.0,   # Tensor Core
+        },
+        "NVIDIA H100 PCIe": {
+            "fp32": 51.0,
+            "fp16": 1513.0,
+            "bf16": 1513.0,
+            "tf32": 756.0,
+        },
+        "NVIDIA H200": {
+            "fp32": 67.0,
+            "fp16": 1979.0,
+            "bf16": 1979.0,
+            "tf32": 989.0,
+        },
+        "NVIDIA A100": {
+            "fp32": 19.5,
+            "fp16": 312.0,
+            "bf16": 312.0,
+            "tf32": 156.0,
+        },
+        "NVIDIA A800": {
+            "fp32": 19.5,
+            "fp16": 312.0,
+            "bf16": 312.0,
+            "tf32": 156.0,
+        },
+        # Consumer GPUs
+        "NVIDIA GeForce RTX 4090": {
+            "fp32": 82.6,
+            "fp16": 661.0,  # Tensor Core
+            "bf16": 661.0,  # Tensor Core
+        },
+        "NVIDIA GeForce RTX 3090": {
+            "fp32": 35.6,
+            "fp16": 285.0,  # Tensor Core (sparse spec; use with caution)
+            "bf16": 285.0,  # Tensor Core
+        },
     }
-    for key, val in table.items():
+
+    # Normalize precision to lowercase
+    prec = precision.lower()
+    if prec not in ("fp32", "fp16", "bf16", "tf32"):
+        prec = "bf16"  # default to bf16 if unrecognized
+
+    # Find matching device (substring match)
+    for key, prec_dict in table.items():
         if key in device_name:
-            return val
+            # Return value for requested precision, fallback to bf16, then first available
+            if prec in prec_dict:
+                return prec_dict[prec]
+            elif "bf16" in prec_dict:
+                return prec_dict["bf16"]
+            else:
+                return next(iter(prec_dict.values()))
+
+    # No match found, try environment variable
     try:
         return float(os.environ.get("MFU_PEAK_TFLOPS", "100"))
     except Exception:

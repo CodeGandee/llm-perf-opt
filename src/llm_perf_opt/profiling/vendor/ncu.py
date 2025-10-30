@@ -21,6 +21,16 @@ def build_ncu_cmd(out_base: Path, work_argv: Sequence[str], *, nvtx_expr: str) -
     nvtx_expr
         NVTX include expression (e.g., "LLM@*") to constrain kernel capture.
 
+    Example
+    -------
+    Profile kernels for the Stage 1 runner while disabling its static analyzer:
+    >>> work = [
+    ...     'python', '-m', 'llm_perf_opt.runners.llm_profile_runner',
+    ...     'dataset.subset_filelist=/abs/dev-20.txt', 'device=cuda:0', 'repeats=1',
+    ...     'infer.max_new_tokens=64', 'runners=stage1.no-static'
+    ... ]
+    >>> cmd = build_ncu_cmd(Path('tmp/stage2/run/ncu/kernels'), work, nvtx_expr='LLM@*')
+
     Returns
     -------
     list[str]
@@ -43,4 +53,3 @@ def build_ncu_cmd(out_base: Path, work_argv: Sequence[str], *, nvtx_expr: str) -
         "-o",
         str(out_base),
     ] + list(work_argv)
-

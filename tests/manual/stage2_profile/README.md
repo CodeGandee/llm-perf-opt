@@ -13,7 +13,12 @@ Quick Checks
 - pixi run python -c "import llm_perf_opt; print('ok')"
 - pixi run python -c "print('stage2-profile' in open('pyproject.toml').read())"
 
+Workload selection and runner interop
+- When profiling the Stage 1 runner with Nsight, disable its static analyzer to avoid extra overhead:
+  - Add Hydra override `runners=stage1.no-static` to your workload argv
+  - Example `work_argv` passed to `build_nsys_cmd`/`build_ncu_cmd`:
+    - `['python', '-m', 'llm_perf_opt.runners.llm_profile_runner', 'dataset.subset_filelist=/abs/dev-20.txt', 'device=cuda:0', 'repeats=1', 'infer.max_new_tokens=64', 'runners=stage1.no-static']`
+
 Notes
 - The actual deep profiling runner will be added in later phases.
 - Artifacts will be written under `tmp/stage2/<run_id>/` once the runner lands.
-

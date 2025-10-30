@@ -24,3 +24,9 @@ hydra:
   output_subdir: null
   job:
     chdir: true
+
+# Interop with Stage 1 runner (refactor compatibility)
+# If the Stage 2 runner delegates the workload to the Stage 1 runner,
+# pass this override so static analysis is disabled during Nsight capture.
+stage1_runner:
+  disable_static: true   # translates to Hydra override: runners=stage1.no-static
