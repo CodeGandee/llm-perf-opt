@@ -98,7 +98,7 @@ def build_nsys_stats_cmd(report_path: Path, out_csv_base: Path) -> list[str]:
     ]
 
 
-def build_nsys_export_sqlite_cmd(report_path: Path) -> list[str]:
+def build_nsys_export_sqlite_cmd(report_path: Path, force_overwrite: bool = True) -> list[str]:
     """Return `nsys export --type sqlite` argv for a report file.
 
     Parameters
@@ -107,13 +107,16 @@ def build_nsys_export_sqlite_cmd(report_path: Path) -> list[str]:
         Path to the report file (`.nsys-rep` or `.qdrep`).
     """
 
-    return [
+    cmd = [
         "nsys",
         "export",
         "--type",
         "sqlite",
-        str(report_path),
     ]
+    if force_overwrite:
+        cmd += ["--force-overwrite", "true"]
+    cmd += [str(report_path)]
+    return cmd
 
 
 def resolve_nsys_report_path(out_base: Path) -> Path | None:

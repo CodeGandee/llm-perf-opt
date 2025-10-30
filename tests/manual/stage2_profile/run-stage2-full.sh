@@ -47,6 +47,7 @@ else
 fi
 
 CMD=(pixi run stage2-profile "$RUN_OVERRIDE" +nsys.gating_nvtx=false +ncu.gating_nvtx=false \
+  ncu=ncu.rtx3090.compute \
   "+run.dataset_subset_filelist=$SUBSET_ABS" \
   "+run.stage1_repeats=20")
 

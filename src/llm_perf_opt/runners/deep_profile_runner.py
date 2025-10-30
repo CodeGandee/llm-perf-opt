@@ -173,6 +173,26 @@ def main(cfg: DictConfig) -> None:  # pragma: no cover - CLI orchestrator
         kernel_regex = None
     csv_log = artifacts.path("ncu/raw.csv")
     gating_nvtx_ncu = bool(getattr(getattr(cfg, "ncu", {}), "gating_nvtx", True))
+    # Read NCU config knobs
+    ncu_set = None
+    ncu_metrics = None
+    try:
+        ncu_set = str(getattr(getattr(cfg, "ncu", {}), "set", "roofline"))
+    except Exception:
+        ncu_set = "roofline"
+    try:
+        ncu_metrics = str(getattr(getattr(cfg, "ncu", {}), "metrics", "")) or None
+    except Exception:
+        ncu_metrics = None
+    # Sections (optional)
+    ncu_sections = None
+    try:
+        secs = getattr(getattr(cfg, "ncu", {}), "sections", None)
+        if isinstance(secs, (list, tuple)):
+            ncu_sections = [str(s) for s in secs if s]
+    except Exception:
+        ncu_sections = None
+
     ncu_cmd = build_ncu_cmd(
         ncu_out,
         work,
@@ -180,8 +200,59 @@ def main(cfg: DictConfig) -> None:  # pragma: no cover - CLI orchestrator
         kernel_regex=kernel_regex,
         csv_log=csv_log,
         use_nvtx=gating_nvtx_ncu,
+        set_name=ncu_set,
+        metrics=(None if ncu_sections else ncu_metrics),
+        sections=ncu_sections,
     )
     subprocess.run(ncu_cmd, check=False)
+
+    # If sections were requested, import the .ncu-rep and render sections to a text report
+    try:
+        if ncu_sections:
+            ncu_rep = Path(str(ncu_out) + ".ncu-rep")
+            if ncu_rep.exists():
+                from llm_perf_opt.profiling.vendor.ncu import build_ncu_import_sections_cmd
+                sec_cmd = build_ncu_import_sections_cmd(ncu_rep, ncu_sections, page="raw")
+                sec_out = artifacts.path("ncu/sections_report.txt")
+                with open(sec_out, "w", encoding="utf-8") as sf:
+                    subprocess.run(sec_cmd, check=False, stdout=sf, stderr=subprocess.STDOUT)
+    except Exception:
+        pass
+
+    # Fallback: if NCU reported no kernels, rerun without NVTX gating and without sections
+    try:
+        ncu_csv_path = artifacts.path("ncu/raw.csv")
+        rerun = False
+        if Path(ncu_csv_path).exists():
+            head = Path(ncu_csv_path).read_text(encoding="utf-8", errors="ignore")[:1000]
+            if "No kernels were profiled" in head:
+                rerun = True
+        if rerun:
+            ncu_cmd2 = build_ncu_cmd(
+                ncu_out,
+                work,
+                nvtx_expr=str(getattr(getattr(cfg, "ncu", {}), "nvtx_include", "decode*")),
+                kernel_regex=None,
+                csv_log=ncu_csv_path,
+                use_nvtx=False,
+                set_name=ncu_set,
+                metrics=None,  # let tool choose
+                sections=None,
+            )
+            subprocess.run(ncu_cmd2, check=False)
+            # Best-effort import of sections from the new rep as well
+            try:
+                ncu_rep2 = Path(str(ncu_out) + ".ncu-rep")
+                if ncu_rep2.exists() and ncu_sections:
+                    from llm_perf_opt.profiling.vendor.ncu import build_ncu_import_sections_cmd
+                    sec_cmd2 = build_ncu_import_sections_cmd(ncu_rep2, ncu_sections, page="raw")
+                    sec_out2 = artifacts.path("ncu/sections_report.txt")
+                    with open(sec_out2, "w", encoding="utf-8") as sf2:
+                        subprocess.run(sec_cmd2, check=False, stdout=sf2, stderr=subprocess.STDOUT)
+            except Exception:
+                pass
+    except Exception:
+        pass
 
     # Generate kernels.md from Nsight Compute CSV (if present)
     try:
