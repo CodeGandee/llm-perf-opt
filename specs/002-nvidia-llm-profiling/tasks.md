@@ -62,8 +62,8 @@ Independent Test: One command runs a profiling session and writes artifacts unde
 - [X] T016 [P] [US1] Add manual run script `tests/manual/stage2_profile/manual_stage2_profile.py` (invokes Pixi `stage2-profile`, asserts expected files exist)
 
 # Hint-driven additions (Nsight + Hydra integration per context/hints/nv-profile-kb/howto-manage-nsys-ncu-processes-for-llm.md)
-- [ ] T030 [P] [US1] Add NVTX helpers with LLM domain labels in `src/llm_perf_opt/profiling/nvtx_utils.py` (ranges: `LLM@prefill`, `LLM@decode_all`, optional `LLM@decode_step`)
-- [ ] T031 [US1] Integrate NVTX helpers around prefill/decode in `src/llm_perf_opt/runners/deep_profile_runner.py` (wrap full decode loop with `LLM@decode_all`)
+- [X] T030 [P] [US1] Verify existing NVTX ranges in model session (`dsocr_session.py`) and align Nsight filters; no new helpers required
+- [X] T031 [US1] Use existing NVTX labels; update runner to target `decode*` for Nsight Compute and NVTX range gating for Nsight Systems
 - [ ] T032 [P] [US1] Implement Hydra-aware argv builder in `src/llm_perf_opt/profiling/vendor/launch.py` (builds list argv; injects `hydra.run.dir`, `hydra.job.chdir`, `+run.mode`, `+inputs.manifest`)
 - [ ] T033 [US1] Extend `src/llm_perf_opt/profiling/vendor/nsys.py` to export stats/SQLite (`nsys stats --report summary --format csv`, `nsys export --sqlite` under `tmp/stage2/<run_id>/nsys/`)
 - [ ] T034 [US1] Extend `src/llm_perf_opt/profiling/vendor/ncu.py` to enforce `--target-processes all`, NVTX include, `--set roofline`, `--section ".*SpeedOfLight.*"`, metrics list, and export raw CSV to `tmp/stage2/<run_id>/ncu/`

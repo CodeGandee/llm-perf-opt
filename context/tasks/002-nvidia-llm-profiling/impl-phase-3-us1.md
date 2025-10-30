@@ -34,25 +34,14 @@ def main(cfg: DictConfig) -> None:
     pass
 ```
 
-### T030/T031: NVTX helpers and integration
+### T030/T031: NVTX ranges — use existing session tags
 
-```python
-# src/llm_perf_opt/profiling/nvtx_utils.py
-import nvtx
-from contextlib import contextmanager
+NVTX segmentation already exists in the model session (`dsocr_session.py`) via
+`prefill`/`decode` ranges and sub-stage hooks (`sam`, `clip`, `projector`). Do
+not add new NVTX helpers; instead, align profiler filters to these labels.
 
-@contextmanager
-def llm_prefill():
-    nvtx.push_range('LLM@prefill');
-    try: yield
-    finally: nvtx.pop_range()
-
-@contextmanager
-def llm_decode_all():
-    nvtx.push_range('LLM@decode_all');
-    try: yield
-    finally: nvtx.pop_range()
-```
+- Nsight Systems: use NVTX range gating without label filter (`nvtx_capture=range`).
+- Nsight Compute: include `decode*` to focus on decode kernels.
 
 ### T032: Hydra‑aware argv builder
 
@@ -86,7 +75,7 @@ sequenceDiagram
 art = Artifacts(run_dir)
 work = build_work_argv('llm_perf_opt.runners.llm_profile_runner', hydra_overrides)
 subprocess.run(build_nsys_cmd(art.root/"nsys"/"run", work), check=True)
-subprocess.run(build_ncu_cmd(art.root/"ncu"/"decode", work, nvtx_expr='LLM@decode_all/'), check=True)
+subprocess.run(build_ncu_cmd(art.root/"ncu"/"decode", work, nvtx_expr='decode*'), check=True)
 ```
 
 ## Testing

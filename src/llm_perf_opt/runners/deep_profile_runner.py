@@ -92,12 +92,14 @@ def main(cfg: DictConfig) -> None:  # pragma: no cover - CLI orchestrator
 
     # Nsight Systems capture
     nsys_out = artifacts.path("nsys/run")
-    nsys_cmd = build_nsys_cmd(nsys_out, work)
+    # Use NVTX range gating without label filter to capture prefill→decode
+    nsys_cmd = build_nsys_cmd(nsys_out, work, nvtx_capture="range")
     subprocess.run(nsys_cmd, check=False)
 
     # Nsight Compute capture (focus on decode region)
     ncu_out = artifacts.path("ncu/decode")
-    ncu_cmd = build_ncu_cmd(ncu_out, work, nvtx_expr="LLM@decode_all*")
+    # Focus on decode region using existing NVTX label from the session
+    ncu_cmd = build_ncu_cmd(ncu_out, work, nvtx_expr="decode*")
     subprocess.run(ncu_cmd, check=False)
 
     # Provenance files
