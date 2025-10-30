@@ -1,0 +1,27 @@
+# Stage 2 runner configuration (Hydra)
+
+defaults:
+  # Reuse Stage 1 PyTorch representative profiler presets under torch_profiler
+  - /profiling/torch@torch_profiler: torch-profiler.min
+  # External profiler presets (Nsight Systems / Nsight Compute)
+  - /profiling/nsys@nsys: default
+  - /profiling/ncu@ncu: default
+  - _self_
+
+run:
+  # deep | light
+  mode: deep
+  # Number of top kernels (by total time) to select for Nsight Compute
+  top_n_kernels: 30
+
+artifacts:
+  # Where Stage 2 artifacts are written
+  stage2_dir: ${hydra:runtime.cwd}/tmp/stage2/${now:%Y%m%d-%H%M%S}
+
+hydra:
+  run:
+    dir: ${artifacts.stage2_dir}
+  output_subdir: null
+  job:
+    chdir: true
+

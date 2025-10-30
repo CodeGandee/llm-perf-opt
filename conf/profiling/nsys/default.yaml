@@ -1,0 +1,11 @@
+# Nsight Systems (nsys) preset — default
+
+trace: cuda,nvtx,osrt          # subsystems to trace
+sample: none                   # disable sampling to reduce overhead
+capture_range: nvtx            # gate profiling by NVTX ranges
+nvtx_capture: range@LLM        # capture ranges within NVTX domain/range (e.g., LLM@...)
+
+export:
+  stats_csv: true              # run `nsys stats --format csv`
+  sqlite: true                 # run `nsys export --sqlite`
+
