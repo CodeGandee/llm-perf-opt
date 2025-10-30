@@ -58,7 +58,7 @@ outputs.save_predictions=false outputs.visualization.enable=false
 ```
 
 Notes:
-- If your runner supports `profiling.enabled=false`, set it to fully skip the representative PyTorch profiling block. If not wired yet, use the above minimal preset plus `warmup_rounds=0` and a small `rep_max_new_tokens` to limit cost.
+- Prefer the alias `+torch_profiler.enabled=false` to fully skip the representative PyTorch profiling block (code supports both this alias and `+profiling.enabled=false`). If not skipping, use the minimal preset plus `warmup_rounds=0` and a small `rep_max_new_tokens` to limit cost.
 - Keep NVTX ranges enabled (LLM@prefill, LLM@decode_all) so nsys/ncu can still isolate stages.
 - Consider `repeats=1` for Stage 2, and ensure `hydra.run.dir` points to `tmp/stage2/<run_id>` to collocate vendor outputs.
 

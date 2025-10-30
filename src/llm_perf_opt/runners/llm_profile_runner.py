@@ -690,7 +690,15 @@ def main(cfg: DictConfig) -> None:  # pragma: no cover - CLI orchestrator
 
     # Optional warmup rounds (gate by profiling.enabled)
     prof_cfg = getattr(cfg, "profiling", {})
-    prof_enabled = bool(prof_cfg.get("enabled", True))
+    # Allow alias key `torch_profiler.enabled` (CLI-friendly for Stage 2 to avoid confusion)
+    _tp_override = None
+    try:
+        tp = getattr(cfg, "torch_profiler")
+        if tp is not None and hasattr(tp, "enabled"):
+            _tp_override = bool(getattr(tp, "enabled"))
+    except Exception:
+        _tp_override = None
+    prof_enabled = (_tp_override if _tp_override is not None else bool(prof_cfg.get("enabled", True)))
     warmup_rounds = int(prof_cfg.get("warmup_rounds", 0)) if prof_enabled else 0
     warmup_synth = bool(prof_cfg.get("warmup_synthetic", True))
     if warmup_rounds > 0:

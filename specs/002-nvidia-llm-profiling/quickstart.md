@@ -65,7 +65,7 @@ pixi run stage2-profile -- \
 
 Notes:
 - Keep NVTX ranges enabled (LLM@prefill, LLM@decode_all) so nsys/ncu can isolate stages.
-- If the runner supports `profiling.enabled=false`, you can also disable the representative PyTorch profiler entirely. Otherwise the above keeps it minimal.
+- To fully skip the representative PyTorch profiler, prefer `+torch_profiler.enabled=false` (alias) or `+profiling.enabled=false` (legacy key). The above example keeps it minimal if you want some operator stats.
 - Runner config lives under `conf/runner/`; `conf/profiling/` should be used for external profiler presets (torch/nsys/ncu).
 
 ### Data model reuse (Stage 2)
