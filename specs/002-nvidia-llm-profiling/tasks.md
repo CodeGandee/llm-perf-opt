@@ -61,6 +61,16 @@ Independent Test: One command runs a profiling session and writes artifacts unde
 - [ ] T015 [US1] Integrate Nsight Compute in `src/llm_perf_opt/profiling/vendor/ncu.py` and call from runner (auto-select top-N kernels strategy stub; persist CSV/JSON under `tmp/stage2/<run_id>/ncu/`)
 - [ ] T016 [P] [US1] Add manual run script `tests/manual/stage2_profile/manual_stage2_profile.py` (invokes Pixi `stage2-profile`, asserts expected files exist)
 
+# Hint-driven additions (Nsight + Hydra integration per context/hints/nv-profile-kb/howto-manage-nsys-ncu-processes-for-llm.md)
+- [ ] T030 [P] [US1] Add NVTX helpers with LLM domain labels in `src/llm_perf_opt/profiling/nvtx_utils.py` (ranges: `LLM@prefill`, `LLM@decode_all`, optional `LLM@decode_step`)
+- [ ] T031 [US1] Integrate NVTX helpers around prefill/decode in `src/llm_perf_opt/runners/deep_profile_runner.py` (wrap full decode loop with `LLM@decode_all`)
+- [ ] T032 [P] [US1] Implement Hydra-aware argv builder in `src/llm_perf_opt/profiling/vendor/launch.py` (builds list argv; injects `hydra.run.dir`, `hydra.job.chdir`, `+run.mode`, `+inputs.manifest`)
+- [ ] T033 [US1] Extend `src/llm_perf_opt/profiling/vendor/nsys.py` to export stats/SQLite (`nsys stats --report summary --format csv`, `nsys export --sqlite` under `tmp/stage2/<run_id>/nsys/`)
+- [ ] T034 [US1] Extend `src/llm_perf_opt/profiling/vendor/ncu.py` to enforce `--target-processes all`, NVTX include, `--set roofline`, `--section ".*SpeedOfLight.*"`, metrics list, and export raw CSV to `tmp/stage2/<run_id>/ncu/`
+- [ ] T035 [P] [US1] Add Hydra toggles for profiler options in `conf/profiling/stage2.yaml` (`nsys.trace`, `nsys.sample`, `nsys.capture`, `ncu.target_processes`, `ncu.clock_control`, `ncu.cache_control`, `ncu.nvtx_include`)
+- [ ] T036 [P] [US1] Ensure artifact layout includes `nsys/` and `ncu/` subfolders in `src/llm_perf_opt/profiling/artifacts.py` (create on run init)
+- [ ] T037 [P] [US1] Implement top‑N kernel selection from `nsys stats` CSV in `src/llm_perf_opt/profiling/nsys_stats.py` (choose by total time) and feed names to ncu wrapper
+
 Checkpoint: US1 runnable end-to-end; artifacts produced consistently
 
 ---
@@ -193,3 +203,16 @@ Incremental Delivery
 - Keep trace size and runtime within bounds; switch to light mode if needed
 - Prefer `pixi run` for all commands
 
+---
+
+## Implementation Guides
+
+For detailed APIs, flows, and test commands per phase, see:
+
+- Phase 1 (Setup): `context/tasks/002-nvidia-llm-profiling/impl-phase-1-setup.md`
+- Phase 2 (Foundational): `context/tasks/002-nvidia-llm-profiling/impl-phase-2-foundational.md`
+- Phase 3 (US1 – Deep Profiling): `context/tasks/002-nvidia-llm-profiling/impl-phase-3-us1.md`
+- Phase 4 (US2 – Kernels Export): `context/tasks/002-nvidia-llm-profiling/impl-phase-4-us2.md`
+- Phase 5 (US3 – Stakeholder Report): `context/tasks/002-nvidia-llm-profiling/impl-phase-5-us3.md`
+- Phase 6 (US4 – Cross‑Model): `context/tasks/002-nvidia-llm-profiling/impl-phase-6-us4.md`
+- Phase 7 (Polish): `context/tasks/002-nvidia-llm-profiling/impl-phase-7-polish.md`
