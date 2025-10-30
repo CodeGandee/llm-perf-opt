@@ -121,13 +121,13 @@ As an ML engineer, I want to apply the profiling workflow to different LLMs with
 - **FR-009**: The system MUST include at least one manual test flow under `tests/manual/stage2_profile/` that guides users through a complete profiling session and verification of artifacts.
 - **FR-010**: The default deep profiling flow MUST use Nsight Systems for the full run and run Nsight Compute on the top‑N kernels only (auto‑selected from total time) to capture utilization/occupancy/memory counters within the overhead target.
 
-### Key Entities *(include if feature involves data)*
+### Key Entities (Reuse‑first)
 
-- **ProfilingSession**: A single execution context capturing inputs, configuration, environment, timings, and generated artifacts.
-- **ModelTarget**: Identifies the profiled model family, variant, parameters, and relevant metadata for cross-run comparison.
-- **StageTiming**: Aggregated timing per annotated stage (prefill, decode), including totals, means, and counts.
-- **OperatorRecord**: Aggregated operator-level metrics (total time, calls, mean ms), sorted by total time.
-- **KernelRecord**: Aggregated kernel-level metrics (name, device, total time, calls, mean ms) used to attribute GPU time.
+- Reuse Stage 1 models: `StageTiming` (attrs), `OperatorSummary`/`OperatorRecord` for operators, `LLMProfileReport` aggregates with `aggregates.stage_ms`.
+- New for Stage 2: **KernelRecord** (name, device, total ms, calls, mean ms) for kernels table and attribution.
+- Optional: extend `LLMProfileReport` with `kernels_topk: list[KernelRecord]`.
+- Provenance (ProfilingSession concept): on‑disk bundle of `env.json`, `config.yaml`, `inputs.yaml`, profiler outputs and tables under `tmp/stage2/<run_id>/`. No new runtime class required.
+- ModelTarget: recorded in provenance/config metadata (not a separate model).
 
 ## Success Criteria *(mandatory)*
 

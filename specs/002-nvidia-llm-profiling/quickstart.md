@@ -45,3 +45,7 @@ pixi run python -c "import torch; print(torch.__version__)"
 ```
 pixi run stage2-profile -- +run.mode=light
 ```
+
+### Data model reuse (Stage 2)
+
+- Stage 2 reuses Stage 1 domain models (StageTiming, OperatorSummary/OperatorRecord, LLMProfileReport aggregates) and introduces only `KernelRecord` for the kernels table. ProfilingSession is treated as an on‑disk provenance bundle (env/config/artifacts) rather than a new runtime class.

@@ -109,7 +109,7 @@ Output: specs/002-nvidia-llm-profiling/research.md (decisions with rationale and
 ## Phase 1: Design & Contracts
 
 Deliverables:
-- specs/002-nvidia-llm-profiling/data-model.md (ProfilingSession, ModelTarget, StageTiming, OperatorRecord, KernelRecord)
+- specs/002-nvidia-llm-profiling/data-model.md (Reuse‑first: reuse Stage 1 models; add KernelRecord only; optional LLMProfileReport.kernels_topk; ProfilingSession is an on‑disk provenance bundle; ModelTarget embedded in provenance)
 - specs/002-nvidia-llm-profiling/contracts/profile.yaml (OpenAPI endpoints for run and artifact retrieval)
 - specs/002-nvidia-llm-profiling/quickstart.md (Pixi/NVIDIA tools usage; manual test flow)
 - Update agent context via `.specify/scripts/bash/update-agent-context.sh codex`

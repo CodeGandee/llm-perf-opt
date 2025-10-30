@@ -34,9 +34,14 @@ Spec: specs/002-nvidia-llm-profiling/spec.md
 - Rationale: Catch regressions in formatting and aggregation logic with low effort.
 - Alternatives considered: Full e2e automated validation (heavy fixtures, high maintenance).
 
+## Data Model Reuse
+
+- Decision: Reuse Stage 1 domain/contract models (StageTiming, OperatorSummary/OperatorRecord, LLMProfileReport aggregates). Introduce only `KernelRecord` and optionally extend `LLMProfileReport` with `kernels_topk`.
+- Rationale: Avoid duplication and reduce migration cost; keep Stage 2 focused on kernel attribution.
+- Alternatives considered: New parallel model set (adds maintenance burden and risk of divergence).
+
 ## Multi-GPU / MIG Scope
 
 - Decision: Default scope is single GPU. Document guidance for device selection and MIG; multi-GPU support as future work.
 - Rationale: Keeps Stage 2 focused; complexity grows with multi-GPU synchronization.
 - Alternatives considered: Multi-GPU in Stage 2 (risks scope creep and delays).
-
