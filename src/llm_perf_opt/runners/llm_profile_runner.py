@@ -688,9 +688,10 @@ def main(cfg: DictConfig) -> None:  # pragma: no cover - CLI orchestrator
     precision = str(getattr(cfg.model, "dtype", "bf16"))
     peak = get_peak_tflops(device_name, precision)
 
-    # Optional warmup rounds
+    # Optional warmup rounds (gate by profiling.enabled)
     prof_cfg = getattr(cfg, "profiling", {})
-    warmup_rounds = int(prof_cfg.get("warmup_rounds", 0))
+    prof_enabled = bool(prof_cfg.get("enabled", True))
+    warmup_rounds = int(prof_cfg.get("warmup_rounds", 0)) if prof_enabled else 0
     warmup_synth = bool(prof_cfg.get("warmup_synthetic", True))
     if warmup_rounds > 0:
         logger.info("Warmup: rounds=%d synthetic=%s", warmup_rounds, warmup_synth)
@@ -720,48 +721,51 @@ def main(cfg: DictConfig) -> None:  # pragma: no cover - CLI orchestrator
             except Exception:
                 break
 
-    # Representative operator profile on the first image
+    # Representative operator profile on the first image (gate by profiling.enabled)
     operator_records: list[OperatorRecord] = []
-    rep_image = str(images[0])
-    prof_cfg = getattr(cfg, "profiling", {})
-    sel_acts = [str(x).lower() for x in list(prof_cfg.get("activities", ["cpu", "cuda"]))]
-    activities = []
-    if "cpu" in sel_acts:
-        activities.append(ProfilerActivity.CPU)
-    if "cuda" in sel_acts and torch.cuda.is_available():
-        activities.append(ProfilerActivity.CUDA)
-    try:
-        # Keep rep profile bounded; honor profiling config caps and switches
-        rep_cap = int(getattr(getattr(cfg, 'profiling', {}), 'rep_max_new_tokens', 64))
-        rep_max_new = int(min(int(getattr(cfg, "infer", {}).get("max_new_tokens", 64)), rep_cap))
-        record_shapes = bool(prof_cfg.get("record_shapes", False))
-        profile_memory = bool(prof_cfg.get("profile_memory", False))
-        with_stack = bool(prof_cfg.get("with_stack", False))
-        with profile(activities=activities if activities else [ProfilerActivity.CPU], record_shapes=record_shapes, profile_memory=profile_memory, with_stack=with_stack) as prof:  # type: ignore[call-arg]
-            logger.info("Profiling representative image: %s", rep_image)
-            _ = session.run_inference(
-                image_path=rep_image,
-                prompt="<image>\n<|grounding|>Convert the document to markdown.",
-                max_new_tokens=rep_max_new,
-                preprocess=dict(
-                    enable=bool(getattr(cfg.model, "preprocess", {}).get("enable", True)),
-                    base_size=int(getattr(cfg.model, "preprocess", {}).get("base_size", 1024)),
-                    image_size=int(getattr(cfg.model, "preprocess", {}).get("image_size", 640)),
-                    crop_mode=bool(getattr(cfg.model, "preprocess", {}).get("crop_mode", False)),
-                    patch_size=int(getattr(cfg.model, "preprocess", {}).get("patch_size", 16)),
-                    downsample_ratio=int(getattr(cfg.model, "preprocess", {}).get("downsample_ratio", 4)),
-                ),
-            )
-            # Ensure all CUDA work is complete so GPU timings are captured by the profiler
-            try:
-                if torch.cuda.is_available() and any(a == ProfilerActivity.CUDA for a in activities):
-                    torch.cuda.synchronize()
-            except Exception:
-                pass
-        operator_records = _collect_operator_records(prof)
-        logger.info("Collected %d operator records", len(operator_records))
-    except Exception:
-        operator_records = []  # Fail‑open for environments without profiler
+    if prof_enabled:
+        rep_image = str(images[0])
+        prof_cfg = getattr(cfg, "profiling", {})
+        sel_acts = [str(x).lower() for x in list(prof_cfg.get("activities", ["cpu", "cuda"]))]
+        activities = []
+        if "cpu" in sel_acts:
+            activities.append(ProfilerActivity.CPU)
+        if "cuda" in sel_acts and torch.cuda.is_available():
+            activities.append(ProfilerActivity.CUDA)
+        try:
+            # Keep rep profile bounded; honor profiling config caps and switches
+            rep_cap = int(getattr(getattr(cfg, 'profiling', {}), 'rep_max_new_tokens', 64))
+            rep_max_new = int(min(int(getattr(cfg, "infer", {}).get("max_new_tokens", 64)), rep_cap))
+            record_shapes = bool(prof_cfg.get("record_shapes", False))
+            profile_memory = bool(prof_cfg.get("profile_memory", False))
+            with_stack = bool(prof_cfg.get("with_stack", False))
+            with profile(activities=activities if activities else [ProfilerActivity.CPU], record_shapes=record_shapes, profile_memory=profile_memory, with_stack=with_stack) as prof:  # type: ignore[call-arg]
+                logger.info("Profiling representative image: %s", rep_image)
+                _ = session.run_inference(
+                    image_path=rep_image,
+                    prompt="<image>\n<|grounding|>Convert the document to markdown.",
+                    max_new_tokens=rep_max_new,
+                    preprocess=dict(
+                        enable=bool(getattr(cfg.model, "preprocess", {}).get("enable", True)),
+                        base_size=int(getattr(cfg.model, "preprocess", {}).get("base_size", 1024)),
+                        image_size=int(getattr(cfg.model, "preprocess", {}).get("image_size", 640)),
+                        crop_mode=bool(getattr(cfg.model, "preprocess", {}).get("crop_mode", False)),
+                        patch_size=int(getattr(cfg.model, "preprocess", {}).get("patch_size", 16)),
+                        downsample_ratio=int(getattr(cfg.model, "preprocess", {}).get("downsample_ratio", 4)),
+                    ),
+                )
+                # Ensure all CUDA work is complete so GPU timings are captured by the profiler
+                try:
+                    if torch.cuda.is_available() and any(a == ProfilerActivity.CUDA for a in activities):
+                        torch.cuda.synchronize()
+                except Exception:
+                    pass
+            operator_records = _collect_operator_records(prof)
+            logger.info("Collected %d operator records", len(operator_records))
+        except Exception:
+            operator_records = []  # Fail‑open for environments without profiler
+    else:
+        logger.info("profiling.enabled=false: skipping PyTorch representative profiling and warmup")
 
     # Repeated runs across dataset
     runs: list[ImageRun] = []
