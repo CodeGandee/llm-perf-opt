@@ -1,14 +1,25 @@
+"""Vendor tool availability checks for Stage 2.
+
+This module provides small helpers to ensure Nsight Systems/Compute are
+available on PATH and raise clear, user-friendly errors otherwise.
+"""
+
 from __future__ import annotations
 
 import shutil
 
 
 class ToolNotFoundError(RuntimeError):
-    pass
+    """Raised when a required external tool is not available on PATH."""
 
 
 def ensure_nsys() -> str:
     """Return `nsys` executable path or raise a friendly error.
+
+    Returns
+    -------
+    str
+        Resolved path to the `nsys` executable.
 
     Raises
     ------
@@ -27,6 +38,11 @@ def ensure_nsys() -> str:
 def ensure_ncu() -> str:
     """Return `ncu` executable path or raise a friendly error.
 
+    Returns
+    -------
+    str
+        Resolved path to the `ncu` executable.
+
     Raises
     ------
     ToolNotFoundError
@@ -39,4 +55,3 @@ def ensure_ncu() -> str:
             "Nsight Compute (ncu) not found in PATH. Install it and verify with 'ncu --version'."
         )
     return path
-

@@ -1,3 +1,18 @@
+"""Nsight Compute parsing helpers for kernel metrics.
+
+This module provides CSV/JSON loaders and a mapper to convert generic `ncu`
+records into the project's `KernelRecord` data model.
+
+Functions
+---------
+parse_ncu_csv
+    Read a CSV exported by `ncu` and return a list of row dicts.
+parse_ncu_json
+    Read a JSON export from `ncu` and return a list of dicts.
+kernels_from_ncu_rows
+    Convert row dicts into `KernelRecord` objects with best‑effort field mapping.
+"""
+
 from __future__ import annotations
 
 import csv
@@ -13,8 +28,19 @@ def parse_ncu_csv(csv_path: str | Path) -> list[dict]:
 
     Parameters
     ----------
-    csv_path : str | Path
+    csv_path : str or Path
         Path to a CSV file exported by `ncu`.
+
+    Returns
+    -------
+    list of dict
+        List of row dictionaries keyed by column header.
+
+    Examples
+    --------
+    >>> rows = parse_ncu_csv('ncu_report.csv')  # doctest: +SKIP
+    >>> isinstance(rows, list)
+    True
     """
 
     rows: List[dict] = []
@@ -30,6 +56,16 @@ def parse_ncu_json(json_path: str | Path) -> list[dict]:
     The JSON structure from `ncu --export` may vary by version; this function
     returns a flat list if a top-level list is present, otherwise wraps the
     loaded object.
+
+    Parameters
+    ----------
+    json_path : str or Path
+        Path to a JSON file exported by `ncu`.
+
+    Returns
+    -------
+    list of dict
+        List of record dictionaries.
     """
 
     with open(json_path, "r", encoding="utf-8") as f:
@@ -42,8 +78,20 @@ def parse_ncu_json(json_path: str | Path) -> list[dict]:
 def kernels_from_ncu_rows(rows: Iterable[dict], device: str = "cuda:0") -> list[KernelRecord]:
     """Convert generic `ncu` rows into `KernelRecord` entries.
 
-    This is a best-effort mapper that looks for common column headers and falls
+    This is a best‑effort mapper that looks for common column headers and falls
     back to zeros when fields are missing.
+
+    Parameters
+    ----------
+    rows : iterable of dict
+        Rows as returned by `parse_ncu_csv`/`parse_ncu_json`.
+    device : str, optional
+        Device identifier to tag in the resulting records, by default ``'cuda:0'``.
+
+    Returns
+    -------
+    list of KernelRecord
+        Parsed kernel records suitable for top‑K tables.
     """
 
     out: list[KernelRecord] = []
@@ -100,4 +148,3 @@ def kernels_from_ncu_rows(rows: Iterable[dict], device: str = "cuda:0") -> list[
             # Skip malformed rows
             continue
     return out
-

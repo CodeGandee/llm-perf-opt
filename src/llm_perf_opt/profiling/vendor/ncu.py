@@ -1,3 +1,9 @@
+"""Nsight Compute command builders.
+
+Produces `ncu` command argv for kernel-level metric collection. These helpers
+do not execute the profiler; they only construct lists for subprocess use.
+"""
+
 from pathlib import Path
 from typing import Sequence
 
@@ -14,14 +20,14 @@ def build_ncu_cmd(out_base: Path, work_argv: Sequence[str], *, nvtx_expr: str) -
 
     Parameters
     ----------
-    out_base
+    out_base : pathlib.Path
         Base output path (without extension) for Nsight Compute outputs.
-    work_argv
+    work_argv : sequence of str
         The target command (and args) to execute under Nsight Compute.
-    nvtx_expr
+    nvtx_expr : str
         NVTX include expression (e.g., "LLM@*") to constrain kernel capture.
 
-    Example
+    Examples
     -------
     Profile kernels for the Stage 1 runner while disabling its static analyzer:
     >>> work = [

@@ -35,13 +35,13 @@ class KernelRecord:
 from pathlib import Path
 
 class Artifacts:
-    def __init__(self, root: Path):
-        self.root = root
-        (root/"nsys").mkdir(parents=True, exist_ok=True)
-        (root/"ncu").mkdir(parents=True, exist_ok=True)
-
-    def path(self, name: str) -> Path:
-        return self.root / name
+    def __init__(self) -> None: ...  # no-arg constructor per coding guide
+    @classmethod
+    def from_root(cls, root: Path | str) -> "Artifacts": ...
+    def set_root(self, root: Path | str) -> None: ...
+    @property
+    def root(self) -> Path: ...
+    def path(self, name: str) -> Path: ...
 ```
 
 ### T009: Nsight Compute CSV parser
@@ -72,8 +72,7 @@ graph LR
 ```bash
 pixi run python - <<'PY'
 from llm_perf_opt.profiling.artifacts import Artifacts
-from pathlib import Path
-art = Artifacts(Path('tmp/stage2/demo'))
+art = Artifacts.from_root('tmp/stage2/demo')
 print(art.path('env.json'))
 PY
 ```

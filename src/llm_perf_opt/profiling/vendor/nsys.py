@@ -1,3 +1,9 @@
+"""Nsight Systems command builders.
+
+Build safe argv lists for profiling workloads with `nsys profile`. These helpers
+do not execute commands; they only construct argument lists for subprocess use.
+"""
+
 from pathlib import Path
 from typing import Sequence
 
@@ -15,20 +21,20 @@ def build_nsys_cmd(
 
     Parameters
     ----------
-    out_base
+    out_base : pathlib.Path
         Base output path (without extension) for Nsight Systems artifacts.
-    work_argv
+    work_argv : sequence of str
         The target command (and args) to execute under Nsight Systems.
-    trace
+    trace : str, optional
         Trace sources, defaults to CUDA + NVTX + OS runtime.
-    sample
+    sample : str, optional
         CPU sampling mode. "none" recommended for lower overhead in GPU focus.
-    capture
+    capture : str, optional
         Capture range selector. "nvtx" to gate by NVTX ranges.
-    nvtx_capture
+    nvtx_capture : str, optional
         NVTX capture expression (e.g., "range@LLM").
 
-    Example
+    Examples
     -------
     To profile the Stage 1 runner without static analyzer (recommended for Nsight runs):
     >>> work = [
