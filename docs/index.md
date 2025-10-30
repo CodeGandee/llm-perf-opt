@@ -1,17 +1,18 @@
-# LLM Perf Opt — DeepSeek‑OCR Stage 1
+# LLM Perf Opt — DeepSeek‑OCR Profiling
 
-LLM Perf Opt provides a reproducible profiling and benchmarking workflow for DeepSeek‑OCR. Phase 3 (US1) is implemented with NVTX ranges, PyTorch operator summaries, and vendor‑style prediction outputs and visualizations.
+LLM Perf Opt provides a reproducible profiling and benchmarking workflow for DeepSeek‑OCR.
+It supports multiple pipelines from a single config: PyTorch operator profiling, Static analysis, Nsight Systems, and Nsight Compute.
 
 Key links:
-- Runner entry: `src/llm_perf_opt/runners/llm_profile_runner.py`
+- PyTorch runner: `src/llm_perf_opt/runners/llm_profile_runner.py`
+- Deep profiling orchestrator: `src/llm_perf_opt/runners/deep_profile_runner.py`
 - Session wrapper: `src/llm_perf_opt/runners/dsocr_session.py`
 - Vendor style viz: `src/llm_perf_opt/visualize/annotations.py`
 - Config root: `conf/`
 
-What you can do:
-- Run a profiling benchmark that writes `report.md`, `operators.md`, `metrics.json` under `tmp/stage1/<run_id>/`.
-- Save predictions with vendor‑style annotated images and `result.mmd` per image.
-- Compare outputs with the official vendor `infer()`.
+Quickstart:
+- `pixi run stage1-run` — writes `torch_profiler/*` and `static_analysis/*` under `tmp/profile-output/<run_id>/`.
+- `pixi run stage2-profile` — writes `nsys/*` under the same run directory.
+- `pixi run stage-all-run` — runs both into a single run directory.
 
 See “Getting Started” for environment and quick commands.
-

@@ -9,6 +9,11 @@ Environment
 - This project uses Pixi for environment and tasks. Install Pixi and run tasks via `pixi run <task>`.
 - Python requirements are declared in `pyproject.toml`.
 
+Common tasks
+- `stage1-run`: torch_profiler + static_analysis to `tmp/profile-output/<run_id>/`
+- `stage2-profile`: Nsight Systems capture (no NCU) to the same dir
+- `stage-all-run`: runs both into one run dir (no NCU)
+
 Quick checks
 ```
 # Lint and type (scoped to src/)
@@ -25,4 +30,4 @@ PY
 Model and dataset layout
 - `models/deepseek-ocr` should be a local clone or HF snapshot; we call its `infer()` function for parity.
 - `datasets/omnidocbench/source-data/images/*.png|*.jpg` contains sample pages.
-
+ - Subset filelist can be relative to the repo root, e.g., `datasets/omnidocbench/subsets/dev-20.txt`.

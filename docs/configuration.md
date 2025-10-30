@@ -1,26 +1,45 @@
 # Configuration
 
-Hydra is used for all configuration. Top-level defaults are in `conf/config.yaml`:
+Hydra is used for all configuration. Top-level defaults are in `conf/config.yaml` and now compose all pipelines from a single entrypoint:
 
 ```
 defaults:
   - dataset: omnidocbench
   - model/deepseek_ocr/arch@model: deepseek_ocr.default
   - model/deepseek_ocr/infer@infer: deepseek_ocr.default
-  # PyTorch profiler presets (min/default/max) are mounted under `torch_profiler`
-  - profiling/torch@torch_profiler: torch-profiler.default
-  # Runner configuration (toggle static analyzer, etc.)
-  - runners: stage1.default
+  - profiling/torch@pipeline.torch_profiler: torch-profiler.default
+  - profiling/nsys@pipeline.nsys: nsys.default
+  - profiling/ncu@pipeline.ncu: ncu.default
   - _self_
 
-experiment: stage1
 repeats: 3
 device: cuda:0
 use_flash_attn: true
 
+run:
+  mode: deep
+  stage1_repeats: 1
+  dataset_subset_filelist: null
+  top_n_kernels: 30
+
+pipeline:
+  static_analysis:
+    enable: true
+    write_reports: true
+    use_analytic_fallback: true
+    use_synthetic_inputs: true
+  torch_profiler:
+    enable: ${pipeline.torch_profiler.enabled}
+  nsys:
+    enable: false
+    gating_nvtx: true
+  ncu:
+    enable: false
+    gating_nvtx: true
+
 hydra:
   run:
-    dir: ${hydra:runtime.cwd}/tmp/stage1/${now:%Y%m%d-%H%M%S}
+    dir: ${hydra:runtime.cwd}/tmp/profile-output/${now:%Y%m%d-%H%M%S}
   output_subdir: null
   job:
     chdir: true
@@ -41,29 +60,23 @@ Config groups
   - keys: `path`, `dtype`, `preprocess.{enable,base_size,image_size,crop_mode,patch_size,downsample_ratio}`
 - Model infer: `conf/model/deepseek_ocr/infer/deepseek_ocr.default.yaml`
   - keys: `temperature`, `max_new_tokens`, `no_repeat_ngram_size`, `do_sample`
-- Runner configs: `conf/runner/`
-  - `stage1.default.yaml`: static analyzer enabled (default)
-  - `stage1.no-static.yaml`: static analyzer disabled (faster)
+- Pipeline presets:
+  - PyTorch profiler: `conf/profiling/torch/torch-profiler.{min,default,max}.yaml`
+  - Nsight Systems: `conf/profiling/nsys/nsys.default.yaml` (supports `capture_range`, `nvtx_capture`, `capture_range_end`)
+  - Nsight Compute: `conf/profiling/ncu/*.yaml`
 
-PyTorch profiler presets (profiling/torch)
-- Files: `torch-profiler.{min,default,max}.yaml`
-- Common keys:
-  - `enabled`: Master on/off for the representative profiling pass.
-  - `activities`: List of profilers to enable, values from {`cpu`, `cuda`}.
-  - `record_shapes`: Record operator input shapes (adds CPU overhead).
-  - `profile_memory`: Collect memory stats/timeline (slower, larger traces).
-  - `with_stack`: Capture Python stacks for events (very slow; huge traces).
-  - `group_by_input_shape`: Aggregate key_averages by input shape (more CPU).
-  - `rep_max_new_tokens`: Hard cap on decode tokens during the profiled run to bound trace size.
-
-Switching presets
-```
-profiling/torch@profiling=torch-profiler.min      # fastest
-profiling/torch@profiling=torch-profiler.default  # balanced (default)
-profiling/torch@profiling=torch-profiler.max      # most detailed
-```
+PyTorch profiler preset keys
+- `enabled`: Master on/off for the representative profiling pass.
+- `activities`: List of profilers to enable, values from {`cpu`, `cuda`}.
+- `record_shapes`, `profile_memory`, `with_stack`, `group_by_input_shape`
+- `rep_max_new_tokens`: Cap profiled decode length to bound trace size.
 
 Notes
-- We no longer use a flat `conf/model/deepseek_ocr.yaml`; it was replaced by the arch/infer groups.
-- To swap fast inference, use `model/deepseek_ocr/infer@infer=deepseek_ocr.fast`.
-- To disable static analyzer for Stage 1, select the runner config with `runner@stage1_runner=stage1.no-static` or use the Pixi task `stage1-run-no-static`.
+- Use `model/deepseek_ocr/infer@infer=deepseek_ocr.fast` to swap fast infer.
+- Static analyzer toggle: `pipeline.static_analysis.enable` (default true).
+- Stage‑oriented configs under `conf/runner/` are deprecated; use pipeline toggles in `conf/config.yaml` instead.
+
+Nsight Systems (nvtx gating)
+- `pipeline.nsys.capture_range` mirrors the CLI (`nvtx|cudaProfilerApi|hotkey|none`).
+- If `capture_range=nvtx`, you must set `pipeline.nsys.nvtx_capture` (e.g., `prefill`, `decode`, or `name@*`). Omitting it results in no trigger and an empty report; the runner will error.
+- Optional: `pipeline.nsys.capture_range_end` supports values like `stop`, `repeat[:N]`, etc. If omitted/empty → not passed.

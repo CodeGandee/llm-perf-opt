@@ -13,18 +13,16 @@ Runner (`llm_profile_runner.py`)
 - Discovers images (`dataset.root` + `fallback_patterns` or `subset_filelist`).
 - Profiles a representative image with PyTorch profiler; collects operator records.
 - Repeats runs over dataset; aggregates timings and MFU.
-- Writes `report.md`, `operators.md`, `metrics.json`, `stakeholder_summary.md` and optional predictions/viz/`llm_profile_runner.log`.
+- Writes `torch_profiler/report.md`, `torch_profiler/operators.md`, `torch_profiler/metrics.json`, and optional predictions/viz/`llm_profile_runner.log`. Writes `static_analysis/static_compute.{json,md}` when enabled.
 - Writes reproducibility artifacts: `env.json`, `inputs.yaml`, `assumptions.md`.
 - Can run a static analyzer (configurable) to estimate per‑stage FLOPs; uses those with measured times to compute improved MFU (prefill total FLOPs; decode per‑token FLOPs × tokens; vision from sam+clip+projector).
 
 Configuration structure
 - `conf/model/<name>/arch/<name>.default.yaml` — architecture + preprocessing
 - `conf/model/<name>/infer/<name>.default.yaml` — inference knobs
-- `conf/config.yaml` composes the groups using `@model` and `@infer`, mounts PyTorch profiler presets under `torch_profiler`, and selects a runner config under `runners`.
-
-Runner configs (toggle static analyzer)
-- `conf/runner/stage1.default.yaml`: analyzer enabled (default)
-- `conf/runner/stage1.no-static.yaml`: analyzer disabled (skip `static_compute.*`)
+- `conf/config.yaml` composes all pipelines from one entry:
+  - mounts `profiling/torch@pipeline.torch_profiler`, `profiling/nsys@pipeline.nsys`, `profiling/ncu@pipeline.ncu`
+  - toggles are under `pipeline.*.enable`
 
 NVTX ranges
 - High-level ranges for prefill/decode (`profiling/nvtx_utils.py`).

@@ -66,7 +66,15 @@ def _read_filelist(root: str, filelist: str) -> list[Path]:
 
     fp = Path(filelist)
     if not fp.is_absolute():
-        fp = Path(root) / filelist
+        # Prefer resolving relative to the original working directory (Hydra runtime.cwd)
+        # so users can pass repo-relative paths even when Hydra chdir is enabled.
+        try:
+            from hydra.core.hydra_config import HydraConfig as _HC  # local import to avoid cycles
+            runtime_cwd = Path(_HC.get().runtime.cwd)
+            cand = runtime_cwd / filelist
+            fp = cand if cand.exists() else (Path(root) / filelist)
+        except Exception:
+            fp = Path(root) / filelist
     lines = [ln.strip() for ln in fp.read_text(encoding="utf-8").splitlines() if ln.strip()]
     out: list[Path] = []
     for ln in lines:
@@ -660,11 +668,18 @@ def main(cfg: DictConfig) -> None:  # pragma: no cover - CLI orchestrator
     if not images:
         raise RuntimeError(f"No images found in dataset root: {cfg.dataset.root}")
 
-    # Prepare output dir (Hydra run dir configured to Stage 1 artifacts path)
-    artifacts_dir = Path(HydraConfig.get().run.dir)
+    # Prepare output dirs: resolve absolute run dir and pipeline subdirs
+    run_dir_cfg = Path(HydraConfig.get().run.dir)
+    base_cwd = Path(HydraConfig.get().runtime.cwd)
+    run_root = run_dir_cfg if run_dir_cfg.is_absolute() else (base_cwd / run_dir_cfg)
+    torch_out_dir = run_root / "torch_profiler"
+    static_out_dir = run_root / "static_analysis"
+    # Use torch_profiler as the main artifacts_dir for this runner
+    artifacts_dir = torch_out_dir
     # Set up a file logger for easier debugging of runs
     try:
-        artifacts_dir.mkdir(parents=True, exist_ok=True)
+        torch_out_dir.mkdir(parents=True, exist_ok=True)
+        static_out_dir.mkdir(parents=True, exist_ok=True)
         fh = logging.FileHandler(artifacts_dir / "llm_profile_runner.log", encoding="utf-8")
         fmt = logging.Formatter("%(asctime)s %(levelname)s %(name)s: %(message)s")
         fh.setFormatter(fmt)
@@ -933,10 +948,10 @@ def main(cfg: DictConfig) -> None:  # pragma: no cover - CLI orchestrator
 
             # Write detailed static compute report (JSON+MD) if allowed
             try:
-                if bool(getattr(static_cfg, "write_reports", True)):
+                if bool(getattr(sa_cfg, "write_reports", True)):
                     from llm_perf_opt.profiling.export import write_static_compute_json, write_static_compute_markdown
-                    write_static_compute_json(static_report, artifacts_dir / "static_compute.json")
-                    write_static_compute_markdown(static_report, artifacts_dir / "static_compute.md")
+                    write_static_compute_json(static_report, static_out_dir / "static_compute.json")
+                    write_static_compute_markdown(static_report, static_out_dir / "static_compute.md")
             except Exception:
                 pass
         except Exception:
@@ -944,7 +959,7 @@ def main(cfg: DictConfig) -> None:  # pragma: no cover - CLI orchestrator
             static_compute = {}
             try:
                 static_compute = session.estimate_static_compute()
-                _write_static_compute(artifacts_dir, static_compute)
+                _write_static_compute(static_out_dir, static_compute)
             except Exception:
                 pass
     if save_preds and preds_for_outputs:

@@ -350,7 +350,7 @@ def main(cfg: DictConfig) -> None:  # pragma: no cover - CLI orchestrator
         import json as _json
         # Load workload metrics for aggregates/MFU
         stats_dict: dict | None = None
-        metrics_path = Path(workload_dir) / "metrics.json"
+        metrics_path = Path(workload_dir) / "torch_profiler" / "metrics.json"
         if Path(metrics_path).exists():
             with open(metrics_path, "r", encoding="utf-8") as mf:
                 m = _json.load(mf)
@@ -406,7 +406,7 @@ def main(cfg: DictConfig) -> None:  # pragma: no cover - CLI orchestrator
             f"- NCU: {(artifacts.out_dir('ncu') / 'raw.csv').name}",
             f"- Top kernels: {artifacts.path('kernels.md').name}",
             f"- Stakeholder: {artifacts.path('stakeholder_summary.md').name}",
-            f"- Workload report: {(Path(workload_dir) / 'report.md').name} (internal workload)",
+            f"- Workload report: {(Path(workload_dir) / 'torch_profiler' / 'report.md').name} (internal workload)",
             "",
         ]
         try:

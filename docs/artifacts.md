@@ -1,37 +1,26 @@
 # Artifacts
 
-Run directory
-- Hydra writes to `tmp/stage1/<run_id>/`.
-- Log file: `llm_profile_runner.log` captures preprocessing, prefill/decode timings, token counts.
+Run directory layout
+- Default run dir: `tmp/profile-output/<run_id>/`.
+- Pipeline outputs live in subdirectories:
+  - `torch_profiler/` — `report.md`, `operators.md`, `metrics.json`, `llm_profile_runner.log`
+  - `static_analysis/` — `static_compute.{json,md}` (enabled by `pipeline.static_analysis.enable`)
+  - `nsys/` — `run.nsys-rep`, `run.sqlite`, `summary_*.csv`, `cmd.txt`
+  - `ncu/` — `raw.csv`, `.ncu-rep`, `sections_report.txt`, `cmd*.txt`
+- Ephemeral scratch lives under `tmp/<stage>/` (e.g., `tmp/workload/` during NSYS capture).
+- Repro at run root: `env.json`, `config.yaml`, `inputs.yaml`.
 
-Core files
-- `report.md` — human summary with aggregates and MFU per stage (uses device peak TFLOPs mapping)
-- `operators.md` — top‑K operator table from PyTorch profiler (sorted by total; includes Mean ms per call)
-- `metrics.json` — machine‑readable summary (includes `aggregates.stage_ms` with prefill/decode and sub‑stages if present)
-- `stakeholder_summary.md` — stakeholder tables: Environment, Aggregates, Per‑Stage Timings (ms), MFU, Top Operators, Recommendations
-
-Static analysis (optional)
-- When enabled via runner config, the runner writes:
-  - `static_compute.json` — detailed analyzer report (per‑stage FLOPs, params, activations)
-  - `static_compute.md` — human‑readable summary of the analyzer report
-
-Reproducibility
-- `env.json` — GPU/CUDA/torch/transformers versions
-- `inputs.yaml` — dataset selection and absolute image paths with width/height/bytes
-- `assumptions.md` — device, repeats, decoding/preprocess/profiling/dataset knobs
+Static analysis
+- Detailed analyzer report under `static_analysis/`:
+  - `static_compute.json` — per‑stage FLOPs, params, activations
+  - `static_compute.md` — human‑readable summary
 
 Predictions and visualization (optional)
 - Enable with `outputs.save_predictions=true`.
-- Files:
-  - `predictions.jsonl` — one JSON per image (raw + clean text, timings, tokens)
-  - `predictions.md` — gallery with thumbnails and annotated images
-  - `viz/<stem>/result_with_boxes.jpg` — annotated original image
-  - `viz/<stem>/result.mmd` — vendor‑style text with `![](images/<idx>.jpg)` references
-  - `viz/_thumbs/<stem>.jpg` — thumbnails used in the gallery
+- Files (under `torch_profiler/`):
+  - `predictions.jsonl`, `predictions.md`
+  - `viz/<stem>/result_with_boxes.jpg`, `viz/<stem>/result.mmd`, `viz/_thumbs/<stem>.jpg`
 
-Vendor parity outputs
-- Use `scripts/deepseek-ocr-infer-one.py` to generate the official artifacts for comparison.
-- Typical layout: `<output>/<stem>/{result_with_boxes.jpg,result.mmd,images/}`.
 Notes on profiler tables
-- CUDA time often aggregates under kernel entries (e.g., `cudaLaunchKernel`, `flash_attn::*`) and may be 0 for many high‑level `aten::*` rows. See `context/summaries/issue-pytorch-profiler-zero-cuda-time.md`.
-- Mean ms is `total_time_ms / calls` and helps compare per‑call costs while keeping sort by total.
+- CUDA time often aggregates under kernel entries (e.g., `cudaLaunchKernel`, `flash_attn::*`) and may be 0 for many high‑level `aten::*` rows.
+- Mean ms is `total_time_ms / calls`.

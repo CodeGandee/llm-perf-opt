@@ -2,7 +2,7 @@
 
 No outputs created
 - Ensure dataset root exists: `conf/dataset/omnidocbench.yaml` → `datasets/omnidocbench/source-data`
-- Run with Pixi (not system Python): `pixi run bench-stage1`
+- Run with Pixi (not system Python): `pixi run stage1-run`
 
 Boxes misaligned in visualization
 - Verify that predictions are saved with specials intact (`outputs.save_predictions=true`).
@@ -15,7 +15,7 @@ Hydra override errors
 - When selecting grouped configs, include targets: `model/deepseek_ocr/arch@model=...` and `model/deepseek_ocr/infer@infer=...`.
 
 Where are logs?
-- Each run writes `llm_profile_runner.log` under `tmp/stage1/<run_id>/`.
+- Each run writes `llm_profile_runner.log` under `tmp/profile-output/<run_id>/torch_profiler/`.
 
 PyTorch profiler shows 0 CUDA time for many ops
 - Expected behavior: device time is attributed to kernel entries (e.g., `cudaLaunchKernel`, `flash_attn::*`), not necessarily to high‑level `aten::*` rows.

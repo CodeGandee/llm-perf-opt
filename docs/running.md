@@ -1,10 +1,11 @@
 # Running
 
 Pixi tasks
-- `stage1-run`: run Stage 1 Hydra runner and produce full artifacts (report/operators/metrics/stakeholder summary + reproducibility)
-- `stage1-run-no-static`: same as `stage1-run` but disables static analyzer (faster; skips `static_compute.*`)
-- `bench-stage1`: subprocess Hydra run via `tests/manual/manual_stage1_benchmark.py`
-- `bench-stage1-inproc`: in-process Hydra run (notebook-friendly)
+- `stage1-run`: run pipelines `torch_profiler` + `static_analysis` and produce full artifacts (report/operators/metrics + reproducibility)
+- `stage1-run-no-static`: same as `stage1-run` but disables static analyzer (skips `static_analysis/*`)
+- `stage2-profile`: run Nsight Systems (`nsys`) capture (workload profiling/static disabled during capture)
+- `stage-all-run`: run Stage 1 first, then `nsys` to the same output dir
+- `bench-stage1`, `bench-stage1-inproc`: manual benchmark variants
 - `dsocr-infer-one`: run vendor `infer()` across inputs for parity
 
 Examples
@@ -21,11 +22,11 @@ pixi run python -m llm_perf_opt.runners.llm_profile_runner \
   model/deepseek_ocr/infer@infer=deepseek_ocr.default \
   outputs.save_predictions=true repeats=1 device=cuda:0
 
-# One-liners with Pixi tasks (Stage 1)
-pixi run stage1-run
-
-# Disable static analyzer via runner config
-pixi run stage1-run-no-static
+# One-liners with Pixi tasks
+pixi run stage1-run                      # torch_profiler + static_analysis
+pixi run stage1-run-no-static            # torch_profiler only
+pixi run stage2-profile                  # nsys only (ncu disabled)
+pixi run stage-all-run                   # stage1 + nsys into same run dir
 
 # Vendor parity on a single image (writes result_with_boxes.jpg/result.mmd)
 pixi run python scripts/deepseek-ocr-infer-one.py \
@@ -39,12 +40,15 @@ Hydra overrides
   - `device=cuda:0`
   - `outputs.save_predictions=true`
   - `model.preprocess.enable=false` to skip preprocessing (debug mode)
- - Disable static analyzer without a Pixi task by selecting the runner config:
-   - `runners=stage1.no-static`
+ - Disable static analyzer:
+   - `pipeline.static_analysis.enable=false`
 
 Where outputs go
-- Hydra run dir is set to `tmp/stage1/<run_id>/`.
-- Core: `report.md`, `operators.md`, `metrics.json`, `stakeholder_summary.md`, `llm_profile_runner.log`
-- Reproducibility: `env.json`, `inputs.yaml`, `assumptions.md`
-- Static analysis: `static_compute.{json,md}` (only when enabled; default ON)
-- Optional predictions + gallery: `predictions.jsonl`, `predictions.md`, `viz/`
+- Hydra run dir defaults to `tmp/profile-output/<run_id>/`.
+- Pipeline outputs:
+  - `torch_profiler/`: `report.md`, `operators.md`, `metrics.json`, `llm_profile_runner.log`
+  - `static_analysis/`: `static_compute.{json,md}` (when enabled)
+  - `nsys/`: `run.nsys-rep`, `run.sqlite`, `summary_*.csv`, `cmd.txt` (when enabled)
+  - `ncu/`: `raw.csv`, `.ncu-rep`, `sections_report.txt`, `cmd*.txt` (when enabled)
+- Reproducibility at run root: `env.json`, `config.yaml`, `inputs.yaml`
+- Optional predictions + gallery: `torch_profiler/predictions.jsonl`, `torch_profiler/predictions.md`, `torch_profiler/viz/`
