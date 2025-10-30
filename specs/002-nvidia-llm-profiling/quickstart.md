@@ -46,6 +46,28 @@ pixi run python -c "import torch; print(torch.__version__)"
 pixi run stage2-profile -- +run.mode=light
 ```
 
+### Minimize Stage 1 Overhead (Stage 2)
+
+When running Stage 2 with Nsight tools, keep the Stage 1 PyTorch profiler as light as possible to avoid compounding overhead. Example:
+
+```
+pixi run stage2-profile -- \
+  +run.mode=deep \
+  +inputs.manifest=/abs/path/to/inputs.yaml \
+  profiling=@profiling/torch/torch-profiler.min \
+  'profiling.activities=[cpu]' \
+  +profiling.record_shapes=false +profiling.profile_memory=false +profiling.with_stack=false \
+  +profiling.warmup_rounds=0 +profiling.rep_max_new_tokens=16 \
+  repeats=1 \
+  hydra.run.dir=$(pwd)/tmp/stage2/$(date +%Y%m%d-%H%M%S) hydra.job.chdir=true \
+  outputs.save_predictions=false outputs.visualization.enable=false
+```
+
+Notes:
+- Keep NVTX ranges enabled (LLM@prefill, LLM@decode_all) so nsys/ncu can isolate stages.
+- If the runner supports `profiling.enabled=false`, you can also disable the representative PyTorch profiler entirely. Otherwise the above keeps it minimal.
+- Runner config lives under `conf/runner/`; `conf/profiling/` should be used for external profiler presets (torch/nsys/ncu).
+
 ### Data model reuse (Stage 2)
 
 - Stage 2 reuses Stage 1 domain models (StageTiming, OperatorSummary/OperatorRecord, LLMProfileReport aggregates) and introduces only `KernelRecord` for the kernels table. ProfilingSession is treated as an on‑disk provenance bundle (env/config/artifacts) rather than a new runtime class.
