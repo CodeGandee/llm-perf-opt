@@ -1,4 +1,4 @@
-# Top-level Hydra defaults for Stage 1 profiling
+# Unified Hydra defaults (single entrypoint)
 
 defaults:
   # Dataset root and discovery rules
@@ -8,10 +8,11 @@ defaults:
   # Inference defaults (e.g., temperature, max_new_tokens)
   - model/deepseek_ocr/infer@infer: deepseek_ocr.default
   # PyTorch profiler preset (min/default/max) under profiling/torch/
-  # Mount under key `torch_profiler` to avoid confusion with Nsight profiling
-  - profiling/torch@torch_profiler: torch-profiler.default
-  # Runner configuration (toggle static analysis, etc.)
-  - runner@stage1_runner: stage1.default
+  # Mount under nested key `pipeline.torch_profiler`
+  - profiling/torch@pipeline.torch_profiler: torch-profiler.default
+  # Nsight presets mounted into nested pipeline keys
+  - profiling/nsys@pipeline.nsys: nsys.default
+  - profiling/ncu@pipeline.ncu: ncu.default
   - _self_
 
 # Global knobs (basic configuration only)
@@ -20,13 +21,43 @@ repeats: 3               # total rounds to run
 device: cuda:0           # target device
 use_flash_attn: true     # enable flash attention if available
 
-# Hydra run/output directory aligns with Stage 1 artifacts
+# Unified run controls for orchestrator (used by Stage-2/deep profiling)
+run:
+  mode: deep                   # deep | light
+  stage1_repeats: 1            # number of repeats for the workload during capture
+  dataset_subset_filelist: null # optional filelist to limit workload samples
+  top_n_kernels: 30            # number of top kernels to inspect in NCU
+
+# Hydra run/output directory aligns with Stage 1 artifacts by default
 hydra:
   run:
     dir: ${hydra:runtime.cwd}/tmp/stage1/${now:%Y%m%d-%H%M%S}
   output_subdir: null
   job:
     chdir: true
+
+# Unified pipeline configuration
+pipeline:
+  static_analysis:
+    enable: true
+    write_reports: true
+    use_analytic_fallback: true
+    use_synthetic_inputs: true
+  # Torch profiler settings are mounted from profiling/torch preset above.
+  # Expose a uniform enable flag here; defaults to the preset's 'enabled'.
+  torch_profiler:
+    enable: ${pipeline.torch_profiler.enabled}
+  # Nsight Systems
+  nsys:
+    enable: false
+    gating_nvtx: true
+    # Other keys (trace, sample, capture_range, capture_range_end, nvtx_capture)
+    # are inherited from the mounted preset.
+  # Nsight Compute
+  ncu:
+    enable: false
+    gating_nvtx: true
+    # Keys (nvtx_include, set, metrics, sections) inherited from the preset.
 
 # Output controls
 outputs:

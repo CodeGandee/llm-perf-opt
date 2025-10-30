@@ -1,12 +1,12 @@
-"""Stage 2 artifacts management utilities.
+"""Artifacts management utilities.
 
 This module provides helpers and a small manager to create and organize the
-Stage 2 artifacts directory tree and write provenance files (env/config/inputs).
+run artifacts directory tree and write provenance files (env/config/inputs).
 
 Classes
 -------
 Artifacts
-    Manager class for artifacts layout (root/nsys/ncu) with read-only property
+    Manager class for artifacts layout (root/nsys/ncu and pipeline dirs) with read-only property
     access and explicit setters/factories per coding guidelines.
 
 Functions
@@ -59,7 +59,7 @@ def new_run_id(dt: Optional[datetime] = None) -> str:
 
 
 class Artifacts:
-    """Artifacts manager for Stage 2 runs.
+    """Artifacts manager for profiling runs.
 
     This class follows the project OO guidelines: constructor takes no
     arguments; use the `from_root()` factory or the `set_root()` mutator to
@@ -92,10 +92,16 @@ class Artifacts:
             Destination root for this artifacts manager.
         """
 
-        rp = Path(root)
+        # Always resolve to an absolute path to avoid nested/duplicated prefixes
+        rp = Path(root).resolve()
         rp.mkdir(parents=True, exist_ok=True)
+        # User-facing pipeline output dirs
         (rp / "nsys").mkdir(parents=True, exist_ok=True)
         (rp / "ncu").mkdir(parents=True, exist_ok=True)
+        (rp / "static_analysis").mkdir(parents=True, exist_ok=True)
+        (rp / "torch_profiler").mkdir(parents=True, exist_ok=True)
+        # Ephemeral scratch
+        (rp / "tmp").mkdir(parents=True, exist_ok=True)
         self.m_root = rp
 
     @classmethod
@@ -123,6 +129,28 @@ class Artifacts:
         """
 
         return self.root / name
+
+    def out_dir(self, stage: str) -> Path:
+        """Return the absolute output directory for a pipeline stage.
+
+        Valid stages: 'static_analysis', 'torch_profiler', 'nsys', 'ncu'.
+        The directory is created if missing.
+        """
+
+        p = self.root / stage
+        p.mkdir(parents=True, exist_ok=True)
+        return p
+
+    def tmp_dir(self, stage: str) -> Path:
+        """Return the absolute tmp directory for a stage or internal workload.
+
+        Typical stages: 'static_analysis', 'torch_profiler', 'nsys', 'ncu', 'workload'.
+        The directory is created if missing.
+        """
+
+        p = self.root / "tmp" / stage
+        p.mkdir(parents=True, exist_ok=True)
+        return p
 
 
 def create_stage2_root(base_dir: Path | str = "tmp/stage2") -> Path:

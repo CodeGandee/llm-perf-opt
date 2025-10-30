@@ -15,6 +15,7 @@ def build_nsys_cmd(
     trace: str = "cuda,nvtx,osrt",
     sample: str = "none",
     capture: str = "nvtx",
+    capture_end: str | None = None,
     nvtx_capture: str = "decode",
     enable_nonregistered_nvtx: bool = True,
 ) -> list[str]:
@@ -66,9 +67,12 @@ def build_nsys_cmd(
     nvx = str(nvtx_capture).lower()
     if cap != "none":
         cmd += [f"--capture-range={capture}"]
-        if enable_nonregistered_nvtx:
+        if capture_end and str(capture_end).strip():
+            cmd += [f"--capture-range-end={capture_end}"]
+        if enable_nonregistered_nvtx and cap == "nvtx":
             cmd += ["--env-var=NSYS_NVTX_PROFILER_REGISTER_ONLY=0"]
-    if nvx != "none":
+    # Only pass NVTX capture expression when capture-range uses NVTX gating
+    if cap == "nvtx" and nvx != "none":
         cmd += [f"--nvtx-capture={nvtx_capture}"]
     cmd += ["-o", str(out_base)]
     return cmd + list(work_argv)

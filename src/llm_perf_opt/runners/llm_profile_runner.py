@@ -602,7 +602,7 @@ def _write_assumptions_md(artifacts_dir: Path, cfg: DictConfig) -> None:
     )
 
     md.new_header(level=2, title="Profiling Settings (PyTorch rep)")
-    prof = getattr(cfg, "torch_profiler", getattr(cfg, "profiling", {}))
+    prof = getattr(getattr(cfg, "pipeline", {}), "torch_profiler", {})
     acts = ",".join([str(x) for x in list(getattr(prof, "activities", ["cpu", "cuda"]))])
     md.new_list(
         items=[
@@ -688,19 +688,12 @@ def main(cfg: DictConfig) -> None:  # pragma: no cover - CLI orchestrator
     precision = str(getattr(cfg.model, "dtype", "bf16"))
     peak = get_peak_tflops(device_name, precision)
 
-    # Optional warmup rounds (gate by torch_profiler.enabled)
-    prof_cfg = getattr(cfg, "torch_profiler", getattr(cfg, "profiling", {}))
-    # Allow alias key `torch_profiler.enabled` (CLI-friendly for Stage 2 to avoid confusion)
-    _tp_override = None
-    try:
-        tp = getattr(cfg, "torch_profiler")
-        if tp is not None and hasattr(tp, "enabled"):
-            _tp_override = bool(getattr(tp, "enabled"))
-    except Exception:
-        _tp_override = None
-    prof_enabled = (_tp_override if _tp_override is not None else bool(prof_cfg.get("enabled", True)))
-    warmup_rounds = int(prof_cfg.get("warmup_rounds", 0)) if prof_enabled else 0
-    warmup_synth = bool(prof_cfg.get("warmup_synthetic", True))
+    # Optional warmup rounds (gate by pipeline.torch_profiler.enable)
+    tp_cfg = getattr(getattr(cfg, "pipeline", {}), "torch_profiler", {})
+    # Prefer `enable`; fallback to `enabled` for preset compatibility
+    prof_enabled = bool(getattr(tp_cfg, "enable", getattr(tp_cfg, "enabled", True)))
+    warmup_rounds = int(getattr(tp_cfg, "warmup_rounds", 0)) if prof_enabled else 0
+    warmup_synth = bool(getattr(tp_cfg, "warmup_synthetic", True))
     if warmup_rounds > 0:
         logger.info("Warmup: rounds=%d synthetic=%s", warmup_rounds, warmup_synth)
         from PIL import Image  # type: ignore[import-untyped]
@@ -733,8 +726,8 @@ def main(cfg: DictConfig) -> None:  # pragma: no cover - CLI orchestrator
     operator_records: list[OperatorRecord] = []
     if prof_enabled:
         rep_image = str(images[0])
-        prof_cfg = getattr(cfg, "torch_profiler", getattr(cfg, "profiling", {}))
-        sel_acts = [str(x).lower() for x in list(prof_cfg.get("activities", ["cpu", "cuda"]))]
+        prof_cfg = tp_cfg
+        sel_acts = [str(x).lower() for x in list(getattr(prof_cfg, "activities", ["cpu", "cuda"]))]
         activities = []
         if "cpu" in sel_acts:
             activities.append(ProfilerActivity.CPU)
@@ -742,11 +735,11 @@ def main(cfg: DictConfig) -> None:  # pragma: no cover - CLI orchestrator
             activities.append(ProfilerActivity.CUDA)
         try:
             # Keep rep profile bounded; honor profiling config caps and switches
-            rep_cap = int(getattr(getattr(cfg, 'profiling', {}), 'rep_max_new_tokens', 64))
+            rep_cap = int(getattr(prof_cfg, 'rep_max_new_tokens', 64))
             rep_max_new = int(min(int(getattr(cfg, "infer", {}).get("max_new_tokens", 64)), rep_cap))
-            record_shapes = bool(prof_cfg.get("record_shapes", False))
-            profile_memory = bool(prof_cfg.get("profile_memory", False))
-            with_stack = bool(prof_cfg.get("with_stack", False))
+            record_shapes = bool(getattr(prof_cfg, "record_shapes", False))
+            profile_memory = bool(getattr(prof_cfg, "profile_memory", False))
+            with_stack = bool(getattr(prof_cfg, "with_stack", False))
             with profile(activities=activities if activities else [ProfilerActivity.CPU], record_shapes=record_shapes, profile_memory=profile_memory, with_stack=with_stack) as prof:  # type: ignore[call-arg]
                 logger.info("Profiling representative image: %s", rep_image)
                 _ = session.run_inference(
@@ -869,18 +862,9 @@ def main(cfg: DictConfig) -> None:  # pragma: no cover - CLI orchestrator
         model_window=None,
     )
 
-    # Compute improved MFU using static analyzer (guarded by runner config)
-    # Support either mounting under root (analysis.static) or under runners group (runners.analysis.static)
-    analysis = getattr(cfg, "analysis", None)
-    if analysis is None or (hasattr(analysis, "_is_none") and analysis._is_none()):  # type: ignore[attr-defined]
-        # Fallback to mounted runner config under stage1_runner
-        runners_node = getattr(cfg, "stage1_runner", None)
-        if runners_node is not None and hasattr(runners_node, "analysis"):
-            analysis = getattr(runners_node, "analysis")
-    if analysis is None:
-        analysis = {}
-    static_cfg = getattr(analysis, "static", {})
-    if bool(getattr(static_cfg, "enabled", True)):
+    # Compute improved MFU using static analyzer (guarded by unified pipeline config)
+    sa_cfg = getattr(getattr(cfg, "pipeline", {}), "static_analysis", {})
+    if bool(getattr(sa_cfg, "enable", True)):
         try:
             pre_cfg = getattr(getattr(cfg, "model", {}), "preprocess", {})
             prefill_len_mean = int(summary.get("aggregates", {}).get("tokens", {}).get("mean", 0) or 0)
@@ -899,8 +883,8 @@ def main(cfg: DictConfig) -> None:  # pragma: no cover - CLI orchestrator
                 crop_mode=bool(pre_cfg.get("crop_mode", True)),
                 patch_size=int(pre_cfg.get("patch_size", 16)),
                 downsample_ratio=int(pre_cfg.get("downsample_ratio", 4)),
-                use_analytic_fallback=bool(getattr(static_cfg, "use_analytic_fallback", True)),
-                use_synthetic_inputs=bool(getattr(static_cfg, "use_synthetic_inputs", True)),
+                use_analytic_fallback=bool(getattr(sa_cfg, "use_analytic_fallback", True)),
+                use_synthetic_inputs=bool(getattr(sa_cfg, "use_synthetic_inputs", True)),
             )
             static_report = analyzer.generate_report(aconf)
             # Extract stage flops

@@ -63,7 +63,7 @@ def _collect_inputs_manifest(work_argv: List[str]) -> list[dict]:
     return [{"path": " ".join(work_argv)}]
 
 
-@hydra.main(version_base=None, config_path="../../../conf", config_name="runner/stage2")
+@hydra.main(version_base=None, config_path="../../../conf", config_name="config")
 def main(cfg: DictConfig) -> None:  # pragma: no cover - CLI orchestrator
     """Hydra entry point for Stage 2 deep profiling.
 
@@ -77,40 +77,50 @@ def main(cfg: DictConfig) -> None:  # pragma: no cover - CLI orchestrator
     6) Write provenance files.
     """
 
-    # Prepare artifacts in the Hydra run.dir so both stages share one main dir
+    # Prepare artifacts in the Hydra run.dir so all pipeline stages share one main dir
     main_dir = Path(HydraConfig.get().run.dir)
     artifacts = Artifacts.from_root(main_dir)
 
-    # Ensure profiler tools are available early with friendly errors
-    ensure_nsys()
-    ensure_ncu()
+    # Ensure required profiler tools are available based on pipeline toggles
+    try:
+        if bool(getattr(getattr(cfg, "pipeline", {}), "nsys", {}).get("enable", False)):
+            ensure_nsys()
+    except Exception:
+        raise
+    try:
+        if bool(getattr(getattr(cfg, "pipeline", {}), "ncu", {}).get("enable", False)):
+            ensure_ncu()
+    except Exception:
+        raise
 
     # Build workload argv for Stage 1 runner
     overrides: list[str] = []
-    # Disable Stage 1 static analyzer to avoid overhead during Nsight capture
-    try:
-        if bool(getattr(getattr(cfg, "stage1_runner", {}), "disable_static", True)):
-            overrides.append("runner@stage1_runner=stage1.no-static")
-    except Exception:
-        overrides.append("runner@stage1_runner=stage1.no-static")
     # Carry common demo overrides (can be changed by user via hydra overrides)
-    device_sel = "cuda:0"
-    try:
-        device_sel = str(getattr(getattr(cfg, "stage1_runner", {}), "device", "cuda:0"))
-    except Exception:
-        device_sel = "cuda:0"
+    device_sel = str(getattr(cfg, "device", "cuda:0"))
     # Repeats and dataset subset for Stage 1 workload
     stage1_repeats = 1
     try:
         stage1_repeats = int(getattr(getattr(cfg, "run", {}), "stage1_repeats", 1))
     except Exception:
         stage1_repeats = 1
+    # Force model.path to repo-absolute path to avoid Hydra CWD ambiguity under nested runs
+    try:
+        repo_root = Path(HydraConfig.get().runtime.cwd)
+        model_path_abs = str(repo_root / "models" / "deepseek-ocr")
+        ds_root_abs = str(repo_root / "datasets" / "omnidocbench" / "source-data")
+        overrides.append(f"model.path={model_path_abs}")
+        overrides.append(f"dataset.root={ds_root_abs}")
+    except Exception:
+        pass
+
     overrides += [
         f"device={device_sel}",
         f"repeats={stage1_repeats}",
         "infer.max_new_tokens=64",
-        # Avoid CUPTI conflicts under Nsight Systems
-        "torch_profiler.enabled=false",
+        # Avoid CUPTI conflicts under Nsight Systems (disable PyTorch profiler in workload)
+        "pipeline.torch_profiler.enable=false",
+        # Disable static analysis during Nsight capture
+        "pipeline.static_analysis.enable=false",
     ]
     try:
         subset_filelist = getattr(getattr(cfg, "run", {}), "dataset_subset_filelist", None)
@@ -118,44 +128,89 @@ def main(cfg: DictConfig) -> None:  # pragma: no cover - CLI orchestrator
             overrides.append(f"dataset.subset_filelist={subset_filelist}")
     except Exception:
         pass
+    # For NSYS/NCU captures, run the internal workload in a temp area, not a user-facing pipeline dir
+    workload_dir = artifacts.tmp_dir("workload")
     work = build_work_argv(
         "llm_perf_opt.runners.llm_profile_runner",
         overrides,
-        hydra_run_dir=str(artifacts.path("stage1")),
+        hydra_run_dir=str(workload_dir),
         chdir=True,
-        run_mode=str(getattr(getattr(cfg, "run", {}), "mode", "deep")),
+        # run_mode is already provided in conf/config.yaml under run.mode
+        run_mode=None,
         inputs_manifest=None,
     )
 
-    # Nsight Systems capture
-    nsys_out = artifacts.path("nsys/run")
-    # Use NVTX gating unless disabled via config
-    gating_nvtx_nsys = bool(getattr(getattr(cfg, "nsys", {}), "gating_nvtx", True))
-    nsys_cmd = build_nsys_cmd(
-        nsys_out,
-        work,
-        nvtx_capture=str(getattr(getattr(cfg, "nsys", {}), "nvtx_capture", "range")) if gating_nvtx_nsys else "none",
-        trace=str(getattr(getattr(cfg, "nsys", {}), "trace", "cuda,nvtx,osrt")),
-        sample=str(getattr(getattr(cfg, "nsys", {}), "sample", "none")),
-        capture=str(getattr(getattr(cfg, "nsys", {}), "capture", "nvtx")) if gating_nvtx_nsys else "none",
-    )
-    subprocess.run(nsys_cmd, check=False)
-    # Export stats CSV + SQLite for post-processing
-    # Resolve report path and export stats/sqlite if available
-    from llm_perf_opt.profiling.vendor.nsys import resolve_nsys_report_path
-    report_path = resolve_nsys_report_path(nsys_out)
-    if report_path is not None:
-        nsys_summary_base = artifacts.path("nsys/summary")
-        nsys_stats_cmd = build_nsys_stats_cmd(report_path, nsys_summary_base)
-        subprocess.run(nsys_stats_cmd, check=False)
-        nsys_sqlite_cmd = build_nsys_export_sqlite_cmd(report_path)
-        subprocess.run(nsys_sqlite_cmd, check=False)
+    # Nsight Systems capture (guarded by pipeline.nsys.enable)
+    if bool(getattr(getattr(cfg, "pipeline", {}), "nsys", {}).get("enable", False)):
+        nsys_out = artifacts.out_dir("nsys") / "run"
+        # Use capture_range semantics matching Nsight Systems CLI. When
+        # `capture_range=nvtx`, an explicit `nvtx_capture` is REQUIRED; empty/omitted
+        # is an error (nsys default is 'none' which never triggers capture).
+        nsys_cfg = getattr(getattr(cfg, "pipeline", {}), "nsys", {})
+        gating_nvtx_nsys = bool(getattr(nsys_cfg, "gating_nvtx", True))
+        try:
+            _nvx_raw = getattr(nsys_cfg, "nvtx_capture", None)
+        except Exception:
+            _nvx_raw = None
+        _nvx_str = None if _nvx_raw is None else str(_nvx_raw)
+        _nvx_empty = isinstance(_nvx_raw, str) and (_nvx_str.strip() == "")
+        # Align with official args: only NVTX gating uses nvtx_capture
+        _cap_range_cfg = str(getattr(nsys_cfg, "capture_range", "nvtx")).lower()
+        # Optional: capture-range-end behavior; omit if unset/empty
+        try:
+            _cap_end_cfg_raw = getattr(nsys_cfg, "capture_range_end", None)
+        except Exception:
+            _cap_end_cfg_raw = None
+        _cap_end_cfg = None if _cap_end_cfg_raw is None else str(_cap_end_cfg_raw).strip() or None
+
+        # Validate NVTX requirements
+        if gating_nvtx_nsys and _cap_range_cfg == "nvtx":
+            if (_nvx_str is None) or _nvx_empty:
+                raise RuntimeError(
+                    "Nsight Systems: pipeline.nsys.capture_range=nvtx requires pipeline.nsys.nvtx_capture to be set to a valid NVTX range (e.g., 'prefill', 'decode', or 'name@*'). "
+                    "Empty/omitted nvtx_capture would result in no trigger and an empty report."
+                )
+        _use_nvtx_gate = bool(gating_nvtx_nsys and _cap_range_cfg == "nvtx")
+
+        # Determine final capture-range to pass to NSYS
+        _cap_final = str(_cap_range_cfg) if gating_nvtx_nsys else "none"
+        # If gating is disabled, force none regardless of config
+        if not gating_nvtx_nsys:
+            _cap_final = "none"
+
+        nsys_cmd = build_nsys_cmd(
+            nsys_out,
+            work,
+            # When using NVTX gating, nvtx_capture must be explicitly provided.
+            nvtx_capture=(_nvx_str if (_use_nvtx_gate and _cap_final == "nvtx") else "none"),
+            trace=str(getattr(nsys_cfg, "trace", "cuda,nvtx,osrt")),
+            sample=str(getattr(nsys_cfg, "sample", "none")),
+            capture=_cap_final,
+            capture_end=_cap_end_cfg if (_cap_final != "none") else None,
+        )
+        # Persist the constructed NSYS command for reproducibility/triage
+        try:
+            import shlex as _shlex
+            (artifacts.out_dir("nsys") / "cmd.txt").write_text(_shlex.join(nsys_cmd) + "\n", encoding="utf-8")
+        except Exception:
+            pass
+        subprocess.run(nsys_cmd, check=False)
+        # Export stats CSV + SQLite for post-processing
+        # Resolve report path and export stats/sqlite if available
+        from llm_perf_opt.profiling.vendor.nsys import resolve_nsys_report_path
+        report_path = resolve_nsys_report_path(nsys_out)
+        if report_path is not None:
+            nsys_summary_base = artifacts.out_dir("nsys") / "summary"
+            nsys_stats_cmd = build_nsys_stats_cmd(report_path, nsys_summary_base)
+            subprocess.run(nsys_stats_cmd, check=False)
+            nsys_sqlite_cmd = build_nsys_export_sqlite_cmd(report_path)
+            subprocess.run(nsys_sqlite_cmd, check=False)
 
     # Nsight Compute capture (focus on decode region)
-    ncu_out = artifacts.path("ncu/decode")
+    ncu_out = artifacts.out_dir("ncu") / "decode"
     # Probe available sections once and save to file for debugging/compat
     try:
-        sections_txt = artifacts.path("ncu/sections.txt")
+        sections_txt = artifacts.out_dir("ncu") / "sections.txt"
         with open(sections_txt, "w", encoding="utf-8") as sf:
             subprocess.run(["ncu", "--list-sections"], stdout=sf, stderr=subprocess.STDOUT, check=False)
     except Exception:
@@ -171,92 +226,107 @@ def main(cfg: DictConfig) -> None:  # pragma: no cover - CLI orchestrator
             kernel_regex = "|".join(pats)
     except Exception:
         kernel_regex = None
-    csv_log = artifacts.path("ncu/raw.csv")
-    gating_nvtx_ncu = bool(getattr(getattr(cfg, "ncu", {}), "gating_nvtx", True))
+    csv_log = artifacts.out_dir("ncu") / "raw.csv"
+    ncu_cfg = getattr(getattr(cfg, "pipeline", {}), "ncu", {})
+    gating_nvtx_ncu = bool(getattr(ncu_cfg, "gating_nvtx", True))
     # Read NCU config knobs
     ncu_set = None
     ncu_metrics = None
     try:
-        ncu_set = str(getattr(getattr(cfg, "ncu", {}), "set", "roofline"))
+        ncu_set = str(getattr(ncu_cfg, "set", "roofline"))
     except Exception:
         ncu_set = "roofline"
     try:
-        ncu_metrics = str(getattr(getattr(cfg, "ncu", {}), "metrics", "")) or None
+        ncu_metrics = str(getattr(ncu_cfg, "metrics", "")) or None
     except Exception:
         ncu_metrics = None
     # Sections (optional)
     ncu_sections = None
     try:
-        secs = getattr(getattr(cfg, "ncu", {}), "sections", None)
+        secs = getattr(ncu_cfg, "sections", None)
         if isinstance(secs, (list, tuple)):
             ncu_sections = [str(s) for s in secs if s]
     except Exception:
         ncu_sections = None
 
-    ncu_cmd = build_ncu_cmd(
-        ncu_out,
-        work,
-        nvtx_expr=str(getattr(getattr(cfg, "ncu", {}), "nvtx_include", "decode*")),
-        kernel_regex=kernel_regex,
-        csv_log=csv_log,
-        use_nvtx=gating_nvtx_ncu,
-        set_name=ncu_set,
-        metrics=(None if ncu_sections else ncu_metrics),
-        sections=ncu_sections,
-    )
-    subprocess.run(ncu_cmd, check=False)
+    if bool(getattr(getattr(cfg, "pipeline", {}), "ncu", {}).get("enable", False)):
+        ncu_cmd = build_ncu_cmd(
+            ncu_out,
+            work,
+            nvtx_expr=str(getattr(ncu_cfg, "nvtx_include", "decode*")),
+            kernel_regex=kernel_regex,
+            csv_log=csv_log,
+            use_nvtx=gating_nvtx_ncu,
+            set_name=ncu_set,
+            metrics=(None if ncu_sections else ncu_metrics),
+            sections=ncu_sections,
+        )
+        # Persist the constructed NCU command as well
+        try:
+            import shlex as _shlex
+            (artifacts.out_dir("ncu") / "cmd.txt").write_text(_shlex.join(ncu_cmd) + "\n", encoding="utf-8")
+        except Exception:
+            pass
+        subprocess.run(ncu_cmd, check=False)
 
     # If sections were requested, import the .ncu-rep and render sections to a text report
-    try:
-        if ncu_sections:
-            ncu_rep = Path(str(ncu_out) + ".ncu-rep")
-            if ncu_rep.exists():
-                from llm_perf_opt.profiling.vendor.ncu import build_ncu_import_sections_cmd
-                sec_cmd = build_ncu_import_sections_cmd(ncu_rep, ncu_sections, page="raw")
-                sec_out = artifacts.path("ncu/sections_report.txt")
-                with open(sec_out, "w", encoding="utf-8") as sf:
-                    subprocess.run(sec_cmd, check=False, stdout=sf, stderr=subprocess.STDOUT)
-    except Exception:
-        pass
+    if bool(getattr(getattr(cfg, "pipeline", {}), "ncu", {}).get("enable", False)):
+        try:
+            if ncu_sections:
+                ncu_rep = Path(str(ncu_out) + ".ncu-rep")
+                if ncu_rep.exists():
+                    from llm_perf_opt.profiling.vendor.ncu import build_ncu_import_sections_cmd
+                    sec_cmd = build_ncu_import_sections_cmd(ncu_rep, ncu_sections, page="raw")
+                    sec_out = artifacts.path("ncu/sections_report.txt")
+                    with open(sec_out, "w", encoding="utf-8") as sf:
+                        subprocess.run(sec_cmd, check=False, stdout=sf, stderr=subprocess.STDOUT)
+        except Exception:
+            pass
 
     # Fallback: if NCU reported no kernels, rerun without NVTX gating and without sections
-    try:
-        ncu_csv_path = artifacts.path("ncu/raw.csv")
-        rerun = False
-        if Path(ncu_csv_path).exists():
-            head = Path(ncu_csv_path).read_text(encoding="utf-8", errors="ignore")[:1000]
-            if "No kernels were profiled" in head:
-                rerun = True
-        if rerun:
-            ncu_cmd2 = build_ncu_cmd(
-                ncu_out,
-                work,
-                nvtx_expr=str(getattr(getattr(cfg, "ncu", {}), "nvtx_include", "decode*")),
-                kernel_regex=None,
-                csv_log=ncu_csv_path,
-                use_nvtx=False,
-                set_name=ncu_set,
-                metrics=None,  # let tool choose
-                sections=None,
-            )
-            subprocess.run(ncu_cmd2, check=False)
-            # Best-effort import of sections from the new rep as well
-            try:
-                ncu_rep2 = Path(str(ncu_out) + ".ncu-rep")
-                if ncu_rep2.exists() and ncu_sections:
-                    from llm_perf_opt.profiling.vendor.ncu import build_ncu_import_sections_cmd
-                    sec_cmd2 = build_ncu_import_sections_cmd(ncu_rep2, ncu_sections, page="raw")
-                    sec_out2 = artifacts.path("ncu/sections_report.txt")
-                    with open(sec_out2, "w", encoding="utf-8") as sf2:
-                        subprocess.run(sec_cmd2, check=False, stdout=sf2, stderr=subprocess.STDOUT)
-            except Exception:
-                pass
-    except Exception:
-        pass
+    if bool(getattr(getattr(cfg, "pipeline", {}), "ncu", {}).get("enable", False)):
+        try:
+            ncu_csv_path = artifacts.out_dir("ncu") / "raw.csv"
+            rerun = False
+            if Path(ncu_csv_path).exists():
+                head = Path(ncu_csv_path).read_text(encoding="utf-8", errors="ignore")[:1000]
+                if "No kernels were profiled" in head:
+                    rerun = True
+            if rerun:
+                ncu_cmd2 = build_ncu_cmd(
+                    ncu_out,
+                    work,
+                    nvtx_expr=str(getattr(ncu_cfg, "nvtx_include", "decode*")),
+                    kernel_regex=None,
+                    csv_log=ncu_csv_path,
+                    use_nvtx=False,
+                    set_name=ncu_set,
+                    metrics=None,  # let tool choose
+                    sections=None,
+                )
+                subprocess.run(ncu_cmd2, check=False)
+                try:
+                    import shlex as _shlex
+                    (artifacts.out_dir("ncu") / "cmd-rerun.txt").write_text(_shlex.join(ncu_cmd2) + "\n", encoding="utf-8")
+                except Exception:
+                    pass
+                # Best-effort import of sections from the new rep as well
+                try:
+                    ncu_rep2 = Path(str(ncu_out) + ".ncu-rep")
+                    if ncu_rep2.exists() and ncu_sections:
+                        from llm_perf_opt.profiling.vendor.ncu import build_ncu_import_sections_cmd
+                        sec_cmd2 = build_ncu_import_sections_cmd(ncu_rep2, ncu_sections, page="raw")
+                        sec_out2 = artifacts.path("ncu/sections_report.txt")
+                        with open(sec_out2, "w", encoding="utf-8") as sf2:
+                            subprocess.run(sec_cmd2, check=False, stdout=sf2, stderr=subprocess.STDOUT)
+                except Exception:
+                    pass
+        except Exception:
+            pass
 
     # Generate kernels.md from Nsight Compute CSV (if present)
     try:
-        ncu_csv_path = artifacts.path("ncu/raw.csv")
+        ncu_csv_path = artifacts.out_dir("ncu") / "raw.csv"
         topkern_list = None
         if Path(ncu_csv_path).exists():
             ncu_rows = parse_ncu_csv(ncu_csv_path)
@@ -273,12 +343,12 @@ def main(cfg: DictConfig) -> None:  # pragma: no cover - CLI orchestrator
     write_config_yaml(artifacts.path("config.yaml"), cfg)
     write_inputs_yaml(artifacts.path("inputs.yaml"), _collect_inputs_manifest(work))
 
-    # US3: Stakeholder summary and Stage 2 report
+    # US3: Stakeholder summary and deep profiling report
     try:
         import json as _json
-        # Load Stage 1 metrics for aggregates/MFU
+        # Load workload metrics for aggregates/MFU
         stats_dict: dict | None = None
-        metrics_path = artifacts.path("stage1/metrics.json")
+        metrics_path = Path(workload_dir) / "metrics.json"
         if Path(metrics_path).exists():
             with open(metrics_path, "r", encoding="utf-8") as mf:
                 m = _json.load(mf)
@@ -327,14 +397,14 @@ def main(cfg: DictConfig) -> None:  # pragma: no cover - CLI orchestrator
         # Lightweight report for Stage 2
         rep_path = artifacts.path("report.md")
         lines = [
-            "# Stage 2 Profiling Report",
+            "# Deep Profiling Report",
             "",
             "Artifacts:",
-            f"- NSYS: {artifacts.path('nsys/run.nsys-rep').name} (if present), summary CSV",
-            f"- NCU: {artifacts.path('ncu/raw.csv').name}",
+            f"- NSYS: {(artifacts.out_dir('nsys') / 'run.nsys-rep').name} (if present), summary CSV",
+            f"- NCU: {(artifacts.out_dir('ncu') / 'raw.csv').name}",
             f"- Top kernels: {artifacts.path('kernels.md').name}",
             f"- Stakeholder: {artifacts.path('stakeholder_summary.md').name}",
-            f"- Stage 1 report: {artifacts.path('stage1/report.md').name} (see Stage 1 dir)",
+            f"- Workload report: {(Path(workload_dir) / 'report.md').name} (internal workload)",
             "",
         ]
         try:
