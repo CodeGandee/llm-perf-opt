@@ -42,6 +42,26 @@ Stage 2 builds on Stage 1 by running the same LLM workload while orchestrating N
 - Independence: Each user story (Stage 2) is independently testable without Stage 1 run history
 - Clarity: Distinct artifact trees make it easy to diff and share results
 
+## Minimizing Stage 1 overhead during Stage 2 runs
+
+When Stage 2 wraps the Stage 1 runner, keep the Stage 1 PyTorch profiler as light as possible to avoid compounding overhead with nsys/ncu.
+
+Recommended Hydra overrides for Stage 2 launches:
+
+```bash
+# Prefer minimal or disabled PyTorch profiler and no warmup
+profiling=@profiling/torch/torch-profiler.min \
+profiling.activities=[cpu] \
++profiling.record_shapes=false +profiling.profile_memory=false +profiling.with_stack=false \
++profiling.warmup_rounds=0 +profiling.rep_max_new_tokens=16 \
+outputs.save_predictions=false outputs.visualization.enable=false
+```
+
+Notes:
+- If your runner supports `profiling.enabled=false`, set it to fully skip the representative PyTorch profiling block. If not wired yet, use the above minimal preset plus `warmup_rounds=0` and a small `rep_max_new_tokens` to limit cost.
+- Keep NVTX ranges enabled (LLM@prefill, LLM@decode_all) so nsys/ncu can still isolate stages.
+- Consider `repeats=1` for Stage 2, and ensure `hydra.run.dir` points to `tmp/stage2/<run_id>` to collocate vendor outputs.
+
 ## Future extensions (non‑blocking)
 
 - Merge view: Single report that overlays Stage 1 aggregates with Stage 2 kernel attribution
