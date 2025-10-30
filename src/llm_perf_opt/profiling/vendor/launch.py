@@ -10,8 +10,16 @@ from __future__ import annotations
 from typing import Sequence
 
 
-def build_work_argv(module: str, overrides: Sequence[str]) -> list[str]:
-    """Return a workload argv for ``python -m <module> <overrides...>``.
+def build_work_argv(
+    module: str,
+    overrides: Sequence[str],
+    *,
+    hydra_run_dir: str | None = None,
+    chdir: bool = True,
+    run_mode: str | None = None,
+    inputs_manifest: str | None = None,
+) -> list[str]:
+    """Return a workload argv for ``python -m <module> <overrides...>`` with optional Hydra injections.
 
     Parameters
     ----------
@@ -19,6 +27,14 @@ def build_work_argv(module: str, overrides: Sequence[str]) -> list[str]:
         Python module path to run with ``-m``.
     overrides : sequence of str
         Hydra override strings to append as arguments.
+    hydra_run_dir : str or None, optional
+        If provided, inject ``hydra.run.dir=<hydra_run_dir>``.
+    chdir : bool, default True
+        If true, inject ``hydra.job.chdir=true``; otherwise ``false``.
+    run_mode : str or None, optional
+        If provided, inject ``+run.mode=<run_mode>``.
+    inputs_manifest : str or None, optional
+        If provided, inject ``+inputs.manifest=<inputs_manifest>``.
 
     Returns
     -------
@@ -26,5 +42,13 @@ def build_work_argv(module: str, overrides: Sequence[str]) -> list[str]:
         Complete argv to run the module with the given overrides.
     """
 
-    return ["python", "-m", module, *list(overrides)]
-
+    args = ["python", "-m", module]
+    inj: list[str] = []
+    if hydra_run_dir:
+        inj.append(f"hydra.run.dir={hydra_run_dir}")
+    inj.append(f"hydra.job.chdir={'true' if chdir else 'false'}")
+    if run_mode:
+        inj.append(f"+run.mode={run_mode}")
+    if inputs_manifest:
+        inj.append(f"+inputs.manifest={inputs_manifest}")
+    return args + list(overrides) + inj

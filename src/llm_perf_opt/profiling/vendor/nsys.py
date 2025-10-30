@@ -60,3 +60,46 @@ def build_nsys_cmd(
         "-o",
         str(out_base),
     ] + list(work_argv)
+
+
+def build_nsys_stats_cmd(qdrep_base: Path, out_csv_base: Path) -> list[str]:
+    """Return `nsys stats` argv for summary CSV export.
+
+    Notes
+    -----
+    Convenience re-export to keep vendor-facing helpers together.
+    ``nsys stats -o <out_csv_base> <qdrep_base>.qdrep`` produces
+    ``<out_csv_base>.csv``.
+    """
+
+    return [
+        "nsys",
+        "stats",
+        "--report",
+        "summary",
+        "--format",
+        "csv",
+        "-o",
+        str(out_csv_base),
+        str(qdrep_base) + ".qdrep",
+    ]
+
+
+def build_nsys_export_sqlite_cmd(qdrep_base: Path, out_sqlite: Path) -> list[str]:
+    """Return `nsys export --sqlite` argv using base path for `.qdrep`.
+
+    Parameters
+    ----------
+    qdrep_base : pathlib.Path
+        Base path (without extension) for the `.qdrep` file.
+    out_sqlite : pathlib.Path
+        Destination SQLite path.
+    """
+
+    return [
+        "nsys",
+        "export",
+        "--sqlite",
+        str(out_sqlite),
+        str(qdrep_base) + ".qdrep",
+    ]

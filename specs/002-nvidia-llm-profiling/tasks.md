@@ -61,15 +61,15 @@ Independent Test: One command runs a profiling session and writes artifacts unde
 - [X] T015 [US1] Integrate Nsight Compute in `src/llm_perf_opt/profiling/vendor/ncu.py` and call from runner (auto-select top-N kernels strategy stub; persist CSV/JSON under `tmp/stage2/<run_id>/ncu/`)
 - [X] T016 [P] [US1] Add manual run script `tests/manual/stage2_profile/manual_stage2_profile.py` (invokes Pixi `stage2-profile`, asserts expected files exist)
 
-# Hint-driven additions (Nsight + Hydra integration per context/hints/nv-profile-kb/howto-manage-nsys-ncu-processes-for-llm.md)
+### Hint-driven additions (Nsight + Hydra integration per context/hints/nv-profile-kb/howto-manage-nsys-ncu-processes-for-llm.md)
 - [X] T030 [P] [US1] Verify existing NVTX ranges in model session (`dsocr_session.py`) and align Nsight filters; no new helpers required
 - [X] T031 [US1] Use existing NVTX labels; update runner to target `decode*` for Nsight Compute and NVTX range gating for Nsight Systems
-- [ ] T032 [P] [US1] Implement Hydra-aware argv builder in `src/llm_perf_opt/profiling/vendor/launch.py` (builds list argv; injects `hydra.run.dir`, `hydra.job.chdir`, `+run.mode`, `+inputs.manifest`)
-- [ ] T033 [US1] Extend `src/llm_perf_opt/profiling/vendor/nsys.py` to export stats/SQLite (`nsys stats --report summary --format csv`, `nsys export --sqlite` under `tmp/stage2/<run_id>/nsys/`)
-- [ ] T034 [US1] Extend `src/llm_perf_opt/profiling/vendor/ncu.py` to enforce `--target-processes all`, NVTX include, `--set roofline`, `--section ".*SpeedOfLight.*"`, metrics list, and export raw CSV to `tmp/stage2/<run_id>/ncu/`
-- [ ] T035 [P] [US1] Add profiler presets for Nsight in `conf/profiling/nsys/nsys.default.yaml` and `conf/profiling/ncu/ncu.default.yaml` (trace/sample/capture for nsys; target_processes/nvtx_include/set/sections/metrics for ncu)
-- [ ] T036 [P] [US1] Ensure artifact layout includes `nsys/` and `ncu/` subfolders in `src/llm_perf_opt/profiling/artifacts.py` (create on run init)
-- [ ] T037 [P] [US1] Implement top‑N kernel selection from `nsys stats` CSV in `src/llm_perf_opt/profiling/nsys_stats.py` (choose by total time) and feed names to ncu wrapper
+- [X] T032 [P] [US1] Implement Hydra-aware argv builder in `src/llm_perf_opt/profiling/vendor/launch.py` (builds list argv; injects `hydra.run.dir`, `hydra.job.chdir`, `+run.mode`, `+inputs.manifest`)
+- [X] T033 [US1] Extend `src/llm_perf_opt/profiling/vendor/nsys.py` to export stats/SQLite (`nsys stats --report summary --format csv`, `nsys export --sqlite` under `tmp/stage2/<run_id>/nsys/`)
+- [X] T034 [US1] Extend `src/llm_perf_opt/profiling/vendor/ncu.py` to enforce `--target-processes all`, NVTX include, `--set roofline`, `--section ".*SpeedOfLight.*"`, metrics list, and export raw CSV to `tmp/stage2/<run_id>/ncu/`
+- [X] T035 [P] [US1] Add profiler presets for Nsight in `conf/profiling/nsys/nsys.default.yaml` and `conf/profiling/ncu/ncu.default.yaml` (trace/sample/capture for nsys; target_processes/nvtx_include/set/sections/metrics for ncu)
+- [X] T036 [P] [US1] Ensure artifact layout includes `nsys/` and `ncu/` subfolders in `src/llm_perf_opt/profiling/artifacts.py` (create on run init)
+- [X] T037 [P] [US1] Implement top‑N kernel selection from `nsys stats` CSV in `src/llm_perf_opt/profiling/nsys_stats.py` (choose by total time) and feed names to ncu wrapper
 
 Checkpoint: US1 runnable end-to-end; artifacts produced consistently
 

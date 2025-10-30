@@ -15,7 +15,14 @@ DEFAULT_METRICS = (
 )
 
 
-def build_ncu_cmd(out_base: Path, work_argv: Sequence[str], *, nvtx_expr: str) -> list[str]:
+def build_ncu_cmd(
+    out_base: Path,
+    work_argv: Sequence[str],
+    *,
+    nvtx_expr: str,
+    kernel_regex: str | None = None,
+    csv_log: Path | None = None,
+) -> list[str]:
     """Build an argv list for `ncu` focused on roofline metrics.
 
     Parameters
@@ -26,6 +33,10 @@ def build_ncu_cmd(out_base: Path, work_argv: Sequence[str], *, nvtx_expr: str) -
         The target command (and args) to execute under Nsight Compute.
     nvtx_expr : str
         NVTX include expression (e.g., "LLM@*") to constrain kernel capture.
+    kernel_regex : str or None, optional
+        If provided, inject ``--kernel-name=<regex>`` to restrict capture to top kernels.
+    csv_log : pathlib.Path or None, optional
+        If provided, inject ``--csv --log-file=<csv_log>`` to export raw CSV.
 
     Examples
     -------
@@ -43,7 +54,7 @@ def build_ncu_cmd(out_base: Path, work_argv: Sequence[str], *, nvtx_expr: str) -
         Complete argv to invoke `ncu` capturing roofline metrics.
     """
 
-    return [
+    cmd: list[str] = [
         "ncu",
         "--target-processes",
         "all",
@@ -58,4 +69,18 @@ def build_ncu_cmd(out_base: Path, work_argv: Sequence[str], *, nvtx_expr: str) -
         DEFAULT_METRICS,
         "-o",
         str(out_base),
-    ] + list(work_argv)
+    ]
+    if kernel_regex:
+        cmd += [
+            "--kernel-name-base",
+            "demangled",
+            "--kernel-name",
+            str(kernel_regex),
+        ]
+    if csv_log:
+        cmd += [
+            "--csv",
+            "--log-file",
+            str(csv_log),
+        ]
+    return cmd + list(work_argv)

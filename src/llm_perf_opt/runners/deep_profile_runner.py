@@ -37,7 +37,12 @@ from llm_perf_opt.profiling.artifacts import (
 from llm_perf_opt.profiling.vendor.checks import ensure_ncu, ensure_nsys
 from llm_perf_opt.profiling.vendor.launch import build_work_argv
 from llm_perf_opt.profiling.vendor.ncu import build_ncu_cmd
-from llm_perf_opt.profiling.vendor.nsys import build_nsys_cmd
+from llm_perf_opt.profiling.vendor.nsys import (
+    build_nsys_cmd,
+    build_nsys_export_sqlite_cmd,
+    build_nsys_stats_cmd,
+)
+from llm_perf_opt.profiling.nsys_stats import top_kernels_from_nsys_summary
 
 
 def _collect_inputs_manifest(work_argv: List[str]) -> list[dict]:
@@ -88,18 +93,56 @@ def main(cfg: DictConfig) -> None:  # pragma: no cover - CLI orchestrator
         "repeats=1",
         "infer.max_new_tokens=64",
     ]
-    work = build_work_argv("llm_perf_opt.runners.llm_profile_runner", overrides)
+    work = build_work_argv(
+        "llm_perf_opt.runners.llm_profile_runner",
+        overrides,
+        hydra_run_dir=None,
+        chdir=True,
+        run_mode=str(getattr(getattr(cfg, "run", {}), "mode", "deep")),
+        inputs_manifest=None,
+    )
 
     # Nsight Systems capture
     nsys_out = artifacts.path("nsys/run")
     # Use NVTX range gating without label filter to capture prefill→decode
-    nsys_cmd = build_nsys_cmd(nsys_out, work, nvtx_capture="range")
+    nsys_cmd = build_nsys_cmd(
+        nsys_out,
+        work,
+        nvtx_capture=str(getattr(getattr(cfg, "nsys", {}), "nvtx_capture", "range")),
+        trace=str(getattr(getattr(cfg, "nsys", {}), "trace", "cuda,nvtx,osrt")),
+        sample=str(getattr(getattr(cfg, "nsys", {}), "sample", "none")),
+        capture=str(getattr(getattr(cfg, "nsys", {}), "capture", "nvtx")),
+    )
     subprocess.run(nsys_cmd, check=False)
+    # Export stats CSV + SQLite for post-processing
+    nsys_summary_base = artifacts.path("nsys/summary")
+    nsys_stats_cmd = build_nsys_stats_cmd(nsys_out, nsys_summary_base)
+    subprocess.run(nsys_stats_cmd, check=False)
+    nsys_sqlite_path = artifacts.path("nsys/trace.sqlite")
+    nsys_sqlite_cmd = build_nsys_export_sqlite_cmd(nsys_out, nsys_sqlite_path)
+    subprocess.run(nsys_sqlite_cmd, check=False)
 
     # Nsight Compute capture (focus on decode region)
     ncu_out = artifacts.path("ncu/decode")
-    # Focus on decode region using existing NVTX label from the session
-    ncu_cmd = build_ncu_cmd(ncu_out, work, nvtx_expr="decode*")
+    # Select top-N kernels from nsys summary and focus on decode region
+    kernel_regex = None
+    try:
+        top_n = int(getattr(getattr(cfg, "run", {}), "top_n_kernels", 30))
+        names = top_kernels_from_nsys_summary(Path(str(nsys_summary_base) + ".csv"), top_n=top_n)
+        if names:
+            import re as _re
+            pats = ["(" + _re.escape(n) + ")" for n in names]
+            kernel_regex = "|".join(pats)
+    except Exception:
+        kernel_regex = None
+    csv_log = artifacts.path("ncu/raw.csv")
+    ncu_cmd = build_ncu_cmd(
+        ncu_out,
+        work,
+        nvtx_expr=str(getattr(getattr(cfg, "ncu", {}), "nvtx_include", "decode*")),
+        kernel_regex=kernel_regex,
+        csv_log=csv_log,
+    )
     subprocess.run(ncu_cmd, check=False)
 
     # Provenance files

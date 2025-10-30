@@ -1,21 +1,9 @@
-# Nsight Compute (ncu) preset — default
+# Nsight Compute defaults (Stage 2)
 
 target_processes: all
-nvtx: true
-nvtx_include: LLM@decode_all/   # default stage expression to include
-
-# Metric sets: start from roofline/SOL and expand only as needed
+nvtx_include: decode*
 set: roofline
-sections:
-  - ".*SpeedOfLight.*"
-
-metrics:
-  - flop_count_hp
-  - flop_count_sp
-  - gpu__time_duration.sum
-  - sm__throughput.avg.pct_of_peak_sustained_elapsed
-  - dram__throughput.avg.pct_of_peak_sustained_elapsed
-
-export:
-  raw_csv: true                 # run `ncu --import ... --page raw --csv`
+section: ".*SpeedOfLight.*"
+metrics: flop_count_hp,flop_count_sp,gpu__time_duration.sum,sm__throughput.avg.pct_of_peak_sustained_elapsed,dram__throughput.avg.pct_of_peak_sustained_elapsed
+csv: true
 
