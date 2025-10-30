@@ -24,7 +24,7 @@ sequenceDiagram
 
     User->>Pixi: pixi run stage2-profile
     Pixi->>Runner: python -m ...deep_profile_runner +overrides
-    Runner->>Hydra: resolve config (conf/profiling/stage2.yaml)
+    Runner->>Hydra: resolve runner config (conf/runner/stage2.yaml)
     Runner->>Storage: create run_dir (nsys/, ncu/, env.json, config.yaml)
     Runner->>NVTX: ensure LLM@prefill / LLM@decode_all
     Runner->>Nsys: build_nsys_cmd(argv, NVTX capture)
@@ -47,7 +47,7 @@ graph TD
         P1T1[T001: nsys wrapper] --> P1A1[vendor/nsys.py]
         P1T2[T002: ncu wrapper] --> P1A2[vendor/ncu.py]
         P1T3[T003: pixi task] --> P1A3[pyproject.toml]
-        P1T4[T004: Hydra cfg] --> P1A4[conf/profiling/stage2.yaml]
+        P1T4[T004: Hydra cfg] --> P1A4[conf/runner/stage2.yaml]
     end
 
     subgraph P2["Phase 2: Foundational"]
@@ -154,7 +154,8 @@ stateDiagram-v2
 ### Phase 1 → Phase 2
 
 Artifacts
-- `conf/profiling/stage2.yaml` — consumed by runner (US1)
+- `conf/runner/stage2.yaml` — runner configuration (mkdir `conf/runner/` if missing)
+- `conf/profiling/*` — external profiler presets (torch/nsys/ncu)
 - `pyproject.toml` Pixi task — entrypoint for US1
 
 Code Dependencies
