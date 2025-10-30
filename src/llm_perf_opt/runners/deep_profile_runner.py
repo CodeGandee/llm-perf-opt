@@ -78,7 +78,9 @@ def main(cfg: DictConfig) -> None:  # pragma: no cover - CLI orchestrator
     """
 
     # Prepare artifacts in the Hydra run.dir so all pipeline stages share one main dir
-    main_dir = Path(HydraConfig.get().run.dir)
+    run_dir_cfg = Path(HydraConfig.get().run.dir)
+    base_cwd = Path(HydraConfig.get().runtime.cwd)
+    main_dir = run_dir_cfg if run_dir_cfg.is_absolute() else (base_cwd / run_dir_cfg)
     artifacts = Artifacts.from_root(main_dir)
 
     # Ensure required profiler tools are available based on pipeline toggles
