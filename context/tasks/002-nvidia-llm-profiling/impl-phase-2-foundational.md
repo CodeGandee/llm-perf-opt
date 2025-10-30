@@ -80,3 +80,19 @@ PY
 ## References
 - Data model: specs/002-nvidia-llm-profiling/data-model.md
 - Spec: specs/002-nvidia-llm-profiling/spec.md
+
+## Summary
+- Implemented T007–T011 (Foundational):
+  - Added `KernelRecord` and extended `LLMProfileReport` with optional `kernels_topk` in `src/llm_perf_opt/data/models.py`.
+  - Created artifacts manager in `src/llm_perf_opt/profiling/artifacts.py`:
+    - `new_run_id()`, `create_stage2_root()`, `Artifacts.from_root()/set_root()`; writers for `env.json`, `config.yaml`, `inputs.yaml`.
+  - Added kernel parsers in `src/llm_perf_opt/profiling/kernels.py`:
+    - `parse_ncu_csv()`, `parse_ncu_json()`, and `kernels_from_ncu_rows()` mapping → `KernelRecord[]`.
+  - Added vendor tool checks in `src/llm_perf_opt/profiling/vendor/checks.py` (`ensure_nsys()`, `ensure_ncu()`).
+  - Added contract→CLI mapping note at `specs/002-nvidia-llm-profiling/contracts/MAPPING.md`.
+- Documentation and code style:
+  - Added module-level docstrings and NumPy-style function/class docs per `magic-context/general/python-coding-guide.md`.
+  - Ensured service/helper class (`Artifacts`) uses no-arg constructor, `m_` member prefix, read-only properties, and explicit setters/factory methods.
+- Quick validation commands executed:
+  - Artifacts smoke: create root, write env/config/inputs; verify layout.
+  - Parsers import OK; vendor checks callable.
