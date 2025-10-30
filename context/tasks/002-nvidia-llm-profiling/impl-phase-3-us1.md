@@ -25,7 +25,7 @@ Phase: 3 | Feature: Stage 2 â€” NVIDIA-Backed Deep LLM Profiling | Tasks: T012â€
 import hydra
 from omegaconf import DictConfig
 
-@hydra.main(version_base=None, config_path='../../../../conf', config_name='config')
+@hydra.main(version_base=None, config_path='../../../conf/runner', config_name='stage2')
 def main(cfg: DictConfig) -> None:
     # 1) Create run dir + provenance
     # 2) Build work argv with Hydra overrides

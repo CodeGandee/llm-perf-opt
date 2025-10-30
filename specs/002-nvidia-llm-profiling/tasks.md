@@ -216,3 +216,4 @@ For detailed APIs, flows, and test commands per phase, see:
 - Phase 5 (US3 – Stakeholder Report): `context/tasks/002-nvidia-llm-profiling/impl-phase-5-us3.md`
 - Phase 6 (US4 – Cross‑Model): `context/tasks/002-nvidia-llm-profiling/impl-phase-6-us4.md`
 - Phase 7 (Polish): `context/tasks/002-nvidia-llm-profiling/impl-phase-7-polish.md`
+ - Phase Integration: `context/tasks/002-nvidia-llm-profiling/impl-integrate-phases.md`

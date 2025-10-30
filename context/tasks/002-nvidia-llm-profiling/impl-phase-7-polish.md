@@ -6,7 +6,7 @@ Phase: 7 | Feature: Stage 2 â€” NVIDIA-Backed Deep LLM Profiling | Tasks: T027â€
 
 ### Modified
 - specs/002-nvidia-llm-profiling/quickstart.md
-- conf/profiling/stage2.yaml
+- conf/runner/stage2.yaml
 - src/llm_perf_opt/profiling/vendor/ncu.py
 
 ## Public APIs
@@ -14,13 +14,12 @@ Phase: 7 | Feature: Stage 2 â€” NVIDIA-Backed Deep LLM Profiling | Tasks: T027â€
 ### T029: Light-mode configuration
 
 ```yaml
-# conf/profiling/stage2.yaml
+# conf/runner/stage2.yaml
 run:
-  mode: deep  # deep|light
-ncu:
-  metrics_set: roofline   # roofline|minimal
-  clock_control: base
-  cache_control: all
+  mode: light  # deep|light
+defaults:
+  - /profiling/nsys@nsys: nsys.default
+  - /profiling/ncu@ncu: ncu.default
 ```
 
 ## Testing
