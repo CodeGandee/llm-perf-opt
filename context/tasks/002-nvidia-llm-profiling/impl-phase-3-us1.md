@@ -25,7 +25,7 @@ Phase: 3 | Feature: Stage 2 — NVIDIA-Backed Deep LLM Profiling | Tasks: T012�
 import hydra
 from omegaconf import DictConfig
 
-@hydra.main(version_base=None, config_path='../../../conf/runner', config_name='stage2')
+@hydra.main(version_base=None, config_path='../../../conf', config_name='runner/stage2')
 def main(cfg: DictConfig) -> None:
     # 1) Create run dir + provenance
     # 2) Build work argv with Hydra overrides
@@ -85,6 +85,23 @@ subprocess.run(build_ncu_cmd(art.root/"ncu"/"decode", work, nvtx_expr='decode*')
 ```bash
 pixi run python tests/manual/stage2_profile/manual_stage2_profile.py
 ```
+
+## Summary
+- One MAIN run directory per Stage 2 run (Hydra `run.dir`), with:
+  - `nsys/`, `ncu/`, and provenance files (`env.json`, `config.yaml`, `inputs.yaml`).
+  - Stage 1 artifacts under `stage1/` (Hydra `run.dir` for Stage 1 is set to `MAIN/stage1`).
+- Nsight Systems:
+  - Uses NVTX range gating (`nvtx_capture=range`).
+  - Resolves `.nsys-rep`/`.qdrep` dynamically; exports stats/SQLite only if a report exists.
+  - Export uses `nsys export --type sqlite` for wide version compatibility.
+- Nsight Compute:
+  - Focuses on existing session NVTX labels with `nvtx_include=decode*`.
+  - Drops brittle `--section` filters; relies on `--set roofline` and metric list.
+  - Probes available sections once via `ncu --list-sections` → `ncu/sections.txt`.
+- Workload overrides (from Stage 2 to Stage 1):
+  - `runner@stage1_runner=stage1.no-static` (disable static analyzer during Nsight runs).
+  - `torch_profiler.enabled=false` to avoid CUPTI conflicts.
+  - Device selection via `+stage1_runner.device=...` (or `CUDA_VISIBLE_DEVICES` remap).
 
 ## References
 - Quickstart: specs/002-nvidia-llm-profiling/quickstart.md

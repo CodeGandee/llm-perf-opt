@@ -74,6 +74,7 @@ pixi.lock
 tmp/
 *.tmp
 tmp/stage2/
+outputs/
 
 # Documentation builds
 site/
