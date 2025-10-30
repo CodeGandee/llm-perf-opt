@@ -50,10 +50,10 @@ Recommended Hydra overrides for Stage 2 launches:
 
 ```bash
 # Prefer minimal or disabled PyTorch profiler and no warmup
-profiling=@profiling/torch/torch-profiler.min \
-profiling.activities=[cpu] \
-+profiling.record_shapes=false +profiling.profile_memory=false +profiling.with_stack=false \
-+profiling.warmup_rounds=0 +profiling.rep_max_new_tokens=16 \
+torch_profiler=@profiling/torch/torch-profiler.min \
+torch_profiler.activities=[cpu] \
++torch_profiler.record_shapes=false +torch_profiler.profile_memory=false +torch_profiler.with_stack=false \
++torch_profiler.warmup_rounds=0 +torch_profiler.rep_max_new_tokens=16 \
 outputs.save_predictions=false outputs.visualization.enable=false
 ```
 

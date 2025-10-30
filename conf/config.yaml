@@ -8,7 +8,8 @@ defaults:
   # Inference defaults (e.g., temperature, max_new_tokens)
   - model/deepseek_ocr/infer@infer: deepseek_ocr.default
   # PyTorch profiler preset (min/default/max) under profiling/torch/
-  - profiling/torch@profiling: torch-profiler.default
+  # Mount under key `torch_profiler` to avoid confusion with Nsight profiling
+  - profiling/torch@torch_profiler: torch-profiler.default
   - _self_
 
 # Global knobs (basic configuration only)

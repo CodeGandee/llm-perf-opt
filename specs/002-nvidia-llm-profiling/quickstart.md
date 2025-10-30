@@ -27,7 +27,7 @@ pixi run stage2-profile -- +run.mode=deep +inputs.manifest=/abs/path/to/inputs.y
 - One‑off module run (example):
 
 ```
-pixi run python -m llm_perf_opt.runners.llm_profile_runner profiling.enabled=true 'profiling.activities=[cpu,cuda]'
+pixi run python -m llm_perf_opt.runners.llm_profile_runner torch_profiler.enabled=true 'torch_profiler.activities=[cpu,cuda]'
 ```
 
 - Quick environment check:
@@ -54,10 +54,10 @@ When running Stage 2 with Nsight tools, keep the Stage 1 PyTorch profiler as lig
 pixi run stage2-profile -- \
   +run.mode=deep \
   +inputs.manifest=/abs/path/to/inputs.yaml \
-  profiling=@profiling/torch/torch-profiler.min \
-  'profiling.activities=[cpu]' \
-  +profiling.record_shapes=false +profiling.profile_memory=false +profiling.with_stack=false \
-  +profiling.warmup_rounds=0 +profiling.rep_max_new_tokens=16 \
+  torch_profiler=@profiling/torch/torch-profiler.min \
+  'torch_profiler.activities=[cpu]' \
+  +torch_profiler.record_shapes=false +torch_profiler.profile_memory=false +torch_profiler.with_stack=false \
+  +torch_profiler.warmup_rounds=0 +torch_profiler.rep_max_new_tokens=16 \
   repeats=1 \
   hydra.run.dir=$(pwd)/tmp/stage2/$(date +%Y%m%d-%H%M%S) hydra.job.chdir=true \
   outputs.save_predictions=false outputs.visualization.enable=false

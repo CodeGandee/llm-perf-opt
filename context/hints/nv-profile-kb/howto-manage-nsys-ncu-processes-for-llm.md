@@ -51,7 +51,7 @@ hydra_overrides = [
     "hydra.job.chdir=true",
     "device=cuda:0",
     "repeats=1",
-    "profiling.activities=[cpu,cuda]",
+    "torch_profiler.activities=[cpu,cuda]",
     "+run.mode=deep",
     "+inputs.manifest=/abs/path/to/inputs.yaml",
 ]
@@ -93,9 +93,9 @@ Sources: Nsight Systems User Guide; Nsight Compute Profiling Guide; RCAC guide; 
 Use a dedicated Hydra config to drive Stage 2 and keep all knobs versioned:
 
 ```yaml
-# conf/profiling/stage2.yaml
+# conf/runner/stage2.yaml
 defaults:
-  - /profiling/torch@profiling: torch-profiler.min
+  - /profiling/torch@torch_profiler: torch-profiler.min
   - _self_
 
 run:
@@ -120,7 +120,7 @@ nsys profile --trace=cuda,nvtx,osrt --sample=none \
   --capture-range=nvtx --nvtx-capture=range@LLM \
   -o tmp/stage2/nsys/run \
   python -m llm_perf_opt.runners.llm_profile_runner \
-  profiling=@profiling/torch/torch-profiler.min \
+  torch_profiler=@profiling/torch/torch-profiler.min \
   +run.mode=deep +inputs.manifest=/abs/path/inputs.yaml \
   hydra.run.dir=$(pwd)/tmp/stage2/$(date +%Y%m%d-%H%M%S) hydra.job.chdir=true
 ```

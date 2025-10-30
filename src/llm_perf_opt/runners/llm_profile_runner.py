@@ -601,8 +601,8 @@ def _write_assumptions_md(artifacts_dir: Path, cfg: DictConfig) -> None:
         ]
     )
 
-    md.new_header(level=2, title="Profiling Settings")
-    prof = getattr(cfg, "profiling", {})
+    md.new_header(level=2, title="Profiling Settings (PyTorch rep)")
+    prof = getattr(cfg, "torch_profiler", getattr(cfg, "profiling", {}))
     acts = ",".join([str(x) for x in list(getattr(prof, "activities", ["cpu", "cuda"]))])
     md.new_list(
         items=[
@@ -688,8 +688,8 @@ def main(cfg: DictConfig) -> None:  # pragma: no cover - CLI orchestrator
     precision = str(getattr(cfg.model, "dtype", "bf16"))
     peak = get_peak_tflops(device_name, precision)
 
-    # Optional warmup rounds (gate by profiling.enabled)
-    prof_cfg = getattr(cfg, "profiling", {})
+    # Optional warmup rounds (gate by torch_profiler.enabled)
+    prof_cfg = getattr(cfg, "torch_profiler", getattr(cfg, "profiling", {}))
     # Allow alias key `torch_profiler.enabled` (CLI-friendly for Stage 2 to avoid confusion)
     _tp_override = None
     try:
@@ -733,7 +733,7 @@ def main(cfg: DictConfig) -> None:  # pragma: no cover - CLI orchestrator
     operator_records: list[OperatorRecord] = []
     if prof_enabled:
         rep_image = str(images[0])
-        prof_cfg = getattr(cfg, "profiling", {})
+        prof_cfg = getattr(cfg, "torch_profiler", getattr(cfg, "profiling", {}))
         sel_acts = [str(x).lower() for x in list(prof_cfg.get("activities", ["cpu", "cuda"]))]
         activities = []
         if "cpu" in sel_acts:

@@ -115,7 +115,7 @@ pixi run python -m llm_perf_opt.runners.llm_profile_runner \
   model.path=/data2/huangzhe/code/llm-perf-opt/models/deepseek-ocr \
   dataset.root=/data2/huangzhe/code/llm-perf-opt/data/samples \
   repeats=3 device=cuda:0 infer.max_new_tokens=64 \
-  'profiling.activities=[cpu,cuda]'
+  'torch_profiler.activities=[cpu,cuda]'
 ```
 
 Artifacts include `report.md`, `operators.md`, `metrics.json`, `stakeholder_summary.md`, and reproducibility files (`env.json`, `inputs.yaml`, `assumptions.md`).
