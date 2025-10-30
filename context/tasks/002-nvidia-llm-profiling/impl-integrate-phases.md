@@ -16,11 +16,11 @@ sequenceDiagram
     participant Hydra
     participant NVTX
     participant Nsys
-    participant NsysStats as nsys stats/export
+    participant NsysStats as "nsys stats/export"
     participant Ncu
-    participant Parser as parsers (nsys_stats, ncu raw)
-    participant Exporter as exporters (operators/kernels/summary)
-    participant Storage as tmp/stage2/<run_id>
+    participant Parser as "parsers (nsys_stats, ncu raw)"
+    participant Exporter as "exporters (operators/kernels/summary)"
+    participant Storage as "tmp/stage2/run_id"
 
     User->>Pixi: pixi run stage2-profile
     Pixi->>Runner: python -m ...deep_profile_runner +overrides
