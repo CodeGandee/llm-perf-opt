@@ -14,7 +14,7 @@ Phase: 3 | Feature: Stage 2 â€” NVIDIA-Backed Deep LLM Profiling | Tasks: T012â€
 - src/llm_perf_opt/profiling/vendor/nsys.py
 - src/llm_perf_opt/profiling/vendor/ncu.py
 - src/llm_perf_opt/profiling/nvtx_utils.py
-- conf/profiling/stage2.yaml
+- conf/runner/stage2.yaml
 - src/llm_perf_opt/profiling/artifacts.py
 
 ## Public APIs

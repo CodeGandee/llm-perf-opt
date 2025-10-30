@@ -25,7 +25,7 @@ Purpose: Project initialization and basic structure for Stage 2
 - [ ] T001 Create vendor wrapper module for Nsight Systems in `src/llm_perf_opt/profiling/vendor/nsys.py`
 - [ ] T002 [P] Create vendor wrapper module for Nsight Compute in `src/llm_perf_opt/profiling/vendor/ncu.py`
 - [ ] T003 Add Pixi task `stage2-profile` in `pyproject.toml` under `[tool.pixi.tasks]`
-- [ ] T004 [P] Add Hydra config for Stage 2 modes in `conf/profiling/stage2.yaml` (keys: `run.mode={deep,light}`, `run.top_n_kernels`, `artifacts.stage2_dir`)
+- [ ] T004 [P] Add runner config for Stage 2 in `conf/runner/stage2.yaml` (keys: `run.mode={deep,light}`, `run.top_n_kernels`, `artifacts.stage2_dir`) — reserve `conf/profiling/*` for external profiler presets (torch/nsys/ncu)
 - [ ] T005 [P] Create manual tests directory and seed doc in `tests/manual/stage2_profile/README.md`
 - [ ] T006 [P] Add `tmp/stage2/` ignore rule in `.gitignore`
 
@@ -55,7 +55,7 @@ Independent Test: One command runs a profiling session and writes artifacts unde
 
 ### Implementation for User Story 1
 
-- [ ] T012 [P] [US1] Implement Hydra entrypoint for Stage 2 in `src/llm_perf_opt/runners/deep_profile_runner.py` (reads `conf/profiling/stage2.yaml`)
+- [ ] T012 [P] [US1] Implement Hydra entrypoint for Stage 2 in `src/llm_perf_opt/runners/deep_profile_runner.py` (reads `conf/runner/stage2.yaml`)
 - [ ] T013 [P] [US1] Implement `build_nsys_cmd()` in `src/llm_perf_opt/profiling/vendor/nsys.py` (trace `cuda,nvtx,osrt`, NVTX capture range, output to `tmp/stage2/<run_id>/nsys.qdrep`)
 - [ ] T014 [US1] Write provenance artifacts from runner in `tmp/stage2/<run_id>/` (`env.json`, `inputs.yaml`, `config.yaml`) via `artifacts.py`
 - [ ] T015 [US1] Integrate Nsight Compute in `src/llm_perf_opt/profiling/vendor/ncu.py` and call from runner (auto-select top-N kernels strategy stub; persist CSV/JSON under `tmp/stage2/<run_id>/ncu/`)

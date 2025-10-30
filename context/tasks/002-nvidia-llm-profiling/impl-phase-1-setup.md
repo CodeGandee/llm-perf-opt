@@ -7,7 +7,7 @@ Phase: 1 | Feature: Stage 2 â€” NVIDIA-Backed Deep LLM Profiling | Tasks: T001â€
 ### Created
 - src/llm_perf_opt/profiling/vendor/nsys.py
 - src/llm_perf_opt/profiling/vendor/ncu.py
-- conf/profiling/stage2.yaml
+- conf/runner/stage2.yaml
 - tests/manual/stage2_profile/README.md
 
 ### Modified
@@ -67,7 +67,7 @@ def build_ncu_cmd(out_base: Path, work_argv: Sequence[str], *, nvtx_expr: str) -
 graph LR
     A[T001: vendor/nsys.py] --> C[T003: pixi stage2-profile]
     B[T002: vendor/ncu.py]  --> C
-    C --> D[T004: conf/profiling/stage2.yaml]
+    C --> D[T004: conf/runner/stage2.yaml]
 ```
 
 ## Testing

@@ -122,10 +122,10 @@ classDiagram
 graph LR
     Actor((Perf Engineer))
 
-    UC1[Run Deep Profile (US1)]
-    UC2[Export Top Kernels (US2)]
-    UC3[Generate Stakeholder Report (US3)]
-    UC4[Profile Other LLM (US4)]
+    UC1["Run Deep Profile - US1"]
+    UC2["Export Top Kernels - US2"]
+    UC3["Generate Stakeholder Report - US3"]
+    UC4["Profile Other LLM - US4"]
 
     Actor --> UC1
     Actor --> UC2
