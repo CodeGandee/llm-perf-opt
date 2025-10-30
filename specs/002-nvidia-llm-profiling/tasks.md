@@ -37,11 +37,11 @@ Purpose: Core building blocks that MUST be complete before user stories
 
 ⚠️ CRITICAL: No user story work can begin until this phase is complete
 
-- [ ] T007 Introduce only new kernel attribution types per reuse-first model: add `KernelRecord` (attrs or TypedDict) in `src/llm_perf_opt/data/models.py` and optionally extend `LLMProfileReport` with `kernels_topk`
-- [ ] T008 [P] Implement artifacts manager in `src/llm_perf_opt/profiling/artifacts.py` (run_id creation, dir layout `tmp/stage2/<run_id>/`, write `env.json`, `config.yaml`, `inputs.yaml`)
-- [ ] T009 [P] Implement kernel results parser in `src/llm_perf_opt/profiling/kernels.py` (parse `ncu` CSV/JSON → `KernelRecord[]`)
-- [ ] T010 [P] Implement vendor tool checks in `src/llm_perf_opt/profiling/vendor/checks.py` (`ensure_nsys()`, `ensure_ncu()`, friendly errors)
-- [ ] T011 [P] Add contract→CLI mapping note in `specs/002-nvidia-llm-profiling/contracts/MAPPING.md` (map `/profile/run` → Pixi `stage2-profile`, `/profile/{run_id}/artifacts` → list `tmp/stage2/<run_id>`) — no new runtime models introduced
+- [X] T007 Introduce only new kernel attribution types per reuse-first model: add `KernelRecord` (attrs or TypedDict) in `src/llm_perf_opt/data/models.py` and optionally extend `LLMProfileReport` with `kernels_topk`
+- [X] T008 [P] Implement artifacts manager in `src/llm_perf_opt/profiling/artifacts.py` (run_id creation, dir layout `tmp/stage2/<run_id>/`, write `env.json`, `config.yaml`, `inputs.yaml`)
+- [X] T009 [P] Implement kernel results parser in `src/llm_perf_opt/profiling/kernels.py` (parse `ncu` CSV/JSON → `KernelRecord[]`)
+- [X] T010 [P] Implement vendor tool checks in `src/llm_perf_opt/profiling/vendor/checks.py` (`ensure_nsys()`, `ensure_ncu()`, friendly errors)
+- [X] T011 [P] Add contract→CLI mapping note in `specs/002-nvidia-llm-profiling/contracts/MAPPING.md` (map `/profile/run` → Pixi `stage2-profile`, `/profile/{run_id}/artifacts` → list `tmp/stage2/<run_id>`) — no new runtime models introduced
 
 Checkpoint: Foundation ready — user story implementation can now begin
 

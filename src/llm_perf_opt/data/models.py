@@ -25,6 +25,21 @@ from attrs.validators import instance_of
 
 
 @define(kw_only=True)
+class KernelRecord:
+    """Kernel-level metric record (Stage 2, Nsight Compute parsed).
+
+    Minimal attribution for top-kernel tables. Values are expected to be
+    non-negative; callers should sanitize raw tool outputs accordingly.
+    """
+
+    kernel_name: str = field(validator=[instance_of(str)])
+    device: str = field(validator=[instance_of(str)])
+    total_ms: float = field(validator=[instance_of(float)])
+    calls: int = field(validator=[instance_of(int)])
+    mean_ms: float = field(validator=[instance_of(float)])
+
+
+@define(kw_only=True)
 class StageTiming:
     """Timing information for a single stage.
 
@@ -89,8 +104,9 @@ class LLMProfileReport:
     run_id: str = field(validator=[instance_of(str)])
     timings: list[StageTiming] = field(factory=list)
     operators_topk: list[OperatorSummary] = field(factory=list)
+    # Optional: populated in Stage 2 when Nsight Compute results are available
+    kernels_topk: list[KernelRecord] = field(factory=list)
     mfu_model_level: float = field(validator=[instance_of(float)])
     mfu_per_stage: Dict[str, float] = field(factory=dict)
     aggregates: Dict[str, Stats] = field(factory=dict)
     notes: str = field(validator=[instance_of(str)])
-
