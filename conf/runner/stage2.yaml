@@ -4,8 +4,8 @@ defaults:
   # Reuse Stage 1 PyTorch representative profiler presets under torch_profiler
   - /profiling/torch@torch_profiler: torch-profiler.min
   # External profiler presets (Nsight Systems / Nsight Compute)
-  - /profiling/nsys@nsys: default
-  - /profiling/ncu@ncu: default
+  - /profiling/nsys@nsys: nsys.default
+  - /profiling/ncu@ncu: ncu.default
   - _self_
 
 run:
@@ -24,4 +24,3 @@ hydra:
   output_subdir: null
   job:
     chdir: true
-

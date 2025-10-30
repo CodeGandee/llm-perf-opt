@@ -96,8 +96,8 @@ Use a dedicated Hydra config to drive Stage 2 and keep all knobs versioned:
 # conf/runner/stage2.yaml
 defaults:
   - /profiling/torch@torch_profiler: torch-profiler.min
-  - /profiling/nsys@nsys: default
-  - /profiling/ncu@ncu: default
+  - /profiling/nsys@nsys: nsys.default
+  - /profiling/ncu@ncu: ncu.default
   - _self_
 
 run:
