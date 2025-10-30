@@ -30,3 +30,4 @@ hydra:
 # pass this override so static analysis is disabled during Nsight capture.
 stage1_runner:
   disable_static: true   # translates to Hydra override: runners=stage1.no-static
+  device: cuda:0         # device override to pass into Stage 1 runner

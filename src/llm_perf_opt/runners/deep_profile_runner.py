@@ -88,8 +88,13 @@ def main(cfg: DictConfig) -> None:  # pragma: no cover - CLI orchestrator
     except Exception:
         overrides.append("runners=stage1.no-static")
     # Carry common demo overrides (can be changed by user via hydra overrides)
+    device_sel = "cuda:0"
+    try:
+        device_sel = str(getattr(getattr(cfg, "stage1_runner", {}), "device", "cuda:0"))
+    except Exception:
+        device_sel = "cuda:0"
     overrides += [
-        "device=cuda:0",
+        f"device={device_sel}",
         "repeats=1",
         "infer.max_new_tokens=64",
     ]
