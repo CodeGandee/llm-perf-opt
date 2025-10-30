@@ -3,5 +3,6 @@
 trace: cuda,nvtx,osrt    # sources to trace
 sample: none             # CPU sampling: 'none' for low overhead
 capture: nvtx            # capture-range selector
-nvtx_capture: range      # gate capture by NVTX ranges (no label filter)
-
+# Gate capture by a specific NVTX range name emitted by the model session.
+# Valid examples: 'prefill', 'decode', or 'decode@*' to match all domains.
+nvtx_capture: prefill

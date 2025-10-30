@@ -22,6 +22,7 @@ def build_ncu_cmd(
     nvtx_expr: str,
     kernel_regex: str | None = None,
     csv_log: Path | None = None,
+    use_nvtx: bool = True,
 ) -> list[str]:
     """Build an argv list for `ncu` focused on roofline metrics.
 
@@ -58,9 +59,6 @@ def build_ncu_cmd(
         "ncu",
         "--target-processes",
         "all",
-        "--nvtx",
-        "--nvtx-include",
-        nvtx_expr,
         "--set",
         "roofline",
         "--metrics",
@@ -68,6 +66,8 @@ def build_ncu_cmd(
         "-o",
         str(out_base),
     ]
+    if use_nvtx:
+        cmd += ["--nvtx", "--nvtx-include", nvtx_expr]
     if kernel_regex:
         cmd += [
             "--kernel-name-base",

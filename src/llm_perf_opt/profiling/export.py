@@ -1,4 +1,4 @@
-"""Export helpers for operator summaries and stakeholder outputs.
+"""Export helpers for operator and kernel summaries, and stakeholder outputs.
 
 Functions
 ---------
@@ -18,6 +18,7 @@ from typing import Iterable, Any, TypedDict
 from pathlib import Path
 from datetime import datetime
 from mdutils.mdutils import MdUtils  # type: ignore[import-untyped]
+from llm_perf_opt.data.models import KernelRecord
 
 
 def top_n_operators(records: Iterable[OperatorRecord], n: int = 10) -> list[OperatorRecord]:
@@ -78,11 +79,78 @@ def write_operator_markdown(records: Iterable[OperatorRecord], path: str, top_k:
     md.create_md_file()
 
 
+def top_n_kernels(records: Iterable[KernelRecord], n: int = 20) -> list[KernelRecord]:
+    """Return top-N kernel records by ``total_ms``.
+
+    Parameters
+    ----------
+    records : Iterable[KernelRecord]
+        Kernel records containing at least ``kernel_name``, ``device``,
+        ``total_ms``, ``calls``, and ``mean_ms``.
+    n : int, default=20
+        Maximum number of records to return.
+
+    Returns
+    -------
+    list[KernelRecord]
+        Sorted kernel records limited to top-N by ``total_ms``.
+    """
+
+    recs = list(records)
+    recs.sort(key=lambda r: float(getattr(r, "total_ms", 0.0)), reverse=True)
+    return recs[: int(n)]
+
+
+def write_kernel_markdown(records: Iterable[KernelRecord], path: str, top_k: int = 20) -> None:
+    """Write a top‑K kernel summary as a Markdown table using mdutils.
+
+    Parameters
+    ----------
+    records : Iterable[KernelRecord]
+        Kernel records to summarize (typically top-N already or raw list).
+    path : str
+        Destination file path (created/overwritten). Accepts ``.md`` suffix; it is
+        stripped to satisfy mdutils' file naming (which appends ``.md`` automatically).
+    top_k : int, default=20
+        Number of rows to include in the output table.
+    """
+
+    rows = top_n_kernels(list(records), n=top_k)
+
+    header = ["kernel_name", "total_ms", "calls", "mean_ms", "device"]
+    table_data: list[str] = header.copy()
+    for r in rows:
+        # Compute mean fallback if absent/zero to keep table informative
+        total_ms = float(getattr(r, "total_ms", 0.0))
+        calls = int(getattr(r, "calls", 0))
+        mean_ms = float(getattr(r, "mean_ms", 0.0))
+        if mean_ms <= 0.0 and total_ms > 0.0:
+            mean_ms = total_ms / max(1, calls)
+
+        table_data.extend(
+            [
+                str(getattr(r, "kernel_name", "")),
+                f"{total_ms:.3f}",
+                str(calls),
+                f"{mean_ms:.6f}",
+                str(getattr(r, "device", "")),
+            ]
+        )
+
+    file_base = path[:-3] if path.endswith(".md") else path
+    md = MdUtils(file_name=file_base)
+    md.new_header(level=1, title="Kernel Summary (Top‑K)")
+    md.new_paragraph(f"Rows: {len(rows)} (k={int(top_k)})")
+    md.new_table(columns=5, rows=len(rows) + 1, text=table_data, text_align="center")
+    md.create_md_file()
+
+
 def write_stakeholder_summary(
     path: str,
     top_ops: list[OperatorRecord],
     stage_takeaways: dict[str, str],
     stats: dict | None = None,
+    top_kernels: list[Any] | None = None,
 ) -> None:
     """Write a concise stakeholder summary in Markdown.
 
@@ -97,6 +165,24 @@ def write_stakeholder_summary(
     stage_takeaways : dict[str, str]
         Free-form messages keyed by stage (e.g., "prefill", "decode", "vision")
         summarizing attribution and recommendations.
+    Parameters
+    ----------
+    path : str
+        Destination Markdown file path.
+    top_ops : list[dict]
+        Pre-sorted top operator records. Each dict may include keys
+        ``op_name``, ``total_time_ms``, ``cuda_time_ms``, and ``calls``.
+        If empty, the Top Operators section will note absence of data.
+    stage_takeaways : dict[str, str]
+        Free-form messages keyed by stage (e.g., "prefill", "decode", "vision")
+        summarizing attribution and recommendations.
+    stats : dict | None
+        Optional environment and aggregate statistics used to populate tables
+        (device, peak_tflops, aggregates, MFU, per-stage timings).
+    top_kernels : list[KernelRecord | dict] | None
+        Optional top kernel records (from Nsight Compute). If provided, a
+        Top Kernels table will be added.
+
     """
 
     file_base = path[:-3] if path.endswith(".md") else path
@@ -224,6 +310,32 @@ def write_stakeholder_summary(
                 ]
             )
         md.new_table(columns=5, rows=len(op_rows) + 1, text=table_data, text_align="center")
+
+    # Top kernels table (if any)
+    if top_kernels is not None:
+        md.new_header(level=2, title="Top Kernels")
+        krows = list(top_kernels)
+        if not krows:
+            md.new_paragraph("No kernel records available. See kernels.md for details if present.")
+        else:
+            k_header = ["Kernel", "Total ms", "Calls", "Mean ms", "Device"]
+            k_table: list[str] = list(k_header)
+            for r in krows:
+                # Accept dict-like or attrs object KernelRecord
+                def _get(obj, key, default=0.0):
+                    try:
+                        return obj.get(key, default) if isinstance(obj, dict) else getattr(obj, key, default)
+                    except Exception:
+                        return default
+                kname = str(_get(r, "kernel_name", ""))
+                tms = float(_get(r, "total_ms", 0.0))
+                calls = int(_get(r, "calls", 0))
+                mean = float(_get(r, "mean_ms", 0.0))
+                if mean <= 0.0 and tms > 0.0:
+                    mean = tms / max(1, calls)
+                dev = str(_get(r, "device", ""))
+                k_table.extend([kname, f"{tms:.3f}", str(calls), f"{mean:.6f}", dev])
+            md.new_table(columns=5, rows=len(krows) + 1, text=k_table, text_align="center")
 
     # Recommendations (template)
     md.new_header(level=2, title="Recommendations")

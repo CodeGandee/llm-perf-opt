@@ -27,7 +27,7 @@ def build_nsys_stats_cmd(qdrep_path: Path, out_csv: Path) -> List[str]:
         "nsys",
         "stats",
         "--report",
-        "summary",
+        "cuda_gpu_kern_sum",
         "--format",
         "csv",
         "-o",

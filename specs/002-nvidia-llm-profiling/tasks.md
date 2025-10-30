@@ -83,12 +83,12 @@ Independent Test: Running the profiling session generates `kernels.md` alongside
 
 ### Tests for User Story 2 (requested in research.md)
 
-- [ ] T017 [P] [US2] Unit test for kernel table export in `tests/unit/test_kernels_export.py` (headers, sort by `total_ms`, mean calculation)
+ - [X] T017 [P] [US2] Unit test for kernel table export in `tests/unit/test_kernels_export.py` (headers, sort by `total_ms`, mean calculation)
 
 ### Implementation for User Story 2
 
-- [ ] T018 [P] [US2] Implement `top_n_kernels()` and `write_kernel_markdown()` in `src/llm_perf_opt/profiling/export.py`
-- [ ] T019 [US2] Generate `kernels.md` in runner `src/llm_perf_opt/runners/deep_profile_runner.py` after parsing ncu outputs
+ - [X] T018 [P] [US2] Implement `top_n_kernels()` and `write_kernel_markdown()` in `src/llm_perf_opt/profiling/export.py`
+ - [X] T019 [US2] Generate `kernels.md` in runner `src/llm_perf_opt/runners/deep_profile_runner.py` after parsing ncu outputs
 
 Checkpoint: `kernels.md` renders correctly and matches top-time attribution in traces
 
@@ -106,9 +106,9 @@ Independent Test: The report renders with all mandatory sections and tables and 
 
 ### Implementation for User Story 3
 
-- [ ] T021 [P] [US3] Extend `write_stakeholder_summary()` in `src/llm_perf_opt/profiling/export.py` to reference/include Top Kernels table
-- [ ] T022 [US3] Ensure `report.md` includes Per-Stage Timings table and MFU per spec in `src/llm_perf_opt/runners/deep_profile_runner.py` (reusing Stage 1 logic where possible)
-- [ ] T023 [US3] Verify final `stakeholder_summary.md` written under `tmp/stage2/<run_id>/` contains all required sections
+- [X] T021 [P] [US3] Extend `write_stakeholder_summary()` in `src/llm_perf_opt/profiling/export.py` to reference/include Top Kernels table
+- [X] T022 [US3] Ensure `report.md` includes Per-Stage Timings table and MFU per spec in `src/llm_perf_opt/runners/deep_profile_runner.py` (reusing Stage 1 logic where possible)
+- [X] T023 [US3] Verify final `stakeholder_summary.md` written under `tmp/stage2/<run_id>/` contains all required sections
 
 Checkpoint: Stakeholder report complete with actionable tables and narrative
 
@@ -202,6 +202,9 @@ Incremental Delivery
 - Each user story is independently completable/testable per its acceptance criteria
 - Keep trace size and runtime within bounds; switch to light mode if needed
 - Prefer `pixi run` for all commands
+
+Known Limitation
+- With NVTX gating enabled, Nsight Systems may produce no report/output on some environments. This is a known issue and is left for future remediation. Workaround: temporarily disable gating for Nsight Systems by setting `+nsys.gating_nvtx=false` when running Stage 2 to force capture. Nsight Compute is unaffected by this limitation.
 
 ---
 

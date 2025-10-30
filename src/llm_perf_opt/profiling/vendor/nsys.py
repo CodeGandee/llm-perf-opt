@@ -15,7 +15,8 @@ def build_nsys_cmd(
     trace: str = "cuda,nvtx,osrt",
     sample: str = "none",
     capture: str = "nvtx",
-    nvtx_capture: str = "range@LLM",
+    nvtx_capture: str = "decode",
+    enable_nonregistered_nvtx: bool = True,
 ) -> list[str]:
     """Build an argv list for `nsys profile` with NVTX gating.
 
@@ -32,7 +33,11 @@ def build_nsys_cmd(
     capture : str, optional
         Capture range selector. "nvtx" to gate by NVTX ranges.
     nvtx_capture : str, optional
-        NVTX capture expression (e.g., "range@LLM").
+        NVTX capture expression (e.g., "decode", "prefill", or "decode@*").
+    enable_nonregistered_nvtx : bool, optional
+        When True, pass `--env-var=NSYS_NVTX_PROFILER_REGISTER_ONLY=0` to allow
+        non-registered NVTX strings (common in Python). Recommended when using
+        NVTX gating.
 
     Examples
     -------
@@ -50,16 +55,23 @@ def build_nsys_cmd(
         Complete argv to invoke `nsys profile`.
     """
 
-    return [
+    cmd = [
         "nsys",
         "profile",
         f"--trace={trace}",
         f"--sample={sample}",
-        f"--capture-range={capture}",
-        f"--nvtx-capture={nvtx_capture}",
-        "-o",
-        str(out_base),
-    ] + list(work_argv)
+    ]
+    # Only add capture-range/NVTX capture when not explicitly disabled
+    cap = str(capture).lower()
+    nvx = str(nvtx_capture).lower()
+    if cap != "none":
+        cmd += [f"--capture-range={capture}"]
+        if enable_nonregistered_nvtx:
+            cmd += ["--env-var=NSYS_NVTX_PROFILER_REGISTER_ONLY=0"]
+    if nvx != "none":
+        cmd += [f"--nvtx-capture={nvtx_capture}"]
+    cmd += ["-o", str(out_base)]
+    return cmd + list(work_argv)
 
 
 def build_nsys_stats_cmd(report_path: Path, out_csv_base: Path) -> list[str]:
@@ -77,7 +89,7 @@ def build_nsys_stats_cmd(report_path: Path, out_csv_base: Path) -> list[str]:
         "nsys",
         "stats",
         "--report",
-        "summary",
+        "cuda_gpu_kern_sum",
         "--format",
         "csv",
         "-o",

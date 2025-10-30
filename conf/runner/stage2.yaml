@@ -13,6 +13,10 @@ run:
   mode: deep
   # Number of top kernels (by total time) to select for Nsight Compute
   top_n_kernels: 30
+  # Stage 1 repeats (images to process); set to dataset subset size to iterate all samples
+  stage1_repeats: 1
+  # Optional dataset subset filelist to pass into Stage 1 (relative to repo root unless absolute)
+  dataset_subset_filelist: null
 
 artifacts:
   # Where Stage 2 artifacts are written
@@ -31,3 +35,10 @@ hydra:
 stage1_runner:
   disable_static: true   # translates to Hydra override: runners=stage1.no-static
   device: cuda:0         # device override to pass into Stage 1 runner
+
+# Profiler gating switches
+# When false, do not rely on NVTX to gate capture/filtering.
+nsys:
+  gating_nvtx: true
+ncu:
+  gating_nvtx: true
