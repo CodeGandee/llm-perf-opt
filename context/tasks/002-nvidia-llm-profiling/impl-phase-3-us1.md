@@ -61,19 +61,21 @@ sequenceDiagram
     participant Ncu
     participant Artifacts
 
-    Runner->>Artifacts: create run_dir (nsys/, ncu/)
-    Runner->>Nsys: build_nsys_cmd(run_dir/nsys/run, work_argv)
+    Runner->>Artifacts: create MAIN run_dir (shared)
+    Runner->>Runner: set Hydra run.dir = MAIN
+    Runner->>Nsys: build_nsys_cmd(MAIN/nsys/run, work_argv)
     Nsys-->>Runner: .qdrep/.nsys-rep
-    Runner->>Ncu: build_ncu_cmd(run_dir/ncu/decode, work_argv, nvtx=LLM@decode_all/)
+    Runner->>Ncu: build_ncu_cmd(MAIN/ncu/decode, work_argv, nvtx=decode*)
     Ncu-->>Runner: .ncu-rep + raw.csv
-    Runner-->>Artifacts: env.json, config.yaml, inputs.yaml
+    Runner-->>Artifacts: env.json, config.yaml, inputs.yaml (under MAIN)
+    Runner->>Stage1: launch with hydra.run.dir = MAIN/stage1
 ```
 
 ## Pseudocode
 
 ```python
-art = Artifacts(run_dir)
-work = build_work_argv('llm_perf_opt.runners.llm_profile_runner', hydra_overrides)
+art = Artifacts(MAIN)
+work = build_work_argv('llm_perf_opt.runners.llm_profile_runner', hydra_overrides, hydra_run_dir=str(art/"stage1"))
 subprocess.run(build_nsys_cmd(art.root/"nsys"/"run", work), check=True)
 subprocess.run(build_ncu_cmd(art.root/"ncu"/"decode", work, nvtx_expr='decode*'), check=True)
 ```

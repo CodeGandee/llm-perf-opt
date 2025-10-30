@@ -25,8 +25,8 @@ from pathlib import Path
 from typing import List
 
 import hydra
-from hydra.core.hydra_config import HydraConfig
 from omegaconf import DictConfig
+from hydra.core.hydra_config import HydraConfig
 
 from llm_perf_opt.profiling.artifacts import (
     Artifacts,
@@ -57,7 +57,7 @@ def _collect_inputs_manifest(work_argv: List[str]) -> list[dict]:
     return [{"path": " ".join(work_argv)}]
 
 
-@hydra.main(version_base=None, config_path="../../../conf/runner", config_name="stage2")
+@hydra.main(version_base=None, config_path="../../../conf", config_name="runner/stage2")
 def main(cfg: DictConfig) -> None:  # pragma: no cover - CLI orchestrator
     """Hydra entry point for Stage 2 deep profiling.
 
@@ -71,9 +71,9 @@ def main(cfg: DictConfig) -> None:  # pragma: no cover - CLI orchestrator
     6) Write provenance files.
     """
 
-    # Prepare artifacts directory (Hydra run.dir is set by stage2.yaml)
-    run_dir = Path(HydraConfig.get().run.dir)
-    artifacts = Artifacts.from_root(run_dir)
+    # Prepare artifacts in the Hydra run.dir so both stages share one main dir
+    main_dir = Path(HydraConfig.get().run.dir)
+    artifacts = Artifacts.from_root(main_dir)
 
     # Ensure profiler tools are available early with friendly errors
     ensure_nsys()
@@ -84,9 +84,9 @@ def main(cfg: DictConfig) -> None:  # pragma: no cover - CLI orchestrator
     # Disable Stage 1 static analyzer to avoid overhead during Nsight capture
     try:
         if bool(getattr(getattr(cfg, "stage1_runner", {}), "disable_static", True)):
-            overrides.append("runners=stage1.no-static")
+            overrides.append("runner@stage1_runner=stage1.no-static")
     except Exception:
-        overrides.append("runners=stage1.no-static")
+        overrides.append("runner@stage1_runner=stage1.no-static")
     # Carry common demo overrides (can be changed by user via hydra overrides)
     device_sel = "cuda:0"
     try:
@@ -97,11 +97,13 @@ def main(cfg: DictConfig) -> None:  # pragma: no cover - CLI orchestrator
         f"device={device_sel}",
         "repeats=1",
         "infer.max_new_tokens=64",
+        # Avoid CUPTI conflicts under Nsight Systems
+        "torch_profiler.enabled=false",
     ]
     work = build_work_argv(
         "llm_perf_opt.runners.llm_profile_runner",
         overrides,
-        hydra_run_dir=None,
+        hydra_run_dir=str(artifacts.path("stage1")),
         chdir=True,
         run_mode=str(getattr(getattr(cfg, "run", {}), "mode", "deep")),
         inputs_manifest=None,
@@ -120,15 +122,25 @@ def main(cfg: DictConfig) -> None:  # pragma: no cover - CLI orchestrator
     )
     subprocess.run(nsys_cmd, check=False)
     # Export stats CSV + SQLite for post-processing
-    nsys_summary_base = artifacts.path("nsys/summary")
-    nsys_stats_cmd = build_nsys_stats_cmd(nsys_out, nsys_summary_base)
-    subprocess.run(nsys_stats_cmd, check=False)
-    nsys_sqlite_path = artifacts.path("nsys/trace.sqlite")
-    nsys_sqlite_cmd = build_nsys_export_sqlite_cmd(nsys_out, nsys_sqlite_path)
-    subprocess.run(nsys_sqlite_cmd, check=False)
+    # Resolve report path and export stats/sqlite if available
+    from llm_perf_opt.profiling.vendor.nsys import resolve_nsys_report_path
+    report_path = resolve_nsys_report_path(nsys_out)
+    if report_path is not None:
+        nsys_summary_base = artifacts.path("nsys/summary")
+        nsys_stats_cmd = build_nsys_stats_cmd(report_path, nsys_summary_base)
+        subprocess.run(nsys_stats_cmd, check=False)
+        nsys_sqlite_cmd = build_nsys_export_sqlite_cmd(report_path)
+        subprocess.run(nsys_sqlite_cmd, check=False)
 
     # Nsight Compute capture (focus on decode region)
     ncu_out = artifacts.path("ncu/decode")
+    # Probe available sections once and save to file for debugging/compat
+    try:
+        sections_txt = artifacts.path("ncu/sections.txt")
+        with open(sections_txt, "w", encoding="utf-8") as sf:
+            subprocess.run(["ncu", "--list-sections"], stdout=sf, stderr=subprocess.STDOUT, check=False)
+    except Exception:
+        pass
     # Select top-N kernels from nsys summary and focus on decode region
     kernel_regex = None
     try:

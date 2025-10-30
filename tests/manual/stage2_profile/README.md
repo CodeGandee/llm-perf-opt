@@ -15,9 +15,9 @@ Quick Checks
 
 Workload selection and runner interop
 - When profiling the Stage 1 runner with Nsight, disable its static analyzer to avoid extra overhead:
-  - Add Hydra override `runners=stage1.no-static` to your workload argv
+  - Add Hydra override `runner@stage1_runner=stage1.no-static` to your workload argv
   - Example `work_argv` passed to `build_nsys_cmd`/`build_ncu_cmd`:
-    - `['python', '-m', 'llm_perf_opt.runners.llm_profile_runner', 'dataset.subset_filelist=/abs/dev-20.txt', 'device=cuda:0', 'repeats=1', 'infer.max_new_tokens=64', 'runners=stage1.no-static']`
+    - `['python', '-m', 'llm_perf_opt.runners.llm_profile_runner', 'dataset.subset_filelist=/abs/dev-20.txt', 'device=cuda:0', 'repeats=1', 'infer.max_new_tokens=64', 'runner@stage1_runner=stage1.no-static']`
 
 Notes
 - The actual deep profiling runner will be added in later phases.

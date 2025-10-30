@@ -3,7 +3,5 @@
 target_processes: all
 nvtx_include: decode*
 set: roofline
-section: ".*SpeedOfLight.*"
 metrics: flop_count_hp,flop_count_sp,gpu__time_duration.sum,sm__throughput.avg.pct_of_peak_sustained_elapsed,dram__throughput.avg.pct_of_peak_sustained_elapsed
 csv: true
-

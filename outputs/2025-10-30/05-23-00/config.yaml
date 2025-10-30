@@ -1,0 +1,40 @@
+runner:
+  torch_profiler:
+    enabled: true
+    activities:
+    - cpu
+    record_shapes: false
+    profile_memory: false
+    with_stack: false
+    group_by_input_shape: false
+    rep_max_new_tokens: 32
+    warmup_rounds: 1
+    warmup_synthetic: true
+  nsys:
+    trace: cuda,nvtx,osrt
+    sample: none
+    capture: nvtx
+    nvtx_capture: range
+  ncu:
+    target_processes: all
+    nvtx_include: decode*
+    set: roofline
+    section: .*SpeedOfLight.*
+    metrics: flop_count_hp,flop_count_sp,gpu__time_duration.sum,sm__throughput.avg.pct_of_peak_sustained_elapsed,dram__throughput.avg.pct_of_peak_sustained_elapsed
+    csv: true
+  run:
+    mode: deep
+    top_n_kernels: 30
+  artifacts:
+    stage2_dir: ${hydra:runtime.cwd}/tmp/stage2/${now:%Y%m%d-%H%M%S}
+  hydra:
+    run:
+      dir: ${artifacts.stage2_dir}
+    output_subdir: null
+    job:
+      chdir: true
+  stage1_runner:
+    disable_static: true
+    device: cuda:0
+stage1_runner:
+  device: cuda:0

@@ -23,8 +23,8 @@ Configuration structure
 - `conf/config.yaml` composes the groups using `@model` and `@infer`, mounts PyTorch profiler presets under `torch_profiler`, and selects a runner config under `runners`.
 
 Runner configs (toggle static analyzer)
-- `conf/runners/stage1.default.yaml`: analyzer enabled (default)
-- `conf/runners/stage1.no-static.yaml`: analyzer disabled (skip `static_compute.*`)
+- `conf/runner/stage1.default.yaml`: analyzer enabled (default)
+- `conf/runner/stage1.no-static.yaml`: analyzer disabled (skip `static_compute.*`)
 
 NVTX ranges
 - High-level ranges for prefill/decode (`profiling/nvtx_utils.py`).

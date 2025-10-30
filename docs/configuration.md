@@ -41,9 +41,9 @@ Config groups
   - keys: `path`, `dtype`, `preprocess.{enable,base_size,image_size,crop_mode,patch_size,downsample_ratio}`
 - Model infer: `conf/model/deepseek_ocr/infer/deepseek_ocr.default.yaml`
   - keys: `temperature`, `max_new_tokens`, `no_repeat_ngram_size`, `do_sample`
- - Runner configs: `conf/runners/`
-   - `stage1.default.yaml`: static analyzer enabled (default)
-   - `stage1.no-static.yaml`: static analyzer disabled (faster)
+- Runner configs: `conf/runner/`
+  - `stage1.default.yaml`: static analyzer enabled (default)
+  - `stage1.no-static.yaml`: static analyzer disabled (faster)
 
 PyTorch profiler presets (profiling/torch)
 - Files: `torch-profiler.{min,default,max}.yaml`
@@ -66,4 +66,4 @@ profiling/torch@profiling=torch-profiler.max      # most detailed
 Notes
 - We no longer use a flat `conf/model/deepseek_ocr.yaml`; it was replaced by the arch/infer groups.
 - To swap fast inference, use `model/deepseek_ocr/infer@infer=deepseek_ocr.fast`.
-- To disable static analyzer for Stage 1, select the runner config with `runners=stage1.no-static` or use the Pixi task `stage1-run-no-static`.
+- To disable static analyzer for Stage 1, select the runner config with `runner@stage1_runner=stage1.no-static` or use the Pixi task `stage1-run-no-static`.

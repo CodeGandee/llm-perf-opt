@@ -1,0 +1,4 @@
+count: 1
+inputs:
+- path: python -m llm_perf_opt.runners.llm_profile_runner runners=stage1.no-static
+    device=cuda:1 repeats=1 infer.max_new_tokens=64 hydra.job.chdir=true +run.mode=deep

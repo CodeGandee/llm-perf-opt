@@ -11,17 +11,17 @@
 - Future-proofing: centralize analysis knobs (e.g., `use_analytic_fallback`, `use_synthetic_inputs`) under a dedicated config node to avoid hard‑coded defaults in code.
 
 ## How to Refactor
-1. Add runner config group (runners)
-   - Create `conf/runners/` group with at least:
-     - `conf/runners/stage1.default.yaml` (baseline behavior)
-     - `conf/runners/stage1.no-static.yaml` (disables static analysis)
+1. Add runner config group (runner)
+   - Create `conf/runner/` group with at least:
+     - `conf/runner/stage1.default.yaml` (baseline behavior)
+     - `conf/runner/stage1.no-static.yaml` (disables static analysis)
    - In these files, set the toggle under an analysis node (used by the runner code):
      - stage1.default.yaml → `analysis: { static: { enabled: true, write_reports: true } }`
      - stage1.no-static.yaml → `analysis: { static: { enabled: false, write_reports: false } }`
 
 2. Wire defaults
-   - Update `conf/config.yaml` defaults to mount the new group with the default option:
-     - Add `- runners: stage1.default`
+   - Update `conf/config.yaml` defaults to mount the new group with the default option and key:
+     - Add `- runner@stage1_runner: stage1.default`
    - Keep all current defaults intact to avoid behavior changes.
 
 3. Guard static analysis in runner
@@ -31,10 +31,10 @@
      - Only write `static_compute.*` when `cfg.analysis.static.write_reports` is true.
 
 4. CLI and Pixi task surface
-   - Keep existing `stage1-run` task unchanged (defaults to enabled via `runners=stage1.default`).
+   - Keep existing `stage1-run` task unchanged (defaults to enabled via `runner@stage1_runner: stage1.default`).
    - Add convenience task `stage1-run-no-static` selecting the runner config:
-     - Append Hydra override: `runners=stage1.no-static`
-   - Users can also pass this override manually: `pixi run stage1-run runners=stage1.no-static`.
+     - Append Hydra override: `runner@stage1_runner=stage1.no-static`
+   - Users can also pass this override manually: `pixi run stage1-run runner@stage1_runner=stage1.no-static`.
 
 5. Documentation updates
    - In Stage 1 quickstart/README, add a section “Runner Configs” showing how to pick `stage1.no-static`.
@@ -110,12 +110,12 @@ defaults:
   - model/deepseek_ocr/arch@model: deepseek_ocr.default
   - model/deepseek_ocr/infer@infer: deepseek_ocr.default
   - profiling/torch@torch_profiler: torch-profiler.default
-  - runners: stage1.default
+  - runner@stage1_runner: stage1.default
   - _self_
 ```
 
 ### New runner configs
-`conf/runners/stage1.default.yaml`:
+`conf/runner/stage1.default.yaml`:
 ```yaml
 # Runner defaults for Stage 1
 analysis:
@@ -126,7 +126,7 @@ analysis:
     use_synthetic_inputs: true
 ```
 
-`conf/runners/stage1.no-static.yaml`:
+`conf/runner/stage1.no-static.yaml`:
 ```yaml
 # Disable static model analysis for faster runs
 analysis:
@@ -157,12 +157,12 @@ After (add convenience task using runner config):
 ```toml
 [tool.pixi.tasks]
 stage1-run = { cmd = "python -m llm_perf_opt.runners.llm_profile_runner ... 'torch_profiler.activities=[cpu,cuda]'" }
-stage1-run-no-static = { cmd = "python -m llm_perf_opt.runners.llm_profile_runner ... 'torch_profiler.activities=[cpu,cuda]' runners=stage1.no-static" }
+stage1-run-no-static = { cmd = "python -m llm_perf_opt.runners.llm_profile_runner ... 'torch_profiler.activities=[cpu,cuda]' runner@stage1_runner=stage1.no-static" }
 ```
 
 ## References
 - Runner static analysis hot‑path: `src/llm_perf_opt/runners/llm_profile_runner.py:872`
-- Runner config (new): `conf/runners/stage1.no-static.yaml`
+- Runner config (new): `conf/runner/stage1.no-static.yaml`
 - Pixi Stage 1 task: `pyproject.toml:52`
 - Hydra base config: `conf/config.yaml:1`
 - PyTorch profiler defaults (for context): `conf/profiling/torch/torch-profiler.default.yaml:1`

@@ -44,7 +44,7 @@ def build_ncu_cmd(
     >>> work = [
     ...     'python', '-m', 'llm_perf_opt.runners.llm_profile_runner',
     ...     'dataset.subset_filelist=/abs/dev-20.txt', 'device=cuda:0', 'repeats=1',
-    ...     'infer.max_new_tokens=64', 'runners=stage1.no-static'
+    ...     'infer.max_new_tokens=64', 'runner@stage1_runner=stage1.no-static'
     ... ]
     >>> cmd = build_ncu_cmd(Path('tmp/stage2/run/ncu/kernels'), work, nvtx_expr='LLM@*')
 
@@ -63,8 +63,6 @@ def build_ncu_cmd(
         nvtx_expr,
         "--set",
         "roofline",
-        "--section",
-        ".*SpeedOfLight.*",
         "--metrics",
         DEFAULT_METRICS,
         "-o",

@@ -873,7 +873,8 @@ def main(cfg: DictConfig) -> None:  # pragma: no cover - CLI orchestrator
     # Support either mounting under root (analysis.static) or under runners group (runners.analysis.static)
     analysis = getattr(cfg, "analysis", None)
     if analysis is None or (hasattr(analysis, "_is_none") and analysis._is_none()):  # type: ignore[attr-defined]
-        runners_node = getattr(cfg, "runners", None)
+        # Fallback to mounted runner config under stage1_runner
+        runners_node = getattr(cfg, "stage1_runner", None)
         if runners_node is not None and hasattr(runners_node, "analysis"):
             analysis = getattr(runners_node, "analysis")
     if analysis is None:
