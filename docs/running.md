@@ -20,7 +20,13 @@ pixi run bench-stage1-inproc
 pixi run python -m llm_perf_opt.runners.llm_profile_runner \
   model/deepseek_ocr/arch@model=deepseek_ocr.default \
   model/deepseek_ocr/infer@infer=deepseek_ocr.default \
-  outputs.save_predictions=true repeats=1 device=cuda:0
+  pipeline.torch_profiler.output.prediction.enable=true \
+  pipeline.torch_profiler.output.visualization.enable=true \
+  dataset/sampling@dataset.sampling=default \
+  dataset.sampling.num_epochs=1 \
+  dataset.sampling.num_samples_per_epoch=1 \
+  device=cuda:0 \
+  infer.max_new_tokens=8192
 
 # One-liners with Pixi tasks
 pixi run stage1-run                      # torch_profiler + static_analysis
@@ -36,9 +42,10 @@ pixi run python scripts/deepseek-ocr-infer-one.py \
 Hydra overrides
 - Use `@model` and `@infer` when selecting model groups, e.g., `model/deepseek_ocr/arch@model=deepseek_ocr.default`.
 - Common toggles:
-  - `repeats=<int>`
   - `device=cuda:0`
-  - `outputs.save_predictions=true`
+  - `pipeline.torch_profiler.output.prediction.enable=true`
+  - `pipeline.torch_profiler.output.visualization.enable=true`
+  - `infer.max_new_tokens=<int>` (integer only; e.g., 8192)
   - `model.preprocess.enable=false` to skip preprocessing (debug mode)
  - Disable static analyzer:
    - `pipeline.static_analysis.enable=false`
@@ -51,4 +58,4 @@ Where outputs go
   - `nsys/`: `run.nsys-rep`, `run.sqlite`, `summary_*.csv`, `cmd.txt` (when enabled)
   - `ncu/`: `raw.csv`, `.ncu-rep`, `sections_report.txt`, `cmd*.txt` (when enabled)
 - Reproducibility at run root: `env.json`, `config.yaml`, `inputs.yaml`
-- Optional predictions + gallery: `torch_profiler/predictions.jsonl`, `torch_profiler/predictions.md`, `torch_profiler/viz/`
+- Optional predictions + viz: `torch_profiler/pred/predictions.jsonl`, `torch_profiler/viz/<hash>/{result_with_boxes.jpg,result.mmd,images/*,info.json}`

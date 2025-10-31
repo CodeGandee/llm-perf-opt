@@ -21,6 +21,7 @@ from datetime import datetime
 import json
 from pathlib import Path
 from typing import Any, Iterable, Iterator
+import random
 
 import hydra
 from omegaconf import DictConfig, OmegaConf
@@ -171,6 +172,72 @@ def _collect_operator_records(prof: Any) -> list[OperatorRecord]:
         # Fail‑open: return what we collected
         pass
     return records
+
+
+def _require_int_max_new_tokens(raw_mnt: object) -> int:
+    """Coerce max_new_tokens to int; disallow 'inf' or null.
+
+    Users must specify an explicit integer cap for output token length.
+    """
+    if raw_mnt is None:
+        raise ValueError(
+            "infer.max_new_tokens must be an integer; got null/None. "
+            "Specify an explicit integer (e.g., 8192)."
+        )
+    if isinstance(raw_mnt, str) and raw_mnt.strip().lower() == "inf":
+        raise ValueError(
+            "infer.max_new_tokens must be an integer; 'inf' is not supported. "
+            "Choose an explicit value like 8192."
+        )
+    # Robust string check (handles OmegaConf nodes and non-plain types)
+    try:
+        _sval = str(raw_mnt).strip().lower()
+        if _sval in {"inf", "+inf", "-inf", "infinity", "+infinity", "-infinity"}:
+            raise ValueError(
+                "infer.max_new_tokens must be an integer; 'inf' is not supported. "
+                "Choose an explicit value like 8192."
+            )
+    except Exception:
+        pass
+    # Fallback: numeric check via float() for exotic node types
+    try:
+        import math as _math
+        _as_float = float(raw_mnt)
+        if _math.isinf(_as_float):
+            raise ValueError(
+                "infer.max_new_tokens must be an integer; 'inf' is not supported. "
+                "Choose an explicit value like 8192."
+            )
+    except Exception:
+        pass
+    # Also reject Python float('inf') or any non-integer float
+    try:
+        import math as _math
+        if isinstance(raw_mnt, float):
+            if _math.isinf(raw_mnt):
+                raise ValueError(
+                    "infer.max_new_tokens must be an integer; 'inf' is not supported. "
+                    "Choose an explicit value like 8192."
+                )
+            if not raw_mnt.is_integer():
+                raise ValueError(
+                    "infer.max_new_tokens must be an integer (no decimals)."
+                )
+            return int(raw_mnt)
+    except Exception:
+        pass
+    try:
+        return int(raw_mnt)
+    except OverflowError:
+        # Common case: OmegaConf parses 'inf' as float('inf') which overflows int()
+        raise ValueError(
+            "infer.max_new_tokens must be an integer; 'inf' is not supported. "
+            "Choose an explicit value like 8192."
+        )
+    except Exception as _:
+        raise ValueError(
+            "infer.max_new_tokens must be an integer; received an invalid value."
+        )
 
 
 def _infer_model_dims(model: object) -> tuple[int, int, int]:
@@ -505,7 +572,7 @@ def _write_predictions_outputs(
             except Exception:
                 result_img_name = None
                 boxes = []
-            # Write result.mmd referencing crops/
+            # Write result.mmd referencing images/
             try:
                 out_mmd = write_vendor_result_mmd(text_raw, str(per_image_dir))
                 result_mmd_name = Path(out_mmd).name
@@ -566,10 +633,19 @@ def _write_assumptions_md(artifacts_dir: Path, cfg: DictConfig) -> None:
     file_base = str(artifacts_dir / "assumptions")
     md = MdUtils(file_name=file_base)
     md.new_header(level=1, title="Run Assumptions")
+    # Dataset sampling summary
+    _sam = getattr(getattr(cfg, "dataset", {}), "sampling", {})
+    _npe = _sam.get("num_samples_per_epoch", None)
+    _epochs = int(_sam.get("num_epochs", 1))
+    _rand = bool(_sam.get("randomize", False))
+    _seed = _sam.get("seed", None)
     md.new_list(
         items=[
             f"Device: {getattr(cfg, 'device', 'cuda:0')}",
-            f"Repeats: {int(getattr(cfg, 'repeats', 1))}",
+            f"Epochs: {_epochs}",
+            f"Samples/epoch: {'all' if _npe in (None, 'null') else int(_npe)}",
+            f"Randomize: {_rand}",
+            f"Seed: {'null' if _seed in (None, 'null') else int(_seed)}",
             "Batch size: 1",
             f"Model path: {getattr(getattr(cfg, 'model', {}), 'path', '')}",
         ]
@@ -607,7 +683,6 @@ def _write_assumptions_md(artifacts_dir: Path, cfg: DictConfig) -> None:
     md.new_list(
         items=[
             f"activities: [{acts}]",
-            f"rep_max_new_tokens: {int(getattr(prof, 'rep_max_new_tokens', 64))}",
             f"warmup_rounds: {int(getattr(prof, 'warmup_rounds', 0))}",
             f"warmup_synthetic: {bool(getattr(prof, 'warmup_synthetic', True))}",
         ]
@@ -680,14 +755,22 @@ def main(cfg: DictConfig) -> None:  # pragma: no cover - CLI orchestrator
         root_logger.addHandler(fh)
     except Exception:
         pass
+    # Summarize sampling plan for logs
+    _sam = getattr(getattr(cfg, "dataset", {}), "sampling", {})
+    _npe = _sam.get("num_samples_per_epoch", None)
+    _epochs = int(_sam.get("num_epochs", 1))
+    _rand = bool(_sam.get("randomize", False))
     logger.info(
-        "Stage1 profiling start | device=%s repeats=%s model=%s dataset_root=%s artifacts_dir=%s",
+        "Stage1 profiling start | device=%s epochs=%s per_epoch=%s randomize=%s model=%s dataset_root=%s artifacts_dir=%s",
         cfg.device,
-        int(cfg.repeats),
+        _epochs,
+        ("all" if _npe in (None, "null") else str(int(_npe))),
+        _rand,
         cfg.model.path,
         cfg.dataset.root,
         str(artifacts_dir),
     )
+    # no legacy 'repeats' support; use dataset.sampling.* exclusively
     logger.info("Discovered %d images for dataset", len(images))
 
     # Device peak TFLOPs (coarse table)
@@ -741,10 +824,9 @@ def main(cfg: DictConfig) -> None:  # pragma: no cover - CLI orchestrator
         if "cuda" in sel_acts and torch.cuda.is_available():
             activities.append(ProfilerActivity.CUDA)
         try:
-            # Keep rep profile bounded; honor profiling config caps and switches
-            rep_cap = int(getattr(prof_cfg, 'rep_max_new_tokens', 64))
+            # Validate user's infer.max_new_tokens: must be explicit integer (no 'inf')
             raw_mnt = getattr(cfg, "infer", {}).get("max_new_tokens", 64)
-            rep_max_new = rep_cap if str(raw_mnt).lower() == "inf" else int(min(int(raw_mnt), rep_cap))
+            rep_max_new = _require_int_max_new_tokens(raw_mnt)
             record_shapes = bool(getattr(prof_cfg, "record_shapes", False))
             profile_memory = bool(getattr(prof_cfg, "profile_memory", False))
             with_stack = bool(getattr(prof_cfg, "with_stack", False))
@@ -778,10 +860,9 @@ def main(cfg: DictConfig) -> None:  # pragma: no cover - CLI orchestrator
 
     # Repeated runs across dataset
     runs: list[ImageRun] = []
-    repeats = int(cfg.repeats)
     raw_mnt = getattr(cfg, "infer", {}).get("max_new_tokens", 64)
-    max_new_tokens: int | None = None if str(raw_mnt).lower() == "inf" else int(raw_mnt)
-    images_iter: Iterator[Path] = iter(images)
+    max_new_tokens: int = _require_int_max_new_tokens(raw_mnt)
+    images_all: list[Path] = list(images)
     # Per-stage output configuration (preferred)
     tp_stage = getattr(getattr(cfg, "pipeline", {}), "torch_profiler", {})
     tp_out = getattr(tp_stage, "output", {}) if tp_stage else {}
@@ -835,66 +916,91 @@ def main(cfg: DictConfig) -> None:  # pragma: no cover - CLI orchestrator
     preds_for_outputs: list[dict] = []
     if save_preds:
         logger.info("Saving predictions to %s", str(artifacts_dir / "predictions.jsonl"))
-    for i in range(repeats):
-        # Cycle through images if repeats > len(images)
-        try:
-            img = next(images_iter)
-        except StopIteration:
-            images_iter = iter(images)
-            img = next(images_iter)
-        logger.info("Repeat %d/%d | image=%s", i + 1, repeats, str(img))
-        res = session.run_inference(
-            image_path=str(img),
-            prompt="<image>\n<|grounding|>Convert the document to markdown.",
-            max_new_tokens=max_new_tokens,
-            return_text=save_preds,
-            preprocess=dict(
+    # Sampling config
+    sam = getattr(getattr(cfg, "dataset", {}), "sampling", {})
+    n_per_epoch_raw = sam.get("num_samples_per_epoch", None)
+    n_per_epoch: int | None = None if n_per_epoch_raw in (None, "null") else int(n_per_epoch_raw)
+    n_epochs = int(sam.get("num_epochs", 1))
+    rand = bool(sam.get("randomize", False))
+    seed = sam.get("seed", None)
+    rng = random.Random(int(seed)) if seed not in (None, "null") else random.Random()
+
+    for ep in range(max(1, n_epochs)):
+        order = images_all[:]
+        if rand:
+            rng.shuffle(order)
+        if n_per_epoch is None:
+            selected = order
+        else:
+            if not rand:
+                start = (ep * n_per_epoch) % max(1, len(order))
+                selected = (order[start:] + order[:start])[: min(n_per_epoch, len(order))]
+            else:
+                selected = order[: min(n_per_epoch, len(order))]
+        for idx, img in enumerate(selected):
+            logger.info(
+                "Epoch %d/%d | sample %d/%s | image=%s",
+                ep + 1,
+                max(1, n_epochs),
+                idx + 1,
+                ("all" if n_per_epoch is None else str(min(n_per_epoch, len(order)))),
+                str(img),
+            )
+            # Build infer kwargs excluding max_new_tokens to avoid conflicts when using 'inf'
+            _infer_cfg = getattr(cfg, "infer", {})
+            _infer_kwargs = dict(
+                temperature=float(_infer_cfg.get("temperature", 0.0)),
+                no_repeat_ngram_size=int(_infer_cfg.get("no_repeat_ngram_size", 0)),
+                do_sample=bool(_infer_cfg.get("do_sample", False)),
+            )
+            res = session.run_inference(
+                image_path=str(img),
+                prompt="<image>\n<|grounding|>Convert the document to markdown.",
+                max_new_tokens=max_new_tokens,
+                return_text=save_preds,
+                preprocess=dict(
                 enable=bool(getattr(cfg.model, "preprocess", {}).get("enable", True)),
                 base_size=int(getattr(cfg.model, "preprocess", {}).get("base_size", 1024)),
                 image_size=int(getattr(cfg.model, "preprocess", {}).get("image_size", 640)),
                 crop_mode=bool(getattr(cfg.model, "preprocess", {}).get("crop_mode", False)),
                 patch_size=int(getattr(cfg.model, "preprocess", {}).get("patch_size", 16)),
                 downsample_ratio=int(getattr(cfg.model, "preprocess", {}).get("downsample_ratio", 4)),
-            ),
-            infer=dict(
-                temperature=float(getattr(cfg, "infer", {}).get("temperature", 0.0)),
-                max_new_tokens=int(getattr(cfg, "infer", {}).get("max_new_tokens", max_new_tokens)),
-                no_repeat_ngram_size=int(getattr(cfg, "infer", {}).get("no_repeat_ngram_size", 0)),
-                do_sample=bool(getattr(cfg, "infer", {}).get("do_sample", False)),
-            ),
-        )
-        runs.append(
-            ImageRun(
-                image_path=str(img),
-                prefill_ms=float(res.get("prefill_ms", 0.0)),
-                decode_ms=float(res.get("decode_ms", 0.0)),
-                tokens=int(res.get("tokens", 0)),
-                prefill_len=int(res.get("prefill_len", 0)),
-                vision_ms=float(res.get("vision_ms", 0.0)),
-                sam_ms=float(res.get("sam_ms", 0.0)),
-                clip_ms=float(res.get("clip_ms", 0.0)),
-                projector_ms=float(res.get("projector_ms", 0.0)),
+                ),
+                infer=_infer_kwargs,
             )
-        )
-        if save_preds and isinstance(res.get("text"), str):
-            text_raw = str(res.get("text"))
-            text_clean = _clean_prediction_text(text_raw, strip_special=strip_special)
-            preds_for_outputs.append(
-                {
-                    "image": str(img),
-                    "text_raw": text_raw,
-                    "text_clean": text_clean,
-                    "prefill_ms": float(res.get("prefill_ms", 0.0)),
-                    "decode_ms": float(res.get("decode_ms", 0.0)),
-                    "vision_ms": float(res.get("vision_ms", 0.0)),
-                    "tokens": int(res.get("tokens", 0)),
-                    "tokens_per_s": (
-                        (float(res.get("tokens", 0)) / (float(res.get("decode_ms", 1.0)) / 1000.0))
-                        if float(res.get("decode_ms", 0.0)) > 0
-                        else 0.0
-                    ),
-                }
+            runs.append(
+                ImageRun(
+                    image_path=str(img),
+                    prefill_ms=float(res.get("prefill_ms", 0.0)),
+                    decode_ms=float(res.get("decode_ms", 0.0)),
+                    tokens=int(res.get("tokens", 0)),
+                    prefill_len=int(res.get("prefill_len", 0)),
+                    vision_ms=float(res.get("vision_ms", 0.0)),
+                    sam_ms=float(res.get("sam_ms", 0.0)),
+                    clip_ms=float(res.get("clip_ms", 0.0)),
+                    projector_ms=float(res.get("projector_ms", 0.0)),
+                )
             )
+            if save_preds and isinstance(res.get("text"), str):
+                text_raw = str(res.get("text"))
+                text_clean = _clean_prediction_text(text_raw, strip_special=strip_special)
+                preds_for_outputs.append(
+                    {
+                        "image": str(img),
+                        "text_raw": text_raw,
+                        "text_clean": text_clean,
+                        "prefill_ms": float(res.get("prefill_ms", 0.0)),
+                        "decode_ms": float(res.get("decode_ms", 0.0)),
+                        "vision_ms": float(res.get("vision_ms", 0.0)),
+                        "tokens": int(res.get("tokens", 0)),
+                        "tokens_per_s": (
+                            (float(res.get("tokens", 0)) / (float(res.get("decode_ms", 1.0)) / 1000.0))
+                            if float(res.get("decode_ms", 0.0)) > 0
+                            else 0.0
+                        ),
+                    }
+                )
+            pass
 
     # Summarize + outputs
     # Static compute via analyzer (preferred) with fallback

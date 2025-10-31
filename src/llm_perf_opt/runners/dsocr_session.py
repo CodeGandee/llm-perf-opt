@@ -38,8 +38,8 @@ class DeepSeekOCRSession:
 
     class _Defaults(Enum):
         """Local fallback defaults (avoid magic numbers inline)."""
-
-        UNBOUNDED_DECODE_CEILING = 4096
+        # Vendor uses max_new_tokens=8192 in infer() when unbounded
+        UNBOUNDED_DECODE_CEILING = 8192
 
     @property
     def device(self) -> Optional[torch.device]:
@@ -107,6 +107,36 @@ class DeepSeekOCRSession:
             # Best-effort; NVTX hooks are optional
             pass
         return inst
+
+    # -----------------------------
+    # Vendor‑equivalent prompt helper
+    # -----------------------------
+    def _build_dsocr_prompt(self, user_prompt: str) -> str:
+        """Construct the DeepSeek‑OCR prompt using the vendor's conversation template (plain).
+
+        This mirrors modeling_deepseekocr.format_messages(..., sft_format='plain') so that
+        our decoding path receives the same textual context as model.infer().
+        """
+        try:
+            import importlib.util
+            repo_root = Path(__file__).resolve().parents[3]
+            conv_path = repo_root / "models" / "deepseek-ocr" / "conversation.py"
+            if conv_path.is_file():
+                spec = importlib.util.spec_from_file_location("dsocr_conv", str(conv_path))
+                if spec and spec.loader:
+                    mod = importlib.util.module_from_spec(spec)
+                    spec.loader.exec_module(mod)  # type: ignore[attr-defined]
+                    get_conv_template = getattr(mod, "get_conv_template", None)
+                    if callable(get_conv_template):
+                        conv = get_conv_template("plain")
+                        conv.set_system_message("")
+                        conv.append_message("<|User|>", user_prompt)
+                        conv.append_message("<|Assistant|>", "")
+                        return str(conv.get_prompt()).strip()
+        except Exception:
+            pass
+        # Fallback to the raw prompt if template is unavailable
+        return user_prompt
 
     def _install_nvtx_stage_hooks(self) -> None:
         """Attach NVTX ranges to key submodules (SAM, CLIP, projector).
@@ -193,6 +223,9 @@ class DeepSeekOCRSession:
             crop_mode = bool(preprocess.get("crop_mode", crop_mode))
             patch_size = int(preprocess.get("patch_size", patch_size))
             downsample_ratio = int(preprocess.get("downsample_ratio", downsample_ratio))
+
+        # Normalize prompt to vendor-equivalent composition
+        prompt = self._build_dsocr_prompt(prompt)
 
         if use_pre:
             # Load and normalize image
@@ -296,6 +329,23 @@ class DeepSeekOCRSession:
 
             input_ids = torch.tensor(tokenized_str, dtype=torch.long, device=self.m_device).unsqueeze(0)
             images_seq_mask = torch.tensor(mask_list, dtype=torch.bool, device=self.m_device).unsqueeze(0)
+            try:
+                true_cnt = int(images_seq_mask.sum().item())
+                logger.info(
+                    "Mask stats | seq_len=%d img_tokens=%d w_crop=%d h_crop=%d",
+                    int(input_ids.shape[-1]),
+                    true_cnt,
+                    int(w_crop),
+                    int(h_crop),
+                )
+                if isinstance(images_crop, torch.Tensor) and isinstance(images_ori, torch.Tensor):
+                    logger.info(
+                        "Images shapes | crop=%s ori=%s",
+                        tuple(images_crop.shape),
+                        tuple(images_ori.shape),
+                    )
+            except Exception:
+                pass
             logger.info(
                 "Preprocess | base=%d img=%d crop=%s grid=%dx%d input_len=%d",
                 int(base_size),
@@ -314,64 +364,55 @@ class DeepSeekOCRSession:
             images_seq_mask = None
             input_ids = self.m_tokenizer(prompt, return_tensors="pt").to(self.m_device)["input_ids"]
 
-        # Prefill: first forward pass
+        # Prefill: vendor generate does not do a separate prefill pass; align for parity
         t0 = perf_counter()
         self._reset_stage_time_accum()
         with prefill_range():
-            if use_pre:
-                inputs = {"input_ids": input_ids}
-            else:
-                nvtx.push_range("tokenizer")
-                try:
-                    inputs = self.m_tokenizer(prompt, return_tensors="pt").to(self.m_device)
-                finally:
-                    nvtx.pop_range()
-            _ = self.m_model(
-                **inputs,
-                images=images,
-                images_seq_mask=images_seq_mask,
-                images_spatial_crop=images_spatial_crop,
-            )
+            # No separate forward; rely on generate below
+            inputs = {"input_ids": input_ids}
         prefill_ms = (perf_counter() - t0) * 1000.0
-        logger.info("Prefill done | image=%s prefill_ms=%.3f", img_abs, prefill_ms)
+        logger.info("Prefill skipped (vendor parity) | image=%s prefill_ms=%.3f", img_abs, prefill_ms)
 
         # Decode: greedy generation
         t1 = perf_counter()
         with decode_range():
-            # Determine max_new_tokens policy (None => until EOS or ceiling)
-            ceiling: int
-            if max_new_tokens is None:
-                ceiling = self._infer_model_ceiling() or self._Defaults.UNBOUNDED_DECODE_CEILING.value  # type: ignore[assignment]
-                if self._infer_model_ceiling() is None:
-                    logging.getLogger(__name__).warning(
-                        "infer.max_new_tokens=inf: unknown model limit; using fallback ceiling=%d",
-                        int(ceiling),
-                    )
-            else:
-                ceiling = int(max_new_tokens)
-
             gen_kwargs: dict[str, object] = {
-                "max_new_tokens": int(ceiling),
                 "eos_token_id": getattr(self.m_tokenizer, "eos_token_id", None),
+                "use_cache": True,
+                "temperature": 0.0,
+                "no_repeat_ngram_size": 20,
             }
+            if max_new_tokens is not None:
+                gen_kwargs["max_new_tokens"] = int(max_new_tokens)
+            try:
+                logger.info("Gen kwargs | max_new_tokens=%s eos_token_id=%s no_repeat_ngram_size=%s", gen_kwargs.get("max_new_tokens", "<unset>"), gen_kwargs.get("eos_token_id"), gen_kwargs.get("no_repeat_ngram_size"))
+            except Exception:
+                pass
             if infer is not None:
                 for k in ("temperature", "no_repeat_ngram_size", "do_sample", "top_p", "top_k"):
                     if k in infer:
                         gen_kwargs[k] = infer[k]
-            # Provide attention mask to silence warnings and match vendor behavior
-            attention_mask = None
+            # Vendor generate expects images_spatial_crop on CPU; ensure dtype/placement parity
             try:
-                attention_mask = torch.ones_like(input_ids, dtype=torch.long, device=self.m_device)
+                _spatial = images_spatial_crop.to(dtype=torch.long, device=torch.device("cpu")) if isinstance(images_spatial_crop, torch.Tensor) else images_spatial_crop
             except Exception:
-                attention_mask = None
-            out = self.m_model.generate(
-                **inputs,
-                images=images,
-                images_seq_mask=images_seq_mask,
-                images_spatial_crop=images_spatial_crop,
-                attention_mask=attention_mask,
-                **gen_kwargs,
-            )
+                _spatial = images_spatial_crop
+            # Single-call generate like vendor (no explicit attention_mask/position_ids)
+            # Optional: autocast to bf16 for parity
+            try:
+                import contextlib
+                ctx = torch.autocast("cuda", dtype=torch.bfloat16) if str(self.m_device).startswith("cuda") else contextlib.nullcontext()
+            except Exception:
+                import contextlib
+                ctx = contextlib.nullcontext()
+            with ctx:
+                out = self.m_model.generate(
+                    **inputs,
+                    images=images,
+                    images_seq_mask=images_seq_mask,
+                    images_spatial_crop=_spatial,
+                    **gen_kwargs,
+                )
         decode_ms = (perf_counter() - t1) * 1000.0
 
         input_len = int(inputs["input_ids"].shape[-1])
@@ -409,28 +450,9 @@ class DeepSeekOCRSession:
             result["text"] = text
         return result
 
-    def _infer_model_ceiling(self) -> Optional[int]:
-        """Best-effort detection of a reasonable generation ceiling.
-
-        Checks common config attributes and returns None if unknown.
-        """
-        try:
-            cfg = getattr(self.m_model, "config", None)
-            if cfg is None:
-                return None
-            for key in (
-                "max_new_tokens",
-                "max_length",
-                "max_position_embeddings",
-                "n_positions",
-                "sliding_window",
-            ):
-                val = getattr(cfg, key, None)
-                if isinstance(val, int) and val > 0:
-                    return int(val)
-        except Exception:
-            return None
-        return None
+    # NOTE: We intentionally do not introspect model config to set output token ceilings.
+    # Users must specify `infer.max_new_tokens` explicitly when they want a limit; otherwise
+    # we do not pass `max_new_tokens` to generate(), letting the model stop at EOS.
     def _reset_stage_time_accum(self) -> None:
         self.m_stage_time_ms = {"sam": 0.0, "clip": 0.0, "projector": 0.0}
 

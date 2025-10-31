@@ -9,9 +9,13 @@ Implementation: `src/llm_perf_opt/visualize/annotations.py`
 - We also write a `result.mmd` that replaces image refs with `![](images/<idx>.jpg)` and removes other refs.
 
 Outputs per image
-- `viz/<stem>/result_with_boxes.jpg`
-- `viz/<stem>/result.mmd`
-- `viz/<stem>/images/*.jpg` (if any)
+- `viz/<hash>/result_with_boxes.jpg`
+- `viz/<hash>/result.mmd`
+- `viz/<hash>/images/*.jpg` (if any)
+- `viz/<hash>/info.json` (metadata: source image path, timings, and structured boxes)
+
+Naming note
+- `<hash>` is the MD5 hash of the absolute image path to provide stable, collision‑resistant per‑image directories.
 
 Stakeholder report visuals
 - `stakeholder_summary.md` presents tables (Environment, Aggregates, Per‑Stage Timings, MFU, Top Operators).

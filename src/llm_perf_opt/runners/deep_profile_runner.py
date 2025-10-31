@@ -117,12 +117,16 @@ def main(cfg: DictConfig) -> None:  # pragma: no cover - CLI orchestrator
 
     overrides += [
         f"device={device_sel}",
-        f"repeats={stage1_repeats}",
         "infer.max_new_tokens=64",
         # Avoid CUPTI conflicts under Nsight Systems (disable PyTorch profiler in workload)
         "pipeline.torch_profiler.enable=false",
         # Disable static analysis during Nsight capture
         "pipeline.static_analysis.enable=false",
+        # Explicit sampling plan for Stage-1 workload (map legacy stage1_repeats → samples/epoch)
+        "dataset/sampling@dataset.sampling=default",
+        "dataset.sampling.num_epochs=1",
+        f"dataset.sampling.num_samples_per_epoch={stage1_repeats}",
+        "dataset.sampling.randomize=false",
     ]
     try:
         subset_filelist = getattr(getattr(cfg, "run", {}), "dataset_subset_filelist", None)

@@ -6,7 +6,6 @@
 # - activities: ['cpu'] only for the lightest pass
 # - record_shapes/profile_memory/with_stack: all disabled to reduce cost
 # - group_by_input_shape: keep false for cheaper aggregation
-# - rep_max_new_tokens: cap the representative decode length further (32)
 enabled: true
 activities: [cpu]
 record_shapes: false
@@ -14,6 +13,5 @@ profile_memory: false
 with_stack: false
 group_by_input_shape: false
 
-rep_max_new_tokens: 32
 warmup_rounds: 1
 warmup_synthetic: true

@@ -5,8 +5,8 @@ No outputs created
 - Run with Pixi (not system Python): `pixi run stage1-run`
 
 Boxes misaligned in visualization
-- Verify that predictions are saved with specials intact (`outputs.save_predictions=true`).
-- Compare our `viz/<stem>/result_with_boxes.jpg` with vendor output from `scripts/deepseek-ocr-infer-one.py`.
+- Verify that predictions saving and visualization are enabled (`pipeline.torch_profiler.output.prediction.enable=true`, `pipeline.torch_profiler.output.visualization.enable=true`).
+- Compare our `viz/<hash>/result_with_boxes.jpg` with vendor output from `scripts/deepseek-ocr-infer-one.py`.
 
 Flash-Attn warnings
 - Model is moved to GPU; dtype defaults to bf16. Warnings are benign for inference; set `use_flash_attn=false` to compare.

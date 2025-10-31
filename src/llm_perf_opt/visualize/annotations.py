@@ -2,7 +2,7 @@
 
 Parses <|ref|>label</|ref|><|det|>[[x1,y1,x2,y2], ...]</|det|> spans from the
 model output text and renders colored boxes with a semi-transparent overlay.
-Also saves cropped images for label == 'image' into a crops/ subfolder.
+Also saves cropped images for label == 'image' into an images/ subfolder.
 """
 
 from __future__ import annotations
@@ -59,7 +59,7 @@ def render_vendor_style(image_path: str, result_text: str, output_dir: str) -> t
     output_dir : str
         Directory to write outputs into. This function writes:
         - result_with_boxes.jpg
-        - crops/ (crops for label == 'image')
+        - images/ (crops for label == 'image')
 
     Returns
     -------
@@ -71,8 +71,8 @@ def render_vendor_style(image_path: str, result_text: str, output_dir: str) -> t
 
     out_dir = Path(output_dir)
     out_dir.mkdir(parents=True, exist_ok=True)
-    crops_dir = out_dir / "crops"
-    crops_dir.mkdir(parents=True, exist_ok=True)
+    images_dir = out_dir / "images"
+    images_dir.mkdir(parents=True, exist_ok=True)
 
     im = Image.open(image_path).convert("RGB")
     W, H = im.size
@@ -130,7 +130,7 @@ def render_vendor_style(image_path: str, result_text: str, output_dir: str) -> t
             if label == "image":
                 try:
                     crop = im.crop((x1p, y1p, x2p, y2p))
-                    crop.save(crops_dir / f"{crop_idx}.jpg")
+                    crop.save(images_dir / f"{crop_idx}.jpg")
                     crop_idx += 1
                 except Exception:
                     pass
@@ -160,7 +160,7 @@ def render_vendor_style(image_path: str, result_text: str, output_dir: str) -> t
 
 
 def write_vendor_result_mmd(result_text: str, output_dir: str) -> Path:
-    """Write a vendor-like ``result.mmd`` replacing image refs with crops.
+    """Write a vendor-like ``result.mmd`` replacing image refs with images.
 
     This mirrors the logic in the vendor's ``infer(..., save_results=True)``:
     - Replace image refs with ``![](images/<idx>.jpg)``
@@ -172,7 +172,7 @@ def write_vendor_result_mmd(result_text: str, output_dir: str) -> Path:
     result_text : str
         Raw decoded text from model output (keep special tokens).
     output_dir : str
-        Directory containing a ``crops/`` subdir populated by ``render_vendor_style``.
+        Directory containing an ``images/`` subdir populated by ``render_vendor_style``.
 
     Returns
     -------
@@ -194,9 +194,9 @@ def write_vendor_result_mmd(result_text: str, output_dir: str) -> Path:
             matches_other.append(full)
 
     out = (result_text or "").strip()
-    # Replace image refs in order with links to saved crops
+    # Replace image refs in order with links to saved images
     for idx, m in enumerate(matches_image):
-        out = out.replace(m, f"![](crops/{idx}.jpg)\n")
+        out = out.replace(m, f"![](images/{idx}.jpg)\n")
     # Remove non-image refs and normalize a couple of tokens used upstream
     for m in matches_other:
         out = out.replace(m, "")

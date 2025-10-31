@@ -3,6 +3,8 @@
 defaults:
   # Dataset root and discovery rules
   - dataset: omnidocbench
+  # Dataset sampling preset (explicit control of epochs/samples)
+  - dataset/sampling@dataset.sampling: default
   # Model architecture + preprocessing defaults (vendor parity)
   - model/deepseek_ocr/arch@model: deepseek_ocr.default
   # Inference defaults (e.g., temperature, max_new_tokens)
@@ -19,14 +21,14 @@ defaults:
 
 # Global knobs (basic configuration only)
 experiment: stage1
-repeats: 3               # total rounds to run
 device: cuda:0           # target device
 use_flash_attn: true     # enable flash attention if available
 
 # Unified run controls for orchestrator (used by Stage-2/deep profiling)
 run:
   mode: deep                   # deep | light
-  stage1_repeats: 1            # number of repeats for the workload during capture
+  # DEPRECATED: use dataset.sampling.* overrides in Stage-2 runner instead
+  stage1_repeats: 1            # (deprecated) repeats for Stage-1 workload during capture
   dataset_subset_filelist: null # optional filelist to limit workload samples
   top_n_kernels: 30            # number of top kernels to inspect in NCU
 

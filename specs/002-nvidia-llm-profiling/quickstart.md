@@ -55,9 +55,12 @@ pixi run stage2-profile -- \
   +run.mode=deep \
   +inputs.manifest=/abs/path/to/inputs.yaml \
   pipeline.torch_profiler.enable=false \
-  repeats=1 \
+  dataset/sampling@dataset.sampling=default \
+  dataset.sampling.num_epochs=1 \
+  dataset.sampling.num_samples_per_epoch=1 \
   hydra.run.dir=$(pwd)/tmp/profile-output/$(date +%Y%m%d-%H%M%S) hydra.job.chdir=true \
-  outputs.save_predictions=false outputs.visualization.enable=false
+  pipeline.torch_profiler.output.prediction.enable=false \
+  pipeline.torch_profiler.output.visualization.enable=false
 ```
 
 Notes:

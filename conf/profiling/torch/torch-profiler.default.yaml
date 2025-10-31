@@ -8,8 +8,6 @@
 # - profile_memory: If true, collects memory events (notably slower, larger traces).
 # - with_stack: If true, captures Python stack traces for events (much slower/larger).
 # - group_by_input_shape: If true, aggregates by input shapes in key_averages (more CPU).
-# - rep_max_new_tokens: Cap on decode tokens for the representative profiled run
-#   to bound trace size and CPU post-processing time.
 enabled: true               # enable representative profiling
 activities: [cpu, cuda]     # collect CPU and CUDA events
 record_shapes: false        # do not record input shapes (keeps it lighter)
@@ -18,6 +16,5 @@ with_stack: false           # do not capture Python stacks
 group_by_input_shape: false # lighter aggregation in key_averages
 
 # Keep representative profiling quick to avoid heavy CPU aggregation
-rep_max_new_tokens: 64
 warmup_rounds: 2          # number of warmup runs before profiling
 warmup_synthetic: true    # if true, warmup uses synthetic inputs

@@ -8,7 +8,6 @@
 # - profile_memory: true to collect memory usage/timeline (expensive)
 # - with_stack: true to capture Python stacks (very expensive; huge traces)
 # - group_by_input_shape: true to aggregate per distinct input shape
-# - rep_max_new_tokens: higher cap to capture more decode steps; expect larger CPU post-processing
 enabled: true
 activities: [cpu, cuda]
 record_shapes: true
@@ -16,6 +15,5 @@ profile_memory: true
 with_stack: true
 group_by_input_shape: true
 
-rep_max_new_tokens: 128
 warmup_rounds: 3
 warmup_synthetic: false

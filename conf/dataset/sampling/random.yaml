@@ -1,0 +1,7 @@
+# Convenience preset: randomize order with full-epoch processing by default
+
+num_samples_per_epoch: null
+num_epochs: 1
+randomize: true
+seed: null
+

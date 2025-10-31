@@ -16,10 +16,10 @@ Static analysis
   - `static_compute.md` — human‑readable summary
 
 Predictions and visualization (optional)
-- Enable with `outputs.save_predictions=true`.
+- Enable with `pipeline.torch_profiler.output.prediction.enable=true`.
 - Files (under `torch_profiler/`):
-  - `predictions.jsonl`, `predictions.md`
-  - `viz/<stem>/result_with_boxes.jpg`, `viz/<stem>/result.mmd`, `viz/_thumbs/<stem>.jpg`
+  - `pred/predictions.jsonl`
+  - `viz/<hash>/result_with_boxes.jpg`, `viz/<hash>/result.mmd`, `viz/<hash>/images/*.jpg`, `viz/<hash>/info.json`
 
 Notes on profiler tables
 - CUDA time often aggregates under kernel entries (e.g., `cudaLaunchKernel`, `flash_attn::*`) and may be 0 for many high‑level `aten::*` rows.

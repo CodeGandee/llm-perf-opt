@@ -1,4 +1,5 @@
 temperature: 0.0
+# Max output tokens: explicit integer required (no 'inf')
 max_new_tokens: 8192
 no_repeat_ngram_size: 20
 do_sample: false
