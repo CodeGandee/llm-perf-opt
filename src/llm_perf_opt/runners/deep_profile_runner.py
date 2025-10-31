@@ -181,7 +181,9 @@ def main(cfg: DictConfig) -> None:  # pragma: no cover - CLI orchestrator
         _nvx_str = None if _nvx_raw is None else str(_nvx_raw)
         _nvx_empty = isinstance(_nvx_raw, str) and (_nvx_str.strip() == "")
         # Align with official args: only NVTX gating uses nvtx_capture
-        _cap_range_cfg = str(getattr(nsys_cfg, "capture_range", "nvtx")).lower()
+        # Default to 'none' (capture all) to avoid empty reports when NVTX labels
+        # are missing or misconfigured.
+        _cap_range_cfg = str(getattr(nsys_cfg, "capture_range", "none")).lower()
         # Optional: capture-range-end behavior; omit if unset/empty
         try:
             _cap_end_cfg_raw = getattr(nsys_cfg, "capture_range_end", None)
@@ -189,14 +191,22 @@ def main(cfg: DictConfig) -> None:  # pragma: no cover - CLI orchestrator
             _cap_end_cfg_raw = None
         _cap_end_cfg = None if _cap_end_cfg_raw is None else str(_cap_end_cfg_raw).strip() or None
 
-        # Validate NVTX requirements
+        # NVTX gating fallback: if capture_range=nvtx but nvtx_capture is omitted/empty,
+        # fall back to capture all (none) to avoid empty reports. Log a warning.
+        _use_nvtx_gate = False
         if gating_nvtx_nsys and _cap_range_cfg == "nvtx":
             if (_nvx_str is None) or _nvx_empty:
-                raise RuntimeError(
-                    "Nsight Systems: pipeline.nsys.capture_range=nvtx requires pipeline.nsys.nvtx_capture to be set to a valid NVTX range (e.g., 'prefill', 'decode', or 'name@*'). "
-                    "Empty/omitted nvtx_capture would result in no trigger and an empty report."
-                )
-        _use_nvtx_gate = bool(gating_nvtx_nsys and _cap_range_cfg == "nvtx")
+                try:
+                    import logging as _logging
+                    _logging.getLogger(__name__).warning(
+                        "Nsight Systems: capture_range=nvtx but nvtx_capture omitted/empty; "
+                        "falling back to capture_range=none (capture all) to avoid empty report."
+                    )
+                except Exception:
+                    pass
+                _cap_range_cfg = "none"
+            else:
+                _use_nvtx_gate = True
 
         # Determine final capture-range to pass to NSYS
         _cap_final = str(_cap_range_cfg) if gating_nvtx_nsys else "none"

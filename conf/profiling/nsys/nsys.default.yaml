@@ -17,7 +17,9 @@ sample: none # CPU sampling. Use 'none' for low overhead GPU-focused runs
 # - none            Do not gate; capture the entire process lifetime.
 #
 # Note: 'range' is NOT a valid value.
-capture_range: nvtx
+# Default: capture all (no gating) to avoid empty reports when NVTX labels are
+# missing or misconfigured.
+capture_range: none
 
 # Optional range end policy (maps to `--capture-range-end=`). If omitted/empty,
 # the runner will not pass this CLI arg. Valid examples:
@@ -39,9 +41,9 @@ capture_range_end: null
 #     * `--nvtx-domain-exclude=default` to exclude default-domain events
 #
 # - Behavior in this project’s runner:
-#     * If capture_range=nvtx, nvtx_capture MUST be provided and non-empty;
-#       omitted/empty is treated as an error to prevent empty reports.
-#     * This preset sets a safe default ('prefill'); override as needed.
+#     * If capture_range=nvtx and nvtx_capture is omitted/empty, the runner
+#       falls back to capture the entire run (equivalent to capture_range=none),
+#       and logs a warning to avoid generating empty reports.
 #     * When capture_range is not 'nvtx' or NVTX gating is disabled, this value
 #       is ignored and not passed to nsys.
 nvtx_capture: prefill
