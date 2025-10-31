@@ -1,10 +1,12 @@
-"""Stage 2 deep profiling runner (Hydra entry).
+"""Stage‑2 Deep Profiling Runner (Hydra entry).
 
-Runs a deep profiling session by launching the Stage 1 runner as the workload
-under NVIDIA Nsight Systems and Nsight Compute. Artifacts are organized under
-``tmp/stage2/<run_id>/`` with subfolders for ``nsys/`` and ``ncu/`` plus
-provenance files.
+Runs a deep profiling session by launching the Stage‑1 runner as the workload
+under NVIDIA Nsight Systems and Nsight Compute. All artifacts are written under
+the Hydra run directory (e.g., ``tmp/profile-output/<run_id>/``) with
+subfolders for ``nsys/`` and ``ncu/`` plus provenance files.
 
+Requirements
+------------
 This runner expects:
 - Nsight Systems (`nsys`) and Nsight Compute (`ncu`) on PATH
 - A working Stage 1 runner module: ``llm_perf_opt.runners.llm_profile_runner``

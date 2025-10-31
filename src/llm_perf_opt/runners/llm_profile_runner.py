@@ -1,16 +1,19 @@
-"""Stage 1 profiling runner (Hydra entry).
+"""Stage‑1 Profiling Runner (Hydra entry).
 
-Implements Phase 3 (US1) of the Stage 1 profiling workflow:
+Runs the Stage‑1 profiling workflow for DeepSeek‑OCR:
 
-- Uses Hydra to configure dataset/model/runtime.
-- Executes DeepSeek‑OCR via :class:`~llm_perf_opt.runners.dsocr_session.DeepSeekOCRSession`.
-- Wraps one representative run in PyTorch Profiler (CPU+CUDA) to collect
-  operator‑level statistics.
+- Configures dataset/model/runtime via Hydra.
+- Executes the workload through :class:`llm_perf_opt.runners.dsocr_session.DeepSeekOCRSession`.
+- Optionally wraps one representative run in PyTorch Profiler (CPU/CUDA) to
+  collect operator‑level statistics.
 - Aggregates repeated runs and estimates MFU (model‑level and per‑stage).
-- Writes artifacts (report.md, metrics.json, operators.md) under tmp/stage1/<run_id>/.
+- Writes artifacts under the unified Hydra run directory
+  ``tmp/profile-output/<run_id>/torch_profiler/``.
 
+Notes
+-----
 This module is intentionally lightweight and delegates reusable helpers to the
-``profiling`` package. It aims to be clear and single‑purpose for Stage 1.
+``profiling`` package. It aims to be clear and single‑purpose for Stage‑1.
 """
 
 from __future__ import annotations
@@ -20,8 +23,7 @@ import logging
 from datetime import datetime
 import json
 from pathlib import Path
-from typing import Any, Iterable, Iterator
-import random
+from typing import Any, Iterable
 
 import hydra
 from omegaconf import DictConfig, OmegaConf
@@ -39,8 +41,10 @@ from llm_perf_opt.profiling.export import (
 from llm_perf_opt.profiling.hw import get_device_name, get_peak_tflops, write_env_json
 from llm_perf_opt.profiling.mfu import compute_stage_mfu
 from llm_perf_opt.runners.dsocr_session import DeepSeekOCRSession
+from llm_perf_opt.runners.inference_engine import run_stage_dataset as _run_stage_dataset
 from llm_perf_opt.runners.dsocr_analyzer import DeepseekOCRStaticAnalyzer, AnalysisConfig
 from PIL import Image  # type: ignore[import-untyped]
+from mdutils import MdUtils  # type: ignore[import-untyped]
 from llm_perf_opt.visualize.annotations import render_vendor_style, write_vendor_result_mmd
 
 
@@ -174,7 +178,7 @@ def _collect_operator_records(prof: Any) -> list[OperatorRecord]:
     return records
 
 
-def _require_int_max_new_tokens(raw_mnt: object) -> int:
+def _require_int_max_new_tokens(raw_mnt: Any) -> int:
     """Coerce max_new_tokens to int; disallow 'inf' or null.
 
     Users must specify an explicit integer cap for output token length.
@@ -552,7 +556,6 @@ def _write_predictions_outputs(
             break
         img_path = Path(str(rec.get("image", "")))
         text_raw = str(rec.get("text_raw", ""))
-        text_clean = str(rec.get("text_clean", ""))
         pre_ms = float(rec.get("prefill_ms", 0.0))
         dec_ms = float(rec.get("decode_ms", 0.0))
         vis_ms = float(rec.get("vision_ms", 0.0))
@@ -859,10 +862,7 @@ def main(cfg: DictConfig) -> None:  # pragma: no cover - CLI orchestrator
         logger.info("profiling.enabled=false: skipping PyTorch representative profiling and warmup")
 
     # Repeated runs across dataset
-    runs: list[ImageRun] = []
-    raw_mnt = getattr(cfg, "infer", {}).get("max_new_tokens", 64)
-    max_new_tokens: int = _require_int_max_new_tokens(raw_mnt)
-    images_all: list[Path] = list(images)
+    runs: list[Any] = []
     # Per-stage output configuration (preferred)
     tp_stage = getattr(getattr(cfg, "pipeline", {}), "torch_profiler", {})
     tp_out = getattr(tp_stage, "output", {}) if tp_stage else {}
@@ -875,7 +875,7 @@ def main(cfg: DictConfig) -> None:  # pragma: no cover - CLI orchestrator
     _pred_dir_raw = getattr(pred_cfg, "save_dir", None)
     _vis_dir_raw = getattr(vis_cfg, "save_dir", None)
     pred_dir_cfg = str(_pred_dir_raw) if (_pred_dir_raw not in (None, "null")) else ("pred" if save_preds else ".")
-    vis_dir_cfg = str(_vis_dir_raw) if (_vis_dir_raw not in (None, "null")) else ("viz" if make_gallery else ".")
+    _ = _vis_dir_raw  # visualization dir resolved by shared engine
 
     # Model-specific extras under per-stage output
     extra = getattr(tp_out, "extra", {}) if tp_out else {}
@@ -909,98 +909,23 @@ def main(cfg: DictConfig) -> None:  # pragma: no cover - CLI orchestrator
         except Exception:
             pass
 
-    # Resolve prediction/visualization directories relative to the stage dir
+    # Resolve prediction/visualization directories (engine handles final writing)
     from pathlib import Path as _P
     pred_dir = _P(pred_dir_cfg) if _P(pred_dir_cfg).is_absolute() else (torch_out_dir / pred_dir_cfg)
-    vis_dir = _P(vis_dir_cfg) if _P(vis_dir_cfg).is_absolute() else (torch_out_dir / vis_dir_cfg)
-    preds_for_outputs: list[dict] = []
     if save_preds:
-        logger.info("Saving predictions to %s", str(artifacts_dir / "predictions.jsonl"))
-    # Sampling config
-    sam = getattr(getattr(cfg, "dataset", {}), "sampling", {})
-    n_per_epoch_raw = sam.get("num_samples_per_epoch", None)
-    n_per_epoch: int | None = None if n_per_epoch_raw in (None, "null") else int(n_per_epoch_raw)
-    n_epochs = int(sam.get("num_epochs", 1))
-    rand = bool(sam.get("randomize", False))
-    seed = sam.get("seed", None)
-    rng = random.Random(int(seed)) if seed not in (None, "null") else random.Random()
+        logger.info("Saving predictions to %s", str(pred_dir / "predictions.jsonl"))
 
-    for ep in range(max(1, n_epochs)):
-        order = images_all[:]
-        if rand:
-            rng.shuffle(order)
-        if n_per_epoch is None:
-            selected = order
-        else:
-            if not rand:
-                start = (ep * n_per_epoch) % max(1, len(order))
-                selected = (order[start:] + order[:start])[: min(n_per_epoch, len(order))]
-            else:
-                selected = order[: min(n_per_epoch, len(order))]
-        for idx, img in enumerate(selected):
-            logger.info(
-                "Epoch %d/%d | sample %d/%s | image=%s",
-                ep + 1,
-                max(1, n_epochs),
-                idx + 1,
-                ("all" if n_per_epoch is None else str(min(n_per_epoch, len(order)))),
-                str(img),
-            )
-            # Build infer kwargs excluding max_new_tokens to avoid conflicts when using 'inf'
-            _infer_cfg = getattr(cfg, "infer", {})
-            _infer_kwargs = dict(
-                temperature=float(_infer_cfg.get("temperature", 0.0)),
-                no_repeat_ngram_size=int(_infer_cfg.get("no_repeat_ngram_size", 0)),
-                do_sample=bool(_infer_cfg.get("do_sample", False)),
-            )
-            res = session.run_inference(
-                image_path=str(img),
-                prompt="<image>\n<|grounding|>Convert the document to markdown.",
-                max_new_tokens=max_new_tokens,
-                return_text=save_preds,
-                preprocess=dict(
-                enable=bool(getattr(cfg.model, "preprocess", {}).get("enable", True)),
-                base_size=int(getattr(cfg.model, "preprocess", {}).get("base_size", 1024)),
-                image_size=int(getattr(cfg.model, "preprocess", {}).get("image_size", 640)),
-                crop_mode=bool(getattr(cfg.model, "preprocess", {}).get("crop_mode", False)),
-                patch_size=int(getattr(cfg.model, "preprocess", {}).get("patch_size", 16)),
-                downsample_ratio=int(getattr(cfg.model, "preprocess", {}).get("downsample_ratio", 4)),
-                ),
-                infer=_infer_kwargs,
-            )
-            runs.append(
-                ImageRun(
-                    image_path=str(img),
-                    prefill_ms=float(res.get("prefill_ms", 0.0)),
-                    decode_ms=float(res.get("decode_ms", 0.0)),
-                    tokens=int(res.get("tokens", 0)),
-                    prefill_len=int(res.get("prefill_len", 0)),
-                    vision_ms=float(res.get("vision_ms", 0.0)),
-                    sam_ms=float(res.get("sam_ms", 0.0)),
-                    clip_ms=float(res.get("clip_ms", 0.0)),
-                    projector_ms=float(res.get("projector_ms", 0.0)),
-                )
-            )
-            if save_preds and isinstance(res.get("text"), str):
-                text_raw = str(res.get("text"))
-                text_clean = _clean_prediction_text(text_raw, strip_special=strip_special)
-                preds_for_outputs.append(
-                    {
-                        "image": str(img),
-                        "text_raw": text_raw,
-                        "text_clean": text_clean,
-                        "prefill_ms": float(res.get("prefill_ms", 0.0)),
-                        "decode_ms": float(res.get("decode_ms", 0.0)),
-                        "vision_ms": float(res.get("vision_ms", 0.0)),
-                        "tokens": int(res.get("tokens", 0)),
-                        "tokens_per_s": (
-                            (float(res.get("tokens", 0)) / (float(res.get("decode_ms", 1.0)) / 1000.0))
-                            if float(res.get("decode_ms", 0.0)) > 0
-                            else 0.0
-                        ),
-                    }
-                )
-            pass
+    # Shared engine: run dataset loop for this stage and write outputs
+    stage_tmp_dir = run_root / "tmp" / "torch_profiler"
+    runs, preds_for_outputs, summary = _run_stage_dataset(
+        cfg=cfg,
+        session=session,
+        stage_name="torch_profiler",
+        stage_out_dir=torch_out_dir,
+        stage_tmp_dir=stage_tmp_dir,
+        logger=logger,
+        hooks=None,
+    )
 
     # Summarize + outputs
     # Static compute via analyzer (preferred) with fallback
@@ -1011,15 +936,7 @@ def main(cfg: DictConfig) -> None:  # pragma: no cover - CLI orchestrator
     except Exception:
         pass
 
-    summary = _summarize_runs(
-        runs,
-        getattr(session, "m_model", None),
-        peak,
-        ctx_len_mode=str(getattr(cfg, "infer", {}).get("context_len_mode", "auto")),
-        ctx_len_fixed=int(getattr(cfg, "infer", {}).get("context_len_fixed", 0)) or None,
-        vision_flops=None,
-        model_window=None,
-    )
+    # summary computed by engine
 
     # Compute improved MFU using static analyzer (guarded by unified pipeline config)
     sa_cfg = getattr(getattr(cfg, "pipeline", {}), "static_analysis", {})
@@ -1106,15 +1023,7 @@ def main(cfg: DictConfig) -> None:  # pragma: no cover - CLI orchestrator
                 _write_static_compute(static_out_dir, static_compute)
             except Exception:
                 pass
-    if save_preds and preds_for_outputs:
-        _write_predictions_outputs(
-            pred_dir,
-            vis_dir,
-            preds_for_outputs,
-            make_gallery=make_gallery,
-            max_images=max_images,
-            thumb_width=thumb_w,
-        )
+    # Predictions and visualizations already written by shared engine
     aggr = summary.get("aggregates", {})
     logger.info(
         (

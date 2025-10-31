@@ -191,11 +191,38 @@ class DeepSeekOCRSession:
         preprocess: Optional[dict] = None,
         infer: Optional[dict] = None,
     ) -> dict:
-        """Run NVTX-segmented inference on a single image.
+        """Run NVTX‑segmented inference on a single image.
 
-        For Stage 1, we prefer a simple generate-based loop that allows
-        segmentation visibility. Some third-party APIs (e.g., ``.infer``) may
-        be monolithic; we don't rely on them for NVTX segmentation here.
+        For Stage‑1 we prefer a single‑call ``generate()`` path that preserves
+        NVTX segmentation visibility without relying on vendor monolithic
+        ``infer(...)`` helpers.
+
+        Parameters
+        ----------
+        image_path : str
+            Path to the input image (absolute or relative to CWD).
+        prompt : str
+            User prompt (will be normalized to the vendor conversation template).
+        max_new_tokens : int, optional
+            Maximum number of output tokens to generate. Must be an integer
+            (enforced by the runner). If omitted, defaults to 64.
+        return_text : bool, optional
+            If True, return decoded text in the result payload.
+        preprocess : dict, optional
+            Preprocess controls: ``enable``, ``base_size``, ``image_size``,
+            ``crop_mode``, ``patch_size``, ``downsample_ratio``.
+        infer : dict, optional
+            Additional generation kwargs (e.g., ``temperature``,
+            ``no_repeat_ngram_size``).
+
+        Returns
+        -------
+        dict
+            A result mapping with timings and optional text, including:
+            ``prefill_ms``, ``decode_ms``, ``tokens``, ``prefill_len``,
+            ``vision_ms`` and sub‑stage timings when available (``sam_ms``,
+            ``clip_ms``, ``projector_ms``). If ``return_text`` is True, a
+            ``text`` field is included.
         """
 
         if self.m_model is None or self.m_tokenizer is None or self.m_device is None:

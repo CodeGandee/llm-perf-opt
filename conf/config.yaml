@@ -14,6 +14,9 @@ defaults:
   - profiling/torch@pipeline.torch_profiler: torch-profiler.default
   - output/torch@pipeline.torch_profiler.output: default
   - model/deepseek_ocr/output/torch@pipeline.torch_profiler.output.extra.deepseek_ocr: default
+  # Direct inference (no profiling) stage outputs
+  - output/direct@pipeline.direct_inference.output: default
+  - model/deepseek_ocr/output/direct@pipeline.direct_inference.output.extra.deepseek_ocr: default
   # Nsight presets mounted into nested pipeline keys
   - profiling/nsys@pipeline.nsys: nsys.default
   - profiling/ncu@pipeline.ncu: ncu.default
@@ -44,6 +47,9 @@ hydra:
 
 # Unified pipeline configuration
 pipeline:
+  direct_inference:
+    enable: false
+    # output.* is mounted via defaults -> pipeline.direct_inference.output
   static_analysis:
     enable: true
     write_reports: true
