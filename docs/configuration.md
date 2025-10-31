@@ -74,7 +74,7 @@ PyTorch profiler preset keys
 Notes
 - Use `model/deepseek_ocr/infer@infer=deepseek_ocr.fast` to swap fast infer.
 - Static analyzer toggle: `pipeline.static_analysis.enable` (default true).
-- Stage‑oriented configs under `conf/runner/` are deprecated; use pipeline toggles in `conf/config.yaml` instead.
+- Stage‑oriented configs under `conf/runner/` have been removed. Use pipeline toggles in `conf/config.yaml` instead.
 
 Nsight Systems (nvtx gating)
 - `pipeline.nsys.capture_range` mirrors the CLI (`nvtx|cudaProfilerApi|hotkey|none`).

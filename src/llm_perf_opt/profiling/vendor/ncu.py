@@ -85,13 +85,13 @@ def build_ncu_cmd(
 
     Examples
     -------
-    Profile kernels for the Stage 1 runner while disabling its static analyzer:
+    Profile kernels for the Stage 1 runner while avoiding extra workload overhead:
     >>> work = [
     ...     'python', '-m', 'llm_perf_opt.runners.llm_profile_runner',
     ...     'dataset.subset_filelist=/abs/dev-20.txt', 'device=cuda:0', 'repeats=1',
-    ...     'infer.max_new_tokens=64', 'runner@stage1_runner=stage1.no-static'
+    ...     'infer.max_new_tokens=64', 'pipeline.static_analysis.enable=false', 'pipeline.torch_profiler.enable=false'
     ... ]
-    >>> cmd = build_ncu_cmd(Path('tmp/stage2/run/ncu/kernels'), work, nvtx_expr='LLM@*')
+    >>> cmd = build_ncu_cmd(Path('tmp/profile-output/run/ncu/kernels'), work, nvtx_expr='LLM@*')
 
     Returns
     -------

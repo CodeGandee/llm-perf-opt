@@ -2,7 +2,7 @@
 
 Parses <|ref|>label</|ref|><|det|>[[x1,y1,x2,y2], ...]</|det|> spans from the
 model output text and renders colored boxes with a semi-transparent overlay.
-Also saves cropped images for label == 'image' into an images/ subfolder.
+Also saves cropped images for label == 'image' into a crops/ subfolder.
 """
 
 from __future__ import annotations
@@ -22,20 +22,32 @@ _REF_DET_RE = re.compile(
 )
 
 
-def _parse_spans(text: str) -> list[tuple[str, list[list[int]]]]:
-    spans: list[tuple[str, list[list[int]]]] = []
-    for _full, label, coords_str in _REF_DET_RE.findall(text or ""):
+def _parse_spans(text: str) -> list[tuple[str, list[list[int]], str]]:
+    """Return list of (label, coords_list, segment_text_after_block).
+
+    segment_text_after_block is the substring from the end of the block until
+    the start of the next block (or end-of-text), stripped. This approximates
+    the lines that will appear in result.mmd for that region.
+    """
+    spans: list[tuple[str, list[list[int]], str]] = []
+    src = text or ""
+    matches = list(_REF_DET_RE.finditer(src))
+    for idx, m in enumerate(matches):
+        label = m.group(2)
+        coords_str = m.group(3)
         try:
             coords = ast.literal_eval(coords_str)
         except Exception:
             continue
         if not isinstance(coords, list):
             continue
-        spans.append((str(label).strip(), coords))
+        next_start = matches[idx + 1].start(0) if (idx + 1) < len(matches) else len(src)
+        seg_text = src[m.end(0):next_start].strip()
+        spans.append((str(label).strip(), coords, seg_text))
     return spans
 
 
-def render_vendor_style(image_path: str, result_text: str, output_dir: str) -> Path:
+def render_vendor_style(image_path: str, result_text: str, output_dir: str) -> tuple[Path, list[dict]]:
     """Render vendor-style overlay and crops.
 
     Parameters
@@ -47,17 +59,19 @@ def render_vendor_style(image_path: str, result_text: str, output_dir: str) -> P
     output_dir : str
         Directory to write outputs into. This function writes:
         - result_with_boxes.jpg
-        - images/ (crops for label == 'image')
+        - crops/ (crops for label == 'image')
 
     Returns
     -------
-    Path
-        Path to the output annotated image (result_with_boxes.jpg).
+    tuple[Path, list[dict]]
+        (Path to the output annotated image, list of box dicts)
+        Each box dict has keys: 'x', 'y', 'w', 'h' (pixel ints in original
+        image coordinates) and 'text' (recognized/label text for the box).
     """
 
     out_dir = Path(output_dir)
     out_dir.mkdir(parents=True, exist_ok=True)
-    crops_dir = out_dir / "images"
+    crops_dir = out_dir / "crops"
     crops_dir.mkdir(parents=True, exist_ok=True)
 
     im = Image.open(image_path).convert("RGB")
@@ -74,8 +88,9 @@ def render_vendor_style(image_path: str, result_text: str, output_dir: str) -> P
         font = None  # type: ignore[assignment]
 
     spans = _parse_spans(result_text)
+    boxes: list[dict] = []
     crop_idx = 0
-    for label, coords_list in spans:
+    for label, coords_list, seg_text in spans:
         # Soft color palette
         base = (
             random.randint(80, 200),
@@ -120,12 +135,28 @@ def render_vendor_style(image_path: str, result_text: str, output_dir: str) -> P
                 except Exception:
                     pass
 
+            # Record box structure
+            try:
+                # Normalize a couple vendor tokens similar to write_vendor_result_mmd
+                _txt = (seg_text or "").replace("\\\\coloneqq", ":=").replace("\\\\eqqcolon", "=:")
+                boxes.append(
+                    {
+                        "x": int(x1p),
+                        "y": int(y1p),
+                        "w": int(max(0, x2p - x1p)),
+                        "h": int(max(0, y2p - y1p)),
+                        "text": _txt,
+                    }
+                )
+            except Exception:
+                pass
+
     # Composite overlay
     im_rgba = im.convert("RGBA")
     im_rgba.alpha_composite(overlay)
     out_path = out_dir / "result_with_boxes.jpg"
     im_rgba.convert("RGB").save(out_path, format="JPEG", quality=90)
-    return out_path
+    return out_path, boxes
 
 
 def write_vendor_result_mmd(result_text: str, output_dir: str) -> Path:
@@ -141,7 +172,7 @@ def write_vendor_result_mmd(result_text: str, output_dir: str) -> Path:
     result_text : str
         Raw decoded text from model output (keep special tokens).
     output_dir : str
-        Directory containing an ``images/`` subdir populated by ``render_vendor_style``.
+        Directory containing a ``crops/`` subdir populated by ``render_vendor_style``.
 
     Returns
     -------
@@ -165,7 +196,7 @@ def write_vendor_result_mmd(result_text: str, output_dir: str) -> Path:
     out = (result_text or "").strip()
     # Replace image refs in order with links to saved crops
     for idx, m in enumerate(matches_image):
-        out = out.replace(m, f"![](images/{idx}.jpg)\n")
+        out = out.replace(m, f"![](crops/{idx}.jpg)\n")
     # Remove non-image refs and normalize a couple of tokens used upstream
     for m in matches_other:
         out = out.replace(m, "")

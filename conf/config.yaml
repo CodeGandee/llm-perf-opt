@@ -10,6 +10,8 @@ defaults:
   # PyTorch profiler preset (min/default/max) under profiling/torch/
   # Mount under nested key `pipeline.torch_profiler`
   - profiling/torch@pipeline.torch_profiler: torch-profiler.default
+  - output/torch@pipeline.torch_profiler.output: default
+  - model/deepseek_ocr/output/torch@pipeline.torch_profiler.output.extra.deepseek_ocr: default
   # Nsight presets mounted into nested pipeline keys
   - profiling/nsys@pipeline.nsys: nsys.default
   - profiling/ncu@pipeline.ncu: ncu.default
@@ -31,7 +33,9 @@ run:
 # Hydra run/output directory aligns with Stage 1 artifacts by default
 hydra:
   run:
-    dir: ${hydra:runtime.cwd}/tmp/stage1/${now:%Y%m%d-%H%M%S}
+    # Default run directory for all pipelines. Individual stages write into
+    # subdirectories under this root (e.g., torch_profiler/, static_analysis/, nsys/, ncu/).
+    dir: ${hydra:runtime.cwd}/tmp/profile-output/${now:%Y%m%d-%H%M%S}
   output_subdir: null
   job:
     chdir: true
@@ -59,12 +63,4 @@ pipeline:
     gating_nvtx: true
     # Keys (nvtx_include, set, metrics, sections) inherited from the preset.
 
-# Output controls
-outputs:
-  save_predictions: false   # save generated text per image for later comparison
-  predictions:
-    strip_special_tokens: false   # also store a cleaned, human-friendly variant
-  visualization:
-    enable: true            # write a predictions gallery (Markdown)
-    max_images: 16          # limit gallery size (set null for all)
-    thumbnail_width: 480    # pixel width for copied thumbnails
+# Output controls are now per-pipeline under `pipeline.<stage>.output.*`.

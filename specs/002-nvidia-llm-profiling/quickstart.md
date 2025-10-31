@@ -16,7 +16,7 @@
 pixi run stage2-profile -- +run.mode=deep +inputs.manifest=/abs/path/to/inputs.yaml
 ```
 
-2) Inspect artifacts (latest run dir under `tmp/stage2/<run_id>/`):
+2) Inspect artifacts (latest run dir under `tmp/profile-output/<run_id>/`):
 - `report.md`, `stakeholder_summary.md`
 - `operators.md` and `kernels.md` (sorted by total, includes mean ms)
 - `env.json`, `inputs.yaml`, `config.yaml`
@@ -54,19 +54,16 @@ When running Stage 2 with Nsight tools, keep the Stage 1 PyTorch profiler as lig
 pixi run stage2-profile -- \
   +run.mode=deep \
   +inputs.manifest=/abs/path/to/inputs.yaml \
-  torch_profiler=@profiling/torch/torch-profiler.min \
-  'torch_profiler.activities=[cpu]' \
-  +torch_profiler.record_shapes=false +torch_profiler.profile_memory=false +torch_profiler.with_stack=false \
-  +torch_profiler.warmup_rounds=0 +torch_profiler.rep_max_new_tokens=16 \
+  pipeline.torch_profiler.enable=false \
   repeats=1 \
-  hydra.run.dir=$(pwd)/tmp/stage2/$(date +%Y%m%d-%H%M%S) hydra.job.chdir=true \
+  hydra.run.dir=$(pwd)/tmp/profile-output/$(date +%Y%m%d-%H%M%S) hydra.job.chdir=true \
   outputs.save_predictions=false outputs.visualization.enable=false
 ```
 
 Notes:
 - Keep NVTX ranges enabled (LLM@prefill, LLM@decode_all) so nsys/ncu can isolate stages.
 - To fully skip the representative PyTorch profiler, prefer `+torch_profiler.enabled=false` (alias) or `+profiling.enabled=false` (legacy key). The above example keeps it minimal if you want some operator stats.
-- Runner config lives under `conf/runner/`; `conf/profiling/` should be used for external profiler presets (torch/nsys/ncu).
+- Unified entry config is `conf/config.yaml`. External profiler presets live under `conf/profiling/` and are mounted into `pipeline.*`.
 
 ### Data model reuse (Stage 2)
 

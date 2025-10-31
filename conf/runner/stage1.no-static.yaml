@@ -1,8 +1,0 @@
-# Disable static model analysis for faster Stage 1 runs
-analysis:
-  static:
-    enabled: false
-    write_reports: false
-    use_analytic_fallback: true
-    use_synthetic_inputs: true
-

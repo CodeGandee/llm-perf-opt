@@ -41,7 +41,6 @@ from llm_perf_opt.runners.dsocr_session import DeepSeekOCRSession
 from llm_perf_opt.runners.dsocr_analyzer import DeepseekOCRStaticAnalyzer, AnalysisConfig
 from PIL import Image  # type: ignore[import-untyped]
 from llm_perf_opt.visualize.annotations import render_vendor_style, write_vendor_result_mmd
-from mdutils.mdutils import MdUtils  # type: ignore[import-untyped]
 
 
 # -----------------------------
@@ -452,16 +451,23 @@ def _clean_prediction_text(text: str, strip_special: bool) -> str:
 
 
 def _write_predictions_outputs(
-    artifacts_dir: Path,
+    pred_dir: Path,
+    vis_dir: Path,
     preds: list[dict],
     make_gallery: bool,
     max_images: int | None,
     thumb_width: int,
 ) -> None:
-    """Write predictions.jsonl and an optional Markdown gallery with thumbnails."""
+    """Write predictions.jsonl and per-image visualization artifacts.
+
+    - predictions.jsonl → `pred_dir/predictions.jsonl`
+    - Per-image: `vis_dir/<md5(full-image-path)>/result_with_boxes.jpg` and `info.json`
+      (no `predictions.md` gallery).
+    """
 
     # JSONL
-    pj = artifacts_dir / "predictions.jsonl"
+    pred_dir.mkdir(parents=True, exist_ok=True)
+    pj = pred_dir / "predictions.jsonl"
     with pj.open("w", encoding="utf-8") as f:
         for rec in preds:
             json.dump(rec, f, ensure_ascii=False)
@@ -470,14 +476,8 @@ def _write_predictions_outputs(
     if not make_gallery:
         return
 
-    # Gallery (Markdown) with local thumbnails for portability
-    # Organize vendor-style annotated assets per image under viz/<stem>/
-    viz_root = artifacts_dir / "viz"
-    viz_root.mkdir(parents=True, exist_ok=True)
-    thumb_dir = viz_root / "_thumbs"
-    thumb_dir.mkdir(parents=True, exist_ok=True)
-    md = MdUtils(file_name=str((artifacts_dir / "predictions").as_posix()))
-    md.new_header(level=1, title="Predictions Gallery")
+    import hashlib as _hashlib
+    vis_dir.mkdir(parents=True, exist_ok=True)
 
     count = 0
     for rec in preds:
@@ -486,53 +486,45 @@ def _write_predictions_outputs(
         img_path = Path(str(rec.get("image", "")))
         text_raw = str(rec.get("text_raw", ""))
         text_clean = str(rec.get("text_clean", ""))
-        # Render vendor-style annotations (result_with_boxes.jpg + images/) per-image subdir
-        annotated_img_rel = None
-        if img_path.is_file():
-            try:
-                per_image_dir = viz_root / img_path.stem
-                per_image_dir.mkdir(parents=True, exist_ok=True)
-                out_annotated = render_vendor_style(str(img_path), text_raw, str(per_image_dir))
-                # Also write vendor-style result.mmd next to annotated image
-                try:
-                    _ = write_vendor_result_mmd(text_raw, str(per_image_dir))
-                except Exception:
-                    pass
-                annotated_img_rel = out_annotated.relative_to(artifacts_dir)
-            except Exception:
-                annotated_img_rel = None
-        if img_path.is_file():
-            try:
-                im = Image.open(img_path).convert("RGB")
-                w, h = im.size
-                if w > thumb_width:
-                    ratio = thumb_width / float(w)
-                    im = im.resize((thumb_width, int(h * ratio)))
-                thumb_name = img_path.stem + ".jpg"
-                thumb_path = thumb_dir / thumb_name
-                im.save(thumb_path, format="JPEG", quality=90)
-                rel_thumb = thumb_path.relative_to(artifacts_dir)
-                md.new_header(level=2, title=img_path.name)
-                md.new_paragraph(f"![{img_path.name}]({rel_thumb.as_posix()})")
-                if annotated_img_rel is not None:
-                    md.new_paragraph("Annotated (with boxes)")
-                    md.new_paragraph(f"![annotated]({annotated_img_rel.as_posix()})")
-            except Exception:
-                md.new_header(level=2, title=img_path.name)
-        else:
-            md.new_header(level=2, title=img_path.name)
+        pre_ms = float(rec.get("prefill_ms", 0.0))
+        dec_ms = float(rec.get("decode_ms", 0.0))
+        vis_ms = float(rec.get("vision_ms", 0.0))
+        try:
+            h = _hashlib.md5(str(img_path.resolve()).encode("utf-8")).hexdigest()
+        except Exception:
+            h = _hashlib.md5(str(img_path).encode("utf-8")).hexdigest()
+        per_image_dir = vis_dir / h
+        per_image_dir.mkdir(parents=True, exist_ok=True)
 
-        md.new_paragraph("**Prediction (clean)**")
-        md.new_line("```text")
-        md.new_line(text_clean)
-        md.new_line("```")
-        md.new_paragraph("Raw (with specials)")
-        md.new_line("```text")
-        md.new_line(text_raw)
-        md.new_line("```")
+        result_img_name = None
+        result_mmd_name = None
+        if img_path.is_file():
+            try:
+                out_annotated, boxes = render_vendor_style(str(img_path), text_raw, str(per_image_dir))
+                result_img_name = Path(out_annotated).name
+            except Exception:
+                result_img_name = None
+                boxes = []
+            # Write result.mmd referencing crops/
+            try:
+                out_mmd = write_vendor_result_mmd(text_raw, str(per_image_dir))
+                result_mmd_name = Path(out_mmd).name
+            except Exception:
+                result_mmd_name = None
+
+        info = {
+            "source_image": str(img_path.resolve()) if img_path.is_absolute() else str(img_path),
+            "result_image": result_img_name,
+            "text_raw": text_raw,
+            "result_mmd": result_mmd_name,
+            "timings_ms": {"prefill": pre_ms, "decode": dec_ms, "vision": vis_ms},
+            "boxes": boxes,
+        }
+        try:
+            (per_image_dir / "info.json").write_text(json.dumps(info, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+        except Exception:
+            pass
         count += 1
-
-    md.create_md_file()
 
 
 def _write_inputs_yaml(artifacts_dir: Path, images: list[Path], dataset_root: str, subset_filelist: str | None) -> None:
@@ -751,7 +743,8 @@ def main(cfg: DictConfig) -> None:  # pragma: no cover - CLI orchestrator
         try:
             # Keep rep profile bounded; honor profiling config caps and switches
             rep_cap = int(getattr(prof_cfg, 'rep_max_new_tokens', 64))
-            rep_max_new = int(min(int(getattr(cfg, "infer", {}).get("max_new_tokens", 64)), rep_cap))
+            raw_mnt = getattr(cfg, "infer", {}).get("max_new_tokens", 64)
+            rep_max_new = rep_cap if str(raw_mnt).lower() == "inf" else int(min(int(raw_mnt), rep_cap))
             record_shapes = bool(getattr(prof_cfg, "record_shapes", False))
             profile_memory = bool(getattr(prof_cfg, "profile_memory", False))
             with_stack = bool(getattr(prof_cfg, "with_stack", False))
@@ -786,15 +779,59 @@ def main(cfg: DictConfig) -> None:  # pragma: no cover - CLI orchestrator
     # Repeated runs across dataset
     runs: list[ImageRun] = []
     repeats = int(cfg.repeats)
-    max_new_tokens = int(getattr(cfg, "infer", {}).get("max_new_tokens", 64))
+    raw_mnt = getattr(cfg, "infer", {}).get("max_new_tokens", 64)
+    max_new_tokens: int | None = None if str(raw_mnt).lower() == "inf" else int(raw_mnt)
     images_iter: Iterator[Path] = iter(images)
-    save_preds = bool(getattr(cfg, "outputs", {}).get("save_predictions", False))
-    strip_special = bool(getattr(cfg.outputs, "predictions", {}).get("strip_special_tokens", False)) if hasattr(cfg, "outputs") else False
-    viz_cfg = getattr(cfg.outputs, "visualization", {}) if hasattr(cfg, "outputs") else {}
-    make_gallery = bool(viz_cfg.get("enable", True))
-    max_images = viz_cfg.get("max_images", 16)
+    # Per-stage output configuration (preferred)
+    tp_stage = getattr(getattr(cfg, "pipeline", {}), "torch_profiler", {})
+    tp_out = getattr(tp_stage, "output", {}) if tp_stage else {}
+    pred_cfg = getattr(tp_out, "prediction", {}) if tp_out else {}
+    vis_cfg = getattr(tp_out, "visualization", {}) if tp_out else {}
+
+    save_preds = bool(getattr(pred_cfg, "enable", False))
+    make_gallery = bool(getattr(vis_cfg, "enable", True))
+    # Default subdirs when enabled and save_dir is omitted
+    _pred_dir_raw = getattr(pred_cfg, "save_dir", None)
+    _vis_dir_raw = getattr(vis_cfg, "save_dir", None)
+    pred_dir_cfg = str(_pred_dir_raw) if (_pred_dir_raw not in (None, "null")) else ("pred" if save_preds else ".")
+    vis_dir_cfg = str(_vis_dir_raw) if (_vis_dir_raw not in (None, "null")) else ("viz" if make_gallery else ".")
+
+    # Model-specific extras under per-stage output
+    extra = getattr(tp_out, "extra", {}) if tp_out else {}
+    dso_extra = getattr(extra, "deepseek_ocr", {}) if extra else {}
+    dso_pred = getattr(dso_extra, "prediction", {}) if dso_extra else {}
+    dso_vis = getattr(dso_extra, "visualization", {}) if dso_extra else {}
+
+    strip_special = bool(getattr(dso_pred, "strip_special_tokens", False))
+    max_images = dso_vis.get("max_images", 16)
     max_images = None if max_images in (None, "null") else int(max_images)
-    thumb_w = int(viz_cfg.get("thumbnail_width", 480))
+    thumb_w = int(dso_vis.get("thumbnail_width", 480))
+
+    # Back-compat fallbacks (legacy outputs.* keys)
+    if not save_preds:
+        try:
+            save_preds = bool(getattr(getattr(cfg, "outputs", {}), "save_predictions", False))
+        except Exception:
+            save_preds = False
+    if not strip_special:
+        try:
+            strip_special = bool(getattr(getattr(getattr(cfg, "outputs", {}), "predictions", {}), "strip_special_tokens", False))
+        except Exception:
+            strip_special = False
+    if not isinstance(max_images, int):
+        try:
+            _vc = getattr(getattr(cfg, "outputs", {}), "visualization", {})
+            _mi = _vc.get("max_images", 16)
+            max_images = None if _mi in (None, "null") else int(_mi)
+            thumb_w = int(_vc.get("thumbnail_width", thumb_w))
+            make_gallery = bool(_vc.get("enable", make_gallery))
+        except Exception:
+            pass
+
+    # Resolve prediction/visualization directories relative to the stage dir
+    from pathlib import Path as _P
+    pred_dir = _P(pred_dir_cfg) if _P(pred_dir_cfg).is_absolute() else (torch_out_dir / pred_dir_cfg)
+    vis_dir = _P(vis_dir_cfg) if _P(vis_dir_cfg).is_absolute() else (torch_out_dir / vis_dir_cfg)
     preds_for_outputs: list[dict] = []
     if save_preds:
         logger.info("Saving predictions to %s", str(artifacts_dir / "predictions.jsonl"))
@@ -849,6 +886,7 @@ def main(cfg: DictConfig) -> None:  # pragma: no cover - CLI orchestrator
                     "text_clean": text_clean,
                     "prefill_ms": float(res.get("prefill_ms", 0.0)),
                     "decode_ms": float(res.get("decode_ms", 0.0)),
+                    "vision_ms": float(res.get("vision_ms", 0.0)),
                     "tokens": int(res.get("tokens", 0)),
                     "tokens_per_s": (
                         (float(res.get("tokens", 0)) / (float(res.get("decode_ms", 1.0)) / 1000.0))
@@ -964,7 +1002,8 @@ def main(cfg: DictConfig) -> None:  # pragma: no cover - CLI orchestrator
                 pass
     if save_preds and preds_for_outputs:
         _write_predictions_outputs(
-            artifacts_dir,
+            pred_dir,
+            vis_dir,
             preds_for_outputs,
             make_gallery=make_gallery,
             max_images=max_images,

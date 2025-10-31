@@ -108,7 +108,7 @@ Each subdirectory contains a README describing its purpose.
 
 ## CLI Usage (Stage 1 Profiling)
 
-Run the Stage 1 profiling runner with Pixi. This collects prefill/decode timings, operator summaries, and MFU, and writes artifacts under `tmp/stage1/<run_id>/`.
+Run the Stage 1 profiling runner with Pixi. This collects prefill/decode timings, operator summaries, and MFU, and writes artifacts under `tmp/profile-output/<run_id>/torch_profiler/` and `tmp/profile-output/<run_id>/static_analysis/`.
 
 ```bash
 pixi run python -m llm_perf_opt.runners.llm_profile_runner \
@@ -124,7 +124,7 @@ Static analyzer (optional)
 - By default, the runner performs a static model analysis to refine MFU and writes `static_compute.json` / `static_compute.md`.
 - To disable for faster runs, either:
   - Use the Pixi task: `pixi run stage1-run-no-static`
-  - Or pass a Hydra override while running: `runners=stage1.no-static`
+  - Or pass a Hydra override while running: `pipeline.static_analysis.enable=false`
 
 ## Profiling Requirements (Nsight Systems)
 

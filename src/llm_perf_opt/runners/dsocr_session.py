@@ -12,6 +12,7 @@ from pathlib import Path
 import logging
 from time import perf_counter
 from typing import Any, Optional
+from enum import Enum
 
 import torch
 from transformers import AutoModel, AutoTokenizer  # type: ignore[import-untyped]
@@ -34,6 +35,11 @@ class DeepSeekOCRSession:
         self.m_dtype: Optional[torch.dtype] = torch.bfloat16
         self.m_nvtx_hooks: list[Any] = []
         self.m_stage_time_ms: dict[str, float] = {"sam": 0.0, "clip": 0.0, "projector": 0.0}
+
+    class _Defaults(Enum):
+        """Local fallback defaults (avoid magic numbers inline)."""
+
+        UNBOUNDED_DECODE_CEILING = 4096
 
     @property
     def device(self) -> Optional[torch.device]:
@@ -150,7 +156,7 @@ class DeepSeekOCRSession:
         self,
         image_path: str,
         prompt: str,
-        max_new_tokens: int = 64,
+        max_new_tokens: Optional[int] = 64,
         return_text: bool = False,
         preprocess: Optional[dict] = None,
         infer: Optional[dict] = None,
@@ -167,7 +173,11 @@ class DeepSeekOCRSession:
 
         logger = logging.getLogger(__name__)
         img_abs = str(Path(image_path).resolve())
-        logger.info("Session inference start | image=%s max_new_tokens=%d", img_abs, int(max_new_tokens))
+        logger.info(
+            "Session inference start | image=%s max_new_tokens=%s",
+            img_abs,
+            ("inf" if max_new_tokens is None else str(int(max_new_tokens))),
+        )
 
         # Build inputs: either full preprocessing (default) or placeholder path
         use_pre = True
@@ -328,8 +338,20 @@ class DeepSeekOCRSession:
         # Decode: greedy generation
         t1 = perf_counter()
         with decode_range():
+            # Determine max_new_tokens policy (None => until EOS or ceiling)
+            ceiling: int
+            if max_new_tokens is None:
+                ceiling = self._infer_model_ceiling() or self._Defaults.UNBOUNDED_DECODE_CEILING.value  # type: ignore[assignment]
+                if self._infer_model_ceiling() is None:
+                    logging.getLogger(__name__).warning(
+                        "infer.max_new_tokens=inf: unknown model limit; using fallback ceiling=%d",
+                        int(ceiling),
+                    )
+            else:
+                ceiling = int(max_new_tokens)
+
             gen_kwargs: dict[str, object] = {
-                "max_new_tokens": int(max_new_tokens),
+                "max_new_tokens": int(ceiling),
                 "eos_token_id": getattr(self.m_tokenizer, "eos_token_id", None),
             }
             if infer is not None:
@@ -386,6 +408,29 @@ class DeepSeekOCRSession:
         if return_text and text is not None:
             result["text"] = text
         return result
+
+    def _infer_model_ceiling(self) -> Optional[int]:
+        """Best-effort detection of a reasonable generation ceiling.
+
+        Checks common config attributes and returns None if unknown.
+        """
+        try:
+            cfg = getattr(self.m_model, "config", None)
+            if cfg is None:
+                return None
+            for key in (
+                "max_new_tokens",
+                "max_length",
+                "max_position_embeddings",
+                "n_positions",
+                "sliding_window",
+            ):
+                val = getattr(cfg, key, None)
+                if isinstance(val, int) and val > 0:
+                    return int(val)
+        except Exception:
+            return None
+        return None
     def _reset_stage_time_accum(self) -> None:
         self.m_stage_time_ms = {"sam": 0.0, "clip": 0.0, "projector": 0.0}
 
