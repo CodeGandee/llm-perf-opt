@@ -117,15 +117,30 @@ def main(cfg: DictConfig) -> None:  # pragma: no cover - CLI orchestrator
     except Exception:
         pass
 
+    # Reuse Stage-1 infer.max_new_tokens when available; allow a run-level override
+    try:
+        rep_mnt = getattr(getattr(cfg, "run", {}), "representative_max_new_tokens", None)
+    except Exception:
+        rep_mnt = None
+    try:
+        if rep_mnt in (None, "null"):
+            rep_mnt = getattr(getattr(cfg, "infer", {}), "max_new_tokens", 64)
+    except Exception:
+        rep_mnt = 64
+    try:
+        rep_mnt = int(rep_mnt)  # enforce integer-only policy (Stage-1 runner enforces the same)
+    except Exception:
+        rep_mnt = 64
+
     overrides += [
         f"device={device_sel}",
-        "infer.max_new_tokens=64",
+        f"infer.max_new_tokens={rep_mnt}",
         # Avoid CUPTI conflicts under Nsight Systems (disable PyTorch profiler in workload)
         "pipeline.torch_profiler.enable=false",
         # Disable static analysis during Nsight capture
         "pipeline.static_analysis.enable=false",
         # Explicit sampling plan for Stage-1 workload (map legacy stage1_repeats → samples/epoch)
-        "dataset/sampling@dataset.sampling=default",
+        # Note: preset is already mounted via conf/config.yaml; no need to append the dataset/sampling preset here.
         "dataset.sampling.num_epochs=1",
         f"dataset.sampling.num_samples_per_epoch={stage1_repeats}",
         "dataset.sampling.randomize=false",
@@ -147,6 +162,9 @@ def main(cfg: DictConfig) -> None:  # pragma: no cover - CLI orchestrator
         run_mode=None,
         inputs_manifest=None,
     )
+
+    # Predeclare NSYS summary base for later post-processing (CSV may or may not exist)
+    nsys_summary_base = artifacts.out_dir("nsys") / "summary"
 
     # Nsight Systems capture (guarded by pipeline.nsys.enable)
     if bool(getattr(getattr(cfg, "pipeline", {}), "nsys", {}).get("enable", False)):
@@ -208,7 +226,6 @@ def main(cfg: DictConfig) -> None:  # pragma: no cover - CLI orchestrator
         from llm_perf_opt.profiling.vendor.nsys import resolve_nsys_report_path
         report_path = resolve_nsys_report_path(nsys_out)
         if report_path is not None:
-            nsys_summary_base = artifacts.out_dir("nsys") / "summary"
             nsys_stats_cmd = build_nsys_stats_cmd(report_path, nsys_summary_base)
             subprocess.run(nsys_stats_cmd, check=False)
             nsys_sqlite_cmd = build_nsys_export_sqlite_cmd(report_path)
@@ -223,15 +240,20 @@ def main(cfg: DictConfig) -> None:  # pragma: no cover - CLI orchestrator
             subprocess.run(["ncu", "--list-sections"], stdout=sf, stderr=subprocess.STDOUT, check=False)
     except Exception:
         pass
-    # Select top-N kernels from nsys summary and focus on decode region
+    # Select top-N kernels from nsys summary (if present) and focus on decode region
     kernel_regex = None
     try:
         top_n = int(getattr(getattr(cfg, "run", {}), "top_n_kernels", 30))
-        names = top_kernels_from_nsys_summary(Path(str(nsys_summary_base) + ".csv"), top_n=top_n)
-        if names:
-            import re as _re
-            pats = ["(" + _re.escape(n) + ")" for n in names]
-            kernel_regex = "|".join(pats)
+    except Exception:
+        top_n = 30
+    try:
+        csv_candidate = Path(str(nsys_summary_base) + ".csv")
+        if csv_candidate.exists():
+            names = top_kernels_from_nsys_summary(csv_candidate, top_n=top_n)
+            if names:
+                import re as _re
+                pats = ["(" + _re.escape(n) + ")" for n in names]
+                kernel_regex = "|".join(pats)
     except Exception:
         kernel_regex = None
     csv_log = artifacts.out_dir("ncu") / "raw.csv"
