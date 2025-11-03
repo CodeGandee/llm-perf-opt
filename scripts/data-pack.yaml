@@ -1,0 +1,18 @@
+env:
+  data_root_env: HF_SNAPSHOTS_ROOT
+  default_data_root: /home/igame/.cache/huggingface/hub/models--deepseek-ai--DeepSeek-OCR/snapshots
+data_items:
+  - id: deepseek_ocr
+    source_dir: 2c968b433af61a059311cbf8997765023806a24d
+    repo_link_path: models/deepseek-ocr
+    required_files:
+      - config.json
+      - tokenizer.json
+      - processor_config.json
+      - model.safetensors.index.json
+      - model-00001-of-000001.safetensors
+    optional_files:
+      - README.md
+      - special_tokens_map.json
+    procssed_dir: models/processed/deepseek-ocr
+
