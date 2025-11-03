@@ -2,6 +2,8 @@
 
 No outputs created
 - Ensure dataset root exists: `conf/dataset/omnidocbench.yaml` → `datasets/omnidocbench/source-data`
+  - Create symlink via: `datasets/omnidocbench/bootstrap.sh --yes` (or `./bootstrap.sh --yes`)
+  - If dataset root only has `images.zip`, the bootstrap can extract it so `images/*.png` are visible.
 - Run with Pixi (not system Python): `pixi run stage1-run`
 
 Boxes misaligned in visualization

@@ -1,16 +1,26 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-# Workspace-level bootstrap that forwards to the config-driven symlink setup.
+# Workspace-level bootstrap. Runs dataset + model bootstraps.
 
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-SCRIPT="$ROOT_DIR/scripts/bootstrap-symlinks.sh"
 
-if [[ ! -x "$SCRIPT" ]]; then
-  echo "Error: missing or non-executable $SCRIPT" >&2
-  echo "Hint: ensure the repo is intact and run: chmod +x scripts/bootstrap-symlinks.sh" >&2
-  exit 1
+# 1) Dataset: OmniDocBench
+DATASET_BOOT="$ROOT_DIR/datasets/omnidocbench/bootstrap.sh"
+if [[ -x "$DATASET_BOOT" ]]; then
+  echo "[bootstrap] OmniDocBench dataset setup..."
+  "$DATASET_BOOT" "$@"
+else
+  echo "[bootstrap] Skip dataset setup (not found): $DATASET_BOOT" >&2
 fi
 
-exec "$SCRIPT" "$@"
+# 2) Models: DeepSeek-OCR
+MODEL_BOOT="$ROOT_DIR/models/bootstrap.sh"
+if [[ -x "$MODEL_BOOT" ]]; then
+  echo "[bootstrap] Models setup..."
+  "$MODEL_BOOT" "$@"
+else
+  echo "[bootstrap] Skip models setup (not found): $MODEL_BOOT" >&2
+fi
 
+echo "[bootstrap] Completed"

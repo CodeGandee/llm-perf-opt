@@ -4,14 +4,15 @@ Stores model weights and tokenizers used by experiments.
 
 ## Setup
 
-Model symlinks (e.g., `models/deepseek-ocr`) should be created by developers on their host using `bootstrap.sh`. These symlinks are not tracked in git to avoid environment-specific paths.
+Model symlinks (e.g., `models/deepseek-ocr`) should be created using the model bootstrap. These symlinks are not tracked in git to avoid environment‑specific paths.
 
-Run the bootstrap script from the repository root:
-```bash
-./bootstrap.sh
-```
+Options
+- Run only model bootstrap:
+  - `models/bootstrap.sh --yes` (uses `models/bootstrap.yaml`)
+- Run all bootstraps from repo root:
+  - `./bootstrap.sh --yes`
 
-This will create the necessary symlinks to your local model storage based on your environment configuration.
+`models/bootstrap.yaml` defaults to using a Hugging Face snapshot root (`$HF_SNAPSHOTS_ROOT`) and a snapshot subdir. Adjust to your local clone or snapshot as needed.
 
 ## Options
 
@@ -21,4 +22,4 @@ This will create the necessary symlinks to your local model storage based on you
 - Git submodules (only for small repos or LFS pointers):
   - Pin lightweight adapters or configs; avoid committing large binaries.
 
-**Important**: Do not commit model symlinks or large binaries to this repo. Model paths are environment-specific and should be configured locally.
+**Important**: Do not commit model symlinks or large binaries to this repo. Model paths are environment‑specific and should be configured locally.

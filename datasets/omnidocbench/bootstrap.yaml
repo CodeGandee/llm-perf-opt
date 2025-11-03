@@ -1,0 +1,21 @@
+env:
+  # Environment variable name that points to a base datasets directory.
+  # If set, the dataset will be resolved as "$DATASETS_ROOT/<source_subdir>".
+  data_root_env: DATASETS_ROOT
+  # Fallback base directory when the env var is not set.
+  default_data_root: /workspace/datasets
+
+dataset:
+  # Subdirectory under the base root that contains the OmniDocBench dataset.
+  source_subdir: OpenDataLab___OmniDocBench
+  # Name of the symlink created within this folder.
+  repo_link_name: source-data
+  # Known zip archives that may need extraction inside the target dataset dir.
+  zips:
+    - images.zip
+    - pdfs.zip
+  # Mapping of zip -> extraction subdir name under the target dataset dir.
+  unzip_targets:
+    images.zip: images
+    pdfs.zip: pdfs
+

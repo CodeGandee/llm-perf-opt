@@ -1,0 +1,18 @@
+env:
+  # Base directory for Hugging Face snapshot storage for DeepSeek-OCR
+  model_root_env: HF_SNAPSHOTS_ROOT
+  default_model_root: /home/igame/.cache/huggingface/hub/models--deepseek-ai--DeepSeek-OCR/snapshots
+
+model:
+  # Snapshot subdir under the base (HF snapshot hash). Adjust to your env.
+  source_subdir: 2c968b433af61a059311cbf8997765023806a24d
+  # Name of the symlink created within models/
+  repo_link_name: deepseek-ocr
+  # Quick sanity requirements to validate the snapshot directory
+  required_files:
+    - config.json
+    - tokenizer.json
+    - processor_config.json
+    - model.safetensors.index.json
+    - model-00001-of-000001.safetensors
+

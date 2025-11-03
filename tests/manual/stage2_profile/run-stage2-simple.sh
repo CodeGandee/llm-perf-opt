@@ -11,7 +11,7 @@ set -euo pipefail
 # Examples:
 #   tests/manual/stage2_profile/run-stage2-simple.sh
 #   tests/manual/stage2_profile/run-stage2-simple.sh --gpu=1
-#   tests/manual/stage2_profile/run-stage2-simple.sh --image=/data2/datasets/OmniDocBench/images/foo.png
+#   tests/manual/stage2_profile/run-stage2-simple.sh --image=/workspace/datasets/OpenDataLab___OmniDocBench/images/foo.png
 #   tests/manual/stage2_profile/run-stage2-simple.sh --with-static-analysis
 
 WITH_STATIC=false

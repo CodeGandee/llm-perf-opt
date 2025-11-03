@@ -2,8 +2,12 @@
 
 Prerequisites
 - GPU machine with CUDA 12.x (Pixi system requirement is set to 12.0)
-- Local model repo symlink: `models/deepseek-ocr -> /data2/huangzhe/code/DeepSeek-OCR`
-- Dataset: `datasets/omnidocbench/source-data/` with images under `images/`
+- Model symlink (DeepSeek-OCR): use `models/bootstrap.sh --yes` or `./bootstrap.sh --yes`
+  - Default config points to an HF snapshot root (`$HF_SNAPSHOTS_ROOT`). You can edit `models/bootstrap.yaml` to match your environment (local clone or snapshot hash).
+- Dataset symlink: `datasets/omnidocbench/source-data -> /workspace/datasets/OpenDataLab___OmniDocBench`
+  - Create via: `datasets/omnidocbench/bootstrap.sh --yes` (reads `datasets/omnidocbench/bootstrap.yaml`)
+  - Or run all bootstraps: `./bootstrap.sh --yes`
+  - The dataset bootstrap can also extract `images.zip` / `pdfs.zip` when present.
 
 Environment
 - This project uses Pixi for environment and tasks. Install Pixi and run tasks via `pixi run <task>`.
