@@ -145,26 +145,95 @@ Static analyzer (optional)
   - Use the Pixi task: `pixi run stage1-run-no-static`
   - Or pass a Hydra override while running: `pipeline.static_analysis.enable=false`
 
-## Profiling Requirements (Nsight Systems)
+## System Prerequisites
 
-To capture end‑to‑end GPU/CPU timelines while running DeepSeek‑OCR and other workloads, we use NVIDIA Nsight Systems (`nsys`). Please install it so profiling commands work locally.
+This project assumes NVIDIA GPUs and requires system tools for profiling and for building optional CUDA‑based deps (e.g., FlashAttention). Install these before running Stage‑1/Stage‑2 profiling.
 
-Preferred install order (where applicable): uv (PyPI) > pixi/conda‑forge > apt > direct .deb
+- Check GPU driver and CUDA compatibility (note Driver and “CUDA Version”):
 
-- Nsight Systems (nsys)
-  - Ubuntu (recommended):
-    - `sudo apt-get update && sudo apt-get install -y nsight-systems nsight-systems-target`
-  - Or download from NVIDIA Developer if apt isn’t available: https://developer.nvidia.com/nsight-systems
-  - Verify: `nsys --version`
+```bash
+nvidia-smi
+```
 
-- Optional: Nsight Compute (ncu) for per‑kernel analysis
-  - pixi/conda‑forge: `pixi add nsight-compute -c conda-forge`
-  - Verify: `ncu --version`
+- Install Nsight Systems (`nsys`) via NVIDIA APT repository (Ubuntu):
 
-- Optional: NVTX annotations for readable timelines
-  - `uv pip install -U nvtx`
+```bash
+# Replace ubuntu2204 with your release (e.g., ubuntu2404) if needed
+sudo wget https://developer.download.nvidia.com/compute/cuda/repos/ubuntu2204/x86_64/cuda-keyring_1.1-1_all.deb
+sudo dpkg -i cuda-keyring_1.1-1_all.deb
+sudo apt-get update
 
-Example capture:
+# Install Nsight Systems CLI + target components
+sudo apt-get install -y nsight-systems nsight-systems-target
+
+# Verify
+nsys --version
+```
+
+If APT isn’t available, use NVIDIA Developer installers: https://developer.nvidia.com/nsight-systems
+
+- Install CUDA Toolkit (`nvcc`) — required to build CUDA-based dependencies (e.g., flash-attn)
+
+Use the official NVIDIA repository for system-wide installation:
+
+```bash
+# Run the automated installation script
+./scripts/install-cuda-toolkit-12-8.sh
+```
+
+Or install manually:
+
+```bash
+# 1. Download and install CUDA keyring (Ubuntu 24.04 example)
+wget https://developer.download.nvidia.com/compute/cuda/repos/ubuntu2404/x86_64/cuda-keyring_1.1-1_all.deb
+sudo dpkg -i cuda-keyring_1.1-1_all.deb
+
+# 2. Update package list
+sudo apt-get update
+
+# 3. Install CUDA Toolkit 12.8 (toolkit only, no driver update)
+sudo apt-get install -y cuda-toolkit-12-8
+
+# 4. Add to PATH and environment
+echo '' >> ~/.bashrc
+echo '# CUDA 12.8 Toolkit' >> ~/.bashrc
+echo 'export CUDA_HOME=/usr/local/cuda-12.8' >> ~/.bashrc
+echo 'export PATH=$CUDA_HOME/bin:$PATH' >> ~/.bashrc
+echo 'export LD_LIBRARY_PATH=$CUDA_HOME/lib64:$LD_LIBRARY_PATH' >> ~/.bashrc
+source ~/.bashrc
+
+# 5. Verify installation
+nvcc --version
+```
+
+**Important Notes:**
+- Replace `ubuntu2404` with your Ubuntu version: `ubuntu2004`, `ubuntu2204`, or `ubuntu2404`
+- Pick a CUDA version that matches your driver (`nvidia-smi` shows max supported "CUDA Version")
+- System-wide installation ensures compilers can find CUDA headers at `/usr/local/cuda-12.8/include`
+- For other distributions (RHEL, Fedora, SLES), see [official installation guide](https://docs.nvidia.com/cuda/cuda-installation-guide-linux/)
+
+- Install Nsight Compute (`ncu`) — per‑kernel profiler
+
+Preferred (newer versions): Pixi Global
+
+```bash
+pixi global install nsight-compute --channel nvidia --channel conda-forge
+~/.pixi/bin/ncu --version   # or add ~/.pixi/bin to PATH
+```
+
+Alternative (root): APT via NVIDIA repository
+
+```bash
+sudo apt-get install -y nsight-compute
+```
+
+- Optional: NVTX (for readable CUDA timeline ranges)
+
+```bash
+uv pip install -U nvtx || pip install -U nvtx
+```
+
+Example Nsight Systems capture:
 
 ```
 nsys profile --trace=cuda,nvtx,osrt -o tmp/nsys/deepseek \

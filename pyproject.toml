@@ -19,13 +19,10 @@ packages = [
 channels = ["conda-forge"]
 platforms = ["linux-64"]
 
+# Base dependencies shared by all environments
 [tool.pixi.pypi-dependencies]
 llm_perf_opt = { path = ".", editable = true }
 pillow = "*"
-torch = { version = ">=2.5.1", index = "https://download.pytorch.org/whl/cu124" }
-torchvision = { version = ">=0.20.1", index = "https://download.pytorch.org/whl/cu124" }
-triton-kernels = { git = "https://github.com/triton-lang/triton.git", rev = "v3.5.0", subdirectory = "python/triton_kernels" }
-flash-attn = "==2.7.4.post1"
 
 [tool.pixi.dependencies]
 # Ensure a Python version compatible with current PyTorch wheels
@@ -41,6 +38,59 @@ cuda = "12.0"
 extra-index-urls = ["https://wheels.vllm.ai/nightly"]
 no-build-isolation = ["flash-attn"]
 
+# ============================================================================
+# Default Environment (CUDA 12.4, sm_90)
+# ============================================================================
+[tool.pixi.feature.default-cuda.pypi-dependencies]
+torch = { version = ">=2.5.1", index = "https://download.pytorch.org/whl/cu124" }
+torchvision = { version = ">=0.20.1", index = "https://download.pytorch.org/whl/cu124" }
+triton-kernels = { git = "https://github.com/triton-lang/triton.git", rev = "v3.5.0", subdirectory = "python/triton_kernels" }
+flash-attn = "==2.7.4.post1"
+
+# ============================================================================
+# RTX 5090 Environment Configuration (CUDA 12.8, sm_120)
+# ============================================================================
+# RTX 5090 (Blackwell architecture with sm_120) requires:
+# - PyTorch nightly with CUDA 12.8+ support
+# - Flash Attention and Triton built from source with sm_120 support
+# - CUDA 12.8+ system requirements
+
+[tool.pixi.feature.rtx5090.pypi-dependencies]
+# PyTorch nightly installation is done via task (pip doesn't work well with pixi for nightly)
+# Base dependencies that don't conflict
+
+[tool.pixi.feature.rtx5090.dependencies]
+python = ">=3.11,<3.13"
+pip = "*"
+ninja = "*"
+setuptools = "*"
+wheel = "*"
+# Note: CUDA 12.8 toolkit should be installed system-wide
+# Nsight Compute should also be from system CUDA 12.8 installation
+
+[tool.pixi.feature.rtx5090.system-requirements]
+cuda = "12.8"
+
+[tool.pixi.feature.rtx5090.tasks]
+# Install PyTorch nightly with CUDA 12.8 (sm_120 support)
+install-pytorch-nightly = { cmd = "pip install --pre torch torchvision torchaudio --index-url https://download.pytorch.org/whl/nightly/cu128 --force-reinstall" }
+# Build flash-attention from source with sm_120 support
+build-flash-attn = { cmd = "MAX_JOBS=$(awk '/MemTotal/ {printf \"%d\", $2/1024/1024/16}' /proc/meminfo) TORCH_CUDA_ARCH_LIST='12.0' pip install flash-attn --no-build-isolation" }
+# Build triton from source with sm_120 support (uses cached LLVM if available)
+build-triton = { cmd = "MAX_JOBS=$(($(nproc)-2)) pip install git+https://github.com/triton-lang/triton.git@main" }
+# Clean triton cache and rebuild (use this if build-triton fails with corrupted downloads)
+build-triton-clean = { cmd = "rm -rf ~/.triton && MAX_JOBS=$(($(nproc)-2)) pip install git+https://github.com/triton-lang/triton.git@main" }
+# Verify RTX 5090 setup
+verify-rtx5090 = { cmd = "python -c 'import torch; print(f\"PyTorch: {torch.__version__}\"); print(f\"CUDA available: {torch.cuda.is_available()}\"); print(f\"CUDA version: {torch.version.cuda}\"); print(f\"Device: {torch.cuda.get_device_name(0) if torch.cuda.is_available() else \"N/A\"}\"); t = torch.zeros(3).cuda(); print(f\"Test tensor on CUDA: {t}\")'" }
+# Full setup for RTX 5090 - run this after pixi install
+setup-rtx5090 = { depends-on = ["install-pytorch-nightly", "build-triton", "build-flash-attn", "verify-rtx5090"] }
+
+[tool.pixi.environments]
+# Default environment with PyTorch 2.5.1 + CUDA 12.4 (up to sm_90)
+default = { features = ["default-cuda"], solve-group = "default" }
+# RTX 5090 environment with PyTorch nightly + CUDA 12.8 (sm_120 support)
+rtx5090 = { features = ["rtx5090"], solve-group = "rtx5090" }
+
 [tool.pixi.tasks]
 install-vllm-nightly = { cmd = "bash scripts/install-vllm-nightly.sh" }
 verify-vllm = { cmd = "python - <<'PY'\nimport vllm, torch, PIL; print('vllm', vllm.__version__); print('torch', torch.__version__); print('pillow', PIL.__version__)\nPY" }
@@ -49,8 +99,8 @@ bench-stage1-inproc = { cmd = "python tests/manual/manual_stage1_benchmark_inpro
 dsocr-infer-one = { cmd = "python scripts/deepseek-ocr-infer-one.py -i \"${INPUT}\" -o \"${OUTPUT}\"" }
 docs-serve = { cmd = "mkdocs serve -a 127.0.0.1:8000" }
 docs-build = { cmd = "mkdocs build" }
-stage1-run = { cmd = "python -m llm_perf_opt.runners.llm_profile_runner 'hydra.run.dir=tmp/profile-output/${now:%Y%m%d-%H%M%S}' dataset.subset_filelist=datasets/omnidocbench/subsets/dev-20.txt device=cuda:0 infer.max_new_tokens=64 'pipeline.torch_profiler.activities=[cpu,cuda]' pipeline.nsys.enable=false pipeline.ncu.enable=false dataset/sampling@dataset.sampling=default dataset.sampling.num_epochs=1 dataset.sampling.num_samples_per_epoch=3 dataset.sampling.randomize=false" }
-stage1-run-no-static = { cmd = "python -m llm_perf_opt.runners.llm_profile_runner 'hydra.run.dir=tmp/profile-output/${now:%Y%m%d-%H%M%S}' dataset.subset_filelist=datasets/omnidocbench/subsets/dev-20.txt device=cuda:0 infer.max_new_tokens=64 'pipeline.torch_profiler.activities=[cpu,cuda]' pipeline.static_analysis.enable=false pipeline.nsys.enable=false pipeline.ncu.enable=false dataset/sampling@dataset.sampling=default dataset.sampling.num_epochs=1 dataset.sampling.num_samples_per_epoch=3 dataset.sampling.randomize=false" }
+stage1-run = { cmd = "python -m llm_perf_opt.runners.llm_profile_runner 'hydra.run.dir=tmp/profile-output/${now:%Y%m%d-%H%M%S}' dataset.subset_filelist=datasets/omnidocbench/subsets/dev-20.txt device=cuda:0 infer.max_new_tokens=64 'pipeline.torch_profiler.activities=[cpu,cuda]' pipeline.nsys.enable=false pipeline.ncu.enable=false dataset.sampling.num_epochs=1 dataset.sampling.num_samples_per_epoch=3 dataset.sampling.randomize=false" }
+stage1-run-no-static = { cmd = "python -m llm_perf_opt.runners.llm_profile_runner 'hydra.run.dir=tmp/profile-output/${now:%Y%m%d-%H%M%S}' dataset.subset_filelist=datasets/omnidocbench/subsets/dev-20.txt device=cuda:0 infer.max_new_tokens=64 'pipeline.torch_profiler.activities=[cpu,cuda]' pipeline.static_analysis.enable=false pipeline.nsys.enable=false pipeline.ncu.enable=false dataset.sampling.num_epochs=1 dataset.sampling.num_samples_per_epoch=3 dataset.sampling.randomize=false" }
 stage2-profile = { cmd = "python -m llm_perf_opt.runners.deep_profile_runner 'hydra.run.dir=tmp/profile-output/${now:%Y%m%d-%H%M%S}' pipeline.nsys.enable=true pipeline.ncu.enable=false pipeline.static_analysis.enable=false" }
 stage2-profile-gpu1 = { cmd = "CUDA_VISIBLE_DEVICES=1 python -m llm_perf_opt.runners.deep_profile_runner 'hydra.run.dir=tmp/profile-output/${now:%Y%m%d-%H%M%S}' device=cuda:0 pipeline.nsys.enable=true pipeline.ncu.enable=false pipeline.static_analysis.enable=false" }
 stage-all-run = { cmd = "bash scripts/stage-all-run.sh" }
