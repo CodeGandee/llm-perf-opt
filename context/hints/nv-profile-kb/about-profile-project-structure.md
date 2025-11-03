@@ -20,76 +20,45 @@ Throughout this guide, placeholder names are shown in angle brackets:
 ```
 <your-project>/
 ├── pyproject.toml                 # Pixi env + tasks + project metadata
+├── bootstrap.sh                   # Optional workspace orchestrator (calls component bootstraps)
 ├── conf/                          # Hydra config tree (config groups)
 │   ├── config.yaml                # top-level defaults list
 │   ├── hydra/
-│   │   └── default.yaml           # run dir/job name/chdir pattern
 │   ├── model/                     # Model configs grouped by arch/infer variants
 │   │   └── <model-name>/
 │   │       ├── arch/
-│   │       │   ├── <model-name>.default.yaml     # architecture & preprocessing defaults
-│   │       │   └── <model-name>.<arch-variant>.yaml
 │   │       └── infer/
-│   │           ├── <model-name>.default.yaml     # inference defaults (match vendor)
-│   │           └── <model-name>.<inference-variant>.yaml
-│   ├── dataset/                   # dataset configurations
-│   │   ├── openwebtext.yaml
-│   │   ├── c4.yaml
-│   │   └── …
-│   ├── runtime/                   # framework/runtime layer
-│   │   ├── pytorch.yaml
-│   │   ├── vllm.yaml
-│   │   └── tensorrtllm.yaml
+│   ├── dataset/                   # Dataset configs (roots, subsets, sampling)
+│   ├── runtime/                   # Framework/runtime layer
 │   ├── hardware/                  # GPU affinity & caps
-│   │   └── single_gpu.yaml
-│   └── profiling/                 # what to collect
-│       ├── minimal.yaml
-│       └── full.yaml
-├── models/                        # model weights/tokenizers (symlinks or submodules)
-│   ├── qwen2_5_7b -> /data/weights/qwen2_5_7b/
-│   └── llama3_70b -> /data/weights/llama3_70b/
-├── datasets/                      # dataset organization
-│   ├── openwebtext/               # example dataset
-│   │   ├── source-data -> /data/datasets/openwebtext/  # symlink to official dataset
-│   │   ├── metadata.yaml          # dataset metadata (size, version, license, etc.)
-│   │   ├── README.md              # documentation for this dataset
-│   │   ├── subset-1k/             # variant: 1k sample subset
-│   │   └── tokenized-gpt2/        # variant: preprocessed with GPT-2 tokenizer
-│   └── c4/                        # another dataset
-│       ├── source-data -> /data/datasets/c4/
-│       ├── metadata.yaml
-│       ├── README.md
-│       └── en-validation/         # variant: English validation split
-├── third_party/                   # reference sources (read-only; symlinks or submodules)
-│   ├── github/                    # GitHub repos (Transformers, vLLM, TRT-LLM, Flash-Attn…)
-│   │   ├── transformers/          # submodule / subtree / sparse clone
-│   │   └── vllm/
-│   └── hf/                        # Hugging Face repos (git+LFS) or hub snapshots
-│       ├── meta-llama/Llama-3/    # submodule (git LFS!) OR snapshot dir
-│       └── Qwen/Qwen2.5/          # idem
+│   └── profiling/                 # Profiler toggles & presets
+├── models/                        # Model weights/tokenizers (symlinks or submodules)
+│   ├── bootstrap.sh               # Model bootstrap (creates <model-name> symlink)
+│   ├── bootstrap.yaml             # Model bootstrap configuration
+│   └── <processed>/               # Optional processed artifacts
+├── datasets/                      # Dataset organization
+│   └── <dataset-name>/
+│       ├── bootstrap.sh           # Creates `source-data` symlink (and optional prep)
+│       ├── bootstrap.yaml         # Dataset bootstrap configuration
+│       ├── source-data -> /path/to/<dataset>/   # Symlink to data on host
+│       ├── README.md              # Dataset documentation
+│       ├── metadata.yaml          # (optional) dataset facts
+│       └── <variant-name>/        # (optional) preprocessed/filtered variants
+├── third_party/                   # Reference sources (read-only; symlinks/submodules)
+│   ├── github/
+│   └── hf/
 ├── src/
-│   └── <your_project>/
-│       ├── __init__.py
-│       ├── cli.py                 # @hydra.main entry, route to runners & profiling
-│       ├── profiling/
-│       │   ├── harness.py         # NVTX, PyTorch profiler, NVML sampler, NSYS/NCU helpers
-│       │   ├── nsight_nsys.py     # thin wrappers (optional)
-│       │   ├── nsight_ncu.py      # thin wrappers (optional)
+│   └── <your_project>/            # Python package
+│       ├── profiling/             # harness, exporters, NVTX/NSYS/NCU helpers
 │       │   └── parsers/
-│       │       └── cublas_log.py  # GEMM M/N/K→FLOPs (optional)
-│       ├── runners/
-│       │   ├── base.py            # Runner interface
-│       │   ├── pytorch_runner.py  # vanilla torch/vLLM glue (select one)
-│       │   └── tensorrtllm_runner.py
-│       └── data/
-│           ├── dataset_utils.py   # dataset loading utilities
-│           └── preprocessors.py   # data preprocessing functions
-├── scripts/
-│   ├── make_symlinks.sh           # convenience: link external weight dirs into models/
-│   ├── snapshot_hf.py             # HF Hub snapshot utility for reference code
-│   ├── prepare_dataset.py         # dataset preparation/variant creation
-│   └── sanity.sh                  # quick smoke runs
-└── README.md
+│       ├── runners/               # CLI runners used by Hydra entries
+│       └── data/                  # dataset utilities
+├── scripts/                       # Utility scripts (prep, analysis, small tools)
+├── tests/                         # Unit/integration/manual tests
+├── docs/                          # Documentation and guides
+├── context/                       # Knowledge base, hints, how-tos
+├── magic-context/                 # Templates/snippets (submodule or folder)
+└── .specify/                      # Project constitution/templates (optional)
 ```
 
 ## Design Rationale
@@ -188,12 +157,16 @@ infer:
   do_sample: false
 ```
 
-### `conf/dataset/<name>.yaml` (what it is: dataset root and optional variant)
+### `conf/dataset/<name>.yaml` (what it is: dataset root, subset, sampling)
 
 ```yaml
 name: openwebtext
-root: ${hydra:runtime.cwd}/datasets/openwebtext
-variant: null  # e.g., "subset-1k" or null for source-data
+root: ${hydra:runtime.cwd}/datasets/openwebtext/source-data
+subset_filelist: null  # or a repo-relative filelist
+sampling:
+  num_epochs: 1
+  num_samples_per_epoch: 3
+  randomize: false
 ```
 
 ### `conf/runtime/pytorch.yaml` (what it is: runtime and basic parameters)
@@ -252,6 +225,28 @@ datasets/
 - Points to the actual location of the downloaded/official dataset
 - Keeps large data files outside the repo while maintaining easy access
 - Allows different environments to point to different storage locations
+
+### Bootstrapping Symlinks (Cross-Host)
+
+Prefer decentralized bootstraps so each component owns its linking logic:
+
+- Dataset bootstrap (per dataset):
+  - `datasets/<dataset-name>/bootstrap.sh` reads `datasets/<dataset-name>/bootstrap.yaml`.
+  - Resolves a base directory from an env var (e.g., `$DATASETS_ROOT`) with a default fallback.
+  - Creates `source-data` symlink. Optionally prepares data (e.g., extracting `*.zip` in-place) when needed.
+  - Example:
+    - `DATASETS_ROOT=/mnt/datasets ./datasets/<dataset-name>/bootstrap.sh --yes`
+
+- Model bootstrap (all models in one place):
+  - `models/bootstrap.sh` reads `models/bootstrap.yaml`.
+  - Resolves a base directory from an env var (e.g., `$HF_SNAPSHOTS_ROOT` or `$MODELS_ROOT`).
+  - Creates the model symlink (e.g., `models/<model-name>`). Optionally validates required files.
+  - Example:
+    - `HF_SNAPSHOTS_ROOT=/nvme/hf-cache ./models/bootstrap.sh --yes`
+
+- Workspace orchestrator (optional):
+  - `./bootstrap.sh` can call component bootstraps in sequence (datasets first, then models) for convenience.
+  - Keep it thin; the source of truth lives next to each component.
 
 ### `metadata.yaml` (what it is: dataset facts for provenance)
 
@@ -341,7 +336,9 @@ datasets/openwebtext/
 
 1. Download/obtain the dataset to your storage location (e.g., `/data/datasets/mydataset/`)
 2. Create dataset directory: `mkdir -p datasets/mydataset`
-3. Create symlink: `ln -s /data/datasets/mydataset datasets/mydataset/source-data`
+3. Prefer running the dataset bootstrap:
+   - `DATASETS_ROOT=/data/datasets ./datasets/<dataset-name>/bootstrap.sh`
+   - Or create a symlink manually: `ln -s /data/datasets/mydataset datasets/mydataset/source-data`
 4. Create `metadata.yaml` with dataset information
 5. Create `README.md` with documentation
 6. Add corresponding Hydra config: `conf/dataset/mydataset.yaml`
