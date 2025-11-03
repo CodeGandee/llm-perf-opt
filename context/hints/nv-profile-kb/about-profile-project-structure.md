@@ -248,6 +248,13 @@ Prefer decentralized bootstraps so each component owns its linking logic:
   - `./bootstrap.sh` can call component bootstraps in sequence (datasets first, then models) for convenience.
   - Keep it thin; the source of truth lives next to each component.
 
+### Symlink Policy
+
+- Do not track or commit symlinks that point to external storage (e.g., host datasets, HF cache, mounted volumes). These links are environment‑specific and must be created by the bootstrap scripts on every developer/CI host.
+- If a symlink’s target resides inside the repository (rare; e.g., an internal layout alias), it may be versioned, but prefer real directories. Document the rationale in the local README.
+- Datasets: never commit `source-data` symlinks; they are created by `datasets/<dataset>/bootstrap.sh`.
+- Models: do not commit `models/<model-name>` symlinks; they are created by `models/bootstrap.sh`.
+
 ### `metadata.yaml` (what it is: dataset facts for provenance)
 
 Short example:
@@ -307,6 +314,17 @@ symlinks/directories at the dataset root. Place the following in
 ```gitignore
 */source-data
 */source-data/**
+```
+
+Similarly, you can ignore top‑level model links (optional) if contributors sometimes accidentally add them:
+
+```gitignore
+# models/.gitignore
+/*
+!.gitignore
+!README.md
+!bootstrap.sh
+!bootstrap.yaml
 ```
 
 ## Example: Complete Dataset Entry
