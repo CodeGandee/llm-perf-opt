@@ -5,6 +5,14 @@
 **Status**: Draft  
 **Input**: User description: "$ARGUMENTS"
 
+<!-- Constitution Compliance (author must ensure):
+  - Public APIs/classes documented with NumPy-style docstrings and examples
+  - All functions/classes fully type-annotated (mypy-clean), ruff-clean
+  - Runtime environment declared (Pixi preferred; else virtualenv)
+  - Manual test plan and file paths for major functionality under tests/manual/
+  - Data models use attrs (default) or pydantic (for web schemas), no business logic
+-->
+
 ## User Scenarios & Testing *(mandatory)*
 
 <!--
@@ -27,6 +35,11 @@
 **Why this priority**: [Explain the value and why it has this priority level]
 
 **Independent Test**: [Describe how this can be tested independently - e.g., "Can be fully tested by [specific action] and delivers [specific value]"]
+
+<!-- Include at least one manual test script path for major functionality,
+     e.g., tests/manual/<feature_area>/test_<name>.py. Automated tests are
+     optional unless requested; if included, place under tests/unit/… and
+     tests/integration/… -->
 
 **Acceptance Scenarios**:
 
@@ -90,6 +103,12 @@
 - **FR-004**: System MUST [data requirement, e.g., "persist user preferences"]
 - **FR-005**: System MUST [behavior, e.g., "log all security events"]
 
+<!-- Add language and quality gates where appropriate, e.g.,
+  - Code MUST be type-annotated and pass mypy
+  - Code MUST pass ruff linting/formatting
+  - Public APIs MUST include NumPy-style docstrings and examples
+-->
+
 *Example of marking unclear requirements:*
 
 - **FR-006**: System MUST authenticate users via [NEEDS CLARIFICATION: auth method not specified - email/password, SSO, OAuth?]
@@ -99,6 +118,11 @@
 
 - **[Entity 1]**: [What it represents, key attributes without implementation]
 - **[Entity 2]**: [What it represents, relationships to other entities]
+
+<!-- Data model guidance:
+  - Prefer attrs (@define kw_only=True); use pydantic for web schemas
+  - Keep business logic out of data models; use services/helpers for behavior
+-->
 
 ## Success Criteria *(mandatory)*
 
