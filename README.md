@@ -104,7 +104,26 @@ Each subdirectory contains a README describing its purpose.
 
 ## Getting Started
 
-*Coming soon - detailed setup and usage instructions will be added*
+Bootstrap assets (models + datasets)
+- Run all: `./bootstrap.sh --yes`
+  - Models config: `models/bootstrap.yaml` (uses `$HF_SNAPSHOTS_ROOT` by default)
+  - Datasets config: `datasets/omnidocbench/bootstrap.yaml` (uses `$DATASETS_ROOT` by default)
+  - The dataset bootstrap can extract `images.zip` / `pdfs.zip` into place when needed.
+- Or run individually:
+  - Models: `models/bootstrap.sh --yes`
+  - Dataset: `datasets/omnidocbench/bootstrap.sh --yes`
+
+Quick run
+- With symlinks in place, defaults point to `models/deepseek-ocr` and `datasets/omnidocbench/source-data`.
+- Example (Pixi): `pixi run stage1-run` or run the module directly:
+
+```bash
+pixi run python -m llm_perf_opt.runners.llm_profile_runner \
+  'hydra.run.dir=tmp/profile-output/${now:%Y%m%d-%H%M%S}' \
+  device=cuda:0 infer.max_new_tokens=64 \
+  'pipeline.torch_profiler.activities=[cpu,cuda]' \
+  pipeline.nsys.enable=false pipeline.ncu.enable=false
+```
 
 ## CLI Usage (Stage 1 Profiling)
 
