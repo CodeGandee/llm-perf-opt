@@ -28,7 +28,6 @@ pillow = "*"
 # Ensure a Python version compatible with current PyTorch wheels
 python = ">=3.11,<3.13"
 ninja = "*"
-nsight-compute = ">=2025.2.1.3,<2026"
 
 [tool.pixi.system-requirements]
 cuda = "12.0"
@@ -102,7 +101,6 @@ docs-build = { cmd = "mkdocs build" }
 stage1-run = { cmd = "python -m llm_perf_opt.runners.llm_profile_runner 'hydra.run.dir=tmp/profile-output/${now:%Y%m%d-%H%M%S}' dataset.subset_filelist=datasets/omnidocbench/subsets/dev-20.txt device=cuda:0 infer.max_new_tokens=64 'pipeline.torch_profiler.activities=[cpu,cuda]' pipeline.nsys.enable=false pipeline.ncu.enable=false dataset.sampling.num_epochs=1 dataset.sampling.num_samples_per_epoch=3 dataset.sampling.randomize=false" }
 stage1-run-no-static = { cmd = "python -m llm_perf_opt.runners.llm_profile_runner 'hydra.run.dir=tmp/profile-output/${now:%Y%m%d-%H%M%S}' dataset.subset_filelist=datasets/omnidocbench/subsets/dev-20.txt device=cuda:0 infer.max_new_tokens=64 'pipeline.torch_profiler.activities=[cpu,cuda]' pipeline.static_analysis.enable=false pipeline.nsys.enable=false pipeline.ncu.enable=false dataset.sampling.num_epochs=1 dataset.sampling.num_samples_per_epoch=3 dataset.sampling.randomize=false" }
 stage2-profile = { cmd = "python -m llm_perf_opt.runners.deep_profile_runner 'hydra.run.dir=tmp/profile-output/${now:%Y%m%d-%H%M%S}' pipeline.nsys.enable=true pipeline.ncu.enable=false pipeline.static_analysis.enable=false" }
-stage2-profile-gpu1 = { cmd = "CUDA_VISIBLE_DEVICES=1 python -m llm_perf_opt.runners.deep_profile_runner 'hydra.run.dir=tmp/profile-output/${now:%Y%m%d-%H%M%S}' device=cuda:0 pipeline.nsys.enable=true pipeline.ncu.enable=false pipeline.static_analysis.enable=false" }
 stage-all-run = { cmd = "bash scripts/stage-all-run.sh" }
 direct-infer-dev20 = { cmd = "python -m llm_perf_opt.runners.direct_inference_runner 'hydra.run.dir=tmp/profile-output/${now:%Y%m%d-%H%M%S}' dataset.subset_filelist=datasets/omnidocbench/subsets/dev-20.txt device=cuda:0 pipeline.direct_inference.enable=true pipeline.torch_profiler.enable=false pipeline.static_analysis.enable=false pipeline.nsys.enable=false pipeline.ncu.enable=false dataset.sampling.num_epochs=1 dataset.sampling.num_samples_per_epoch=null dataset.sampling.randomize=false infer.max_new_tokens=8192 pipeline.direct_inference.output.prediction.enable=true pipeline.direct_inference.output.visualization.enable=true" }
 
