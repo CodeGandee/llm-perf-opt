@@ -73,6 +73,11 @@ pixi.lock
 # Temporary files
 tmp/
 *.tmp
+tmp/stage2/
+outputs/
+# Local profiling DB and generated reports
+run.sqlite
+reports/
 
 # Documentation builds
 site/

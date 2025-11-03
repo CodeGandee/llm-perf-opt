@@ -1,6 +1,6 @@
 [project]
 authors = [{name = "igamenovoer", email = "igamenovoer@xx.com"}]
-dependencies = ["transformers==4.46.3", "tokenizers==0.20.3", "einops>=0.8.1,<0.9", "addict>=2.4.0,<3", "easydict>=1.13,<2", "mypy>=1.18.2,<2", "ruff>=0.14.2,<0.15", "nvtx>=0.2.13,<0.3"]
+dependencies = ["transformers==4.46.3", "tokenizers==0.20.3", "einops>=0.8.1,<0.9", "addict>=2.4.0,<3", "easydict>=1.13,<2", "mypy>=1.18.2,<2", "ruff>=0.14.2,<0.15", "nvtx>=0.2.13,<0.3", "hydra-core>=1.3.2,<2", "pydantic>=2.12.3,<3", "attrs>=25.4.0,<26", "cattrs>=25.3.0,<26", "omegaconf>=2.3.0,<3", "nvidia-ml-py>=13.580.82,<14", "fvcore>=0.1.5.post20221221,<0.2", "mdutils>=1.8.1,<2", "mkdocs-material>=9.6.22,<10", "pandas>=2.3.3,<3"]
 name = "llm-perf-opt"
 requires-python = ">= 3.11"
 version = "0.1.0"
@@ -8,6 +8,12 @@ version = "0.1.0"
 [build-system]
 build-backend = "hatchling.build"
 requires = ["hatchling"]
+
+[tool.hatch.build.targets.wheel]
+# Package only the unified project package under src/llm_perf_opt
+packages = [
+  "src/llm_perf_opt",
+]
 
 [tool.pixi.workspace]
 channels = ["conda-forge"]
@@ -38,3 +44,32 @@ no-build-isolation = ["flash-attn"]
 [tool.pixi.tasks]
 install-vllm-nightly = { cmd = "bash scripts/install-vllm-nightly.sh" }
 verify-vllm = { cmd = "python - <<'PY'\nimport vllm, torch, PIL; print('vllm', vllm.__version__); print('torch', torch.__version__); print('pillow', PIL.__version__)\nPY" }
+bench-stage1 = { cmd = "python tests/manual/manual_stage1_benchmark.py" }
+bench-stage1-inproc = { cmd = "python tests/manual/manual_stage1_benchmark_inproc.py" }
+dsocr-infer-one = { cmd = "python scripts/deepseek-ocr-infer-one.py -i \"${INPUT}\" -o \"${OUTPUT}\"" }
+docs-serve = { cmd = "mkdocs serve -a 127.0.0.1:8000" }
+docs-build = { cmd = "mkdocs build" }
+stage1-run = { cmd = "python -m llm_perf_opt.runners.llm_profile_runner 'hydra.run.dir=tmp/profile-output/${now:%Y%m%d-%H%M%S}' dataset.subset_filelist=datasets/omnidocbench/subsets/dev-20.txt device=cuda:0 infer.max_new_tokens=64 'pipeline.torch_profiler.activities=[cpu,cuda]' pipeline.nsys.enable=false pipeline.ncu.enable=false dataset/sampling@dataset.sampling=default dataset.sampling.num_epochs=1 dataset.sampling.num_samples_per_epoch=3 dataset.sampling.randomize=false" }
+stage1-run-no-static = { cmd = "python -m llm_perf_opt.runners.llm_profile_runner 'hydra.run.dir=tmp/profile-output/${now:%Y%m%d-%H%M%S}' dataset.subset_filelist=datasets/omnidocbench/subsets/dev-20.txt device=cuda:0 infer.max_new_tokens=64 'pipeline.torch_profiler.activities=[cpu,cuda]' pipeline.static_analysis.enable=false pipeline.nsys.enable=false pipeline.ncu.enable=false dataset/sampling@dataset.sampling=default dataset.sampling.num_epochs=1 dataset.sampling.num_samples_per_epoch=3 dataset.sampling.randomize=false" }
+stage2-profile = { cmd = "python -m llm_perf_opt.runners.deep_profile_runner 'hydra.run.dir=tmp/profile-output/${now:%Y%m%d-%H%M%S}' pipeline.nsys.enable=true pipeline.ncu.enable=false pipeline.static_analysis.enable=false" }
+stage2-profile-gpu1 = { cmd = "CUDA_VISIBLE_DEVICES=1 python -m llm_perf_opt.runners.deep_profile_runner 'hydra.run.dir=tmp/profile-output/${now:%Y%m%d-%H%M%S}' device=cuda:0 pipeline.nsys.enable=true pipeline.ncu.enable=false pipeline.static_analysis.enable=false" }
+stage-all-run = { cmd = "bash scripts/stage-all-run.sh" }
+direct-infer-dev20 = { cmd = "python -m llm_perf_opt.runners.direct_inference_runner 'hydra.run.dir=tmp/profile-output/${now:%Y%m%d-%H%M%S}' dataset.subset_filelist=datasets/omnidocbench/subsets/dev-20.txt device=cuda:0 pipeline.direct_inference.enable=true pipeline.torch_profiler.enable=false pipeline.static_analysis.enable=false pipeline.nsys.enable=false pipeline.ncu.enable=false dataset.sampling.num_epochs=1 dataset.sampling.num_samples_per_epoch=null dataset.sampling.randomize=false infer.max_new_tokens=8192 pipeline.direct_inference.output.prediction.enable=true pipeline.direct_inference.output.visualization.enable=true" }
+
+[tool.ruff]
+target-version = "py311"
+line-length = 120
+respect-gitignore = true
+exclude = [
+  "magic-context/**",
+  "context/**",
+  "third_party/**",
+]
+
+[tool.mypy]
+python_version = "3.11"
+pretty = true
+show_error_codes = true
+strict_optional = false
+ignore_missing_imports = true
+files = ["src"]

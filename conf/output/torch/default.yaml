@@ -1,0 +1,16 @@
+# General (model-agnostic) output controls for the torch_profiler stage
+
+prediction:
+  enable: false
+  # Relative resolves under the stage output directory (Artifacts.out_dir('torch_profiler')).
+  # Default subdirectory when enabled: 'pred'. If save_dir is omitted/null while
+  # enable=true, use 'pred'.
+  save_dir: pred
+
+visualization:
+  enable: true
+  # predictions.md and assets location; relative to the stage output directory.
+  # Default subdirectory when enabled: 'viz'. If save_dir is omitted/null while
+  # enable=true, use 'viz'.
+  save_dir: viz
+

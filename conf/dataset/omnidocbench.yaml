@@ -1,0 +1,15 @@
+# Dataset config: OmniDocBench
+
+name: OmniDocBench
+root: ${hydra:runtime.cwd}/datasets/omnidocbench/source-data
+
+# Provide a subset as a newline-delimited file list (path relative to `root`, or absolute)
+# Example (relative to `root`): subsets/dev-20.txt
+subset_filelist: null
+
+# Fallback glob patterns used only when subset_filelist is null
+# Each entry is a glob pattern relative to `root`. The combined matches form the
+# intended file list. De-duplication is left to the user (or caller) to handle.
+fallback_patterns:
+  - "images/*.png"
+  - "images/*.jpg"

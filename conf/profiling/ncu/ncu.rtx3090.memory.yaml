@@ -1,0 +1,18 @@
+# Nsight Compute preset: RTX 3090 (GA102) — Memory focus
+
+target_processes: all
+nvtx_include: decode*
+set: roofline
+# Focused sections for memory-bound analysis
+sections:
+  - SpeedOfLight
+  - MemoryWorkloadAnalysis
+  - WorkloadDistribution
+  - Occupancy
+  - SchedulerStats
+  - WarpStateStats
+  - LaunchStats
+# Avoid explicit metrics to maintain compatibility across driver/NCU versions
+metrics: null
+csv: true
+

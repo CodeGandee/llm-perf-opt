@@ -1,0 +1,19 @@
+# PyTorch profiler maximal effort (deep detail; slow)
+#
+# Use when you need exhaustive detail for deep analysis.
+#
+# - enabled: master switch
+# - activities: ['cpu','cuda'] to capture both host/kernel events
+# - record_shapes: true to record input shapes per op (expensive)
+# - profile_memory: true to collect memory usage/timeline (expensive)
+# - with_stack: true to capture Python stacks (very expensive; huge traces)
+# - group_by_input_shape: true to aggregate per distinct input shape
+enabled: true
+activities: [cpu, cuda]
+record_shapes: true
+profile_memory: true
+with_stack: true
+group_by_input_shape: true
+
+warmup_rounds: 3
+warmup_synthetic: false

@@ -1,0 +1,20 @@
+/data2/huangzhe/code/llm-perf-opt/datasets/omnidocbench/source-data/images/book_en_40.Puzzles.and.Problems.in.Probability.and.Mathematical.Statistics,.Schwarz,.Springer,.2008_page_064.png
+/data2/huangzhe/code/llm-perf-opt/datasets/omnidocbench/source-data/images/book_en_40.Puzzles.and.Problems.in.Probability.and.Mathematical.Statistics,.Schwarz,.Springer,.2008_page_115.png
+/data2/huangzhe/code/llm-perf-opt/datasets/omnidocbench/source-data/images/book_en_5.Advanced.Modern.Algebra.-.J.Rotman.2003_page_572.png
+/data2/huangzhe/code/llm-perf-opt/datasets/omnidocbench/source-data/images/book_en_5.Advanced.Modern.Algebra.-.J.Rotman.2003_page_887.png
+/data2/huangzhe/code/llm-perf-opt/datasets/omnidocbench/source-data/images/book_en_6.Complex.Analysis.-.Elias.M..Stein_page_051.png
+/data2/huangzhe/code/llm-perf-opt/datasets/omnidocbench/source-data/images/book_en_6.Complex.Analysis.-.Elias.M..Stein_page_205.png
+/data2/huangzhe/code/llm-perf-opt/datasets/omnidocbench/source-data/images/book_en_A.Concise.Introduction.to.Linear.Algebra,.Geza.Schay,.Birkhauser,.2012_page_065.png
+/data2/huangzhe/code/llm-perf-opt/datasets/omnidocbench/source-data/images/book_en_A.Concise.Introduction.to.Linear.Algebra,.Geza.Schay,.Birkhauser,.2012_page_194.png
+/data2/huangzhe/code/llm-perf-opt/datasets/omnidocbench/source-data/images/book_en_A.Course.in.Abstract.Harmonic.Analysis.-.Gerald.B.Folland.0849384907_page_119.png
+/data2/huangzhe/code/llm-perf-opt/datasets/omnidocbench/source-data/images/book_en_国外数学教材-An Excursion through Elementary Mathematics（初等数学漫游）-An excursion through elementary mathematics, Vol.3 (Caminha Muniz Neto A)_0035.png
+/data2/huangzhe/code/llm-perf-opt/datasets/omnidocbench/source-data/images/book_en_国外数学教材-An Excursion through Elementary Mathematics（初等数学漫游）-An excursion through elementary mathematics, Vol.3 (Caminha Muniz Neto A)_0085.png
+/data2/huangzhe/code/llm-perf-opt/datasets/omnidocbench/source-data/images/book_en_国外数学教材-An Excursion through Elementary Mathematics（初等数学漫游）-An excursion through elementary mathematics, Vol.3 (Caminha Muniz Neto A)_0092.png
+/data2/huangzhe/code/llm-perf-opt/datasets/omnidocbench/source-data/images/book_en_国外数学教材-An Excursion through Elementary Mathematics（初等数学漫游）-An excursion through elementary mathematics, Vol.3 (Caminha Muniz Neto A)_0100.png
+/data2/huangzhe/code/llm-perf-opt/datasets/omnidocbench/source-data/images/book_en_国外数学教材-An Excursion through Elementary Mathematics（初等数学漫游）-An excursion through elementary mathematics, Vol.3 (Caminha Muniz Neto A)_0119.png
+/data2/huangzhe/code/llm-perf-opt/datasets/omnidocbench/source-data/images/book_en_国外数学教材-An Excursion through Elementary Mathematics（初等数学漫游）-An excursion through elementary mathematics, Vol.3 (Caminha Muniz Neto A)_0242.png
+/data2/huangzhe/code/llm-perf-opt/datasets/omnidocbench/source-data/images/book_en_国外数学教材-An Excursion through Elementary Mathematics（初等数学漫游）-An excursion through elementary mathematics, Vol.3 (Caminha Muniz Neto A)_0451.png
+/data2/huangzhe/code/llm-perf-opt/datasets/omnidocbench/source-data/images/book_en_国外数学教材-An Excursion through Elementary Mathematics（初等数学漫游）-An excursion through elementary mathematics, Vol.3 (Caminha Muniz Neto A)_0596.png
+/data2/huangzhe/code/llm-perf-opt/datasets/omnidocbench/source-data/images/book_en_国外数学教材-数论-Melvyn B. Nathanson—Elementary Methods in Number Theory_0007.png
+/data2/huangzhe/code/llm-perf-opt/datasets/omnidocbench/source-data/images/book_en_国外数学教材-数论-Melvyn B. Nathanson—Elementary Methods in Number Theory_0017.png
+/data2/huangzhe/code/llm-perf-opt/datasets/omnidocbench/source-data/images/book_en_国外数学教材-数论-Melvyn B. Nathanson—Elementary Methods in Number Theory_0035.png

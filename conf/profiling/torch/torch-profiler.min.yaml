@@ -1,0 +1,17 @@
+# PyTorch profiler minimal effort (fastest)
+#
+# Use this when you want a quick operator ranking with minimal overhead.
+#
+# - enabled: Master switch
+# - activities: ['cpu'] only for the lightest pass
+# - record_shapes/profile_memory/with_stack: all disabled to reduce cost
+# - group_by_input_shape: keep false for cheaper aggregation
+enabled: true
+activities: [cpu]
+record_shapes: false
+profile_memory: false
+with_stack: false
+group_by_input_shape: false
+
+warmup_rounds: 1
+warmup_synthetic: true

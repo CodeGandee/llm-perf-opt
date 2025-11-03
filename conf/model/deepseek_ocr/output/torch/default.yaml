@@ -1,0 +1,8 @@
+# DeepSeek-OCR specific output knobs for the torch_profiler stage
+
+prediction:
+  strip_special_tokens: false
+
+visualization:
+  max_images: 16
+  thumbnail_width: 480

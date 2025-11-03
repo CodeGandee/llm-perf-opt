@@ -1,0 +1,11 @@
+name: deepseek_ocr
+# Local path to the vendor repository (symlinked under models/)
+path: ${hydra:runtime.cwd}/models/deepseek-ocr
+dtype: bf16
+preprocess:
+  enable: true
+  base_size: 1024
+  image_size: 640
+  crop_mode: true
+  patch_size: 16
+  downsample_ratio: 4

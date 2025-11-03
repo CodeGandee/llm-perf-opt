@@ -87,12 +87,11 @@ llm-perf-opt/
 │   ├── github/
 │   └── hf/
 ├── src/
-│   ├── llmprof/          # Profiling package (profiling/, runners/, data/)
-│   │   ├── profiling/
-│   │   │   └── parsers/
-│   │   ├── runners/
-│   │   └── data/
-│   └── llm_perf_opt/     # Project-specific package scaffolding
+│   └── llm_perf_opt/     # Unified project package
+│       ├── profiling/
+│       │   └── parsers/
+│       ├── runners/
+│       └── data/
 ├── scripts/              # Utility scripts (symlinks, dataset prep, snapshots)
 ├── tests/                # Tests (manual/unit/integration as needed)
 ├── docs/                 # Documentation and guides
@@ -106,6 +105,26 @@ Each subdirectory contains a README describing its purpose.
 ## Getting Started
 
 *Coming soon - detailed setup and usage instructions will be added*
+
+## CLI Usage (Stage 1 Profiling)
+
+Run the Stage 1 profiling runner with Pixi. This collects prefill/decode timings, operator summaries, and MFU, and writes artifacts under `tmp/profile-output/<run_id>/torch_profiler/` and `tmp/profile-output/<run_id>/static_analysis/`.
+
+```bash
+pixi run python -m llm_perf_opt.runners.llm_profile_runner \
+  model.path=/data2/huangzhe/code/llm-perf-opt/models/deepseek-ocr \
+  dataset.root=/data2/huangzhe/code/llm-perf-opt/data/samples \
+  repeats=3 device=cuda:0 infer.max_new_tokens=64 \
+  'torch_profiler.activities=[cpu,cuda]'
+```
+
+Artifacts include `report.md`, `operators.md`, `metrics.json`, `stakeholder_summary.md`, and reproducibility files (`env.json`, `inputs.yaml`, `assumptions.md`).
+
+Static analyzer (optional)
+- By default, the runner performs a static model analysis to refine MFU and writes `static_compute.json` / `static_compute.md`.
+- To disable for faster runs, either:
+  - Use the Pixi task: `pixi run stage1-run-no-static`
+  - Or pass a Hydra override while running: `pipeline.static_analysis.enable=false`
 
 ## Profiling Requirements (Nsight Systems)
 

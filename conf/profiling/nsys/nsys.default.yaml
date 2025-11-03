@@ -1,0 +1,49 @@
+# Nsight Systems defaults (Stage 2)
+
+trace: cuda,nvtx,osrt # Sources to trace (CUDA, NVTX, OS runtime)
+sample: none # CPU sampling. Use 'none' for low overhead GPU-focused runs
+
+# Capture range selector (maps to `--capture-range=`). Key mirrors the CLI for
+# future compatibility. Supported values:
+# - nvtx            Gate by NVTX ranges; capture starts when a matching NVTX
+#                   range opens and ends when it closes. Pair with `nvtx_capture`
+#                   below to choose the label/domain to trigger on.
+# - cudaProfilerApi Start/stop collection using CUDA {cu,cuda}ProfilerStart/Stop
+#                   API calls from the workload.
+# - hotkey          Start/stop collection via a hotkey press (graphics-focused).
+#                   When using this from CLI, Nsight Systems supports an
+#                   additional `--hotkey-capture=<F1..F12>` flag; we don’t expose
+#                   that here, but you can still set it via extra args if needed.
+# - none            Do not gate; capture the entire process lifetime.
+#
+# Note: 'range' is NOT a valid value.
+# Default: capture all (no gating) to avoid empty reports when NVTX labels are
+# missing or misconfigured.
+capture_range: none
+
+# Optional range end policy (maps to `--capture-range-end=`). If omitted/empty,
+# the runner will not pass this CLI arg. Valid examples:
+# - none            Ignore end of first range (keep collecting)
+# - stop            Stop at the end of the first matching range
+# - stop-shutdown   Stop at end and shutdown session
+# - repeat[:N]      Repeat per range; optional :N limits how many
+# - repeat-shutdown:N Repeat per range and shutdown after N
+capture_range_end: null
+
+# NVTX capture expression (maps to `--nvtx-capture=`)
+# - When `capture_range=nvtx`, this selects the NVTX range name (optionally with
+#   domain) that will trigger capture. Examples:
+#     * 'prefill'        → match default-domain NVTX range named 'prefill'
+#     * 'decode'         → match default-domain NVTX range named 'decode'
+#     * 'decode@*'       → match 'decode' across any NVTX domain
+# - Related (CLI-only) domain filters when using NVTX:
+#     * `--nvtx-domain-include=default` to include only default-domain events
+#     * `--nvtx-domain-exclude=default` to exclude default-domain events
+#
+# - Behavior in this project’s runner:
+#     * If capture_range=nvtx and nvtx_capture is omitted/empty, the runner
+#       falls back to capture the entire run (equivalent to capture_range=none),
+#       and logs a warning to avoid generating empty reports.
+#     * When capture_range is not 'nvtx' or NVTX gating is disabled, this value
+#       is ignored and not passed to nsys.
+nvtx_capture: prefill

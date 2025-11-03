@@ -1,0 +1,57 @@
+openapi: 3.1.0
+info:
+  title: Stage 2 Profiling API
+  version: 0.1.0
+paths:
+  /profile/run:
+    post:
+      summary: Start a profiling session for DeepSeek-OCR
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                model:
+                  type: string
+                  example: deepseek-ocr
+                inputs_manifest:
+                  type: string
+                profiling_mode:
+                  type: string
+                  enum: [deep, light]
+                  default: deep
+              required: [model, inputs_manifest]
+      responses:
+        '202':
+          description: Profiling started
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  run_id:
+                    type: string
+  /profile/{run_id}/artifacts:
+    get:
+      summary: List artifacts produced by a profiling session
+      parameters:
+        - in: path
+          name: run_id
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Artifact listing
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  artifacts:
+                    type: array
+                    items:
+                      type: string
+

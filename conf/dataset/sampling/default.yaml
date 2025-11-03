@@ -1,0 +1,15 @@
+# Dataset sampling controls (per Stage‑1 run and Stage‑1-as-workload)
+
+# Number of samples to process per epoch.
+# - null → process all available samples each epoch
+num_samples_per_epoch: null
+
+# How many epochs to run.
+num_epochs: 1
+
+# Whether to shuffle sample order each epoch.
+randomize: false
+
+# Optional RNG seed for deterministic shuffles when randomize=true.
+seed: null
+
