@@ -5,6 +5,194 @@ These tools are maintained with care to ensure compatibility with the latest NCU
 
 ## Scripts
 
+### ncu-profile-kernels.sh
+
+Bash version of the kernel profiler - recommended for production use as NCU works better when called directly from bash rather than through Python subprocess.
+
+**Usage:**
+```bash
+ncu-profile-kernels.sh [options] -- <launch-command> [launch-args]
+```
+
+**Required (one of):**
+- `--kernel-config <yaml-path>` - Path to YAML file with kernel names/regex patterns
+- `--kernel-regex <regex>` - Single regex pattern for kernel matching
+
+**Options:**
+- `--output-dir <dir>` - Directory for profiling results (default: tmp/ncu-profile/<timestamp>)
+- `--topk <num>` - Profile only top K kernels from YAML (requires --kernel-config)
+- `--extra-sections <s1> <s2>` - Additional ncu sections beyond defaults
+- `--num-kernel-call-skip <N>` - Skip first N kernel invocations (default: 200)
+- `--num-kernel-call-profile <M>` - Profile M invocations after skipping (default: 1)
+- `--force-overwrite` - Overwrite existing reports
+
+**Default sections:** SpeedOfLight, MemoryWorkloadAnalysis, Occupancy, SchedulerStats
+
+**Dependencies:**
+- **Required:** `ncu` (Nsight Compute CLI)
+- **For --kernel-config mode:**
+  - `yq` (preferred, faster) OR `python3/python` with `ruamel.yaml` or `pyyaml`
+  - `jq` (preferred for JSON parsing) OR `python3/python`
+- **For --kernel-regex mode:** Only `ncu` required (no Python/yq/jq needed)
+
+**Features:**
+- Supports both single kernel and batch profiling modes
+- Mutually exclusive: `--kernel-config` OR `--kernel-regex`
+- `--topk` limits profiling to first K kernels from YAML (only with `--kernel-config`)
+- Flexible launch command via `--` separator (can be any executable: Python, compiled binary, bash script, etc.)
+- Colored terminal logging
+- Automatic CSV export for all sections
+- Provenance tracking via `command.yaml`
+- NCU runs directly (not through subprocess) for better reliability
+
+**Examples:**
+```bash
+# Profile single kernel (no Python needed)
+ncu-profile-kernels.sh --kernel-regex 'gemvx::kernel<.*\(int\)7.*>' \
+  --output-dir tmp/gemvx \
+  -- ./my_cuda_app --arg1 --arg2
+
+# Profile multiple kernels from YAML (requires yq or python)
+ncu-profile-kernels.sh --kernel-config top-kernels.yaml \
+  --extra-sections SourceCounters \
+  -- python inference.py --model deepseek
+
+# Profile only top 3 kernels with Pixi environment
+ncu-profile-kernels.sh --kernel-config top-kernels.yaml --topk 3 \
+  -- pixi run -e rtx5090 python -m llm_perf_opt.runners.llm_profile_runner device=cuda:0
+
+# Profile with C++ binary
+ncu-profile-kernels.sh --kernel-regex 'my_kernel.*' \
+  -- /path/to/my_cuda_binary input.dat
+
+# Profile with custom sampling
+ncu-profile-kernels.sh --kernel-regex 'flash_fwd.*' \
+  --num-kernel-call-skip 500 \
+  --num-kernel-call-profile 10 \
+  -- python benchmark.py
+```
+
+**Output structure:**
+```
+<output-dir>/
+├── command.yaml                      # Provenance (timestamp, args, versions)
+├── kernel_001/                       # First kernel directory
+│   ├── ncu.ncu-rep                  # NCU binary report
+│   ├── ncu.section_SpeedOfLight.csv
+│   ├── ncu.section_MemoryWorkloadAnalysis.csv
+│   ├── ncu.section_Occupancy.csv
+│   ├── ncu.section_SchedulerStats.csv
+│   └── ncu.details.csv
+├── kernel_002/                       # Second kernel directory (if batch mode)
+│   ├── ncu.ncu-rep
+│   └── ...
+└── kernel_003/                       # Third kernel directory (if topk=3)
+    ├── ncu.ncu-rep
+    └── ...
+```
+
+**Note:** The directory structure matches the naming pattern from `ncu-profile-kernel.v2.sh`.
+
+### ncu-profile-kernels.py
+
+Python version of the kernel profiler with similar functionality.
+
+**Usage:**
+```bash
+python3 ncu-profile-kernels.py [options] -- <launch-command> [launch-args]
+```
+
+**Required (one of):**
+- `--kernel-config <yaml-path>` - Path to YAML file with kernel names/regex patterns
+- `--kernel-regex <regex>` - Single regex pattern for kernel matching
+
+**Options:**
+- `--output-dir <dir>` - Directory for profiling results (default: tmp/ncu-profile/<timestamp>)
+- `--topk <num>` - Profile only top K kernels from YAML (requires --kernel-config)
+- `--extra-sections <s1> <s2>` - Additional ncu sections beyond defaults
+- `--num-kernel-call-skip <N>` - Skip first N kernel invocations (default: 200)
+- `--num-kernel-call-profile <M>` - Profile M invocations after skipping (default: 1)
+- `--force-overwrite` - Overwrite existing reports
+
+**Default sections:** SpeedOfLight, MemoryWorkloadAnalysis, Occupancy, SchedulerStats
+
+**Features:**
+- Supports both single kernel and batch profiling modes
+- Mutually exclusive: `--kernel-config` OR `--kernel-regex`
+- `--topk` limits profiling to first K kernels from YAML (only with `--kernel-config`)
+- Flexible launch command via `--` separator
+- Colored terminal logging
+- Automatic CSV export for all sections
+- Provenance tracking via `command.yaml`
+
+**Examples:**
+```bash
+# Profile single kernel
+python3 ncu-profile-kernels.py \
+  --kernel-regex 'internal::gemvx::kernel<.*\(int\)7.*>' \
+  --output-dir tmp/gemvx-profile \
+  -- python -m llm_perf_opt.runners.llm_profile_runner device=cuda:0
+
+# Profile multiple kernels from YAML
+python3 ncu-profile-kernels.py \
+  --kernel-config top-kernels.yaml \
+  --extra-sections SourceCounters \
+  -- python inference.py --model deepseek
+
+# Profile with custom sampling
+python3 ncu-profile-kernels.py \
+  --kernel-regex 'flash_fwd.*' \
+  --num-kernel-call-skip 500 \
+  --num-kernel-call-profile 10 \
+  -- python benchmark.py
+
+# Profile only top 3 kernels from YAML
+python3 ncu-profile-kernels.py \
+  --kernel-config top-kernels.yaml \
+  --topk 3 \
+  -- python inference.py
+```
+
+**Output structure:**
+```
+<output-dir>/
+├── command.yaml                # Provenance (timestamp, args, versions)
+├── kernel_001_<name>.ncu-rep   # NCU binary report
+├── kernel_001_<name>.section_SpeedOfLight.csv
+├── kernel_001_<name>.section_MemoryWorkloadAnalysis.csv
+├── kernel_001_<name>.section_Occupancy.csv
+├── kernel_001_<name>.section_SchedulerStats.csv
+├── kernel_001_<name>.details.csv
+└── ...                         # Additional kernels if batch mode
+```
+
+### test-ncu-profile.sh
+
+Quick test script for `ncu-profile-kernels.sh` with sensible defaults for the RTX 5090 environment.
+
+**Usage:**
+```bash
+# Run with defaults (top 3 kernels, RTX 5090 env)
+./scripts/ncu/release/test-ncu-profile.sh
+
+# Profile top 5 kernels instead
+TOPK=5 ./scripts/ncu/release/test-ncu-profile.sh
+
+# Use default Pixi environment instead of RTX 5090
+PIXI_ENV=default ./scripts/ncu/release/test-ncu-profile.sh
+
+# Adjust launch skip/count
+LAUNCH_SKIP=100 LAUNCH_COUNT=5 ./scripts/ncu/release/test-ncu-profile.sh
+```
+
+**Environment variables:**
+- `TOPK` - Number of top kernels to profile (default: 3)
+- `LAUNCH_SKIP` - Kernel invocations to skip (default: 50)
+- `LAUNCH_COUNT` - Kernel invocations to profile (default: 1)
+- `PIXI_ENV` - Pixi environment to use (default: rtx5090)
+- `MAX_NEW_TOKENS` - Max tokens for inference (default: 64)
+- `NUM_SAMPLES` - Number of dataset samples (default: 1)
+
 ### extract-top-kernels.py
 
 Extracts top-K kernels from Nsight Systems CSV output and generates a YAML configuration file for batch profiling with ncu.
@@ -53,6 +241,8 @@ kernels:
 
 ### End-to-End Kernel Profiling Pipeline
 
+#### Option A: Using ncu-profile-kernels.py (Recommended)
+
 1. **Profile with Nsight Systems** (application-level)
    ```bash
    nsys profile -o myapp.nsys-rep python run.py
@@ -66,19 +256,51 @@ kernels:
 
 3. **Extract top kernels**
    ```bash
-   ./extract-top-kernels.py summary_cuda_gpu_kern_sum.csv -o top-kernels.yaml --topk 5
+   python3 extract-top-kernels.py summary_cuda_gpu_kern_sum.csv -o top-kernels.yaml --topk 5
    ```
 
 4. **Batch profile with Nsight Compute** (kernel-level)
    ```bash
-   ../examples/ncu-profile-top-kernels.v2.sh --yaml top-kernels.yaml
+   python3 ncu-profile-kernels.py \
+     --kernel-config top-kernels.yaml \
+     --output-dir tmp/ncu-batch \
+     -- python run.py
+   ```
+
+   Or profile only the top 3 most expensive kernels:
+   ```bash
+   python3 ncu-profile-kernels.py \
+     --kernel-config top-kernels.yaml \
+     --topk 3 \
+     --output-dir tmp/ncu-top3 \
+     -- python run.py
    ```
 
 5. **Analyze results**
-   - Each kernel gets a directory with:
-     - `ncu.ncu-rep` - Open in ncu-ui for interactive analysis
-     - `ncu.section_*.csv` - Section data (SpeedOfLight, MemoryWorkloadAnalysis, etc.)
+   - Output directory contains:
+     - `kernel_NNN_<name>.ncu-rep` - Open in ncu-ui for interactive analysis
+     - `kernel_NNN_<name>.section_*.csv` - Section data (SpeedOfLight, MemoryWorkloadAnalysis, etc.)
+     - `kernel_NNN_<name>.details.csv` - Detailed metrics
      - `command.yaml` - Profiling provenance
+
+#### Option B: Single Kernel Quick Profile
+
+For quick profiling of a specific kernel pattern:
+
+```bash
+python3 ncu-profile-kernels.py \
+  --kernel-regex 'your_kernel_pattern.*' \
+  --num-kernel-call-skip 100 \
+  -- python run.py --args
+```
+
+#### Option C: Using Legacy Bash Script
+
+For backward compatibility:
+
+```bash
+../examples/ncu-profile-top-kernels.v2.sh --yaml top-kernels.yaml
+```
 
 ## References
 
