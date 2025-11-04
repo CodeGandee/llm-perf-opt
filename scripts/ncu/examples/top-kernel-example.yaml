@@ -1,0 +1,16 @@
+# Top 3 kernels from Nsight Systems profiling (by time %)
+# Format: each kernel has both full name and regex pattern
+# The regex pattern is used for ncu --kernel-name filtering
+
+kernels:
+  - name: 'std::enable_if<!T7, void>::type internal::gemvx::kernel<int, int, __nv_bfloat16, __nv_bfloat16, __nv_bfloat16, float, (bool)0, (bool)1, (bool)1, (bool)0, (int)7, (bool)0, cublasGemvParamsEx<int, cublasGemvTensorStridedBatched<const __nv_bfloat16>, cublasGemvTensorStridedBatched<const __nv_bfloat16>, cublasGemvTensorStridedBatched<__nv_bfloat16>, float>>(T13)'
+    regex: '.*internal::gemvx::kernel<.*\(int\)7.*>'
+    description: 'cuBLAS GEMV kernel variant (int)7 - 30.0% of GPU time, 51,146 calls'
+
+  - name: 'std::enable_if<!T7, void>::type internal::gemvx::kernel<int, int, __nv_bfloat16, __nv_bfloat16, __nv_bfloat16, float, (bool)0, (bool)1, (bool)1, (bool)0, (int)6, (bool)0, cublasGemvParamsEx<int, cublasGemvTensorStridedBatched<const __nv_bfloat16>, cublasGemvTensorStridedBatched<const __nv_bfloat16>, cublasGemvTensorStridedBatched<__nv_bfloat16>, float>>(T13)'
+    regex: '.*internal::gemvx::kernel<.*\(int\)6.*>'
+    description: 'cuBLAS GEMV kernel variant (int)6 - 12.9% of GPU time, 7,164 calls'
+
+  - name: 'void at::native::unrolled_elementwise_kernel<at::native::direct_copy_kernel_cuda(at::TensorIteratorBase &)::[lambda() (instance 3)]::operator ()() const::[lambda() (instance 7)]::operator ()() const::[lambda(float) (instance 1)], std::array<char *, (unsigned long)2>, (int)4, TrivialOffsetCalculator<(int)1, unsigned int>, TrivialOffsetCalculator<(int)1, unsigned int>, at::native::memory::LoadWithCast<(int)1>, at::native::memory::StoreWithCast<(int)1>>(int, T1, T2, T4, T5, T6, T7)'
+    regex: 'unrolled_elementwise_kernel<.*direct_copy_kernel_cuda'
+    description: 'PyTorch tensor copy kernel - 5.4% of GPU time, 19,158 calls'

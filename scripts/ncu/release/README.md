@@ -1,0 +1,2 @@
+ncu scripts that are used in the release versions, as reusable tools for profiling LLM performance.
+should be maintained with care to ensure they work correctly with the latest NCU features and LLM architectures.

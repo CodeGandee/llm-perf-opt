@@ -1,0 +1,1 @@
+ncu scripts that are used as examples to demonstrate how to do different types of profiling, maybe outdated or less maintained.
