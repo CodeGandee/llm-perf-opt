@@ -164,3 +164,90 @@ Want me to wrap this into a tiny bash helper that reads your nsys CSV and auto-s
 [6]: https://www.olcf.ornl.gov/wp-content/uploads/2020/02/OLCF-Webinar-Nsight-Compute.pdf?utm_source=chatgpt.com "Nsight Compute"
 [7]: https://docs.nvidia.com/nsight-compute/NsightCompute/index.html?utm_source=chatgpt.com "3. Nsight Compute — NsightCompute 13.0 documentation"
 [8]: https://developer.nvidia.com/nvidia-development-tools-solutions-err_nvgpuctrperm-permission-issue-performance-counters?utm_source=chatgpt.com "Permission issue with Performance Counters"
+
+---
+
+Here are two drop-in ways to do it: a tiny one-liner for a single name, and a small Bash+Python helper that reads your **nsys CSV**, escapes the kernel names correctly, and runs **ncu** on the top-3.
+
+---
+
+## A) One kernel name → exact-match regex → `ncu`
+
+```bash
+# NAME is the demangled kernel name you want to match exactly
+NAME='std::enable_if<!T7, void>::type internal::gemvx::kernel<int, int, __nv_bfloat16, __nv_bfloat16, __nv_bfloat16, float, (bool)0, (bool)1, (bool)1, (bool)0, (int)7, (bool)0, cublasGemvParamsEx<int, cublasGemvTensorStridedBatched<const __nv_bfloat16>, cublasGemvTensorStridedBatched<const __nv_bfloat16>, cublasGemvTensorStridedBatched<__nv_bfloat16>, float>>(T13)'
+
+# Turn it into an exact-match regex for ncu
+PATTERN=$(python3 -c 'import re,sys; s=sys.argv[1]; print("regex:^"+re.escape(s)+"$")' "$NAME")
+
+# Use it with ncu (assumes METRICS is already set)
+ncu --kernel-name-base demangled --kernel-name "$PATTERN" --metrics "$METRICS" \
+    -o ncu_exact_1  your_app_cmd --your-args
+```
+
+* `re.escape()` escapes all regex-special characters so the literal string matches exactly. Then we add `^…$` and the `regex:` prefix. ([Python documentation][1])
+* `--kernel-name` accepts a **regex** when you prefix with `regex:`; and `--kernel-name-base demangled` makes the match use demangled names (which is what your nsys “Name” column shows). ([NVIDIA Docs][2])
+
+---
+
+## B) From **nsys CSV** → take top-3 by total time → run `ncu`
+
+This version is robust to commas/quotes inside the Name field (uses Python’s `csv.DictReader`) and safely shell-quotes the regex for `ncu` (via `shlex.quote`).
+
+```bash
+#!/usr/bin/env bash
+set -euo pipefail
+
+CSV="${1:?Usage: $0 nsys_report.csv [app cmd…]}"
+shift
+APP_CMD="${*:-python run.py --your-args}"
+
+# Define metrics if not already exported
+: "${METRICS:=sm__throughput.avg.pct_of_peak_sustained_elapsed,\
+dram__throughput.avg.pct_of_peak_sustained_elapsed,\
+l1tex__t_sector_hit_rate.pct,\
+lts__t_sector_hit_rate.pct,\
+smsp__warp_issue_stalled_barrier_per_warp_active.pct,\
+smsp__warp_issue_stalled_short_scoreboard_per_warp_active.pct,\
+smsp__warp_issue_stalled_long_scoreboard_per_warp_active.pct,\
+gpu__time_duration.sum}"
+
+# Generate the ncu commands and execute them
+python3 - "$CSV" "$APP_CMD" <<'PY' | bash
+import sys, csv, re, shlex
+csv_path, app_cmd = sys.argv[1], sys.argv[2]
+
+with open(csv_path, newline='') as f:
+    rows = list(csv.DictReader(f))
+
+# Sort by Total Time (ns) descending; adjust if you prefer "Time (%)"
+rows.sort(key=lambda r: int(r["Total Time (ns)"] or 0), reverse=True)
+
+for i, row in enumerate(rows[:3], 1):
+    name = row["Name"]
+    pat = "regex:^" + re.escape(name) + "$"
+    pat_q = shlex.quote(pat)  # safe for shell
+    out = (
+        f'ncu --kernel-name-base demangled '
+        f'--kernel-name {pat_q} '
+        f'--metrics "$METRICS" '
+        f'-o ncu_top{i} '
+        f'{app_cmd}'
+    )
+    print(out)
+PY
+```
+
+**Why these bits:**
+
+* `csv.DictReader` correctly parses the quoted **Name** column even with commas/angles inside. ([Python documentation][3])
+* `re.escape()` converts the demangled name into a literal-match regex; we add `^…$` to force exact match. ([Python documentation][1])
+* `shlex.quote()` safely wraps the regex so shells don’t mangle backslashes or metacharacters. ([Python documentation][4])
+* `ncu --kernel-name regex:<expr>` and `--kernel-name-base demangled` are the documented way to regex-match demangled kernel names. ([NVIDIA Docs][2])
+
+If you prefer to preview instead of auto-running, drop the final `| bash` and just inspect the printed `ncu` commands.
+
+[1]: https://docs.python.org/3/library/re.html "re — Regular expression operations — Python 3.14.0 documentation"
+[2]: https://docs.nvidia.com/nsight-compute/NsightComputeCli/index.html "4. Nsight Compute CLI — NsightCompute 13.0 documentation"
+[3]: https://docs.python.org/3/library/csv.html?utm_source=chatgpt.com "CSV File Reading and Writing"
+[4]: https://docs.python.org/3/library/shlex.html?utm_source=chatgpt.com "shlex — Simple lexical analysis"
