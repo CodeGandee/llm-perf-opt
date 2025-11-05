@@ -219,6 +219,8 @@ End‑to‑end steps to profile the top kernels from an Nsight Systems capture:
   - `pixi run -e rtx5090 ./scripts/ncu/release/ncu-profile-kernels.sh --kernel-config tmp/ncu/top-10-kernels.yaml --topk 3 -- python -m llm_perf_opt.runners.llm_profile_runner device=cuda:0`
 - Python:
   - `python scripts/ncu/release/ncu-profile-kernels.py --kernel-config tmp/ncu/top-10-kernels.yaml --topk 3 -- ./bin/infer --device cuda:0`
+- Runner-backed (uses vendor builder via via-runner script):
+  - `pixi run -e rtx5090 ./scripts/ncu/release/ncu-profile-kernels-via-runner.sh --kernel-config tmp/ncu/top-10-kernels.yaml --topk 3 --extra-sections SourceCounters -- python -m llm_perf_opt.runners.llm_profile_runner hydra.run.dir=tmp/ncu-work/${now:%Y%m%d-%H%M%S} dataset.subset_filelist=datasets/omnidocbench/subsets/dev-3.txt device=cuda:0 pipeline.torch_profiler.enable=false pipeline.static_analysis.enable=false dataset.sampling.num_epochs=1 dataset.sampling.num_samples_per_epoch=1 dataset.sampling.randomize=false infer.max_new_tokens=64`
 
 4) Inspect outputs
 - Outputs live under `<output-dir>/kernel_<rank>_<md5>/` with files `ncu.ncu-rep`, `ncu.section_<Section>.csv`, and `ncu.details.csv`.
