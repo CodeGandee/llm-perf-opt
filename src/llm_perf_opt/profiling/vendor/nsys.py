@@ -5,7 +5,7 @@ do not execute commands; they only construct argument lists for subprocess use.
 """
 
 from pathlib import Path
-from typing import Sequence
+from typing import Sequence, Optional
 
 
 def build_nsys_cmd(
@@ -13,10 +13,10 @@ def build_nsys_cmd(
     work_argv: Sequence[str],
     *,
     trace: str = "cuda,nvtx,osrt",
-    sample: str = "none",
-    capture: str = "none",
-    capture_end: str | None = None,
-    nvtx_capture: str = "none",
+    sample: Optional[str] = None,
+    capture: Optional[str] = None,
+    capture_end: Optional[str] = None,
+    nvtx_capture: Optional[str] = None,
     enable_nonregistered_nvtx: bool = True,
 ) -> list[str]:
     """Build an argv list for `nsys profile` (no NVTX gating by default).
@@ -29,14 +29,15 @@ def build_nsys_cmd(
         The target command (and args) to execute under Nsight Systems.
     trace : str, optional
         Trace sources, defaults to CUDA + NVTX + OS runtime.
-    sample : str, optional
-        CPU sampling mode. "none" recommended for lower overhead in GPU focus.
-    capture : str, optional
-        Capture range selector. Default "none" captures the whole run. Use "nvtx"
+    sample : Optional[str], optional
+        CPU sampling mode. When None/empty, the option is omitted (nsys default).
+    capture : Optional[str], optional
+        Capture range selector. When None/empty, the option is omitted (nsys default).
+        Use "nvtx" to gate by NVTX ranges if you provide an `nvtx_capture` expression.
         to gate by NVTX ranges if you provide an `nvtx_capture` expression.
-    nvtx_capture : str, optional
+    nvtx_capture : Optional[str], optional
         NVTX capture expression (e.g., "decode", "prefill", or "decode@*").
-        Defaults to "none" (no NVTX gating argument will be passed).
+        When None/empty and/or when capture != 'nvtx', no NVTX gating argument is passed.
     enable_nonregistered_nvtx : bool, optional
         When True, pass `--env-var=NSYS_NVTX_PROFILER_REGISTER_ONLY=0` to allow
         non-registered NVTX strings (common in Python). Recommended when using
@@ -58,24 +59,24 @@ def build_nsys_cmd(
         Complete argv to invoke `nsys profile`.
     """
 
-    cmd = [
-        "nsys",
-        "profile",
-        f"--trace={trace}",
-        f"--sample={sample}",
-    ]
-    # Only add capture-range/NVTX capture when not explicitly disabled
-    cap = str(capture).lower()
-    nvx = str(nvtx_capture).lower()
-    if cap != "none":
+    cmd = ["nsys", "profile", f"--trace={trace}"]
+    # Add CPU sampling only if explicitly requested and not 'none'
+    smp = (str(sample).strip().lower() if sample is not None else "")
+    if smp and smp != "none":
+        cmd += [f"--sample={sample}"]
+
+    # Add capture-range controls only if explicitly requested and not 'none'
+    cap = (str(capture).strip().lower() if capture is not None else "")
+    nvx = (str(nvtx_capture).strip().lower() if nvtx_capture is not None else "")
+    if cap and cap != "none":
         cmd += [f"--capture-range={capture}"]
         if capture_end and str(capture_end).strip():
             cmd += [f"--capture-range-end={capture_end}"]
         if enable_nonregistered_nvtx and cap == "nvtx":
             cmd += ["--env-var=NSYS_NVTX_PROFILER_REGISTER_ONLY=0"]
-    # Only pass NVTX capture expression when capture-range uses NVTX gating
-    if cap == "nvtx" and nvx != "none":
-        cmd += [f"--nvtx-capture={nvtx_capture}"]
+        # Only pass NVTX capture expression when capture-range uses NVTX gating
+        if cap == "nvtx" and nvx:
+            cmd += [f"--nvtx-capture={nvtx_capture}"]
     cmd += ["-o", str(out_base)]
     return cmd + list(work_argv)
 

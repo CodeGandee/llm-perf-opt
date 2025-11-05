@@ -214,14 +214,24 @@ def main(cfg: DictConfig) -> None:  # pragma: no cover - CLI orchestrator
         if not gating_nvtx_nsys:
             _cap_final = "none"
 
+        # Convert optional sampling/capture settings: pass None to omit flags
+        _sample_cfg_raw = getattr(nsys_cfg, "sample", None)
+        _sample_arg = None
+        try:
+            if isinstance(_sample_cfg_raw, str) and _sample_cfg_raw.strip().lower() != "none":
+                _sample_arg = str(_sample_cfg_raw)
+        except Exception:
+            _sample_arg = None
+        _capture_arg = None if _cap_final == "none" else _cap_final
+
         nsys_cmd = build_nsys_cmd(
             nsys_out,
             work,
             # When using NVTX gating, nvtx_capture must be explicitly provided.
-            nvtx_capture=(_nvx_str if (_use_nvtx_gate and _cap_final == "nvtx") else "none"),
+            nvtx_capture=(_nvx_str if (_use_nvtx_gate and _cap_final == "nvtx") else None),
             trace=str(getattr(nsys_cfg, "trace", "cuda,nvtx,osrt")),
-            sample=str(getattr(nsys_cfg, "sample", "none")),
-            capture=_cap_final,
+            sample=_sample_arg,
+            capture=_capture_arg,
             capture_end=_cap_end_cfg if (_cap_final != "none") else None,
         )
         # Persist the constructed NSYS command for reproducibility/triage
