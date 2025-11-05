@@ -28,27 +28,28 @@ Launch Command:
 
 Examples
 --------
-Profile single kernel:
+Profile single kernel (generic binary):
 >>> python3 ncu-profile-kernels.py \\
 ...   --kernel-regex 'internal::gemvx::kernel<.*\\(int\\)7.*>' \\
 ...   --output-dir tmp/gemvx-profile \\
-...   -- python -m llm_perf_opt.runners.llm_profile_runner device=cuda:0
+...   -- ./bin/infer --device cuda:0 --model deepseek-ocr
 
-Profile multiple kernels from YAML:
+Profile multiple kernels from YAML (shell command):
 >>> python3 ncu-profile-kernels.py \\
 ...   --kernel-config top-kernels.yaml \\
 ...   --extra-sections SourceCounters \\
-...   -- python inference.py --model deepseek
+...   -- bash -lc 'my_infer_tool --model deepseek --batch 4'
 
-Profile only top 3 kernels from YAML:
+Profile only top 3 kernels from YAML (Python example):
 >>> python3 ncu-profile-kernels.py \\
 ...   --kernel-config top-kernels.yaml \\
 ...   --topk 3 \\
-...   -- python inference.py
+...   -- python -m llm_perf_opt.runners.llm_profile_runner device=cuda:0
 
 Notes
 -----
-- Based on NVIDIA best practices from nsight-compute CLI docs
+- Launch command can be any runnable console command (binary, shell, or Python); no Python-specific assumption.
+- Based on NVIDIA best practices from Nsight Compute CLI docs
 - Uses --launch-skip/--launch-count for sampling (no replay needed)
 - Uses --kernel-name-base demangled with regex patterns
 - Default sections: SpeedOfLight, MemoryWorkloadAnalysis, Occupancy, SchedulerStats
@@ -62,6 +63,7 @@ import argparse
 import os
 import subprocess
 import sys
+import hashlib
 from datetime import datetime
 from pathlib import Path
 from typing import Any
@@ -404,29 +406,29 @@ def write_provenance(
 def parse_args() -> argparse.Namespace:
     """Parse command line arguments."""
     parser = argparse.ArgumentParser(
-        description="Profile CUDA kernels with Nsight Compute (ncu)",
+        description="Profile CUDA kernels with Nsight Compute (ncu) — works with any console command",
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog="""
 Examples:
-  # Profile single kernel
+  # Profile single kernel (generic binary)
   %(prog)s --kernel-regex 'gemvx::kernel<.*\\(int\\)7.*>' \\
     --output-dir tmp/gemvx \\
-    -- python -m llm_perf_opt.runners.llm_profile_runner device=cuda:0
+    -- ./bin/infer --device cuda:0
 
-  # Profile multiple kernels from YAML
+  # Profile multiple kernels from YAML (shell command)
   %(prog)s --kernel-config top-kernels.yaml \\
     --extra-sections SourceCounters \\
-    -- python inference.py --model deepseek
+    -- bash -lc 'my_infer_tool --model deepseek --batch 4'
 
   # Profile with custom sampling
   %(prog)s --kernel-regex 'flash_fwd.*' \\
     --num-kernel-call-skip 500 \\
     --num-kernel-call-profile 10 \\
-    -- python benchmark.py
+    -- ./benchmark --size 2048
 
-  # Profile only top 5 kernels from YAML
+  # Profile only top 5 kernels from YAML (Python example)
   %(prog)s --kernel-config top-kernels.yaml --topk 5 \\
-    -- python inference.py
+    -- python -m llm_perf_opt.runners.llm_profile_runner device=cuda:0
 
 Default sections: SpeedOfLight, MemoryWorkloadAnalysis, Occupancy, SchedulerStats
         """,
@@ -563,6 +565,10 @@ def main() -> None:
         topk=args.topk if args.kernel_config else None,
     )
 
+    # Determine rank width for directory naming (min 4 digits)
+    num_kernels = len(kernels)
+    rank_width = max(4, len(str(num_kernels)))
+
     # Profile each kernel
     success_count = 0
     failed_count = 0
@@ -581,9 +587,13 @@ def main() -> None:
         log.info(f"Regex: {log.highlight(kernel_regex)}")
         log.info(f"{'=' * 80}")
 
-        # Create output path for this kernel
-        safe_name = "".join(c if c.isalnum() or c in "-_" else "_" for c in kernel_name[:100])
-        output_base = output_dir / f"kernel_{i + 1:03d}_{safe_name}"
+        # Create output path for this kernel (match bash script layout)
+        # Use per-kernel directory with numeric rank and md5 of kernel name
+        rank = i + 1
+        name_md5 = hashlib.md5(kernel_name.encode("utf-8")).hexdigest()
+        kernel_dir = output_dir / f"kernel_{rank:0{rank_width}d}_{name_md5}"
+        kernel_dir.mkdir(parents=True, exist_ok=True)
+        output_base = kernel_dir / "ncu"
 
         # Run profiling
         success = run_ncu_profile(

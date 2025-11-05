@@ -1,36 +1,43 @@
-# llm-perf-opt Development Guidelines
+# Repository Guidelines
 
-Auto-generated from all feature plans. Last updated: 2025-10-28
+This document is a concise contributor guide for llm-perf-opt. Follow it for any changes within this repository.
 
-## Active Technologies
-- Python 3.11 (Pixi env; pyproject requires >=3.11) + PyTorch 2.5.x (CUDA 12.4 wheels), Transformers 4.46.3, Tokenizers 0.20.x, NVTX, Hydra/OmegaConf, attrs/pydantic, NVML (nvidia-ml-py), ruff, mypy (001-profile-deepseek-ocr)
-- N/A (local files for artifacts under `/data2/huangzhe/code/llm-perf-opt/tmp` and `/data2/huangzhe/code/llm-perf-opt/specs/001-profile-deepseek-ocr`) (001-profile-deepseek-ocr)
-- Python 3.11 (Pixi env) + PyTorch 2.5.x, Transformers 4.46.x, Tokenizers 0.20.x, NVTX, NVIDIA Nsight Systems (nsys), NVIDIA Nsight Compute (ncu) (002-nvidia-llm-profiling)
-- Local filesystem artifacts under `tmp/` and `context/` (no DB) (002-nvidia-llm-profiling)
+## Project Structure & Module Organization
+- src/llm_perf_opt: Python package (runners, profiling, data, visualize)
+- conf/: Hydra config groups (model, dataset, runtime, hardware, profiling)
+- tests/: unit/, integration/, manual/ (manual tests use manual_*.py)
+- scripts/: tooling and profiling helpers; bootstrap.sh at root for assets
+- datasets/, models/, third_party/: symlinks or local mounts; do not commit large artifacts
+- docs/, context/, magic-context/, specs/, tmp/: docs, knowledge, plans, and run outputs
 
-- (001-profile-deepseek-ocr)
+## Build, Test, and Development Commands
+- Environment: install Pixi, then run `pixi install` (default CUDA 12.4 env)
+- Lint: `pixi run ruff check .`  |  Types: `pixi run mypy src`
+- Unit tests: `pixi run pytest tests/unit/`
+- Integration tests: `pixi run pytest tests/integration/`
+- Manual run (stage‑1): `pixi run stage1-run`
+- Deep profiling (stage‑2): `pixi run stage2-profile`
+- Docs: `pixi run docs-serve` (dev) | `pixi run docs-build`
+- Bootstrap assets: `./bootstrap.sh --yes`
 
-## Project Structure
+## Coding Style & Naming Conventions
+- Python 3.11; 4‑space indentation; max line length 120
+- Use type hints; keep functions small and single‑purpose
+- Naming: modules/functions snake_case; Classes CamelCase; constants UPPER_CASE
+- Run `ruff` (PEP8 + rules in pyproject) and `mypy` before pushing
 
-```text
-backend/
-frontend/
-tests/
-```
+## Testing Guidelines
+- Framework: pytest. Place fast, deterministic tests in tests/unit/
+- Integration tests may touch filesystem or external tools; mark/select via `-m integration` as needed
+- Manual tests live in tests/manual/ and must be prefixed with `manual_` to avoid pytest collection
+- Aim for meaningful coverage; add tests beside the feature you modify
 
-## Commands
+## Commit & Pull Request Guidelines
+- Commits: imperative, concise, and scoped (e.g., `runners: fix nsys gating`)
+- PRs: include summary, motivation, linked issue, before/after notes, and any performance impact
+- Attach or reference artifacts under tmp/profile-output/<run_id>/ when relevant
+- Keep diffs focused; update docs/config if behavior changes
 
-# Add commands for 
-
-## Code Style
-
-: Follow standard conventions
-
-## Recent Changes
-- 002-nvidia-llm-profiling: Added Python 3.11 (Pixi env) + PyTorch 2.5.x, Transformers 4.46.x, Tokenizers 0.20.x, NVTX, NVIDIA Nsight Systems (nsys), NVIDIA Nsight Compute (ncu)
-- 001-profile-deepseek-ocr: Added Python 3.11 (Pixi env; pyproject requires >=3.11) + PyTorch 2.5.x (CUDA 12.4 wheels), Transformers 4.46.3, Tokenizers 0.20.x, NVTX, Hydra/OmegaConf, attrs/pydantic, NVML (nvidia-ml-py), ruff, mypy
-- 001-profile-deepseek-ocr: Added Python 3.11 (Pixi env; pyproject requires >=3.11) + PyTorch 2.5.x (CUDA 12.4 wheels), Transformers 4.46.3, Tokenizers 0.20.x, NVTX, Hydra/OmegaConf, attrs/pydantic, NVML (nvidia-ml-py), ruff, mypy
-
-
-<!-- MANUAL ADDITIONS START -->
-<!-- MANUAL ADDITIONS END -->
+## Security & Configuration Tips
+- Do not commit datasets, weights, profiler traces, or large binaries; prefer symlinks and local paths
+- Use Hydra overrides for reproducibility (e.g., `hydra.run.dir=tmp/profile-output/${now:%Y%m%d-%H%M%S}`)

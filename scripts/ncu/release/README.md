@@ -75,21 +75,22 @@ ncu-profile-kernels.sh --kernel-regex 'flash_fwd.*' \
 **Output structure:**
 ```
 <output-dir>/
-├── command.yaml                      # Provenance (timestamp, args, versions)
-├── kernel_001/                       # First kernel directory
-│   ├── ncu.ncu-rep                  # NCU binary report
+├── command.yaml                                # Provenance (timestamp, args, versions)
+├── kernel_0001_d41d8cd98f00b204e9800998ecf8427e/  # Per‑kernel dir: rank (min 4 digits) + md5(name)
+│   ├── ncu.ncu-rep                              # NCU binary report
 │   ├── ncu.section_SpeedOfLight.csv
 │   ├── ncu.section_MemoryWorkloadAnalysis.csv
 │   ├── ncu.section_Occupancy.csv
 │   ├── ncu.section_SchedulerStats.csv
 │   └── ncu.details.csv
-├── kernel_002/                       # Second kernel directory (if batch mode)
+├── kernel_0002_<md5>/
 │   ├── ncu.ncu-rep
 │   └── ...
-└── kernel_003/                       # Third kernel directory (if topk=3)
+└── kernel_0003_<md5>/
     ├── ncu.ncu-rep
     └── ...
 ```
+Directory name format: `kernel_<rank>_<md5(kernel-name)>`, where `<rank>` is zero‑padded to `max(4, len(total_kernels))`.
 
 **Note:** The directory structure matches the naming pattern from `ncu-profile-kernel.v2.sh`.
 
@@ -156,15 +157,22 @@ python3 ncu-profile-kernels.py \
 **Output structure:**
 ```
 <output-dir>/
-├── command.yaml                # Provenance (timestamp, args, versions)
-├── kernel_001_<name>.ncu-rep   # NCU binary report
-├── kernel_001_<name>.section_SpeedOfLight.csv
-├── kernel_001_<name>.section_MemoryWorkloadAnalysis.csv
-├── kernel_001_<name>.section_Occupancy.csv
-├── kernel_001_<name>.section_SchedulerStats.csv
-├── kernel_001_<name>.details.csv
-└── ...                         # Additional kernels if batch mode
+├── command.yaml                                # Provenance (timestamp, args, versions)
+├── kernel_0001_d41d8cd98f00b204e9800998ecf8427e/
+│   ├── ncu.ncu-rep
+│   ├── ncu.section_SpeedOfLight.csv
+│   ├── ncu.section_MemoryWorkloadAnalysis.csv
+│   ├── ncu.section_Occupancy.csv
+│   ├── ncu.section_SchedulerStats.csv
+│   └── ncu.details.csv
+├── kernel_0002_<md5>/
+│   ├── ncu.ncu-rep
+│   └── ...
+└── kernel_0003_<md5>/
+    ├── ncu.ncu-rep
+    └── ...
 ```
+Directory name format matches the Bash script.
 
 ### test-ncu-profile.sh
 

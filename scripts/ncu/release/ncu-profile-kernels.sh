@@ -321,6 +321,28 @@ log_ok "Provenance: $PROV_YAML"
 SUCCESS_COUNT=0
 FAILED_COUNT=0
 
+# Determine rank width for directory naming (min 4 digits)
+RANK_WIDTH=${#KERNEL_COUNT}
+if (( RANK_WIDTH < 4 )); then RANK_WIDTH=4; fi
+
+# Helper: compute MD5 hex of a string (kernel name)
+compute_md5() {
+  local s="$1"
+  if command -v md5sum >/dev/null 2>&1; then
+    printf "%s" "$s" | md5sum | awk '{print $1}'
+  elif command -v md5 >/dev/null 2>&1; then
+    # macOS fallback
+    printf "%s" "$s" | md5 | awk '{print $NF}'
+  elif command -v python3 >/dev/null 2>&1 || command -v python >/dev/null 2>&1; then
+    local PY_CMD
+    PY_CMD=$(command -v python3 2>/dev/null || command -v python)
+    printf "%s" "$s" | "$PY_CMD" -c 'import sys,hashlib; print(hashlib.md5(sys.stdin.buffer.read()).hexdigest())'
+  else
+    log_err "md5sum or python is required to compute MD5"
+    exit 2
+  fi
+}
+
 for i in $(seq 0 $((KERNEL_COUNT - 1))); do
   # Extract kernel info using available tools
   if command -v jq &>/dev/null; then
@@ -349,8 +371,11 @@ for i in $(seq 0 $((KERNEL_COUNT - 1))); do
   log_info "Regex: $(log_highlight "$KERNEL_REGEX_CURRENT")"
   log_info "================================================================================"
 
-  # Create output directory for this kernel (follow v2.sh naming pattern)
-  KERNEL_DIR="$OUT_DIR/kernel_$(printf '%03d' $KERNEL_NUM)"
+  # Create output directory for this kernel (match Python naming):
+  # kernel_<rank>_<md5-of-kernel-name>, rank padded to RANK_WIDTH (min 4)
+  RANK_PADDED=$(printf "%0${RANK_WIDTH}d" "$KERNEL_NUM")
+  NAME_MD5=$(compute_md5 "$KERNEL_NAME")
+  KERNEL_DIR="$OUT_DIR/kernel_${RANK_PADDED}_${NAME_MD5}"
   mkdir -p "$KERNEL_DIR"
 
   OUTPUT_BASE="${KERNEL_DIR}/ncu"
