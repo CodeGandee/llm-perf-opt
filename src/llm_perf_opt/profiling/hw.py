@@ -96,6 +96,17 @@ def get_peak_tflops(device_name: str, precision: str = "bf16") -> float:
             "fp16": 661.0,  # Tensor Core
             "bf16": 661.0,  # Tensor Core
         },
+        # RTX 50‑series (Blackwell)
+        # Sources:
+        # - NVIDIA RTX Blackwell GPU Architecture (public PDF; GB202 specs)
+        # - Puget Systems AI review indicating ~209.5 TFLOPS (BF16/FP16 dense) for RTX 5090
+        #   https://www.pugetsystems.com/labs/articles/nvidia-geforce-rtx-5090-amp-5080-ai-review/
+        # Approx FP32 computed from CUDA cores (21,760) * 2.407 GHz * 2 FLOPs / 1e12 ≈ 104.8 TFLOPS.
+        "NVIDIA GeForce RTX 5090": {
+            "fp32": 104.8,
+            "fp16": 209.5,  # Tensor Core (dense)
+            "bf16": 209.5,  # Tensor Core (dense)
+        },
         "NVIDIA GeForce RTX 3090": {
             "fp32": 35.6,
             "fp16": 285.0,  # Tensor Core (sparse spec; use with caution)
