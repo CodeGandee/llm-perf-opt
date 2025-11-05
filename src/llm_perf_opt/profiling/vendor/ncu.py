@@ -5,14 +5,14 @@ do not execute the profiler; they only construct lists for subprocess use.
 """
 
 from pathlib import Path
-from typing import Sequence, Optional, Sequence as _Seq
+from typing import Sequence, Optional, Sequence as _Seq, Union
 import subprocess
 
 
 DEFAULT_METRICS = (
     "gpu__time_duration.sum,"
     "sm__throughput.avg.pct_of_peak_sustained_elapsed,"
-    "dram__throughput.avg.pct_of_peak_sustained_elapsed"
+    "dram__throughput.avg.pct_of_peak_sustained_elapsed",
 )
 
 
@@ -56,17 +56,34 @@ def _filter_metrics(metrics_csv: Optional[str]) -> Optional[str]:
     return ",".join(filtered) if filtered else None
 
 
+def _normalize_metrics_csv(metrics: Union[str, Sequence[str], None]) -> Optional[str]:
+    """Normalize metrics (str | sequence | None) to a CSV string or None."""
+    if metrics is None:
+        return None
+    if isinstance(metrics, str):
+        m = metrics.strip()
+        return m if m else None
+    try:
+        # Accept any iterable of strings
+        toks = [str(x).strip() for x in metrics if str(x).strip()]
+    except TypeError:
+        return None
+    return ",".join(toks) if toks else None
+
+
 def build_ncu_cmd(
     out_base: Path,
     work_argv: Sequence[str],
     *,
-    nvtx_expr: str,
+    nvtx_expr: Optional[str],
     kernel_regex: str | None = None,
     csv_log: Path | None = None,
     use_nvtx: bool = True,
     set_name: str | None = "roofline",
-    metrics: str | None = DEFAULT_METRICS,
+    metrics: Union[str, Sequence[str], None] = None,
     sections: Optional[_Seq[str]] = None,
+    target_processes: Optional[str] = "all",
+    force_overwrite: bool = False,
 ) -> list[str]:
     """Build an argv list for `ncu` focused on roofline metrics.
 
@@ -99,11 +116,14 @@ def build_ncu_cmd(
         Complete argv to invoke `ncu` capturing roofline metrics.
     """
 
-    cmd: list[str] = ["ncu", "--target-processes", "all"]
+    cmd: list[str] = ["ncu"]
+    # Target processes (default to 'all' if omitted)
+    if target_processes:
+        cmd += ["--target-processes", str(target_processes)]
     if set_name:
         cmd += ["--set", str(set_name)]
-    # Filter metrics for device compatibility; allow None to skip --metrics entirely
-    met = _filter_metrics(metrics)
+    # Normalize metrics (list or str) then filter for device compatibility; allow None to skip --metrics entirely
+    met = _filter_metrics(_normalize_metrics_csv(metrics))
     if met:
         cmd += ["--metrics", met]
     # Add selected sections (limits profiling to these summaries)
@@ -112,7 +132,7 @@ def build_ncu_cmd(
             if sec:
                 cmd += ["--section", str(sec)]
     cmd += ["-o", str(out_base)]
-    if use_nvtx:
+    if use_nvtx and nvtx_expr:
         cmd += ["--nvtx", "--nvtx-include", nvtx_expr]
     if kernel_regex:
         cmd += [
@@ -127,6 +147,8 @@ def build_ncu_cmd(
             "--log-file",
             str(csv_log),
         ]
+    if force_overwrite:
+        cmd += ["--force-overwrite"]
     return cmd + list(work_argv)
 
 

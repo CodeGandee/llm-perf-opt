@@ -1,25 +1,24 @@
 # Nsight Compute preset for RTX 3090 (GA102)
 
-target_processes: all
-nvtx_include: decode*
-# Keep the roofline set but avoid explicit flop_count_* metrics that are
-# unavailable/unstable on GA102 with this NCU version.
-set: roofline
-# Limit to the most informative sections for GA102 per our KB:
-# - SpeedOfLight: high-level peak % for compute/memory
-# - ComputeWorkloadAnalysis: compute pipeline utilization (Tensor, FP, INT)
-# - MemoryWorkloadAnalysis: memory hierarchy and throughput
-# - Occupancy: achieved vs theoretical occupancy
-# - SchedulerStats: warp issue/eligibility
-# - WarpStateStats: stall reasons
-# - LaunchStats: grid/block resources
-sections:
-  - SpeedOfLight
-  - ComputeWorkloadAnalysis
-  - MemoryWorkloadAnalysis
-  - Occupancy
-  - SchedulerStats
-  - WarpStateStats
-  - LaunchStats
-metrics: null
-csv: true
+description: Nsight Compute preset for RTX 3090 (GA102) — balanced
+
+# New structured schema: all Nsight Compute arguments live under `ncu_cli`.
+ncu_cli:
+  target_processes: all
+  nvtx:
+    include: decode*
+  # Keep the roofline set but avoid explicit flop_count_* metrics that are
+  # unavailable/unstable on GA102 with certain NCU versions.
+  set: roofline
+  # Informative sections for GA102 per our KB
+  sections:
+    - SpeedOfLight
+    - ComputeWorkloadAnalysis
+    - MemoryWorkloadAnalysis
+    - Occupancy
+    - SchedulerStats
+    - WarpStateStats
+    - LaunchStats
+  metrics: null
+  export:
+    csv: true

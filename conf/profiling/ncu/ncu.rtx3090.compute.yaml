@@ -1,18 +1,23 @@
 # Nsight Compute preset: RTX 3090 (GA102) — Compute focus
 
-target_processes: all
-nvtx_include: decode*
-set: roofline
-# Focused sections for compute-bound analysis
-sections:
-  - SpeedOfLight
-  - ComputeWorkloadAnalysis
-  - Occupancy
-  - SchedulerStats
-  - WarpStateStats
-  - LaunchStats
-  - InstructionStats
-# Avoid explicit metrics; let section defaults apply to keep compatibility
-metrics: null
-csv: true
+description: Nsight Compute preset for RTX 3090 (GA102) — compute bound focus
 
+# New structured schema: all Nsight Compute arguments live under `ncu_cli`.
+ncu_cli:
+  target_processes: all
+  nvtx:
+    include: decode*
+  set: roofline
+  # Focused sections for compute-bound analysis
+  sections:
+    - SpeedOfLight
+    - ComputeWorkloadAnalysis
+    - Occupancy
+    - SchedulerStats
+    - WarpStateStats
+    - LaunchStats
+    - InstructionStats
+  # Avoid explicit metrics; let section defaults apply
+  metrics: null
+  export:
+    csv: true

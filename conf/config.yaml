@@ -69,6 +69,6 @@ pipeline:
   ncu:
     enable: false
     gating_nvtx: true
-    # Keys (nvtx_include, set, metrics, sections) inherited from the preset.
+    # Keys are read from the preset under `ncu_cli.*` (target_processes, nvtx.include, set, metrics, sections, export.*).
 
 # Output controls are now per-pipeline under `pipeline.<stage>.output.*`.

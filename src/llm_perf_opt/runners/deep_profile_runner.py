@@ -266,40 +266,60 @@ def main(cfg: DictConfig) -> None:  # pragma: no cover - CLI orchestrator
                 kernel_regex = "|".join(pats)
     except Exception:
         kernel_regex = None
-    csv_log = artifacts.out_dir("ncu") / "raw.csv"
     ncu_cfg = getattr(getattr(cfg, "pipeline", {}), "ncu", {})
+    ncu_cli = getattr(ncu_cfg, "ncu_cli", {})
     gating_nvtx_ncu = bool(getattr(ncu_cfg, "gating_nvtx", True))
-    # Read NCU config knobs
-    ncu_set = None
-    ncu_metrics = None
+    # Read NCU config knobs from new schema
     try:
-        ncu_set = str(getattr(ncu_cfg, "set", "roofline"))
+        nvtx_val = getattr(ncu_cli, "nvtx", None)
+        nvtx_expr = None
+        if isinstance(nvtx_val, dict):
+            inc = nvtx_val.get("include", None)
+            if inc is not None and str(inc).strip():
+                nvtx_expr = str(inc).strip()
+    except Exception:
+        nvtx_expr = None
+    try:
+        ncu_set = str(getattr(ncu_cli, "set", "roofline"))
     except Exception:
         ncu_set = "roofline"
+    # metrics may be list[str] or None
     try:
-        ncu_metrics = str(getattr(ncu_cfg, "metrics", "")) or None
+        ncu_metrics = getattr(ncu_cli, "metrics", None)
     except Exception:
         ncu_metrics = None
-    # Sections (optional)
+    # sections optional list[str]
     ncu_sections = None
     try:
-        secs = getattr(ncu_cfg, "sections", None)
+        secs = getattr(ncu_cli, "sections", None)
         if isinstance(secs, (list, tuple)):
             ncu_sections = [str(s) for s in secs if s]
     except Exception:
         ncu_sections = None
+    # target processes optional
+    try:
+        ncu_target_procs = str(getattr(ncu_cli, "target_processes", "all"))
+    except Exception:
+        ncu_target_procs = "all"
+    # force overwrite optional (default true per preset)
+    try:
+        ncu_force = bool(getattr(ncu_cli, "force_overwrite", True))
+    except Exception:
+        ncu_force = True
 
     if bool(getattr(getattr(cfg, "pipeline", {}), "ncu", {}).get("enable", False)):
         ncu_cmd = build_ncu_cmd(
             ncu_out,
             work,
-            nvtx_expr=str(getattr(ncu_cfg, "nvtx_include", "decode*")),
+            nvtx_expr=nvtx_expr,
             kernel_regex=kernel_regex,
             csv_log=csv_log,
             use_nvtx=gating_nvtx_ncu,
             set_name=ncu_set,
-            metrics=(None if ncu_sections else ncu_metrics),
+            metrics=ncu_metrics,
             sections=ncu_sections,
+            target_processes=ncu_target_procs,
+            force_overwrite=ncu_force,
         )
         # Persist the constructed NCU command as well
         try:
@@ -336,13 +356,15 @@ def main(cfg: DictConfig) -> None:  # pragma: no cover - CLI orchestrator
                 ncu_cmd2 = build_ncu_cmd(
                     ncu_out,
                     work,
-                    nvtx_expr=str(getattr(ncu_cfg, "nvtx_include", "decode*")),
+                    nvtx_expr=nvtx_expr,
                     kernel_regex=None,
                     csv_log=ncu_csv_path,
                     use_nvtx=False,
                     set_name=ncu_set,
                     metrics=None,  # let tool choose
                     sections=None,
+                    target_processes=ncu_target_procs,
+                    force_overwrite=ncu_force,
                 )
                 subprocess.run(ncu_cmd2, check=False)
                 try:
@@ -473,3 +495,9 @@ def main(cfg: DictConfig) -> None:  # pragma: no cover - CLI orchestrator
 
 if __name__ == "__main__":  # pragma: no cover
     main()
+    # export.csv controls whether we request raw CSV log from ncu
+    try:
+        export_csv = bool(getattr(getattr(ncu_cli, "export", {}), "csv", True))
+    except Exception:
+        export_csv = True
+    csv_log = (artifacts.out_dir("ncu") / "raw.csv") if export_csv else None

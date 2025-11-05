@@ -39,6 +39,7 @@ pipeline:
   ncu:
     enable: false
     gating_nvtx: true
+    # Nsight Compute args are provided by the preset under `ncu_cli.*`
 
 hydra:
   run:
@@ -76,6 +77,18 @@ Notes
 - Swap infer preset: `model/deepseek_ocr/infer@infer=deepseek_ocr.fast`.
 - Static analyzer toggle: `pipeline.static_analysis.enable` (default true).
 - Stage‑oriented configs under `conf/runner/` are deprecated/removed; use pipeline toggles in `conf/config.yaml` instead.
+
+Nsight Compute (`ncu_cli`) fields
+- Each preset under `conf/profiling/ncu/*.yaml` defines an `ncu_cli` map:
+  - `target_processes`: string (e.g., `all`) → `--target-processes`.
+  - `nvtx.include`: string (e.g., `decode*`) → `--nvtx --nvtx-include` when NVTX gating is enabled.
+  - `set`: string (e.g., `roofline`) → `--set`.
+  - `metrics`: list of metric names, or `null` to omit `--metrics`.
+  - `sections`: list of sections (e.g., SpeedOfLight, MemoryWorkloadAnalysis, Occupancy, SchedulerStats).
+  - `export.csv`: boolean to indicate CSV-friendly exports for tooling.
+  - Defaults: `ncu.default` aligns with the scripts’ defaults but hard-codes both sections and a concise metrics set:
+    - sections: [SpeedOfLight, MemoryWorkloadAnalysis, Occupancy, SchedulerStats]
+    - metrics: [flop_count_hp, flop_count_sp, gpu__time_duration.sum, sm__throughput.avg.pct_of_peak_sustained_elapsed, dram__throughput.avg.pct_of_peak_sustained_elapsed]
 
 Nsight Systems (NVTX gating)
 - `pipeline.nsys.capture_range` mirrors the CLI (`nvtx|cudaProfilerApi|hotkey|none`).

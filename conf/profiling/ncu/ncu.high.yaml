@@ -1,9 +1,10 @@
-# Nsight Compute defaults (Stage 2)
-# Preset intended for general roofline collection with additional FLOP counts.
+# Nsight Compute preset (High Coverage)
+# Includes everything from ncu.default plus the union of sections used by
+# the RTX 3090 presets (balanced/compute/memory). Use when you want broader
+# section coverage in a single run.
 
-description: Default Nsight Compute preset aligned with script defaults
+description: High‑coverage Nsight Compute preset (default metrics + union of GA102 sections)
 
-# New structured schema: all Nsight Compute arguments live under `ncu_cli`.
 ncu_cli:
   # Profile all child processes by default (matches `--target-processes all`).
   target_processes: all
@@ -25,12 +26,17 @@ ncu_cli:
     - sm__throughput.avg.pct_of_peak_sustained_elapsed   # SM throughput (% of peak sustained)
     - dram__throughput.avg.pct_of_peak_sustained_elapsed # DRAM throughput (% of peak sustained)
 
-  # Sections to include in the report (high-signal summaries)
+  # Sections to include in the report (union of RTX 3090 presets)
   sections:
-    - SpeedOfLight           # High-level utilization vs peak for compute/memory
-    - MemoryWorkloadAnalysis # Memory hierarchy behavior and bandwidth analysis
-    - Occupancy              # Achieved vs theoretical occupancy and limiting factors
-    - SchedulerStats         # Warp issue eligibility/scheduling statistics
+    - SpeedOfLight            # High-level utilization vs peak for compute/memory
+    - ComputeWorkloadAnalysis # Compute pipeline utilization (Tensor, FP, INT)
+    - MemoryWorkloadAnalysis  # Memory hierarchy behavior and bandwidth analysis
+    - WorkloadDistribution    # Workload distribution by memory/cache levels
+    - Occupancy               # Achieved vs theoretical occupancy and limiting factors
+    - SchedulerStats          # Warp issue eligibility/scheduling statistics
+    - WarpStateStats          # Stall reasons by warp state
+    - LaunchStats             # Grid/block dimensions and resource usage
+    - InstructionStats        # Instruction mix and counts
 
   # Advanced NCU CLI controls (script-managed per-kernel; shown for reference)
   # kernel_name_base: demangled   # => --kernel-name-base demangled
