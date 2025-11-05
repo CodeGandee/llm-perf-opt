@@ -201,6 +201,33 @@ LAUNCH_SKIP=100 LAUNCH_COUNT=5 ./scripts/ncu/release/test-ncu-profile.sh
 - `MAX_NEW_TOKENS` - Max tokens for inference (default: 64)
 - `NUM_SAMPLES` - Number of dataset samples (default: 1)
 
+## Workflow: Profile Top Kernels (NSYS → YAML → NCU)
+
+End‑to‑end steps to profile the top kernels from an Nsight Systems capture:
+
+1) Get a kernel summary CSV from Nsight Systems
+- If you have an `.nsys-rep`, export the CUDA kernel summary CSV:
+  - `nsys stats -r cuda_gpu_kern_sum -f csv -o summary path/to/your.nsys-rep`
+- Or use the sample CSV: `scripts/ncu/examples/summary_cuda_gpu_kern_sum.csv`
+
+2) Generate a kernel config YAML with extract-top-kernels.py
+- Example (top 10):
+  - `python scripts/ncu/release/extract-top-kernels.py scripts/ncu/examples/summary_cuda_gpu_kern_sum.csv -o tmp/ncu/top-10-kernels.yaml --topk 10`
+
+3) Run Nsight Compute profiling (choose Bash or Python variant)
+- Bash (recommended for production):
+  - `pixi run -e rtx5090 ./scripts/ncu/release/ncu-profile-kernels.sh --kernel-config tmp/ncu/top-10-kernels.yaml --topk 3 -- python -m llm_perf_opt.runners.llm_profile_runner device=cuda:0`
+- Python:
+  - `python scripts/ncu/release/ncu-profile-kernels.py --kernel-config tmp/ncu/top-10-kernels.yaml --topk 3 -- ./bin/infer --device cuda:0`
+
+4) Inspect outputs
+- Outputs live under `<output-dir>/kernel_<rank>_<md5>/` with files `ncu.ncu-rep`, `ncu.section_<Section>.csv`, and `ncu.details.csv`.
+- Default `<output-dir>` is `tmp/ncu-profile/<timestamp>`. Override via `--output-dir`.
+
+Tips
+- Add more sections with `--extra-sections SourceCounters`.
+- Use the helper test driver: `pixi run -e rtx5090 ./scripts/ncu/release/test-ncu-profile.sh [--bash|--python]`.
+
 ### extract-top-kernels.py
 
 Extracts top-K kernels from Nsight Systems CSV output and generates a YAML configuration file for batch profiling with ncu.
