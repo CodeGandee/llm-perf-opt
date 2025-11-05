@@ -10,6 +10,8 @@ ncu_cli:
   # Keep the roofline set but avoid explicit flop_count_* metrics that are
   # unavailable/unstable on GA102 with certain NCU versions.
   set: roofline
+  # Kernel name matching base for regex (maps to --kernel-name-base)
+  kernel_name_base: demangled
   # Informative sections for GA102 per our KB
   sections:
     - SpeedOfLight

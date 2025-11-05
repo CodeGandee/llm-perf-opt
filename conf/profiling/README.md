@@ -15,6 +15,7 @@ Nsight Compute (`profiling/ncu/*`)
   - `ncu_cli.sections`: YAML list of NCU sections (e.g., SpeedOfLight, ComputeWorkloadAnalysis, ...).
   - `ncu_cli.export.csv`: boolean, request CSV-friendly exports (tooling-defined).
   - `ncu_cli.force_overwrite`: boolean, when true pass `--force-overwrite` to overwrite existing outputs.
+  - `ncu_cli.kernel_name_base`: string, one of {`demangled`, `mangled`} → `--kernel-name-base`.
   - Defaults: the `ncu.default` preset mirrors the scripts’ behavior but explicitly hard-codes both sections and a concise metrics list:
     - sections: [SpeedOfLight, MemoryWorkloadAnalysis, Occupancy, SchedulerStats]
     - metrics: [flop_count_hp, flop_count_sp, gpu__time_duration.sum, sm__throughput.avg.pct_of_peak_sustained_elapsed, dram__throughput.avg.pct_of_peak_sustained_elapsed]

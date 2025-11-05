@@ -84,6 +84,7 @@ def build_ncu_cmd(
     sections: Optional[_Seq[str]] = None,
     target_processes: Optional[str] = "all",
     force_overwrite: bool = False,
+    kernel_name_base: str = "demangled",
 ) -> list[str]:
     """Build an argv list for `ncu` focused on roofline metrics.
 
@@ -137,7 +138,7 @@ def build_ncu_cmd(
     if kernel_regex:
         cmd += [
             "--kernel-name-base",
-            "demangled",
+            str(kernel_name_base or "demangled"),
             "--kernel-name",
             str(kernel_regex),
         ]

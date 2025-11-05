@@ -18,6 +18,9 @@ ncu_cli:
   # Section preset
   set: roofline           # Built-in NCU preset for roofline/SpeedOfLight analyses
 
+  # Kernel name matching base for regex (maps to --kernel-name-base)
+  kernel_name_base: demangled
+
   # Metrics to collect (concise, device-portable set)
   metrics:
     - flop_count_hp       # Half-precision floating-point operation count

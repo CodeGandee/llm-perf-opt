@@ -8,6 +8,8 @@ ncu_cli:
   nvtx:
     include: decode*
   set: roofline
+  # Kernel name matching base for regex (maps to --kernel-name-base)
+  kernel_name_base: demangled
   # Focused sections for compute-bound analysis
   sections:
     - SpeedOfLight

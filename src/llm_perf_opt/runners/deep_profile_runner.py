@@ -316,6 +316,11 @@ def main(cfg: DictConfig) -> None:  # pragma: no cover - CLI orchestrator
         ncu_force = bool(getattr(ncu_cli, "force_overwrite", True))
     except Exception:
         ncu_force = True
+    # kernel name base (regex base), default demangled
+    try:
+        ncu_kernel_name_base = str(getattr(ncu_cli, "kernel_name_base", "demangled"))
+    except Exception:
+        ncu_kernel_name_base = "demangled"
 
     if bool(getattr(getattr(cfg, "pipeline", {}), "ncu", {}).get("enable", False)):
         ncu_cmd = build_ncu_cmd(
@@ -330,6 +335,7 @@ def main(cfg: DictConfig) -> None:  # pragma: no cover - CLI orchestrator
             sections=ncu_sections,
             target_processes=ncu_target_procs,
             force_overwrite=ncu_force,
+            kernel_name_base=ncu_kernel_name_base,
         )
         # Persist the constructed NCU command as well
         try:
@@ -375,6 +381,7 @@ def main(cfg: DictConfig) -> None:  # pragma: no cover - CLI orchestrator
                     sections=None,
                     target_processes=ncu_target_procs,
                     force_overwrite=ncu_force,
+                    kernel_name_base=ncu_kernel_name_base,
                 )
                 subprocess.run(ncu_cmd2, check=False)
                 try:
