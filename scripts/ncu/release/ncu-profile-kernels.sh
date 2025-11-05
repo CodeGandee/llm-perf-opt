@@ -1,15 +1,72 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-# Nsight Compute kernel profiler with flexible kernel selection (Bash version)
+# Nsight Compute Kernel Profiler (Bash)
 #
-# This script profiles CUDA kernels using NVIDIA Nsight Compute (ncu) with support
-# for both single kernel regex patterns and batch profiling from YAML configs.
+# Synopsis:
+#   scripts/ncu/release/ncu-profile-kernels.sh [options] -- <launch-command> [launch-args]
 #
-# Usage:
-#   ncu-profile-kernels.sh [options] -- <launch-command> [launch-args]
+# Description:
+#   Profiles CUDA kernels with NVIDIA Nsight Compute (ncu). Works with any console
+#   command (Python, compiled binary, or shell). Supports single-regex and YAML batch
+#   modes. Outputs are written per kernel under:
+#     <output-dir>/kernel_<rank>_<md5(kernel-name)>/ncu.*
+#   where <rank> is zero‑padded to max(4, len(total_kernels)).
 #
-# Based on NVIDIA best practices from nsight-compute CLI docs
+# Requirements:
+#   - ncu on PATH (Nsight Compute CLI)
+#   - For --kernel-config mode: 'yq' (mikefarah, Go) or Python 3 with ruamel.yaml/pyyaml
+#     and jq (recommended) or Python for JSON parsing
+#   - Recommended: run inside Pixi env for CUDA/PyTorch toolchain
+#       pixi run -e <env> ./scripts/ncu/release/ncu-profile-kernels.sh ...
+#
+# Options (common):
+#   --kernel-config <yaml>         YAML listing kernels with 'name' and 'regex'
+#   --kernel-regex <regex>         Single demangled-name regex to match kernels
+#   --output-dir <dir>             Defaults to tmp/ncu-profile/<timestamp>
+#   --topk <K>                     First K kernels from YAML (with --kernel-config)
+#   --extra-sections <s...>        Extra NCU sections beyond defaults
+#   --num-kernel-call-skip <N>     Skip first N kernel invocations (default: 200)
+#   --num-kernel-call-profile <M>  Profile M invocations after skipping (default: 1)
+#   --force-overwrite              Overwrite existing reports
+#   --                             Separator before target launch command
+#
+# Default sections:
+#   SpeedOfLight, MemoryWorkloadAnalysis, Occupancy, SchedulerStats
+#
+# Examples:
+#   # Profile single kernel (Python module)
+#   pixi run -e rtx5090 ./scripts/ncu/release/ncu-profile-kernels.sh \
+#     --kernel-regex 'flash_fwd.*' -- \
+#     python -m llm_perf_opt.runners.llm_profile_runner device=cuda:0
+#
+#   # Batch from YAML (limit to top 3) and add SourceCounters
+#   pixi run -e rtx5090 ./scripts/ncu/release/ncu-profile-kernels.sh \
+#     --kernel-config scripts/ncu/examples/top-10-kernels.yaml \
+#     --topk 3 --extra-sections SourceCounters -- \
+#     ./bin/infer --device cuda:0 --model deepseek-ocr
+#
+#   # C++ binary with custom sampling
+#   ./scripts/ncu/release/ncu-profile-kernels.sh \
+#     --kernel-regex 'my_kernel_.*' --num-kernel-call-skip 500 --num-kernel-call-profile 5 -- \
+#     /path/to/app --arg1
+#
+# Output layout:
+#   <output-dir>/
+#     command.yaml
+#     kernel_0001_<md5>/
+#       ncu.ncu-rep
+#       ncu.section_<Section>.csv
+#       ncu.details.csv
+#
+# Tips:
+#   - Quote regex to avoid shell globbing
+#   - Set NO_COLOR=1 to disable colored logs
+#   - Use -- to terminate profiler options; everything after is passed as-is to target
+#
+# Run with -h for on-demand help.
+
+# Based on NVIDIA best practices from Nsight Compute CLI docs
 
 # --- Color logging ---
 if [[ -t 1 && -z "${NO_COLOR:-}" && "${TERM:-}" != "dumb" ]]; then
