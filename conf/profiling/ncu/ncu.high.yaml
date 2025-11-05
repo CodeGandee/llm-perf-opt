@@ -42,7 +42,6 @@ ncu_cli:
     - InstructionStats        # Instruction mix and counts
 
   # Advanced NCU CLI controls (script-managed per-kernel; shown for reference)
-  # kernel_name_base: demangled   # => --kernel-name-base demangled
   # kernel_name: regex:...        # => --kernel-name regex:<pattern> (per kernel)
   # launch_skip: 200              # => --launch-skip <N> (script default 200)
   # launch_count: 1               # => --launch-count <M> (script default 1)
