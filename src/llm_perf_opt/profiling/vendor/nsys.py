@@ -14,12 +14,12 @@ def build_nsys_cmd(
     *,
     trace: str = "cuda,nvtx,osrt",
     sample: str = "none",
-    capture: str = "nvtx",
+    capture: str = "none",
     capture_end: str | None = None,
-    nvtx_capture: str = "decode",
+    nvtx_capture: str = "none",
     enable_nonregistered_nvtx: bool = True,
 ) -> list[str]:
-    """Build an argv list for `nsys profile` with NVTX gating.
+    """Build an argv list for `nsys profile` (no NVTX gating by default).
 
     Parameters
     ----------
@@ -32,9 +32,11 @@ def build_nsys_cmd(
     sample : str, optional
         CPU sampling mode. "none" recommended for lower overhead in GPU focus.
     capture : str, optional
-        Capture range selector. "nvtx" to gate by NVTX ranges.
+        Capture range selector. Default "none" captures the whole run. Use "nvtx"
+        to gate by NVTX ranges if you provide an `nvtx_capture` expression.
     nvtx_capture : str, optional
         NVTX capture expression (e.g., "decode", "prefill", or "decode@*").
+        Defaults to "none" (no NVTX gating argument will be passed).
     enable_nonregistered_nvtx : bool, optional
         When True, pass `--env-var=NSYS_NVTX_PROFILER_REGISTER_ONLY=0` to allow
         non-registered NVTX strings (common in Python). Recommended when using
