@@ -24,10 +24,10 @@ set -euo pipefail
 #   TOPK=5 ./test-ncu-profile.sh --bash         # override topk
 
 # --- Configuration ---
-TOPK=${TOPK:-3}
+TOPK=${TOPK:-5}
 KERNEL_CONFIG="scripts/ncu/examples/top-10-kernels.yaml"
 LAUNCH_SKIP=${LAUNCH_SKIP:-50}
-LAUNCH_COUNT=${LAUNCH_COUNT:-1}
+LAUNCH_COUNT=${LAUNCH_COUNT:-10}
 PIXI_ENV=${PIXI_ENV:-rtx5090}
 MAX_NEW_TOKENS=${MAX_NEW_TOKENS:-64}
 NUM_SAMPLES=${NUM_SAMPLES:-1}

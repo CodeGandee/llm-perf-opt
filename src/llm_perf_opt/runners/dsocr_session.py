@@ -182,7 +182,7 @@ class DeepSeekOCRSession:
         _attach(getattr(core, "projector", None), "projector")
 
     @torch.inference_mode()
-    def run_inference(
+    def run_inference_generate(
         self,
         image_path: str,
         prompt: str,
@@ -191,11 +191,11 @@ class DeepSeekOCRSession:
         preprocess: Optional[dict] = None,
         infer: Optional[dict] = None,
     ) -> dict:
-        """Run NVTX‑segmented inference on a single image.
+        """Legacy single-call generate path (kept for reference).
 
-        For Stage‑1 we prefer a single‑call ``generate()`` path that preserves
-        NVTX segmentation visibility without relying on vendor monolithic
-        ``infer(...)`` helpers.
+        This version uses ``self.m_model.generate(...)`` to do both prefill and
+        decode in one call, which makes separate prefill/decode profiling
+        impossible. Retained for reference and A/B comparison.
 
         Parameters
         ----------
@@ -391,7 +391,7 @@ class DeepSeekOCRSession:
             images_seq_mask = None
             input_ids = self.m_tokenizer(prompt, return_tensors="pt").to(self.m_device)["input_ids"]
 
-        # Prefill: vendor generate does not do a separate prefill pass; align for parity
+        # Prefill: skipped here to match vendor generate parity
         t0 = perf_counter()
         self._reset_stage_time_accum()
         with prefill_range():
@@ -459,6 +459,315 @@ class DeepSeekOCRSession:
             tokens,
             (tokens / (decode_ms / 1000.0)) if decode_ms > 0 else 0.0,
         )
+        result: dict[str, object] = {
+            "prefill_ms": float(prefill_ms),
+            "decode_ms": float(decode_ms),
+            "tokens": int(tokens),
+            "prefill_len": int(input_len),
+            "vision_ms": float(vision_ms),
+        }
+        # Include sub-stage timings if available from NVTX hooks
+        try:
+            result["sam_ms"] = float(self.m_stage_time_ms.get("sam", 0.0))
+            result["clip_ms"] = float(self.m_stage_time_ms.get("clip", 0.0))
+            result["projector_ms"] = float(self.m_stage_time_ms.get("projector", 0.0))
+        except Exception:
+            pass
+        if return_text and text is not None:
+            result["text"] = text
+        return result
+
+    @torch.inference_mode()
+    def run_inference(
+        self,
+        image_path: str,
+        prompt: str,
+        max_new_tokens: Optional[int] = 64,
+        return_text: bool = False,
+        preprocess: Optional[dict] = None,
+        infer: Optional[dict] = None,
+    ) -> dict:
+        """Run NVTX‑segmented inference with explicit prefill + decode.
+
+        Refactored to split prefill (forward pass with vision fusion and cache
+        build) from decode (token-by-token loop using the KV cache). This
+        enables separate profiling of prefill vs decode while keeping the
+        original preprocessing and NVTX vision sub-stage hooks.
+
+        Parameters
+        ----------
+        image_path : str
+            Path to the input image (absolute or relative to CWD).
+        prompt : str
+            User prompt (normalized to the vendor conversation template).
+        max_new_tokens : int, optional
+            Maximum number of decode steps. If None, falls back to 8192.
+        return_text : bool, optional
+            Include decoded text in the result.
+        preprocess : dict, optional
+            Preprocess controls: enable, base_size, image_size, crop_mode,
+            patch_size, downsample_ratio.
+        infer : dict, optional
+            Decode controls: temperature, do_sample, top_k, top_p,
+            no_repeat_ngram_size (best-effort support).
+        """
+
+        if self.m_model is None or self.m_tokenizer is None or self.m_device is None:
+            raise RuntimeError("Session is not initialized. Use from_local() first.")
+
+        logger = logging.getLogger(__name__)
+        img_abs = str(Path(image_path).resolve())
+        logger.info(
+            "Session inference start (split) | image=%s max_new_tokens=%s",
+            img_abs,
+            ("inf" if max_new_tokens is None else str(int(max_new_tokens))),
+        )
+
+        # Build inputs: either full preprocessing (default) or placeholder path
+        use_pre = True
+        base_size = 1024
+        image_size = 640
+        crop_mode = False
+        patch_size = 16
+        downsample_ratio = 4
+        if preprocess is not None:
+            use_pre = bool(preprocess.get("enable", True))
+            base_size = int(preprocess.get("base_size", base_size))
+            image_size = int(preprocess.get("image_size", image_size))
+            crop_mode = bool(preprocess.get("crop_mode", crop_mode))
+            patch_size = int(preprocess.get("patch_size", patch_size))
+            downsample_ratio = int(preprocess.get("downsample_ratio", downsample_ratio))
+
+        # Normalize prompt to vendor-equivalent composition
+        prompt = self._build_dsocr_prompt(prompt)
+
+        if use_pre:
+            # Load and normalize image
+            from PIL import Image, ImageOps  # local import to avoid hard dep at import time
+            from torchvision import transforms  # type: ignore[import-untyped]
+
+            img = Image.open(img_abs).convert("RGB")
+            img = ImageOps.exif_transpose(img)
+            mean = (0.5, 0.5, 0.5)
+            tfm = transforms.Compose([
+                transforms.ToTensor(),
+                transforms.Normalize(mean=mean, std=mean),
+            ])
+
+            # Global padded view -> BF16 tensor
+            global_view = ImageOps.pad(img, (base_size, base_size), color=tuple(int(x * 255) for x in mean))
+            images_ori = tfm(global_view).to(self.m_dtype or torch.bfloat16)
+            images_ori = images_ori.unsqueeze(0).to(self.m_device)  # [1,3,H,W]
+
+            # Local crops (optional via crop_mode)
+            images_spatial_crop = torch.tensor([[1, 1]], dtype=torch.long)
+            if crop_mode:
+                orig_w, orig_h = img.size
+                aspect_ratio = orig_w / float(orig_h)
+                # Candidate ratios where blocks in [2..9]
+                target_ratios = sorted({
+                    (i, j)
+                    for n in range(2, 10)
+                    for i in range(1, n + 1)
+                    for j in range(1, n + 1)
+                    if (i * j) <= 9 and (i * j) >= 2
+                }, key=lambda x: x[0] * x[1])
+
+                def _closest_ratio(ratio_list: list[tuple[int, int]]) -> tuple[int, int]:
+                    best = (1, 1)
+                    best_diff = float("inf")
+                    area = orig_w * orig_h
+                    for (w_r, h_r) in ratio_list:
+                        target_ar = w_r / float(h_r)
+                        diff = abs(aspect_ratio - target_ar)
+                        if diff < best_diff:
+                            best = (w_r, h_r)
+                            best_diff = diff
+                        elif diff == best_diff:
+                            if area > 0.5 * image_size * image_size * w_r * h_r:
+                                best = (w_r, h_r)
+                    return best
+
+                w_crop, h_crop = _closest_ratio(target_ratios)
+                target_w = image_size * w_crop
+                target_h = image_size * h_crop
+                resized = img.resize((target_w, target_h))
+                crops = []
+                for i in range(w_crop * h_crop):
+                    c = i % (target_w // image_size)
+                    r = i // (target_w // image_size)
+                    box = (c * image_size, r * image_size, (c + 1) * image_size, (r + 1) * image_size)
+                    crops.append(resized.crop(box))
+                images_spatial_crop = torch.tensor([[w_crop, h_crop]], dtype=torch.long)
+                crop_tensors = [tfm(c).to(self.m_dtype or torch.bfloat16) for c in crops]
+                images_crop = (
+                    torch.stack(crop_tensors, dim=0).to(self.m_device)
+                    if crop_tensors
+                    else torch.zeros((1, 3, base_size, base_size), dtype=self.m_dtype or torch.bfloat16, device=self.m_device)
+                )
+            else:
+                images_crop = torch.zeros((1, 3, base_size, base_size), dtype=self.m_dtype or torch.bfloat16, device=self.m_device)
+                w_crop = h_crop = 1
+            images = [(images_crop, images_ori)]
+
+            # Build input_ids and images_seq_mask aligned to <image> span
+            IMAGE_TOKEN_ID = 128815
+            text_splits = prompt.split("<image>")
+            tokenized_str: list[int] = []
+            mask_list: list[bool] = []
+
+            for text_piece in text_splits[:-1]:
+                toks = self.m_tokenizer.encode(text_piece, add_special_tokens=False)
+                tokenized_str += toks
+                mask_list += [False] * len(toks)
+
+                import math as _math
+                num_queries = _math.ceil((image_size // patch_size) / downsample_ratio)
+                num_queries_base = _math.ceil((base_size // patch_size) / downsample_ratio)
+                # Base tokens (global view)
+                tokenized_image = ([IMAGE_TOKEN_ID] * num_queries_base + [IMAGE_TOKEN_ID]) * num_queries_base
+                tokenized_image += [IMAGE_TOKEN_ID]
+                # Local crops (if any)
+                if crop_mode and (w_crop > 1 or h_crop > 1):
+                    tokenized_image += (
+                        ([IMAGE_TOKEN_ID] * (num_queries * w_crop) + [IMAGE_TOKEN_ID]) * (num_queries * h_crop)
+                    )
+                tokenized_str += tokenized_image
+                mask_list += [True] * len(tokenized_image)
+
+            toks_tail = self.m_tokenizer.encode(text_splits[-1], add_special_tokens=False)
+            tokenized_str = [0] + tokenized_str + toks_tail  # BOS=0
+            mask_list = [False] + mask_list + [False] * len(toks_tail)
+
+            input_ids = torch.tensor(tokenized_str, dtype=torch.long, device=self.m_device).unsqueeze(0)
+            images_seq_mask = torch.tensor(mask_list, dtype=torch.bool, device=self.m_device).unsqueeze(0)
+            attention_mask = torch.ones_like(input_ids, dtype=torch.long, device=self.m_device)
+
+            try:
+                logger.info(
+                    "Preprocess | base=%d img=%d crop=%s grid=%dx%d input_len=%d",
+                    int(base_size), int(image_size), str(bool(crop_mode)), int(w_crop), int(h_crop), int(input_ids.shape[-1])
+                )
+            except Exception:
+                pass
+        else:
+            # Placeholder tensors (no vision fusion)
+            zeros_ori = torch.zeros((1, 3, 640, 640), dtype=self.m_dtype or torch.bfloat16, device=self.m_device)
+            zeros_crop = torch.zeros((1, 3, 1024, 1024), dtype=self.m_dtype or torch.bfloat16, device=self.m_device)
+            images = [(zeros_crop, zeros_ori)]
+            images_spatial_crop = torch.zeros((1, 2), dtype=torch.long)
+            images_seq_mask = None
+            input_ids = self.m_tokenizer(prompt, return_tensors="pt").to(self.m_device)["input_ids"]
+            attention_mask = torch.ones_like(input_ids, dtype=torch.long, device=self.m_device)
+
+        # Prefill forward pass (build KV cache, run vision modules)
+        t0 = perf_counter()
+        self._reset_stage_time_accum()
+        with prefill_range():
+            # Vendor expects images_spatial_crop on CPU
+            try:
+                _spatial = images_spatial_crop.to(dtype=torch.long, device=torch.device("cpu")) if isinstance(images_spatial_crop, torch.Tensor) else images_spatial_crop
+            except Exception:
+                _spatial = images_spatial_crop
+            try:
+                import contextlib
+                ctx = torch.autocast("cuda", dtype=torch.bfloat16) if str(self.m_device).startswith("cuda") else contextlib.nullcontext()
+            except Exception:
+                import contextlib
+                ctx = contextlib.nullcontext()
+            with ctx:
+                outputs_prefill = self.m_model(
+                    input_ids=input_ids,
+                    attention_mask=attention_mask,
+                    past_key_values=None,
+                    use_cache=True,
+                    images=images,
+                    images_seq_mask=images_seq_mask,
+                    images_spatial_crop=_spatial,
+                    return_dict=True,
+                )
+        prefill_ms = (perf_counter() - t0) * 1000.0
+
+        # Seed decode
+        last_logits = outputs_prefill.logits[:, -1, :]
+        eos_id = getattr(self.m_tokenizer, "eos_token_id", None)
+
+        def _sample_next(logits: torch.Tensor) -> torch.Tensor:
+            # Minimal sampling support honoring infer controls
+            if not infer or not bool(infer.get("do_sample", False)):
+                return torch.argmax(logits, dim=-1)
+            temperature = float(infer.get("temperature", 1.0) or 1.0)
+            top_k = int(infer.get("top_k", 0) or 0)
+            top_p = float(infer.get("top_p", 1.0) or 1.0)
+            logits = logits / max(1e-6, temperature)
+            probs = torch.softmax(logits, dim=-1)
+            # top-k filtering (optional)
+            if top_k > 0:
+                kth = torch.topk(probs, k=top_k, dim=-1).values[:, -1].unsqueeze(-1)
+                probs = torch.where(probs >= kth, probs, torch.zeros_like(probs))
+            # top-p (nucleus) filtering (optional)
+            if top_p < 1.0:
+                sorted_probs, sorted_idx = torch.sort(probs, descending=True, dim=-1)
+                cumsum = torch.cumsum(sorted_probs, dim=-1)
+                mask = cumsum <= top_p
+                # ensure at least one token
+                mask[:, 0] = True
+                filtered = torch.where(mask, sorted_probs, torch.zeros_like(sorted_probs))
+                # scatter back to original indices
+                probs = torch.zeros_like(probs).scatter(-1, sorted_idx, filtered)
+            # renormalize
+            probs = probs / (probs.sum(dim=-1, keepdim=True) + 1e-9)
+            return torch.multinomial(probs, num_samples=1).squeeze(-1)
+
+        next_token = _sample_next(last_logits)
+        next_input_ids = next_token.unsqueeze(1)
+        past_kv = outputs_prefill.past_key_values
+
+        # Decode loop
+        t1 = perf_counter()
+        with decode_range():
+            generated: list[torch.Tensor] = []
+            max_steps = int(max_new_tokens) if max_new_tokens is not None else int(self._Defaults.UNBOUNDED_DECODE_CEILING.value)
+            for _ in range(max_steps):
+                # extend attention mask for this new token BEFORE prepare_inputs_for_generation
+                attention_mask = torch.cat(
+                    [attention_mask, torch.ones((attention_mask.size(0), 1), dtype=attention_mask.dtype, device=attention_mask.device)],
+                    dim=1,
+                )
+                prepared = self.m_model.prepare_inputs_for_generation(
+                    next_input_ids,
+                    past_key_values=past_kv,
+                    attention_mask=attention_mask,
+                    use_cache=True,
+                )
+                try:
+                    import contextlib
+                    ctx = torch.autocast("cuda", dtype=torch.bfloat16) if str(self.m_device).startswith("cuda") else contextlib.nullcontext()
+                except Exception:
+                    import contextlib
+                    ctx = contextlib.nullcontext()
+                with ctx:
+                    out = self.m_model(**prepared, return_dict=True)
+                step_logits = out.logits[:, -1, :]
+                next_token = _sample_next(step_logits)
+                generated.append(next_token)
+                next_input_ids = next_token.unsqueeze(1)
+                past_kv = out.past_key_values
+                if eos_id is not None and (next_token == eos_id).all().item():
+                    break
+        decode_ms = (perf_counter() - t1) * 1000.0
+
+        input_len = int(input_ids.shape[-1])
+        tokens = int(len(generated))
+        vision_ms = float(self.get_vision_time_ms())
+        text: str | None = None
+        if return_text and tokens > 0:
+            try:
+                gen_ids = torch.stack(generated, dim=1)[0].tolist()
+                text = self.m_tokenizer.decode(gen_ids, skip_special_tokens=False)
+            except Exception:
+                text = None
+
         result: dict[str, object] = {
             "prefill_ms": float(prefill_ms),
             "decode_ms": float(decode_ms),
