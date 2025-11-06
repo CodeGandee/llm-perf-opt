@@ -224,3 +224,12 @@ python tests/manual/ncu/manual_nvtx_regions.py --device cpu
 - Spec: `specs/003-nvtx-ncu-profiling/spec.md`
 - Tasks: `specs/003-nvtx-ncu-profiling/tasks.md`
 - NVTX helpers: `src/llm_perf_opt/profiling/nvtx_utils.py`
+
+## Summary
+
+- Implemented dummy models package with `ShallowResNet` and NVTX‑annotated forward.
+- Added factory `get_model("dummy_shallow_resnet")` for easy instantiation.
+- Created manual script `tests/manual/ncu/manual_nvtx_regions.py` emitting ranges A, A::A1, B.
+- Added Hydra configs under `conf/model/dummy_shallow_resnet/{arch,infer}/` for selection via overrides.
+- Inserted docs stubs in `docs/running.md` and `docs/configuration.md` to reference dummy usage and NCU CLI mapping.
+- Verified import and a CPU run of the manual NVTX script; ready for Phase 2 integration.
