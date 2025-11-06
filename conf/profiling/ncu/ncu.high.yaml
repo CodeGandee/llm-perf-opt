@@ -8,6 +8,8 @@ description: High‑coverage Nsight Compute preset (default metrics + union of G
 ncu_cli:
   # Profile all child processes by default (matches `--target-processes all`).
   target_processes: all
+  # Default replay mode (kernel-level). Override as needed for NVTX aggregation.
+  replay_mode: kernel
 
   # Optional NVTX gating
   # By default, do not limit profiling to a particular NVTX tag.

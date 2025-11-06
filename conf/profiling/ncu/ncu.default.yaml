@@ -7,6 +7,8 @@ description: Default Nsight Compute preset aligned with script defaults
 ncu_cli:
   # Profile all child processes by default (matches `--target-processes all`).
   target_processes: all
+  # Default replay mode (kernel-level). Override with 'range' or 'app-range' for NVTX aggregation.
+  replay_mode: kernel
 
   # Optional NVTX gating
   # By default, do not limit profiling to a particular NVTX tag.

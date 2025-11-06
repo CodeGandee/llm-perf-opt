@@ -280,6 +280,11 @@ def main(cfg: DictConfig) -> None:  # pragma: no cover - CLI orchestrator
         ncu_set = str(getattr(ncu_cli, "set", "roofline"))
     except Exception:
         ncu_set = "roofline"
+    # Replay mode for Nsight Compute (kernel|range|app-range|application)
+    try:
+        ncu_replay_mode = str(getattr(ncu_cli, "replay_mode", "kernel"))
+    except Exception:
+        ncu_replay_mode = "kernel"
     # metrics may be list[str] or None
     try:
         ncu_metrics = getattr(ncu_cli, "metrics", None)
@@ -323,6 +328,7 @@ def main(cfg: DictConfig) -> None:  # pragma: no cover - CLI orchestrator
             target_processes=ncu_target_procs,
             force_overwrite=ncu_force,
             kernel_name_base=ncu_kernel_name_base,
+            replay_mode=ncu_replay_mode,
         )
         # Persist the constructed NCU command as well
         try:

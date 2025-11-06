@@ -85,6 +85,7 @@ def build_ncu_cmd(
     target_processes: Optional[str] = "all",
     force_overwrite: bool = False,
     kernel_name_base: str = "demangled",
+    replay_mode: str | None = None,
 ) -> list[str]:
     """Build an argv list for `ncu` focused on roofline metrics.
 
@@ -123,6 +124,9 @@ def build_ncu_cmd(
         cmd += ["--target-processes", str(target_processes)]
     if set_name:
         cmd += ["--set", str(set_name)]
+    # Replay mode controls how NCU replays to collect requested data
+    if replay_mode:
+        cmd += ["--replay-mode", str(replay_mode)]
     # Normalize metrics (list or str) then filter for device compatibility; allow None to skip --metrics entirely
     met = _filter_metrics(_normalize_metrics_csv(metrics))
     if met:

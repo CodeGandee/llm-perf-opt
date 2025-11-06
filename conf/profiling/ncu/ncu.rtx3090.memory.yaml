@@ -5,6 +5,7 @@ description: Nsight Compute preset for RTX 3090 (GA102) — memory bound focus
 # New structured schema: all Nsight Compute arguments live under `ncu_cli`.
 ncu_cli:
   target_processes: all
+  replay_mode: kernel
   nvtx:
     include: decode*
   set: roofline

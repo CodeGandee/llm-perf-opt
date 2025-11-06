@@ -147,3 +147,15 @@ PY
 ## References
 - Spec: `specs/003-nvtx-ncu-profiling/spec.md`
 - Tasks: `specs/003-nvtx-ncu-profiling/tasks.md`
+
+## Summary
+
+- Added attrs data models `NCUProfileRegion` and `NCUProfileRegionReport` in `src/llm_perf_opt/data/ncu_regions.py` with full typing and module docstrings.
+- Extended `build_ncu_cmd` to accept `replay_mode` and mapped it to `--replay-mode` in `src/llm_perf_opt/profiling/vendor/ncu.py`.
+- Updated presets to include `ncu_cli.replay_mode: kernel` in:
+  - `conf/profiling/ncu/ncu.default.yaml`
+  - `conf/profiling/ncu/ncu.high.yaml`
+  - `conf/profiling/ncu/ncu.rtx3090.yaml`
+  - `conf/profiling/ncu/ncu.rtx3090.compute.yaml`
+  - `conf/profiling/ncu/ncu.rtx3090.memory.yaml`
+- Wired `replay_mode` read-through in the Stage‑2 runner and pass-through to the NCU builder to complete the foundational plumbing.

@@ -56,11 +56,11 @@ model/dummy_shallow_resnet/infer@infer=dummy_shallow_resnet.default
 
 **Purpose**: Core data models and config/CLI plumbing required by all stories
 
-- [ ] T007 [P] Create attrs data models `NCUProfileRegion` and `NCUProfileRegionReport` in `/workspace/code/llm-perf-opt/src/llm_perf_opt/data/ncu_regions.py`
-- [ ] T008 [P] Extend NCU command builder with `replay_mode` (map to `--replay-mode`) in `/workspace/code/llm-perf-opt/src/llm_perf_opt/profiling/vendor/ncu.py`
-- [ ] T009 [P] Add `ncu_cli.replay_mode: kernel` default to `/workspace/code/llm-perf-opt/conf/profiling/ncu/ncu.default.yaml`
-- [ ] T010 [P] Add `ncu_cli.replay_mode: kernel` default to `/workspace/code/llm-perf-opt/conf/profiling/ncu/ncu.high.yaml`
-- [ ] T011 [P] Add `ncu_cli.replay_mode: kernel` default to `/workspace/code/llm-perf-opt/conf/profiling/ncu/ncu.rtx3090.yaml` (and related variants)
+ - [X] T007 [P] Create attrs data models `NCUProfileRegion` and `NCUProfileRegionReport` in `/workspace/code/llm-perf-opt/src/llm_perf_opt/data/ncu_regions.py`
+ - [X] T008 [P] Extend NCU command builder with `replay_mode` (map to `--replay-mode`) in `/workspace/code/llm-perf-opt/src/llm_perf_opt/profiling/vendor/ncu.py`
+ - [X] T009 [P] Add `ncu_cli.replay_mode: kernel` default to `/workspace/code/llm-perf-opt/conf/profiling/ncu/ncu.default.yaml`
+ - [X] T010 [P] Add `ncu_cli.replay_mode: kernel` default to `/workspace/code/llm-perf-opt/conf/profiling/ncu/ncu.high.yaml`
+ - [X] T011 [P] Add `ncu_cli.replay_mode: kernel` default to `/workspace/code/llm-perf-opt/conf/profiling/ncu/ncu.rtx3090.yaml` (and related variants)
 
 **Checkpoint**: Foundation ready – user story implementation can begin
 
