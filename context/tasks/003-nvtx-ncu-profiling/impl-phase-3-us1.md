@@ -212,3 +212,18 @@ sed -n '1,60p' tmp/profile-output/*/ncu/regions/report.md
 ## References
 - Spec: `specs/003-nvtx-ncu-profiling/spec.md`
 - Tasks: `specs/003-nvtx-ncu-profiling/tasks.md`
+
+## Summary
+
+This phase implements User Story 1 (NVTX range replay) end‑to‑end:
+
+- Scope: Enable Nsight Compute range replay, organize per‑region artifacts under `ncu/regions/<sanitized>/`, and produce consolidated `report.{md,json}`.
+- Files created: `src/llm_perf_opt/profiling/regions.py`, `src/llm_perf_opt/profiling/export_regions.py`.
+- Files modified: `src/llm_perf_opt/runners/deep_profile_runner.py`, `src/llm_perf_opt/profiling/artifacts.py`, `docs/running.md`.
+- Public APIs: `assemble_region_reports(rows, ...)`, `export_region_reports(artifacts, reports)`, `sanitize_region_label()`, `sanitized_region_dir()`.
+- Behavior: When `pipeline.ncu.ncu_cli.replay_mode in {range, app-range}`
+  - Run NCU with `--csv --log-file` → parse rows → group by NVTX range → export consolidated + per‑region structure.
+  - Fallback: If CSV is unavailable, derive region labels from `ncu_cli.nvtx.include` and materialize minimal structure for verification.
+- Outputs: `ncu/regions/<Region>/`, `ncu/regions/report.json`, `ncu/regions/report.md`, and optional per‑region `sections.txt` when available.
+- Testing: Use `tests/manual/ncu/manual_nvtx_regions.py` with dummy model presets to validate directories and consolidated reports are present.
+- Next: US2 adds per‑region kernel include/exclude filters; US3 integrates configurable sections/metrics into regional exports.

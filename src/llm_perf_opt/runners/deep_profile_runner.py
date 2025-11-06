@@ -51,6 +51,16 @@ from llm_perf_opt.profiling.export import (
     write_kernel_markdown,
     write_stakeholder_summary,
 )
+from llm_perf_opt.profiling.regions import (
+    discover_region_labels,
+    build_region_reports,
+    assemble_region_reports,
+)
+from llm_perf_opt.profiling.export_regions import (
+    write_regions_json,
+    write_regions_markdown,
+    export_region_reports,
+)
 
 
 def _collect_inputs_manifest(work_argv: List[str]) -> list[dict]:
@@ -156,8 +166,15 @@ def main(cfg: DictConfig) -> None:  # pragma: no cover - CLI orchestrator
         pass
     # For NSYS/NCU captures, run the internal workload in a temp area, not a user-facing pipeline dir
     workload_dir = artifacts.tmp_dir("workload")
+    # Allow overriding the workload module for Nsight tools to run under.
+    try:
+        _wl_mod = getattr(getattr(cfg, "pipeline", {}), "workload", {}).get("module", None)
+    except Exception:
+        _wl_mod = None
+    work_module = str(_wl_mod) if (_wl_mod and str(_wl_mod).strip()) else "llm_perf_opt.runners.llm_profile_runner"
+
     work = build_work_argv(
-        "llm_perf_opt.runners.llm_profile_runner",
+        work_module,
         overrides,
         hydra_run_dir=str(workload_dir),
         chdir=True,
@@ -252,7 +269,7 @@ def main(cfg: DictConfig) -> None:  # pragma: no cover - CLI orchestrator
             nsys_sqlite_cmd = build_nsys_export_sqlite_cmd(report_path)
             subprocess.run(nsys_sqlite_cmd, check=False)
 
-    # Nsight Compute capture (focus on decode region)
+    # Nsight Compute capture (default per-kernel; range-aware below)
     ncu_out = artifacts.out_dir("ncu") / "decode"
     # Probe available sections once and save to file for debugging/compat
     try:
@@ -270,8 +287,15 @@ def main(cfg: DictConfig) -> None:  # pragma: no cover - CLI orchestrator
     try:
         nvtx_val = getattr(ncu_cli, "nvtx", None)
         nvtx_expr = None
-        if isinstance(nvtx_val, dict):
-            inc = nvtx_val.get("include", None)
+        if nvtx_val is not None:
+            inc = None
+            try:
+                inc = nvtx_val.get("include")  # OmegaConf/DotMap supports .get
+            except Exception:
+                try:
+                    inc = getattr(nvtx_val, "include", None)
+                except Exception:
+                    inc = None
             if inc is not None and str(inc).strip():
                 nvtx_expr = str(inc).strip()
     except Exception:
@@ -315,12 +339,14 @@ def main(cfg: DictConfig) -> None:  # pragma: no cover - CLI orchestrator
         ncu_kernel_name_base = "demangled"
 
     if bool(getattr(getattr(cfg, "pipeline", {}), "ncu", {}).get("enable", False)):
+        # Always define CSV log path for downstream parsing and exports
+        ncu_csv_path = artifacts.out_dir("ncu") / "raw.csv"
         ncu_cmd = build_ncu_cmd(
             ncu_out,
             work,
             nvtx_expr=nvtx_expr,
             kernel_regex=kernel_regex,
-            csv_log=csv_log,
+            csv_log=ncu_csv_path,
             use_nvtx=gating_nvtx_ncu,
             set_name=ncu_set,
             metrics=ncu_metrics,
@@ -337,6 +363,52 @@ def main(cfg: DictConfig) -> None:  # pragma: no cover - CLI orchestrator
         except Exception:
             pass
         subprocess.run(ncu_cmd, check=False)
+
+        # US1 (range replay): prefer CSV-based assembly; fallback to label discovery
+        try:
+            if str(ncu_replay_mode).lower() in {"range", "app-range"}:
+                if ncu_csv_path.exists():
+                    rows = parse_ncu_csv(ncu_csv_path)
+                    reps = assemble_region_reports(rows, device=device_sel)
+                    # If assembly yields only unlabeled/empty, fall back to NVTX include labels
+                    try:
+                        only_unlabeled = (not reps) or all((r.region.name or "").strip() == "(unlabeled)" for r in reps)
+                    except Exception:
+                        only_unlabeled = False
+                    if only_unlabeled:
+                        labels_from_expr = discover_region_labels(nvtx_expr) or ["NVTX@range"]
+                        reps = build_region_reports(labels_from_expr, device=device_sel, process=None)
+                    export_region_reports(artifacts, reps)
+                    # Ensure directories also exist for explicitly requested NVTX labels
+                    try:
+                        labels_from_expr = discover_region_labels(nvtx_expr)
+                        if labels_from_expr:
+                            global_sections = artifacts.path("ncu/sections_report.txt")
+                            for lbl in labels_from_expr:
+                                d = artifacts.region_dir(lbl, create=True)
+                                if global_sections.exists():
+                                    (d / "sections.txt").write_text(global_sections.read_text(encoding="utf-8"), encoding="utf-8")
+                    except Exception:
+                        pass
+                else:
+                    regions_root = artifacts.out_dir("ncu") / "regions"
+                    regions_root.mkdir(parents=True, exist_ok=True)
+                    labels = discover_region_labels(nvtx_expr) or ["NVTX@range"]
+                    # Create per-region dirs and copy sections if present
+                    global_sections = artifacts.path("ncu/sections_report.txt")
+                    for lbl in labels:
+                        d = artifacts.region_dir(lbl, create=True)
+                        try:
+                            if global_sections.exists():
+                                (d / "sections.txt").write_text(global_sections.read_text(encoding="utf-8"), encoding="utf-8")
+                        except Exception:
+                            pass
+                    reps = build_region_reports(labels, device=device_sel, process=None)
+                    write_regions_json(reps, regions_root / "report.json", scope="aggregate")
+                    write_regions_markdown(reps, regions_root / "report.md")
+        except Exception:
+            # Non-fatal: region materialization is best-effort
+            pass
 
     # If sections were requested, import the .ncu-rep and render sections to a text report
     if bool(getattr(getattr(cfg, "pipeline", {}), "ncu", {}).get("enable", False)):

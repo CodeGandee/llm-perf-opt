@@ -27,9 +27,11 @@ class BasicBlock(nn.Module):
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         identity = x
-        with nvtx.range("block.conv1"):
+        # Use nvtx.annotate as a context manager; nvtx.range is not provided by the
+        # Python nvtx package. This ensures Nsight tools can gate on these labels.
+        with nvtx.annotate("block.conv1"):
             out = self.relu(self.bn1(self.conv1(x)))
-        with nvtx.range("block.conv2"):
+        with nvtx.annotate("block.conv2"):
             out = self.bn2(self.conv2(out))
         return self.relu(out + identity)
 
@@ -65,11 +67,10 @@ class ShallowResNet(nn.Module):
         _ = self.forward(x)
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
-        with nvtx.range("stem"):
+        with nvtx.annotate("stem"):
             x = self.stem(x)
-        with nvtx.range("residual"):
+        with nvtx.annotate("residual"):
             x = self.blocks(x)
-        with nvtx.range("head"):
+        with nvtx.annotate("head"):
             x = self.head(x)
         return x
-

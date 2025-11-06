@@ -119,9 +119,30 @@ Typical workflow:
 
 See `scripts/ncu/release/README.md` for detailed usage, options, and examples.
 
-## NVTX Range Replay (stub)
+## NVTX Range Replay (per‑region outputs)
 
 - Use dummy model configs via Hydra overrides for quick verification:
   - `model/dummy_shallow_resnet/arch@model=dummy_shallow_resnet.default`
   - `model/dummy_shallow_resnet/infer@infer=dummy_shallow_resnet.default`
-- Generate NVTX ranges with `tests/manual/ncu/manual_nvtx_regions.py` and profile with Nsight Compute using `pipeline.ncu.ncu_cli.replay_mode=range`.
+
+Profile only NVTX‑marked regions and generate per‑region artifacts with Nsight Compute's range replay:
+
+```bash
+pixi run python -m llm_perf_opt.runners.deep_profile_runner \
+  pipeline.ncu.enable=true pipeline.nsys.enable=false \
+  model/dummy_shallow_resnet/arch@model=dummy_shallow_resnet.default \
+  model/dummy_shallow_resnet/infer@infer=dummy_shallow_resnet.default \
+  pipeline.ncu.ncu_cli.replay_mode=range \
+  pipeline.ncu.ncu_cli.nvtx.include='A;B;A::A1' \
+  device=cuda:0
+```
+
+Expected outputs under `tmp/profile-output/<run_id>/ncu/regions/`:
+- One folder per region label (sanitized), e.g., `A/`, `B/`, `A__A1/`
+- Consolidated `report.json` and `report.md`
+- Per‑region `sections.txt` when NCU sections are requested
+
+Manual validation script:
+```bash
+pixi run python tests/manual/ncu/manual_nvtx_regions.py --regions 'A;B;A::A1'
+```

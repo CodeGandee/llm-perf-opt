@@ -12,10 +12,10 @@ ncu_cli:
   replay_mode: kernel
 
   # Optional NVTX gating
-  # By default, do not limit profiling to a particular NVTX tag.
-  # Uncomment to gate on NVTX ranges (example):
-  # nvtx:
-  #   include: decode*   # Only profile kernels inside NVTX ranges whose name matches 'decode*'
+  # By default, NVTX gating is defined but disabled (include: null).
+  # Override `ncu_cli.nvtx.include` at runtime, e.g., '+pipeline.ncu.ncu_cli.nvtx.include=decode*'
+  nvtx:
+    include: null   # When set, passes --nvtx --nvtx-include <expr>
 
   # Section preset
   set: roofline           # Built-in NCU preset for roofline/SpeedOfLight analyses

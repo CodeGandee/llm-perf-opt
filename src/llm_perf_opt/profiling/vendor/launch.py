@@ -8,6 +8,7 @@ valid keys for the target module's config tree.
 from __future__ import annotations
 
 from typing import Sequence
+import sys
 
 
 def build_work_argv(
@@ -39,7 +40,8 @@ def build_work_argv(
         Complete argv to run the module with the given overrides.
     """
 
-    args = ["python", "-m", module]
+    py = sys.executable or "python"
+    args = [py, "-m", module]
     inj: list[str] = []
     if hydra_run_dir:
         inj.append(f"hydra.run.dir={hydra_run_dir}")

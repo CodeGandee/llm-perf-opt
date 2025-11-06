@@ -152,6 +152,36 @@ class Artifacts:
         p.mkdir(parents=True, exist_ok=True)
         return p
 
+    # -------------------------------
+    # NVTX region path abstractions
+    # -------------------------------
+
+    def region_dir(self, region_label: str, create: bool = True) -> Path:
+        """Return the filesystem directory for an NVTX region under ``ncu/regions``.
+
+        The directory name is a sanitized variant of the provided NVTX label to
+        ensure cross-platform safety. The original label should be preserved in
+        JSON/Markdown exports alongside the sanitized path when needed.
+
+        Parameters
+        ----------
+        region_label : str
+            Original NVTX range label (e.g., ``'A'`` or ``'A::A1'``).
+        create : bool, default True
+            When true, create the directory if it does not exist.
+
+        Returns
+        -------
+        pathlib.Path
+            Absolute path to the region directory under ``ncu/regions``.
+        """
+
+        safe = sanitize_region_label(region_label)
+        base = self.out_dir("ncu") / "regions" / safe
+        if create:
+            base.mkdir(parents=True, exist_ok=True)
+        return base
+
 
 def create_stage2_root(base_dir: Path | str = "tmp/stage2") -> Path:
     """Create and return a new Stage 2 artifacts root.
@@ -219,3 +249,42 @@ def write_inputs_yaml(path: Path, records: list[dict]) -> None:
     payload = {"count": len(records), "inputs": records}
     yml = OmegaConf.to_yaml(payload)
     path.write_text(yml, encoding="utf-8")
+
+
+def sanitize_region_label(label: str) -> str:
+    """Return a filesystem-safe folder name for an NVTX region label.
+
+    Rules:
+    - Replace path separators and whitespace with ``_``
+    - Collapse ``::`` nesting tokens to ``__`` to keep hierarchy readable
+    - Keep alphanumerics, ``.``, ``-``, and ``_``; replace others with ``_``
+
+    Examples
+    --------
+    >>> sanitize_region_label('A::A1')
+    'A__A1'
+    >>> sanitize_region_label('LLM@decode/all')
+    'LLM_decode_all'
+    """
+
+    s = str(label).strip()
+    # Normalize common separators first
+    s = s.replace("::", "__").replace("/", "_").replace("\\", "_")
+    # Replace whitespace with underscores
+    s = "_".join(s.split())
+    # Keep a safe character set
+    safe_chars = set("ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789._-")
+    out = []
+    for ch in s:
+        out.append(ch if ch in safe_chars else "_")
+    # Collapse repeated underscores for neatness
+    import re as _re  # local import to avoid global dependency
+
+    collapsed = _re.sub(r"_+", "_", "".join(out))
+    return collapsed.strip("._") or "region"
+
+
+def sanitized_region_dir(artifacts: Artifacts, name: str) -> Path:
+    """Compatibility helper: return/create ncu/regions/<sanitized(name)> directory."""
+
+    return artifacts.region_dir(name, create=True)

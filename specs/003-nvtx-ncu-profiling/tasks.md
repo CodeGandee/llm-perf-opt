@@ -81,12 +81,12 @@ Run the manual script with 3 ranges (A, B, A::A1) and `pipeline.ncu.ncu_cli.repl
 
 ### Implementation for User Story 1
 
-- [ ] T012 [US1] Implement NVTX range replay and per-range outputs in `/workspace/code/llm-perf-opt/src/llm_perf_opt/runners/deep_profile_runner.py` (handles `replay_mode=range|app-range`, writes to `ncu/regions/<region>/` and consolidated `ncu/regions/`)
-- [ ] T013 [P] [US1] Implement region assembler to build `NCUProfileRegionReport` in `/workspace/code/llm-perf-opt/src/llm_perf_opt/profiling/regions.py`
-- [ ] T014 [P] [US1] Implement region report exporters (Markdown + JSON) in `/workspace/code/llm-perf-opt/src/llm_perf_opt/profiling/export_regions.py`
-- [ ] T015 [P] [US1] Add filesystem-safe region path helper to `/workspace/code/llm-perf-opt/src/llm_perf_opt/profiling/artifacts.py` for `ncu/regions/<sanitized_name>`
-- [ ] T016 [US1] Implement manual test with 3 ranges in `/workspace/code/llm-perf-opt/tests/manual/ncu/manual_nvtx_regions.py` (validate expected files exist)
-- [ ] T017 [US1] Update NVTX range replay examples in `/workspace/code/llm-perf-opt/docs/running.md` (commands + expected outputs under `ncu/regions/`)
+ - [X] T012 [US1] Implement NVTX range replay and per-range outputs in `/workspace/code/llm-perf-opt/src/llm_perf_opt/runners/deep_profile_runner.py` (handles `replay_mode=range|app-range`, writes to `ncu/regions/<region>/` and consolidated `ncu/regions/`)
+ - [X] T013 [P] [US1] Implement region assembler to build `NCUProfileRegionReport` in `/workspace/code/llm-perf-opt/src/llm_perf_opt/profiling/regions.py`
+ - [X] T014 [P] [US1] Implement region report exporters (Markdown + JSON) in `/workspace/code/llm-perf-opt/src/llm_perf_opt/profiling/export_regions.py`
+ - [X] T015 [P] [US1] Add filesystem-safe region path helper to `/workspace/code/llm-perf-opt/src/llm_perf_opt/profiling/artifacts.py` for `ncu/regions/<sanitized_name>`
+ - [X] T016 [US1] Implement manual test with 3 ranges in `/workspace/code/llm-perf-opt/tests/manual/ncu/manual_nvtx_regions.py` (validate expected files exist)
+ - [X] T017 [US1] Update NVTX range replay examples in `/workspace/code/llm-perf-opt/docs/running.md` (commands + expected outputs under `ncu/regions/`)
 
 Parallel execution example: T013, T014, T015 can run in parallel after T007–T008
 
