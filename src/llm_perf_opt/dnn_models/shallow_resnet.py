@@ -31,8 +31,13 @@ class BasicBlock(nn.Module):
         # Python nvtx package. This ensures Nsight tools can gate on these labels.
         with nvtx.annotate("block.conv1"):
             out = self.relu(self.bn1(self.conv1(x)))
+            # Ensure kernels complete inside the NVTX range for NCU range replay
+            if torch.cuda.is_available():
+                torch.cuda.synchronize()
         with nvtx.annotate("block.conv2"):
             out = self.bn2(self.conv2(out))
+            if torch.cuda.is_available():
+                torch.cuda.synchronize()
         return self.relu(out + identity)
 
 
@@ -69,8 +74,14 @@ class ShallowResNet(nn.Module):
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         with nvtx.annotate("stem"):
             x = self.stem(x)
+            if torch.cuda.is_available():
+                torch.cuda.synchronize()
         with nvtx.annotate("residual"):
             x = self.blocks(x)
+            if torch.cuda.is_available():
+                torch.cuda.synchronize()
         with nvtx.annotate("head"):
             x = self.head(x)
+            if torch.cuda.is_available():
+                torch.cuda.synchronize()
         return x
