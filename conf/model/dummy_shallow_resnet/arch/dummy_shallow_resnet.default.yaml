@@ -1,0 +1,12 @@
+description: Dummy shallow ResNet model (arch defaults)
+
+name: dummy_shallow_resnet
+
+# Optional path to on-disk assets (unused for the dummy model)
+path: models/dummy_shallow_resnet
+
+preprocess:
+  enable: false
+  image_size: 64
+  normalize: false
+

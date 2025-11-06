@@ -41,14 +41,14 @@ model/dummy_shallow_resnet/infer@infer=dummy_shallow_resnet.default
 
 **Purpose**: Initial scaffolding including a reusable dummy model for testing/debugging
 
-- [ ] T001 [P] Create package scaffold for dummy models in `/workspace/code/llm-perf-opt/src/llm_perf_opt/dnn_models/__init__.py`; add Hydra config groups for the dummy model under:
+ - [X] T001 [P] Create package scaffold for dummy models in `/workspace/code/llm-perf-opt/src/llm_perf_opt/dnn_models/__init__.py`; add Hydra config groups for the dummy model under:
       - `/workspace/code/llm-perf-opt/conf/model/dummy_shallow_resnet/arch/dummy_shallow_resnet.default.yaml`
       - `/workspace/code/llm-perf-opt/conf/model/dummy_shallow_resnet/infer/dummy_shallow_resnet.default.yaml`
-- [ ] T002 [P] Implement `ShallowResNet` dummy model in `/workspace/code/llm-perf-opt/src/llm_perf_opt/dnn_models/shallow_resnet.py` (few layers, CPU/GPU compatible)
-- [ ] T003 [P] Add model factory `get_model(name)` in `/workspace/code/llm-perf-opt/src/llm_perf_opt/dnn_models/factory.py` (returns `ShallowResNet` by name)
-- [ ] T004 [P] Create manual test scaffold in `/workspace/code/llm-perf-opt/tests/manual/ncu/manual_nvtx_regions.py`
-- [ ] T005 [P] Add "NVTX Range Replay" section stub to `/workspace/code/llm-perf-opt/docs/running.md`
-- [ ] T006 [P] Add "NCU CLI Config Mapping" section stub to `/workspace/code/llm-perf-opt/docs/configuration.md`
+ - [X] T002 [P] Implement `ShallowResNet` dummy model in `/workspace/code/llm-perf-opt/src/llm_perf_opt/dnn_models/shallow_resnet.py` (few layers, CPU/GPU compatible)
+ - [X] T003 [P] Add model factory `get_model(name)` in `/workspace/code/llm-perf-opt/src/llm_perf_opt/dnn_models/factory.py` (returns `ShallowResNet` by name)
+ - [X] T004 [P] Create manual test scaffold in `/workspace/code/llm-perf-opt/tests/manual/ncu/manual_nvtx_regions.py`
+ - [X] T005 [P] Add "NVTX Range Replay" section stub to `/workspace/code/llm-perf-opt/docs/running.md`
+ - [X] T006 [P] Add "NCU CLI Config Mapping" section stub to `/workspace/code/llm-perf-opt/docs/configuration.md`
 
 ---
 

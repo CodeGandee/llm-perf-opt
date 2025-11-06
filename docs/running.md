@@ -118,3 +118,10 @@ Typical workflow:
    ```
 
 See `scripts/ncu/release/README.md` for detailed usage, options, and examples.
+
+## NVTX Range Replay (stub)
+
+- Use dummy model configs via Hydra overrides for quick verification:
+  - `model/dummy_shallow_resnet/arch@model=dummy_shallow_resnet.default`
+  - `model/dummy_shallow_resnet/infer@infer=dummy_shallow_resnet.default`
+- Generate NVTX ranges with `tests/manual/ncu/manual_nvtx_regions.py` and profile with Nsight Compute using `pipeline.ncu.ncu_cli.replay_mode=range`.

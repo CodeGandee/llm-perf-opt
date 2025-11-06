@@ -1,0 +1,7 @@
+description: Dummy shallow ResNet model (inference defaults)
+
+# Inference knobs (present for Hydra consistency; not used by the dummy model)
+dtype: float32
+batch_size: 4
+device: cuda:0
+

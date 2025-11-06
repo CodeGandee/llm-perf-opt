@@ -106,3 +106,11 @@ Nsight Systems (NVTX gating)
 - `pipeline.nsys.capture_range` mirrors the CLI (`nvtx|cudaProfilerApi|hotkey|none`).
 - If `capture_range=nvtx`, you must set `pipeline.nsys.nvtx_capture` (e.g., `prefill`, `decode`, or `name@*`). Omitting it results in no trigger and an empty report; the runner errors to prevent this.
 - Optional: `pipeline.nsys.capture_range_end` supports values like `stop`, `repeat[:N]`, etc. If omitted/empty → not passed.
+
+## NCU CLI Config Mapping (stub)
+
+Quick reference for key Hydra → CLI mappings (see section above for details):
+- `pipeline.ncu.ncu_cli.replay_mode` → `--replay-mode`
+- `pipeline.ncu.ncu_cli.nvtx.include` → `--nvtx --nvtx-include <expr>`
+- `pipeline.ncu.ncu_cli.kernel_name` → `--kernel-name <name|regex:...>`
+- `pipeline.ncu.ncu_cli.kernel_name_base` → `--kernel-name-base <demangled|mangled>`
