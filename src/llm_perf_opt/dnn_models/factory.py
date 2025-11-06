@@ -5,7 +5,7 @@ from __future__ import annotations
 from typing import Literal
 import torch
 
-from .shallow_resnet import ShallowResNet
+from llm_perf_opt.dnn_models.shallow_resnet import ShallowResNet
 
 ModelName = Literal["dummy_shallow_resnet"]
 
@@ -28,4 +28,3 @@ def get_model(name: ModelName, device: str | None = None) -> torch.nn.Module:
     if device is not None:
         model.to(device)
     return model
-
