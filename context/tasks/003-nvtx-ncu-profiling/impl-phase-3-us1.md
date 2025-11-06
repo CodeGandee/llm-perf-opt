@@ -227,3 +227,31 @@ This phase implements User Story 1 (NVTX range replay) end‑to‑end:
 - Outputs: `ncu/regions/<Region>/`, `ncu/regions/report.json`, `ncu/regions/report.md`, and optional per‑region `sections.txt` when available.
 - Testing: Use `tests/manual/ncu/manual_nvtx_regions.py` with dummy model presets to validate directories and consolidated reports are present.
 - Next: US2 adds per‑region kernel include/exclude filters; US3 integrates configurable sections/metrics into regional exports.
+
+### Known Issue: NCU warns "No ranges were profiled"
+
+Context
+- While validating US1 with an NVTX‑annotated dummy workload (ShallowResNet using `nvtx.annotate('stem'|'residual'|'head')`), Nsight Compute sometimes emits:
+
+  `==WARNING== No ranges were profiled.`
+
+What we tried
+- Correct NVTX usage in model: switched to `nvtx.annotate(...)` (Python API) instead of `nvtx.range(...)`.
+- Verified GPU execution (device=cuda:0) and that tensors/models run on GPU.
+- Ensured NVTX gating format correctness:
+  - Incorrect: a single include string with semicolons `'stem;residual;head'` → no match
+  - Correct: single label `--nvtx-include stem` (or repeat the flag for multiple labels)
+- Ensured CSV logging is enabled and workload override points to a tiny NVTX workload.
+
+Observed
+- Even with `--nvtx --nvtx-include stem` and GPU, raw.csv can contain the warning. The consolidated `ncu/regions/report.md` may still show the intended label because our assembler provides a best‑effort fallback to keep artifacts coherent.
+
+Likely reasons (per NVIDIA docs)
+- Range Replay has requirements: ranges must be synchronizable at start, avoid unsupported CUDA API calls, and contain replayable work. Framework execution may schedule kernels outside the strict start/end of the NVTX range or call unsupported APIs within the range, causing NCU to skip profiling that range.
+- NVTX include expressions only match start/end ranges, not arbitrary nested events.
+
+Next steps
+- Try `replay_mode=app-range` with the same `--nvtx --nvtx-include stem` to relax capture constraints for framework workloads.
+- Make ranges clearly cover work: add `torch.cuda.synchronize()` at the end of each NVTX block so kernel launches are definitely inside the range window.
+- Sanity check gating in per‑kernel mode: `replay_mode=kernel` with `--nvtx --nvtx-include stem`; confirm kernels appear in CSV.
+- Enhance the NCU builder to accept multiple include labels by emitting repeated `--nvtx-include` flags when a list is provided.
