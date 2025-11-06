@@ -13,7 +13,7 @@
 
 ```
 # Uses fixed inputs manifest and deep mode
-pixi run stage2-profile -- +run.mode=deep +inputs.manifest=/abs/path/to/inputs.yaml
+pixi run stage2-profile -- +inputs.manifest=/abs/path/to/inputs.yaml
 ```
 
 2) Inspect artifacts (latest run dir under `tmp/profile-output/<run_id>/`):
@@ -43,7 +43,7 @@ pixi run python -c "import torch; print(torch.__version__)"
 - If overhead is high, switch to light mode:
 
 ```
-pixi run stage2-profile -- +run.mode=light
+pixi run stage2-profile
 ```
 
 ### Minimize Stage 1 Overhead (Stage 2)
@@ -52,7 +52,7 @@ When running Stage 2 with Nsight tools, keep the Stage 1 PyTorch profiler as lig
 
 ```
 pixi run stage2-profile -- \
-  +run.mode=deep \
+  \
   +inputs.manifest=/abs/path/to/inputs.yaml \
   pipeline.torch_profiler.enable=false \
   dataset/sampling@dataset.sampling=default \

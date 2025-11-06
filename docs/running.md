@@ -43,6 +43,7 @@ Hydra overrides
 - Use `@model` and `@infer` when selecting model groups, e.g., `model/deepseek_ocr/arch@model=deepseek_ocr.default`.
 - Common toggles:
   - `device=cuda:0`
+  - `use_flash_attn=true|false` (FlashAttention 2 toggling for supported GPUs)
   - `pipeline.torch_profiler.output.prediction.enable=true`
   - `pipeline.torch_profiler.output.visualization.enable=true`
   - `infer.max_new_tokens=<int>` (integer only; e.g., 8192)
@@ -50,13 +51,34 @@ Hydra overrides
  - Disable static analyzer:
    - `pipeline.static_analysis.enable=false`
 
+Model and dataset paths (Stage 2)
+- Stage 2 (deep profiling) no longer hard‑codes model or dataset paths. It resolves absolute paths from Hydra config values:
+  - `cfg.model.path` → absolute via `${hydra:runtime.cwd}` if relative
+  - `cfg.dataset.root` → absolute via `${hydra:runtime.cwd}` if relative
+- Override paths directly on the command line as needed:
+  ```bash
+  pixi run -e rtx5090 python -m llm_perf_opt.runners.deep_profile_runner \
+    model.path=/abs/models/deepseek-ocr \
+    dataset.root=/abs/datasets/OmniDocBench \
+    device=cuda:0 pipeline.nsys.enable=true pipeline.ncu.enable=false
+  ```
+
+NSYS with FlashAttention
+- Ensure you run on GPU (e.g., `device=cuda:0`). FlashAttention may emit warnings during module registration but is supported.
+  ```bash
+  pixi run -e rtx5090 python -m llm_perf_opt.runners.deep_profile_runner \
+    device=cuda:0 use_flash_attn=true pipeline.nsys.enable=true pipeline.ncu.enable=false \
+    dataset.sampling.num_epochs=1 dataset.sampling.num_samples_per_epoch=1 \
+    dataset.subset_filelist=datasets/omnidocbench/subsets/dev-3.txt
+  ```
+
 Where outputs go
 - Hydra run dir defaults to `tmp/profile-output/<run_id>/`.
 - Pipeline outputs:
   - `torch_profiler/`: `report.md`, `operators.md`, `metrics.json`, `llm_profile_runner.log`
   - `static_analysis/`: `static_compute.{json,md}` (when enabled)
-  - `nsys/`: `run.nsys-rep`, `run.sqlite`, `summary_*.csv`, `cmd.txt` (when enabled)
-  - `ncu/`: `raw.csv`, `.ncu-rep`, `sections_report.txt`, `cmd*.txt` (when enabled)
+- `nsys/`: `run.nsys-rep`, `run.sqlite`, `summary_*.csv`, `cmd.txt` (when enabled)
+- `ncu/`: `raw.csv`, `.ncu-rep`, `sections_report.txt`, `cmd*.txt` (when enabled)
 - Reproducibility at run root: `env.json`, `config.yaml`, `inputs.yaml`
 - Optional predictions + viz: `torch_profiler/pred/predictions.jsonl`, `torch_profiler/viz/<hash>/{result_with_boxes.jpg,result.mmd,images/*,info.json}`
 

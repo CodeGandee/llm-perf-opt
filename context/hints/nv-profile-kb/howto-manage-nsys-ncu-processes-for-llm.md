@@ -50,9 +50,9 @@ hydra_overrides = [
     f"hydra.run.dir={art}",
     "hydra.job.chdir=true",
     "device=cuda:0",
-    "repeats=1",
+    "dataset.sampling.num_epochs=1",
+    "dataset.sampling.num_samples_per_epoch=1",
     "torch_profiler.activities=[cpu,cuda]",
-    "+run.mode=deep",
     "+inputs.manifest=/abs/path/to/inputs.yaml",
 ]
 
@@ -100,16 +100,9 @@ defaults:
   - /profiling/ncu@ncu: ncu.default
   - _self_
 
-run:
-  mode: deep          # deep|light
-  top_n_kernels: 30   # used by ncu selection
-
-artifacts:
-  stage2_dir: ${hydra:runtime.cwd}/tmp/stage2/${now:%Y%m%d-%H%M%S}
-
 hydra:
   run:
-    dir: ${artifacts.stage2_dir}
+    dir: ${hydra:runtime.cwd}/tmp/profile-output/${now:%Y%m%d-%H%M%S}
   output_subdir: null
   job:
     chdir: true
@@ -123,7 +116,7 @@ nsys profile --trace=cuda,nvtx,osrt --sample=none \
   -o tmp/stage2/nsys/run \
   python -m llm_perf_opt.runners.llm_profile_runner \
   torch_profiler=@profiling/torch/torch-profiler.min \
-  +run.mode=deep +inputs.manifest=/abs/path/inputs.yaml \
+  +inputs.manifest=/abs/path/inputs.yaml \
   hydra.run.dir=$(pwd)/tmp/stage2/$(date +%Y%m%d-%H%M%S) hydra.job.chdir=true
 ```
 
@@ -136,9 +129,9 @@ Notes:
 - Programmatic pattern:
 
 ```python
-for mode in ["deep", "light"]:
-    run_dir = art.parent / f"{run_id}-{mode}"
-    ovs = [f"hydra.run.dir={run_dir}", f"run.mode={mode}", "hydra.job.chdir=true"]
+for variant in ["baseline", "tuned"]:
+    run_dir = art.parent / f"{run_id}-{variant}"
+    ovs = [f"hydra.run.dir={run_dir}", "hydra.job.chdir=true"]
     subprocess.run(nsys + work + ovs, check=True)
     subprocess.run(ncu + work + ovs, check=True)
 ```

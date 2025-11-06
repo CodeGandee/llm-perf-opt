@@ -25,7 +25,7 @@ Purpose: Project initialization and basic structure for Stage 2
  - [X] T001 Create vendor wrapper module for Nsight Systems in `src/llm_perf_opt/profiling/vendor/nsys.py`
  - [X] T002 [P] Create vendor wrapper module for Nsight Compute in `src/llm_perf_opt/profiling/vendor/ncu.py`
  - [X] T003 Add Pixi task `stage2-profile` in `pyproject.toml` under `[tool.pixi.tasks]`
- - [X] T004 [P] Add runner config for Stage 2 in `conf/runner/stage2.yaml` (keys: `run.mode={deep,light}`, `run.top_n_kernels`, `artifacts.stage2_dir`) — reserve `conf/profiling/*` for external profiler presets (torch/nsys/ncu)
+ - [X] T004 [P] Verify Nsight presets under `conf/profiling/{nsys,ncu}` are mounted via `conf/config.yaml` and adjust Pixi task `stage2-profile` accordingly
  - [X] T005 [P] Create manual tests directory and seed doc in `tests/manual/stage2_profile/README.md`
  - [X] T006 [P] Add `tmp/stage2/` ignore rule in `.gitignore`
 
@@ -64,7 +64,7 @@ Independent Test: One command runs a profiling session and writes artifacts unde
 ### Hint-driven additions (Nsight + Hydra integration per context/hints/nv-profile-kb/howto-manage-nsys-ncu-processes-for-llm.md)
 - [X] T030 [P] [US1] Verify existing NVTX ranges in model session (`dsocr_session.py`) and align Nsight filters; no new helpers required
 - [X] T031 [US1] Use existing NVTX labels; update runner to target `decode*` for Nsight Compute and NVTX range gating for Nsight Systems
-- [X] T032 [P] [US1] Implement Hydra-aware argv builder in `src/llm_perf_opt/profiling/vendor/launch.py` (builds list argv; injects `hydra.run.dir`, `hydra.job.chdir`, `+run.mode`, `+inputs.manifest`)
+ - [X] T032 [P] [US1] Implement Hydra-aware argv builder in `src/llm_perf_opt/profiling/vendor/launch.py` (builds list argv; injects `hydra.run.dir`, `hydra.job.chdir`, `+inputs.manifest`)
 - [X] T033 [US1] Extend `src/llm_perf_opt/profiling/vendor/nsys.py` to export stats/SQLite (`nsys stats --report summary --format csv`, `nsys export --sqlite` under `tmp/stage2/<run_id>/nsys/`)
 - [X] T034 [US1] Extend `src/llm_perf_opt/profiling/vendor/ncu.py` to enforce `--target-processes all`, NVTX include, `--set roofline`, `--section ".*SpeedOfLight.*"`, metrics list, and export raw CSV to `tmp/stage2/<run_id>/ncu/`
 - [X] T035 [P] [US1] Add profiler presets for Nsight in `conf/profiling/nsys/nsys.default.yaml` and `conf/profiling/ncu/ncu.default.yaml` (trace/sample/capture for nsys; target_processes/nvtx_include/set/sections/metrics for ncu)

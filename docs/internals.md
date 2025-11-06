@@ -26,6 +26,12 @@ Configuration structure
   - mounts `profiling/torch@pipeline.torch_profiler`, `profiling/nsys@pipeline.nsys`, `profiling/ncu@pipeline.ncu`
   - toggles are under `pipeline.*.enable`
 
+Path resolution (Stage 2)
+- The Stage 2 runner (`deep_profile_runner.py`) resolves `cfg.model.path` and `cfg.dataset.root` from Hydra config to absolute paths relative to the Hydra runtime cwd. This removes any hard‑coded repo assumptions and allows users to point to arbitrary model/dataset locations via overrides.
+
+Conversation template lookup
+- The session wrapper attempts to import a vendor conversation module from `<model_path>/conversation.py` (or a provided `conv_module_path`) to mirror vendor prompt construction. If unavailable, it falls back to a raw prompt. This keeps the project decoupled from fixed repository layouts.
+
 NVTX ranges
 - High-level ranges for prefill/decode (`profiling/nvtx_utils.py`).
 - Optional submodule hooks for SAM/CLIP/projector in the session (forward pre/post hooks).

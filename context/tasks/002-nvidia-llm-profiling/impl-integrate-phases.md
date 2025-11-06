@@ -226,7 +226,7 @@ pixi run pytest tests/unit/test_kernels_export.py -q
 pixi run pytest tests/unit/test_stakeholder_summary.py -q
 
 # Manual end-to-end
-pixi run stage2-profile -- +run.mode=deep +inputs.manifest=/abs/path/inputs.yaml
+pixi run stage2-profile -- +inputs.manifest=/abs/path/inputs.yaml
 
 # Validate artifacts exist
 python - <<'PY'

@@ -48,8 +48,9 @@ fi
 
 CMD=(pixi run stage2-profile "$RUN_OVERRIDE" +nsys.gating_nvtx=false +ncu.gating_nvtx=false \
   ncu=ncu.rtx3090.compute \
-  "+run.dataset_subset_filelist=$SUBSET_ABS" \
-  "+run.stage1_repeats=20")
+  "dataset.subset_filelist=$SUBSET_ABS" \
+  "dataset.sampling.num_epochs=1" \
+  "dataset.sampling.num_samples_per_epoch=20")
 
 # If requested, enable Stage 1 static model analysis (undo the default disable in Stage 2)
 if [[ "$WITH_STATIC" == "true" ]]; then

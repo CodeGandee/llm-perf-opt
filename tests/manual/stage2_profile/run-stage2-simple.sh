@@ -65,8 +65,9 @@ RUN_OVERRIDE='hydra.run.dir=tmp/stage2/${now:%Y%m%d-%H%M%S}'
 CMD=(pixi run stage2-profile "$RUN_OVERRIDE" \
   +nsys.gating_nvtx=false +ncu.gating_nvtx=true \
   ncu=ncu.rtx3090.compute \
-  +run.dataset_subset_filelist=$SUBSET_FILE \
-  +run.stage1_repeats=1)
+  dataset.subset_filelist=$SUBSET_FILE \
+  dataset.sampling.num_epochs=1 \
+  dataset.sampling.num_samples_per_epoch=1)
 
 if [[ "$WITH_STATIC" == "true" ]]; then
   CMD+=("+stage1_runner.disable_static=false")

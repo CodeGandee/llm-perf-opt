@@ -35,6 +35,8 @@ class DeepSeekOCRSession:
         self.m_dtype: Optional[torch.dtype] = torch.bfloat16
         self.m_nvtx_hooks: list[Any] = []
         self.m_stage_time_ms: dict[str, float] = {"sam": 0.0, "clip": 0.0, "projector": 0.0}
+        self.m_model_path: Optional[str] = None
+        self.m_conv_module_path: Optional[str] = None
 
     class _Defaults(Enum):
         """Local fallback defaults (avoid magic numbers inline)."""
@@ -49,7 +51,11 @@ class DeepSeekOCRSession:
 
     @classmethod
     def from_local(
-        cls, model_path: str, device: str = "cuda:0", use_flash_attn: bool = True
+        cls,
+        model_path: str,
+        device: str = "cuda:0",
+        use_flash_attn: bool = True,
+        conv_module_path: Optional[str] = None,
     ) -> "DeepSeekOCRSession":
         """Create a session from a local model path.
 
@@ -101,6 +107,17 @@ class DeepSeekOCRSession:
         inst.m_model = model
         inst.m_tokenizer = tokenizer
         inst.m_device = dev
+        inst.m_model_path = model_path
+        # Prefer explicit conversation module path; else try model_path/conversation.py
+        try:
+            if conv_module_path:
+                inst.m_conv_module_path = str(Path(conv_module_path).resolve())
+            else:
+                candidate = Path(model_path) / "conversation.py"
+                if candidate.exists():
+                    inst.m_conv_module_path = str(candidate.resolve())
+        except Exception:
+            inst.m_conv_module_path = None
         try:
             inst._install_nvtx_stage_hooks()
         except Exception:
@@ -119,20 +136,25 @@ class DeepSeekOCRSession:
         """
         try:
             import importlib.util
-            repo_root = Path(__file__).resolve().parents[3]
-            conv_path = repo_root / "models" / "deepseek-ocr" / "conversation.py"
-            if conv_path.is_file():
-                spec = importlib.util.spec_from_file_location("dsocr_conv", str(conv_path))
-                if spec and spec.loader:
-                    mod = importlib.util.module_from_spec(spec)
-                    spec.loader.exec_module(mod)  # type: ignore[attr-defined]
-                    get_conv_template = getattr(mod, "get_conv_template", None)
-                    if callable(get_conv_template):
-                        conv = get_conv_template("plain")
-                        conv.set_system_message("")
-                        conv.append_message("<|User|>", user_prompt)
-                        conv.append_message("<|Assistant|>", "")
-                        return str(conv.get_prompt()).strip()
+            conv_path_str = self.m_conv_module_path
+            if not conv_path_str and self.m_model_path:
+                candidate = Path(self.m_model_path) / "conversation.py"
+                if candidate.exists():
+                    conv_path_str = str(candidate.resolve())
+            if conv_path_str:
+                conv_path = Path(conv_path_str)
+                if conv_path.is_file():
+                    spec = importlib.util.spec_from_file_location("dsocr_conv", str(conv_path))
+                    if spec and spec.loader:
+                        mod = importlib.util.module_from_spec(spec)
+                        spec.loader.exec_module(mod)  # type: ignore[attr-defined]
+                        get_conv_template = getattr(mod, "get_conv_template", None)
+                        if callable(get_conv_template):
+                            conv = get_conv_template("plain")
+                            conv.set_system_message("")
+                            conv.append_message("<|User|>", user_prompt)
+                            conv.append_message("<|Assistant|>", "")
+                            return str(conv.get_prompt()).strip()
         except Exception:
             pass
         # Fallback to the raw prompt if template is unavailable

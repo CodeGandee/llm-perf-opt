@@ -5,12 +5,12 @@ description: "Task list for NVTX-based NCU Regional Profiling"
 
 # Tasks: NVTX-based NCU Regional Profiling
 
-**Input**: Design documents from `/workspace/code/llm-perf-opt/specs/003-nvtx-ncu-profiling/`
-**Prerequisites**: plan.md (required), spec.md (required), research.md, data-model.md, contracts/
+**Input**: Design documents from `/specs/003-nvtx-ncu-profiling/`
+**Prerequisites**: plan.md (required), spec.md (required for user stories), research.md, data-model.md, contracts/
 
-**Tests**: Manual scenario under `tests/manual/…` is required per plan. Unit tests are included for critical parsers/aggregators.
+**Tests**: Provide manual tests for major functionality under `tests/manual/…`. Automated tests are OPTIONAL unless requested.
 
-**Organization**: Tasks are grouped by user story to enable independent implementation and testing of each story.
+**Organization**: Tasks are grouped by user story to enable independent implementation and testing.
 
 ## Format: `[ID] [P?] [Story] Description`
 
@@ -18,116 +18,94 @@ description: "Task list for NVTX-based NCU Regional Profiling"
 - **[Story]**: Which user story this task belongs to (e.g., US1, US2, US3)
 - Include exact file paths in descriptions
 
-## Path Conventions
-
-- Single project layout rooted at `/workspace/code/llm-perf-opt`
-- Artifacts under `/workspace/code/llm-perf-opt/tmp/profile-output/<run_id>/`
-
----
-
 ## Phase 1: Setup (Shared Infrastructure)
 
-**Purpose**: Prepare configuration, docs, and manual test entrypoint.
+**Purpose**: Initial scaffolding including a reusable dummy model for testing/debugging
 
-- [ ] T001 Update Hydra config to add region mode toggle `pipeline.ncu.region_mode.enable` in `/workspace/code/llm-perf-opt/conf/config.yaml`
-- [ ] T002 [P] Seed region-mode defaults (include patterns, replay mode) under `ncu_cli` in `/workspace/code/llm-perf-opt/conf/profiling/ncu/ncu.default.yaml`
-- [ ] T003 [P] Create manual test entrypoint file at `/workspace/code/llm-perf-opt/tests/manual/ncu/manual_nvtx_regions.py`
-- [ ] T004 [P] Add NVTX region-mode examples to `/workspace/code/llm-perf-opt/docs/running.md`
-- [ ] T005 [P] Document new config keys (region mode, selection) in `/workspace/code/llm-perf-opt/docs/configuration.md`
-
-Checkpoint: Config and docs prepared; manual test file exists (can be empty placeholder).
+- [ ] T001 [P] Create package scaffold for dummy models in `/workspace/code/llm-perf-opt/src/llm_perf_opt/dnn_models/__init__.py`
+- [ ] T002 [P] Implement `ShallowResNet` dummy model in `/workspace/code/llm-perf-opt/src/llm_perf_opt/dnn_models/shallow_resnet.py` (few layers, CPU/GPU compatible)
+- [ ] T003 [P] Add model factory `get_model(name)` in `/workspace/code/llm-perf-opt/src/llm_perf_opt/dnn_models/factory.py` (returns `ShallowResNet` by name)
+- [ ] T004 [P] Create manual test scaffold in `/workspace/code/llm-perf-opt/tests/manual/ncu/manual_nvtx_regions.py`
+- [ ] T005 [P] Add "NVTX Range Replay" section stub to `/workspace/code/llm-perf-opt/docs/running.md`
+- [ ] T006 [P] Add "NCU CLI Config Mapping" section stub to `/workspace/code/llm-perf-opt/docs/configuration.md`
 
 ---
 
 ## Phase 2: Foundational (Blocking Prerequisites)
 
-**Purpose**: Core models and utilities required by all user stories.
+**Purpose**: Core data models and config/CLI plumbing required by all stories
 
-**⚠️ CRITICAL**: No user story work can begin until this phase is complete.
+- [ ] T007 [P] Create attrs data models `NCUProfileRegion` and `NCUProfileRegionReport` in `/workspace/code/llm-perf-opt/src/llm_perf_opt/data/ncu_regions.py`
+- [ ] T008 [P] Extend NCU command builder with `replay_mode` (map to `--replay-mode`) in `/workspace/code/llm-perf-opt/src/llm_perf_opt/profiling/vendor/ncu.py`
+- [ ] T009 [P] Add `ncu_cli.replay_mode: kernel` default to `/workspace/code/llm-perf-opt/conf/profiling/ncu/ncu.default.yaml`
+- [ ] T010 [P] Add `ncu_cli.replay_mode: kernel` default to `/workspace/code/llm-perf-opt/conf/profiling/ncu/ncu.high.yaml`
+- [ ] T011 [P] Add `ncu_cli.replay_mode: kernel` default to `/workspace/code/llm-perf-opt/conf/profiling/ncu/ncu.rtx3090.yaml` (and related variants)
 
-- [ ] T006 Add `NCUProfileRegion` and `NCUProfileRegionReport` data models (attrs) in `/workspace/code/llm-perf-opt/src/llm_perf_opt/data/models.py`
-- [ ] T007 [P] Extend Nsight Compute builder to support `--replay-mode` via `replay_mode` param in `/workspace/code/llm-perf-opt/src/llm_perf_opt/profiling/vendor/ncu.py`
-- [ ] T008 [P] Add `sanitize_region_name(name: str) -> str` utility in `/workspace/code/llm-perf-opt/src/llm_perf_opt/profiling/nvtx_utils.py`
-- [ ] T009 Implement region report writers: `write_region_report_markdown(...)` and `write_region_report_json(...)` in `/workspace/code/llm-perf-opt/src/llm_perf_opt/profiling/export.py`
-- [ ] T010 [P] Ensure artifacts layout includes `ncu/regions/` subdir creation in `/workspace/code/llm-perf-opt/src/llm_perf_opt/profiling/artifacts.py`
-
-Checkpoint: Models/utilities available; builder and export helpers ready.
+**Checkpoint**: Foundation ready – user story implementation can begin
 
 ---
 
 ## Phase 3: User Story 1 - Profile NVTX-marked regions only (Priority: P1) 🎯 MVP
 
-**Goal**: Limit Nsight Compute profiling to NVTX-marked regions and produce per‑region reports, including nested ranges with inclusive parent totals.
+**Goal**: Restrict profiling to NVTX-marked regions and aggregate results per range (including nested regions)
 
-**Independent Test**: Run profiling on a sample with three ranges (A, B, and A::A1 nested) and verify outputs include one section per region (A, A::A1, B), metrics populated, and no kernels outside ranges appear.
-
-### Tests for User Story 1 (requested in plan)
-
-- [ ] T011 [P] [US1] Implement manual scenario with 3 NVTX ranges (A, A::A1, B) in `/workspace/code/llm-perf-opt/tests/manual/ncu/manual_nvtx_regions.py`
-- [ ] T012 [P] [US1] Unit test: region model serialization/parent inference in `/workspace/code/llm-perf-opt/tests/unit/test_ncu_region_models.py`
+**Independent Test**: Run manual script with 3 ranges (A, B, A::A1) and `pipeline.ncu.ncu_cli.replay_mode=range` + `pipeline.ncu.ncu_cli.nvtx.include`, then verify one section per region in `ncu/regions/` and consolidated `report.{md,json}`
 
 ### Implementation for User Story 1
 
-- [ ] T013 [US1] Extend runner to support region-mode orchestration loop in `/workspace/code/llm-perf-opt/src/llm_perf_opt/runners/deep_profile_runner.py` (reads `pipeline.ncu.region_mode.enable` and iterates include patterns)
-- [ ] T014 [US1] Add per-region NCU invocation with `--nvtx --nvtx-include <expr> --replay-mode=range` in `/workspace/code/llm-perf-opt/src/llm_perf_opt/runners/deep_profile_runner.py`
-- [ ] T015 [US1] Write per-region artifacts under `/workspace/code/llm-perf-opt/tmp/profile-output/<run_id>/ncu/regions/<sanitized>/` (cmd, .ncu-rep, optional CSV/sections) in `/workspace/code/llm-perf-opt/src/llm_perf_opt/runners/deep_profile_runner.py`
-- [ ] T016 [US1] Parse NCU outputs and assemble `NCUProfileRegion` objects (kernels + metrics/sections) in `/workspace/code/llm-perf-opt/src/llm_perf_opt/profiling/aggregate.py`
-- [ ] T017 [US1] Implement inclusive nesting (parent includes child totals) during aggregation in `/workspace/code/llm-perf-opt/src/llm_perf_opt/profiling/aggregate.py`
-- [ ] T018 [US1] Emit consolidated JSON at `/workspace/code/llm-perf-opt/tmp/profile-output/<run_id>/ncu/regions/report.json` in `/workspace/code/llm-perf-opt/src/llm_perf_opt/profiling/export.py`
-- [ ] T019 [US1] Emit consolidated Markdown at `/workspace/code/llm-perf-opt/tmp/profile-output/<run_id>/ncu/regions/report.md` in `/workspace/code/llm-perf-opt/src/llm_perf_opt/profiling/export.py`
-- [ ] T020 [US1] Graceful no-match handling: write baseline section and exit 0 in `/workspace/code/llm-perf-opt/src/llm_perf_opt/runners/deep_profile_runner.py`
+- [ ] T012 [US1] Implement NVTX range replay and per-range outputs in `/workspace/code/llm-perf-opt/src/llm_perf_opt/runners/deep_profile_runner.py` (handles `replay_mode=range|app-range`, writes to `ncu/regions/<region>/` and consolidated `ncu/regions/`)
+- [ ] T013 [P] [US1] Implement region assembler to build `NCUProfileRegionReport` in `/workspace/code/llm-perf-opt/src/llm_perf_opt/profiling/regions.py`
+- [ ] T014 [P] [US1] Implement region report exporters (Markdown + JSON) in `/workspace/code/llm-perf-opt/src/llm_perf_opt/profiling/export_regions.py`
+- [ ] T015 [P] [US1] Add filesystem-safe region path helper to `/workspace/code/llm-perf-opt/src/llm_perf_opt/profiling/artifacts.py` for `ncu/regions/<sanitized_name>`
+- [ ] T016 [US1] Implement manual test with 3 ranges in `/workspace/code/llm-perf-opt/tests/manual/ncu/manual_nvtx_regions.py` (validate expected files exist)
+- [ ] T017 [US1] Update NVTX range replay examples in `/workspace/code/llm-perf-opt/docs/running.md` (commands + expected outputs under `ncu/regions/`)
 
-Checkpoint: User Story 1 independently functional. Run manual scenario and verify outputs.
+Parallel execution example: T013, T014, T015 can run in parallel after T007–T008
 
 ---
 
 ## Phase 4: User Story 2 - Select kernels within each region (Priority: P2)
 
-**Goal**: Apply name-based include/exclude patterns to constrain which kernels are summarized per region.
+**Goal**: Constrain per-region reporting to selected kernels via name patterns (include/exclude)
 
-**Independent Test**: Run on a sample with 20+ kernel calls; applying include/exclude patterns should reduce per‑region kernel tables to the intended subset while keeping totals aligned with the subset.
-
-### Tests for User Story 2 (requested in plan for parsers)
-
-- [ ] T021 [P] [US2] Unit test: kernel selection (include/exclude precedence) in `/workspace/code/llm-perf-opt/tests/unit/test_kernel_selection.py`
+**Independent Test**: Use manual script with `pipeline.ncu.ncu_cli.nvtx.include='decode*'` and a regex kernel filter; verify only matching kernels appear in per-region listings and selection metadata is recorded
 
 ### Implementation for User Story 2
 
-- [ ] T022 [P] [US2] Add kernel selection keys to preset (e.g., `ncu_cli.kernel_name`, `ncu_cli.kernel_name_base`) in `/workspace/code/llm-perf-opt/conf/profiling/ncu/ncu.default.yaml`
-- [ ] T023 [US2] Pass kernel selection from config to builder (`kernel_regex`, base) in `/workspace/code/llm-perf-opt/src/llm_perf_opt/runners/deep_profile_runner.py`
-- [ ] T024 [US2] Reflect selection in region aggregation (only selected kernels contribute) in `/workspace/code/llm-perf-opt/src/llm_perf_opt/profiling/aggregate.py`
-- [ ] T025 [US2] Annotate selection patterns in report outputs (JSON + Markdown) in `/workspace/code/llm-perf-opt/src/llm_perf_opt/profiling/export.py`
+- [ ] T018 [P] [US2] Read `ncu_cli.kernel_name` and `kernel_name_base` in `/workspace/code/llm-perf-opt/src/llm_perf_opt/runners/deep_profile_runner.py` and pass through to NCU builder
+- [ ] T019 [P] [US2] Add optional `ncu_cli.kernel_exclude` (list) placeholders to `/workspace/code/llm-perf-opt/conf/profiling/ncu/ncu.default.yaml` and `/workspace/code/llm-perf-opt/conf/profiling/ncu/ncu.high.yaml`
+- [ ] T020 [P] [US2] Apply include/exclude selection to per-region kernel lists in `/workspace/code/llm-perf-opt/src/llm_perf_opt/profiling/regions.py` and persist `selection` metadata
+- [ ] T021 [US2] Extend manual test in `/workspace/code/llm-perf-opt/tests/manual/ncu/manual_nvtx_regions.py` to add kernel regex within NVTX range and verify subset
+- [ ] T022 [US2] Update kernel filter examples in `/workspace/code/llm-perf-opt/docs/configuration.md` (exact and `regex:` forms)
 
-Checkpoint: User Stories 1 and 2 both work and are testable independently.
+Parallel execution example: T018–T020 can run in parallel; T021–T022 follow
 
 ---
 
 ## Phase 5: User Story 3 - Configure reported metrics/sections (Priority: P3)
 
-**Goal**: Choose which metric groups/sections appear in per‑region reports via Hydra config, consistent with existing presets.
+**Goal**: Allow users to select `sections` and `metrics` via config; reflect in region reports
 
-**Independent Test**: Changing `ncu_cli.sections` or `ncu_cli.metrics` in the config should deterministically change report content on next run; verify alignment across two different configurations.
+**Independent Test**: Override `pipeline.ncu.ncu_cli.sections` and `metrics`; run manual script and confirm Markdown/JSON reflect selected groups and NCU importer outputs
 
 ### Implementation for User Story 3
 
-- [ ] T026 [P] [US3] Ensure region-mode path applies existing `ncu_cli.sections` and `ncu_cli.metrics` in `/workspace/code/llm-perf-opt/src/llm_perf_opt/runners/deep_profile_runner.py`
-- [ ] T027 [P] [US3] Add section export for each region using import command in `/workspace/code/llm-perf-opt/src/llm_perf_opt/profiling/vendor/ncu.py` and runner wiring in `/workspace/code/llm-perf-opt/src/llm_perf_opt/runners/deep_profile_runner.py`
-- [ ] T028 [US3] Update docs to demonstrate section/metric overrides for region mode in `/workspace/code/llm-perf-opt/docs/running.md`
-- [ ] T029 [US3] Update docs to document config keys and examples in `/workspace/code/llm-perf-opt/docs/configuration.md`
+- [ ] T023 [P] [US3] Ensure `sections`/`metrics` apply to range flows in `/workspace/code/llm-perf-opt/src/llm_perf_opt/runners/deep_profile_runner.py` and import per-region sections into `ncu/regions/<region>/sections.txt`
+- [ ] T024 [P] [US3] Add sample `sections`/`metrics` for region runs in `/workspace/code/llm-perf-opt/conf/profiling/ncu/ncu.default.yaml`
+- [ ] T025 [P] [US3] Include selected sections/metrics summaries in Markdown in `/workspace/code/llm-perf-opt/src/llm_perf_opt/profiling/export_regions.py`
+- [ ] T026 [US3] Document `sections`/`metrics` overrides and replay mode interactions in `/workspace/code/llm-perf-opt/docs/configuration.md`
 
-Checkpoint: All user stories independently functional; reports reflect configured sections/metrics.
+Parallel execution example: T023–T025 can run in parallel after T012–T014
 
 ---
 
 ## Phase N: Polish & Cross-Cutting Concerns
 
-**Purpose**: Repo-wide quality and finishing touches.
+**Purpose**: Validation, error handling, and documentation hardening
 
-- [ ] T030 [P] Add/refresh example commands for region mode in `/workspace/code/llm-perf-opt/specs/003-nvtx-ncu-profiling/quickstart.md`
-- [ ] T031 Type hints + mypy clean for all touched modules in `/workspace/code/llm-perf-opt/src/`
-- [ ] T032 Ruff clean (PEP8 + project rules) for all touched modules in `/workspace/code/llm-perf-opt/src/`
-- [ ] T033 [P] Update `/workspace/code/llm-perf-opt/scripts/ncu/release/README.md` with region-mode notes
-- [ ] T034 Validate manual quickstart run end-to-end and attach artifacts under `/workspace/code/llm-perf-opt/tmp/profile-output/<run_id>/`
+- [ ] T027 [P] Add JSON schema validator for region report at `/workspace/code/llm-perf-opt/scripts/ncu/validate_regions_json.py` (schema: `/workspace/code/llm-perf-opt/specs/003-nvtx-ncu-profiling/contracts/openapi.yaml`)
+- [ ] T028 Improve empty-range handling and messaging in `/workspace/code/llm-perf-opt/src/llm_perf_opt/runners/deep_profile_runner.py` (emit "no matching regions" note)
+- [ ] T029 [P] Update nesting semantics and artifact layout docs in `/workspace/code/llm-perf-opt/docs/internals.md`
 
 ---
 
@@ -135,67 +113,27 @@ Checkpoint: All user stories independently functional; reports reflect configure
 
 ### Phase Dependencies
 
-- Setup (Phase 1) → Foundational (Phase 2) → User Stories (Phase 3+) → Polish
-- User stories can proceed in parallel after Foundational, or sequentially P1 → P2 → P3
+- Setup (Phase 1): No dependencies – can start immediately
+- Foundational (Phase 2): Depends on Setup completion – BLOCKS all user stories
+- User Stories (Phase 3+): Depend on Foundational; proceed in priority order (P1 → P2 → P3) or in parallel if staffed
+- Polish (Final Phase): Depends on desired user stories being complete
 
 ### User Story Dependencies
 
-- User Story 1 (P1): No dependency on other stories (depends on Foundational)
-- User Story 2 (P2): Independent of US1 but integrates selection into aggregation
-- User Story 3 (P3): Independent of US1/US2; configuration wiring applies to region-mode path
+- User Story 1 (P1): Starts after Foundational; no dependency on other stories
+- User Story 2 (P2): Starts after Foundational; leverages US1 assembler if available (T010, T011)
+- User Story 3 (P3): Starts after Foundational; leverages US1 runner hooks (T009)
 
 ### Within Each User Story
 
-- Tests (if included) before implementation; ensure they fail first
-- Models before services/aggregation
-- Aggregation before export
-- Story complete before starting next priority
+- Models/helpers before runner wiring
+- Runner wiring before exporters/docs
+- Manual test after core implementation
 
----
+### Parallel Opportunities
 
-## Parallel Examples
-
-### User Story 1
-
-Tasks runnable in parallel:
-- T011 — implement manual scenario (`/workspace/code/llm-perf-opt/tests/manual/ncu/manual_nvtx_regions.py`)
-- T012 — unit tests for models (`/workspace/code/llm-perf-opt/tests/unit/test_ncu_region_models.py`)
-
-### User Story 2
-
-Tasks runnable in parallel:
-- T021 — unit tests for selection (`/workspace/code/llm-perf-opt/tests/unit/test_kernel_selection.py`)
-- T022 — preset update (`/workspace/code/llm-perf-opt/conf/profiling/ncu/ncu.default.yaml`)
-
-### User Story 3
-
-Tasks runnable in parallel:
-- T026 — ensure section/metric wiring in runner (`/workspace/code/llm-perf-opt/src/llm_perf_opt/runners/deep_profile_runner.py`)
-- T027 — region section export wiring (`/workspace/code/llm-perf-opt/src/llm_perf_opt/profiling/vendor/ncu.py` and runner)
-
----
-
-## Implementation Strategy
-
-### MVP First (User Story 1 Only)
-
-1. Complete Setup (T001–T005)
-2. Complete Foundational (T006–T010)
-3. Implement US1 (T011–T020)
-4. Validate US1 independently using manual scenario and reports
-
-### Incremental Delivery
-
-1. Deliver US1 (MVP) → demo/report
-2. Add US2 (selection) → demo/report
-3. Add US3 (metrics/sections) → demo/report
-
----
-
-## Validation Checklist
-
-- All tasks follow the required format: `- [ ] T### [P?] [US?] Description with absolute file path`
-- Each user story has clear, independent test criteria and can be validated in isolation
-- Dependencies are explicit; [P] marks identify safe parallel work
-- MVP scope = User Story 1 only
-
+- Setup: T001–T003 in parallel
+- Foundational: T004–T008 in parallel
+- US1: T010–T012 in parallel (after T004–T005); T013–T014 follow
+- US2: T015–T017 in parallel; T018–T019 follow
+- US3: T020–T022 in parallel; T023 follows

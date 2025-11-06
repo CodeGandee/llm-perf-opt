@@ -2,8 +2,8 @@
 
 ## Decisions
 
-- Decision: Region discovery and capture via NVTX include expressions
-  Rationale: Using `ncu --nvtx --nvtx-include <expr>` runs one capture per region label/pattern with deterministic attribution and no kernel‑name heuristics.
+- Decision: Region discovery and capture via NVTX include expressions + range replay
+  Rationale: Using `ncu --nvtx --nvtx-include <expr> --replay-mode range` (or `app-range`) aggregates results per NVTX range with deterministic attribution and no kernel‑name heuristics.
   Alternatives considered: Single pass + post‑hoc NVTX correlation (NCU lacks reliable region export); time‑window filtering (not supported directly); rely only on top‑K kernel regex from NSYS (insufficient for region attribution).
 
 - Decision: Nested region semantics are inclusive
@@ -28,7 +28,7 @@
 
 ## Constraints & Practices
 
-- Preserve existing CLI contract and defaults; add opt‑in `pipeline.ncu.region_mode.enable=true`.
+- Preserve existing CLI contract and defaults; expose native NCU CLI flags under `pipeline.ncu.ncu_cli.*` (1:1 mapping). Examples: `replay_mode`, `nvtx.include`, `sections`, `metrics`, `target_processes`, `kernel_name`, `kernel_name_base`. No standalone `region_mode` config.
 - Use `attrs` data models for NCUProfileRegion and NCUProfileRegionReport in the Python package; reuse `KernelRecord`; emit JSON via `.asdict()`.
 - Keep manual test under `tests/manual/ncu/manual_nvtx_regions.py`.
 - Document configuration and examples in `docs/running.md` and `docs/configuration.md`.

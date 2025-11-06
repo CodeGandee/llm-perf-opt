@@ -36,6 +36,7 @@ from llm_perf_opt.profiling.artifacts import (
     write_env_json,
     write_inputs_yaml,
 )
+from llm_perf_opt.utils.paths import resolve_hydra_path
 from llm_perf_opt.profiling.vendor.checks import ensure_ncu, ensure_nsys
 from llm_perf_opt.profiling.vendor.launch import build_work_argv
 from llm_perf_opt.profiling.vendor.ncu import build_ncu_cmd
@@ -44,7 +45,6 @@ from llm_perf_opt.profiling.vendor.nsys import (
     build_nsys_export_sqlite_cmd,
     build_nsys_stats_cmd,
 )
-from llm_perf_opt.profiling.nsys_stats import top_kernels_from_nsys_summary
 from llm_perf_opt.profiling.kernels import parse_ncu_csv, kernels_from_ncu_rows
 from llm_perf_opt.profiling.export import (
     top_n_kernels,
@@ -101,30 +101,33 @@ def main(cfg: DictConfig) -> None:  # pragma: no cover - CLI orchestrator
     overrides: list[str] = []
     # Carry common demo overrides (can be changed by user via hydra overrides)
     device_sel = str(getattr(cfg, "device", "cuda:0"))
-    # Repeats and dataset subset for Stage 1 workload
-    stage1_repeats = 1
+    # Repeats and dataset subset for Stage 1 workload (canonical config only)
     try:
-        stage1_repeats = int(getattr(getattr(cfg, "run", {}), "stage1_repeats", 1))
+        _sam = getattr(getattr(cfg, "dataset", {}), "sampling", {})
+        stage1_repeats = int(_sam.get("num_samples_per_epoch", 1))
     except Exception:
         stage1_repeats = 1
-    # Force model.path to repo-absolute path to avoid Hydra CWD ambiguity under nested runs
+    # Resolve model/dataset paths from Hydra config (no hard-coded repo paths)
     try:
         repo_root = Path(HydraConfig.get().runtime.cwd)
-        model_path_abs = str(repo_root / "models" / "deepseek-ocr")
-        ds_root_abs = str(repo_root / "datasets" / "omnidocbench" / "source-data")
-        overrides.append(f"model.path={model_path_abs}")
-        overrides.append(f"dataset.root={ds_root_abs}")
     except Exception:
-        pass
+        repo_root = Path.cwd()
+    try:
+        model_path_cfg = getattr(getattr(cfg, "model", {}), "path", None)
+    except Exception:
+        model_path_cfg = None
+    try:
+        dataset_root_cfg = getattr(getattr(cfg, "dataset", {}), "root", None)
+    except Exception:
+        dataset_root_cfg = None
+    for key, raw in (("model.path", model_path_cfg), ("dataset.root", dataset_root_cfg)):
+        resolved = resolve_hydra_path(raw, repo_root)
+        if resolved:
+            overrides.append(f"{key}={resolved}")
 
     # Reuse Stage-1 infer.max_new_tokens when available; allow a run-level override
     try:
-        rep_mnt = getattr(getattr(cfg, "run", {}), "representative_max_new_tokens", None)
-    except Exception:
-        rep_mnt = None
-    try:
-        if rep_mnt in (None, "null"):
-            rep_mnt = getattr(getattr(cfg, "infer", {}), "max_new_tokens", 64)
+        rep_mnt = getattr(getattr(cfg, "infer", {}), "max_new_tokens", 64)
     except Exception:
         rep_mnt = 64
     try:
@@ -146,7 +149,7 @@ def main(cfg: DictConfig) -> None:  # pragma: no cover - CLI orchestrator
         "dataset.sampling.randomize=false",
     ]
     try:
-        subset_filelist = getattr(getattr(cfg, "run", {}), "dataset_subset_filelist", None)
+        subset_filelist = getattr(getattr(cfg, "dataset", {}), "subset_filelist", None)
         if subset_filelist:
             overrides.append(f"dataset.subset_filelist={subset_filelist}")
     except Exception:
@@ -158,8 +161,6 @@ def main(cfg: DictConfig) -> None:  # pragma: no cover - CLI orchestrator
         overrides,
         hydra_run_dir=str(workload_dir),
         chdir=True,
-        # run_mode is already provided in conf/config.yaml under run.mode
-        run_mode=None,
         inputs_manifest=None,
     )
 
@@ -260,22 +261,8 @@ def main(cfg: DictConfig) -> None:  # pragma: no cover - CLI orchestrator
             subprocess.run(["ncu", "--list-sections"], stdout=sf, stderr=subprocess.STDOUT, check=False)
     except Exception:
         pass
-    # Select top-N kernels from nsys summary (if present) and focus on decode region
+    # Kernel selection is configured directly via NCU CLI config (kernel_name/kernel_name_base).
     kernel_regex = None
-    try:
-        top_n = int(getattr(getattr(cfg, "run", {}), "top_n_kernels", 30))
-    except Exception:
-        top_n = 30
-    try:
-        csv_candidate = Path(str(nsys_summary_base) + ".csv")
-        if csv_candidate.exists():
-            names = top_kernels_from_nsys_summary(csv_candidate, top_n=top_n)
-            if names:
-                import re as _re
-                pats = ["(" + _re.escape(n) + ")" for n in names]
-                kernel_regex = "|".join(pats)
-    except Exception:
-        kernel_regex = None
     ncu_cfg = getattr(getattr(cfg, "pipeline", {}), "ncu", {})
     ncu_cli = getattr(ncu_cfg, "ncu_cli", {})
     gating_nvtx_ncu = bool(getattr(ncu_cfg, "gating_nvtx", True))
@@ -411,7 +398,7 @@ def main(cfg: DictConfig) -> None:  # pragma: no cover - CLI orchestrator
             ncu_rows = parse_ncu_csv(ncu_csv_path)
             device_for_records = device_sel
             krecs = kernels_from_ncu_rows(ncu_rows, device=device_for_records)
-            topkern_list = top_n_kernels(krecs, n=int(getattr(getattr(cfg, "run", {}), "top_n_kernels", 20)))
+            topkern_list = top_n_kernels(krecs, n=20)
             write_kernel_markdown(topkern_list, str(artifacts.path("kernels.md")), top_k=len(topkern_list))
     except Exception:
         # Best-effort: do not block run completion on export failures
@@ -512,9 +499,3 @@ def main(cfg: DictConfig) -> None:  # pragma: no cover - CLI orchestrator
 
 if __name__ == "__main__":  # pragma: no cover
     main()
-    # export.csv controls whether we request raw CSV log from ncu
-    try:
-        export_csv = bool(getattr(getattr(ncu_cli, "export", {}), "csv", True))
-    except Exception:
-        export_csv = True
-    csv_log = (artifacts.out_dir("ncu") / "raw.csv") if export_csv else None

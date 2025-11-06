@@ -5,11 +5,11 @@
 
 ## Summary
 
-Extend the existing Nsight Compute profiling facility to support NVTX range–scoped profiling and reporting. Only kernels occurring inside NVTX-marked regions are profiled, the output aggregates metrics by region (including nested regions), and users can filter kernels within each region by include/exclude patterns. Metrics and sections remain fully configurable via Hydra, consistent with current NCU presets.
+Extend the existing Nsight Compute profiling facility to support NVTX range–scoped profiling and reporting. Only kernels occurring inside NVTX-marked regions are profiled, the output aggregates metrics by region (including nested regions), and users can filter kernels within each region by include/exclude patterns. Metrics and sections remain fully configurable via Hydra, with config keys mirroring native NCU CLI args (1:1) under `pipeline.ncu.ncu_cli.*`.
 
 High-level approach:
-- Discover or accept a configured set of NVTX region labels and run one NCU capture per region using `--nvtx --nvtx-include <expr>`; write per‑region artifacts under `ncu/regions/<region>/` plus a consolidated machine‑readable summary.
-- Preserve current deep profiling flows and presets; add config to enable region mode and kernel selection patterns.
+- Discover or accept a configured set of NVTX region labels and profile with `--nvtx --nvtx-include <expr>`, using `--replay-mode range` (or `app-range`) for aggregated per‑range results; write per‑range artifacts under `ncu/regions/<region>/` plus a consolidated machine‑readable summary.
+- Preserve current deep profiling flows and presets; expose native NCU flags via Hydra under `pipeline.ncu.ncu_cli.*` (e.g., `replay_mode`, `nvtx.include`, `sections`, `metrics`) and kernel selection (`kernel_name`, `kernel_name_base`). No separate "region_mode" toggle.
 - Generate a per‑region report (human + JSON) and an aggregate summary across processes/devices, with inclusive parent totals for nested regions.
 
 ## Technical Context
@@ -20,7 +20,7 @@ High-level approach:
 **Testing**: pytest (unit/integration), manual scripts under `tests/manual/`  
 **Target Platform**: Linux with NVIDIA GPUs and CUDA toolchain on PATH  
 **Project Type**: Single Python package with Hydra‑based runners  
-**Performance Goals**: Region‑mode overhead ≤ 15% over baseline deep profiling for same workload; per‑region report generation ≤ 10 seconds for ≤ 20 regions  
+**Performance Goals**: Range‑replay overhead ≤ 15% over baseline deep profiling for same workload; per‑region report generation ≤ 10 seconds for ≤ 20 regions  
 **Constraints**: No breaking changes to current CLI and config usage; defaults remain off until enabled via config; report must be reproducible from artifacts only  
 **Scale/Scope**: Typical runs produce ≤ 30 regions; each region may include up to hundreds of kernel launches; multi‑process (DDP) supported via per‑scope and aggregate outputs
 

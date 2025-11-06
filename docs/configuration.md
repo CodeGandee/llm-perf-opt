@@ -19,12 +19,6 @@ experiment: stage1
 device: cuda:0
 use_flash_attn: true
 
-run:
-  mode: deep
-  stage1_repeats: 1            # deprecated; use dataset.sampling.* instead
-  dataset_subset_filelist: null
-  top_n_kernels: 30
-
 pipeline:
   static_analysis:
     enable: true
@@ -65,6 +59,16 @@ Config groups
   - Model‑specific: `conf/model/deepseek_ocr/output/torch/default.yaml` → `pipeline.torch_profiler.output.extra.deepseek_ocr`
   - Defaults: when `prediction.enable=true` and `prediction.save_dir` is omitted/null, outputs write to `pred/`. When `visualization.enable=true` and `visualization.save_dir` is omitted/null, outputs write to `viz/`. Paths are relative to the stage output dir unless absolute.
 
+Model and dataset paths
+- Stage 2 runner resolves `model.path` and `dataset.root` from Hydra config to absolute paths using the Hydra runtime cwd. There are no hard‑coded repo paths.
+- Override at runtime as needed:
+  ```bash
+  pixi run -e rtx5090 python -m llm_perf_opt.runners.deep_profile_runner \
+    model.path=/abs/models/deepseek-ocr \
+    dataset.root=/abs/datasets/OmniDocBench \
+    device=cuda:0 pipeline.nsys.enable=true pipeline.ncu.enable=false
+  ```
+
 PyTorch profiler preset keys
 - `enabled`: Master on/off for the representative profiling pass.
 - `activities`: List of profilers to enable, values from {`cpu`, `cuda`}.
@@ -87,6 +91,7 @@ Nsight Compute (`ncu_cli`) fields
   - `sections`: list of sections (e.g., SpeedOfLight, MemoryWorkloadAnalysis, Occupancy, SchedulerStats).
   - `kernel_name_base`: kernel name format (e.g., `demangled`) → `--kernel-name-base`.
   - `export.csv`: boolean to indicate CSV-friendly exports for tooling.
+  - `replay_mode`: `kernel|range|app-range|application` → `--replay-mode` (for per‑range aggregation or per‑kernel).
   - Defaults: `ncu.default` aligns with the scripts' defaults but hard-codes both sections and a concise metrics set:
     - sections: [SpeedOfLight, MemoryWorkloadAnalysis, Occupancy, SchedulerStats]
     - metrics: [flop_count_hp, flop_count_sp, gpu__time_duration.sum, sm__throughput.avg.pct_of_peak_sustained_elapsed, dram__throughput.avg.pct_of_peak_sustained_elapsed]

@@ -102,7 +102,7 @@ pixi run python tests/manual/stage2_profile/manual_stage2_profile.py
   - Supports `--list-sections`; writes `MAIN/ncu/sections.txt` for inspection and version‑dependent tuning.
   - When available, top‑N kernels are derived from NSYS stats to form a `kernel_regex` seed; falls back gracefully if stats are missing.
 - CLI/argv and Hydra integration
-  - `build_work_argv` injects Hydra overrides for Stage 1, including `hydra.run.dir=MAIN/stage1`, `hydra.job.chdir=false`, and mode markers (e.g., `+run.mode=stage2`).
+  - `build_work_argv` injects Hydra overrides for Stage 1, including `hydra.run.dir=MAIN/stage1` and `hydra.job.chdir=false`.
   - Device mapping works with `CUDA_VISIBLE_DEVICES` and `+stage1_runner.device=cuda:0` so GPU index `1` can be targeted reliably.
 - Stage 1 coordination
   - Static analyzer disabled during deep profiling via `runner@stage1_runner=stage1.no-static`.

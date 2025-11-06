@@ -16,7 +16,6 @@ def build_work_argv(
     *,
     hydra_run_dir: str | None = None,
     chdir: bool = True,
-    run_mode: str | None = None,
     inputs_manifest: str | None = None,
 ) -> list[str]:
     """Return a workload argv for ``python -m <module> <overrides...>`` with optional Hydra injections.
@@ -31,8 +30,6 @@ def build_work_argv(
         If provided, inject ``hydra.run.dir=<hydra_run_dir>``.
     chdir : bool, default True
         If true, inject ``hydra.job.chdir=true``; otherwise ``false``.
-    run_mode : str or None, optional
-        If provided, inject ``+run.mode=<run_mode>``.
     inputs_manifest : str or None, optional
         If provided, inject ``+inputs.manifest=<inputs_manifest>``.
 
@@ -47,8 +44,6 @@ def build_work_argv(
     if hydra_run_dir:
         inj.append(f"hydra.run.dir={hydra_run_dir}")
     inj.append(f"hydra.job.chdir={'true' if chdir else 'false'}")
-    if run_mode:
-        inj.append(f"+run.mode={run_mode}")
     if inputs_manifest:
         inj.append(f"+inputs.manifest={inputs_manifest}")
     return args + list(overrides) + inj

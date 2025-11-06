@@ -28,12 +28,6 @@ device: cuda:0           # target device
 use_flash_attn: true     # enable flash attention if available
 
 # Unified run controls for orchestrator (used by Stage-2/deep profiling)
-run:
-  mode: deep                   # deep | light
-  # DEPRECATED: use dataset.sampling.* overrides in Stage-2 runner instead
-  stage1_repeats: 1            # (deprecated) repeats for Stage-1 workload during capture
-  dataset_subset_filelist: null # optional filelist to limit workload samples
-  top_n_kernels: 30            # number of top kernels to inspect in NCU
 
 # Hydra run/output directory aligns with Stage 1 artifacts by default
 hydra:

@@ -47,7 +47,7 @@ Manual test entry point: `tests/manual/ncu/manual_nvtx_regions.py`
 
 **Acceptance Scenarios**:
 
-1. **Given** a program with 3 named ranges (A, B, and A::A1 nested), **When** the user runs the profiling workflow with region-only capture enabled, **Then** the output contains separate report sections for A, A::A1, and B with configured metrics populated for each section.
+1. **Given** a program with 3 named ranges (A, B, and A::A1 nested), **When** the user runs the profiling workflow with NVTX range replay configured (e.g., `pipeline.ncu.ncu_cli.replay_mode=range` and an appropriate `pipeline.ncu.ncu_cli.nvtx.include`), **Then** the output contains separate report sections for A, A::A1, and B with configured metrics populated for each section.
 2. **Given** overlapping or back-to-back ranges, **When** profiling is executed, **Then** only kernels occurring within the active range are attributed to that range and no kernels outside ranges appear in region reports.
 
 ---
