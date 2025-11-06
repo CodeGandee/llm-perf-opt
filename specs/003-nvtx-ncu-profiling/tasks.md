@@ -18,11 +18,32 @@ description: "Task list for NVTX-based NCU Regional Profiling"
 - **[Story]**: Which user story this task belongs to (e.g., US1, US2, US3)
 - Include exact file paths in descriptions
 
+## Global Testing Model Assumption
+
+All phases (Setup, Foundational, User Stories, Polish) MUST use a dummy model as the workload for testing and verification. We will ship minimal Hydra config groups for these dummy models under:
+
+- `conf/model/dummy_<what-model>/arch/dummy_<what-model>.default.yaml`
+- `conf/model/dummy_<what-model>/infer/dummy_<what-model>.default.yaml`
+
+Example for the shallow ResNet dummy:
+
+- `conf/model/dummy_shallow_resnet/arch/dummy_shallow_resnet.default.yaml`
+- `conf/model/dummy_shallow_resnet/infer/dummy_shallow_resnet.default.yaml`
+
+Select the dummy model via Hydra overrides in all manual tests and examples, e.g.:
+
+```
+model/dummy_shallow_resnet/arch@model=dummy_shallow_resnet.default \
+model/dummy_shallow_resnet/infer@infer=dummy_shallow_resnet.default
+```
+
 ## Phase 1: Setup (Shared Infrastructure)
 
 **Purpose**: Initial scaffolding including a reusable dummy model for testing/debugging
 
-- [ ] T001 [P] Create package scaffold for dummy models in `/workspace/code/llm-perf-opt/src/llm_perf_opt/dnn_models/__init__.py`
+- [ ] T001 [P] Create package scaffold for dummy models in `/workspace/code/llm-perf-opt/src/llm_perf_opt/dnn_models/__init__.py`; add Hydra config groups for the dummy model under:
+      - `/workspace/code/llm-perf-opt/conf/model/dummy_shallow_resnet/arch/dummy_shallow_resnet.default.yaml`
+      - `/workspace/code/llm-perf-opt/conf/model/dummy_shallow_resnet/infer/dummy_shallow_resnet.default.yaml`
 - [ ] T002 [P] Implement `ShallowResNet` dummy model in `/workspace/code/llm-perf-opt/src/llm_perf_opt/dnn_models/shallow_resnet.py` (few layers, CPU/GPU compatible)
 - [ ] T003 [P] Add model factory `get_model(name)` in `/workspace/code/llm-perf-opt/src/llm_perf_opt/dnn_models/factory.py` (returns `ShallowResNet` by name)
 - [ ] T004 [P] Create manual test scaffold in `/workspace/code/llm-perf-opt/tests/manual/ncu/manual_nvtx_regions.py`
@@ -49,7 +70,14 @@ description: "Task list for NVTX-based NCU Regional Profiling"
 
 **Goal**: Restrict profiling to NVTX-marked regions and aggregate results per range (including nested regions)
 
-**Independent Test**: Run manual script with 3 ranges (A, B, A::A1) and `pipeline.ncu.ncu_cli.replay_mode=range` + `pipeline.ncu.ncu_cli.nvtx.include`, then verify one section per region in `ncu/regions/` and consolidated `report.{md,json}`
+**Independent Test**: Use the dummy model via Hydra overrides:
+
+```
+model/dummy_shallow_resnet/arch@model=dummy_shallow_resnet.default \
+model/dummy_shallow_resnet/infer@infer=dummy_shallow_resnet.default
+```
+
+Run the manual script with 3 ranges (A, B, A::A1) and `pipeline.ncu.ncu_cli.replay_mode=range` + `pipeline.ncu.ncu_cli.nvtx.include`, then verify one section per region in `ncu/regions/` and consolidated `report.{md,json}`.
 
 ### Implementation for User Story 1
 
@@ -68,7 +96,7 @@ Parallel execution example: T013, T014, T015 can run in parallel after T007–T0
 
 **Goal**: Constrain per-region reporting to selected kernels via name patterns (include/exclude)
 
-**Independent Test**: Use manual script with `pipeline.ncu.ncu_cli.nvtx.include='decode*'` and a regex kernel filter; verify only matching kernels appear in per-region listings and selection metadata is recorded
+**Independent Test**: Use the dummy model via the same Hydra overrides as US1. Run the manual script with `pipeline.ncu.ncu_cli.nvtx.include='decode*'` and a regex kernel filter; verify only matching kernels appear in per-region listings and selection metadata is recorded.
 
 ### Implementation for User Story 2
 
@@ -86,7 +114,7 @@ Parallel execution example: T018–T020 can run in parallel; T021–T022 follow
 
 **Goal**: Allow users to select `sections` and `metrics` via config; reflect in region reports
 
-**Independent Test**: Override `pipeline.ncu.ncu_cli.sections` and `metrics`; run manual script and confirm Markdown/JSON reflect selected groups and NCU importer outputs
+**Independent Test**: With the dummy model selected via Hydra overrides, override `pipeline.ncu.ncu_cli.sections` and `metrics`; run the manual script and confirm Markdown/JSON reflect selected groups and NCU importer outputs.
 
 ### Implementation for User Story 3
 
