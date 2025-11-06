@@ -1,0 +1,55 @@
+openapi: 3.1.0
+info:
+  title: NVTX Range Report Contracts
+  version: 0.1.0
+paths: {}
+components:
+  schemas:
+    KernelRecord:
+      type: object
+      properties:
+        kernel_name: { type: string }
+        total_ms: { type: number }
+        calls: { type: integer }
+        mean_ms: { type: number }
+        device: { type: string }
+      required: [kernel_name, total_ms, calls, device]
+    NCUProfileRegion:
+      type: object
+      properties:
+        name: { type: string }
+        parent: { type: ["string", "null"] }
+        device: { type: string }
+        process_id: { type: integer }
+        metrics:
+          type: object
+          additionalProperties: { type: number }
+        sections:
+          type: object
+          additionalProperties: {}
+        kernels:
+          type: array
+          items: { $ref: '#/components/schemas/KernelRecord' }
+        selection:
+          type: object
+          properties:
+            include_patterns:
+              type: array
+              items: { type: string }
+            exclude_patterns:
+              type: array
+              items: { type: string }
+      required: [name]
+    NCUProfileRegionReport:
+      type: object
+      properties:
+        scope: { type: string }
+        regions:
+          type: array
+          items: { $ref: '#/components/schemas/NCUProfileRegion' }
+        totals:
+          type: object
+          additionalProperties: { type: number }
+        generated_at: { type: string, format: date-time }
+        config_fingerprint: { type: string }
+      required: [scope, regions, generated_at]

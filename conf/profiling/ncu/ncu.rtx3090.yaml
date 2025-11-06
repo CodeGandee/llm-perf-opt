@@ -12,6 +12,12 @@ ncu_cli:
   set: roofline
   # Kernel name matching base for regex (maps to --kernel-name-base)
   kernel_name_base: demangled
+  # Kernel name filtering (maps to --kernel-name or -k):
+  #   - Exact match (default): kernel_name: my_exact_kernel_name
+  #   - Regex match: kernel_name: regex:my_pattern
+  #   Since NCU 2021.1+, exact match is default; use "regex:" prefix for pattern matching.
+  # kernel_name: my_kernel        # => --kernel-name my_kernel (exact match)
+  # kernel_name: regex:my_.*      # => --kernel-name regex:my_.* (regex match)
   # Informative sections for GA102 per our KB
   sections:
     - SpeedOfLight

@@ -41,3 +41,10 @@ This document is a concise contributor guide for llm-perf-opt. Follow it for any
 ## Security & Configuration Tips
 - Do not commit datasets, weights, profiler traces, or large binaries; prefer symlinks and local paths
 - Use Hydra overrides for reproducibility (e.g., `hydra.run.dir=tmp/profile-output/${now:%Y%m%d-%H%M%S}`)
+
+## Active Technologies
+- Python 3.11 + Hydra (omegaconf), mdutils, attrs, nvtx (runtime), Nsight Systems/Compute CLIs (nsys/ncu) (003-nvtx-ncu-profiling)
+- Filesystem artifacts under `/workspace/code/llm-perf-opt/tmp/profile-output/<run_id>/` (nsys/, ncu/, torch_profiler/, static_analysis/) (003-nvtx-ncu-profiling)
+
+## Recent Changes
+- 003-nvtx-ncu-profiling: Added Python 3.11 + Hydra (omegaconf), mdutils, attrs, nvtx (runtime), Nsight Systems/Compute CLIs (nsys/ncu)

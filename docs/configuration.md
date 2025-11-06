@@ -85,10 +85,17 @@ Nsight Compute (`ncu_cli`) fields
   - `set`: string (e.g., `roofline`) → `--set`.
   - `metrics`: list of metric names, or `null` to omit `--metrics`.
   - `sections`: list of sections (e.g., SpeedOfLight, MemoryWorkloadAnalysis, Occupancy, SchedulerStats).
+  - `kernel_name_base`: kernel name format (e.g., `demangled`) → `--kernel-name-base`.
   - `export.csv`: boolean to indicate CSV-friendly exports for tooling.
-  - Defaults: `ncu.default` aligns with the scripts’ defaults but hard-codes both sections and a concise metrics set:
+  - Defaults: `ncu.default` aligns with the scripts' defaults but hard-codes both sections and a concise metrics set:
     - sections: [SpeedOfLight, MemoryWorkloadAnalysis, Occupancy, SchedulerStats]
     - metrics: [flop_count_hp, flop_count_sp, gpu__time_duration.sum, sm__throughput.avg.pct_of_peak_sustained_elapsed, dram__throughput.avg.pct_of_peak_sustained_elapsed]
+- Available presets:
+  - `ncu.default` — Standard 4-section preset (SpeedOfLight, MemoryWorkloadAnalysis, Occupancy, SchedulerStats)
+  - `ncu.high` — High-coverage preset with union of sections from device-specific presets (adds ComputeWorkloadAnalysis, WorkloadDistribution, WarpStateStats, LaunchStats, InstructionStats)
+  - `ncu.rtx3090` — GA102-specific balanced preset
+  - `ncu.rtx3090.compute` — Compute-focused preset for RTX 3090
+  - `ncu.rtx3090.memory` — Memory-focused preset for RTX 3090
 
 Nsight Systems (NVTX gating)
 - `pipeline.nsys.capture_range` mirrors the CLI (`nvtx|cudaProfilerApi|hotkey|none`).

@@ -7,6 +7,13 @@ Run directory layout
   - `static_analysis/` — `static_compute.{json,md}` (enabled by `pipeline.static_analysis.enable`)
   - `nsys/` — `run.nsys-rep`, `run.sqlite`, `summary_*.csv`, `cmd.txt`
   - `ncu/` — `raw.csv`, `.ncu-rep`, `sections_report.txt`, `cmd*.txt`
+- NCU kernel profiling scripts output (separate directory from pipeline):
+  - Default: `tmp/ncu-profile/<timestamp>/` (customizable via `--output-dir`)
+  - Per-kernel subdirectories: `kernel_<rank>_<md5(name)>/`
+    - `ncu.ncu-rep` — Binary report (open with ncu-ui)
+    - `ncu.section_<SectionName>.csv` — CSV export for each section
+    - `ncu.details.csv` — Detailed metrics
+  - `command.yaml` — Provenance (timestamp, args, ncu version)
 - Ephemeral scratch lives under `tmp/<stage>/` (e.g., `tmp/workload/` during NSYS capture).
 - Repro at run root: `env.json`, `config.yaml`, `inputs.yaml`.
 

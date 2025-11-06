@@ -14,5 +14,6 @@ Quickstart:
 - `pixi run stage1-run` — writes `torch_profiler/*` and `static_analysis/*` under `tmp/profile-output/<run_id>/`.
 - `pixi run stage2-profile` — writes `nsys/*` under the same run directory.
 - `pixi run stage-all-run` — runs both into a single run directory.
+- NCU kernel profiling — extract top kernels from Nsys output and profile with Nsight Compute (see "Running" for workflow).
 
-See “Getting Started” for environment and quick commands.
+See "Getting Started" for environment and quick commands.

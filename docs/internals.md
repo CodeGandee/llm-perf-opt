@@ -2,12 +2,14 @@
 
 Session wrapper (`dsocr_session.py`)
 - Loads tokenizer/model once (`from_local`) and installs optional NVTX hooks for SAM, CLIP, and projector submodules.
-- `run_inference(...)` stages:
-  - Preprocess: load PIL image, pad to `base_size`, optional dynamic crops to `image_size` grid (3×2 etc.).
-  - Token assembly: mirrors vendor image token span sizing using `patch_size=16` / `downsample_ratio=4` with base and crop grids.
-  - Prefill: forward once with `images`, `images_seq_mask`, `images_spatial_crop`.
-  - Decode: `generate(...)` with attention_mask to silence warnings; defaults from `infer` config.
-  - Logs timings and tokens; returns dictionary (prefill_ms, decode_ms, tokens, optional text).
+- Inference methods:
+  - `run_inference_generate(...)` — Legacy vendor-parity method using `generate()` for both prefill and decode in one call. Suitable for quick validation but less precise for profiling.
+  - `run_inference(...)` — Explicit prefill + decode split with NVTX ranges:
+    - Preprocess: load PIL image, pad to `base_size`, optional dynamic crops to `image_size` grid (3×2 etc.).
+    - Token assembly: mirrors vendor image token span sizing using `patch_size=16` / `downsample_ratio=4` with base and crop grids.
+    - Prefill: forward once with `images`, `images_seq_mask`, `images_spatial_crop` (builds KV cache).
+    - Decode: token-by-token loop using KV cache; controllable via `infer` config.
+  - Both methods log timings and tokens; return dictionary (prefill_ms, decode_ms, tokens, optional text).
 
 Runner (`llm_profile_runner.py`)
 - Discovers images (`dataset.root` + `fallback_patterns` or `subset_filelist`).
