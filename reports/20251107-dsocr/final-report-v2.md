@@ -116,13 +116,13 @@ NCU profiling was performed on all top 20 kernels, with **100% success rate** yi
 - L1/L2 hit rates: per‑class means are shown here for completeness, but cache hit rates can vary by access path (e.g., streaming loads, cache‑bypass, cp.async→SMEM). Treat per‑class cache numbers as indicative rather than definitive; full per‑kernel details are in the raw NCU data.
 
 **Metric Definitions:**
-- SM Throughput: Percent of peak SM compute activity achieved by the kernel (`sm__throughput.avg.pct_of_peak_sustained_active`). Indicates compute pressure; high values often correlate with compute‑bound kernels.
-- DRAM Throughput: Percent of peak off‑chip memory bandwidth (GDDR/HBM) used (`dram__throughput.avg.pct_of_peak_sustained_active`). Indicates external memory pressure; high values mean heavy DRAM traffic.
-- Memory Throughput: Aggregate memory subsystem activity across caches and DRAM (`mem__throughput.avg.pct_of_peak_sustained_active`). Can be high even when DRAM% is low if most traffic is served by L1/L2; not additive with DRAM%.
-- Achieved Occupancy: Fraction of active warps relative to the theoretical maximum residency on an SM (Occupancy section’s achieved occupancy). Low values suggest insufficient parallelism or latency hiding.
-- L1 Hit Rate: Percent of L1/TEX cacheable requests served from L1. Sensitive to access path and cache controls; interpret with care alongside Memory/DRAM throughput.
-- L2 Hit Rate: Percent of L2‑cacheable requests served from L2. Higher L2 hit can reduce DRAM throughput and improve effective bandwidth.
-- Mean Duration: Average single‑invocation kernel duration (μs) as measured by NCU for that kernel. Longer durations typically indicate heavier compute or larger tiles.
+- SM Throughput: Percent of peak SM compute activity achieved by the kernel. NCU metric: `sm__throughput.avg.pct_of_peak_sustained_active`. Indicates compute pressure; high values often correlate with compute‑bound kernels.
+- DRAM Throughput: Percent of peak off‑chip memory bandwidth (GDDR/HBM) used. NCU metric: `dram__throughput.avg.pct_of_peak_sustained_active`. Indicates external memory pressure; high values mean heavy DRAM traffic.
+- Memory Throughput: Aggregate memory subsystem activity across caches and DRAM. NCU metric: `mem__throughput.avg.pct_of_peak_sustained_active`. Can be high even when DRAM% is low if most traffic is served by L1/L2; not additive with DRAM%.
+- Achieved Occupancy: Fraction of active warps relative to the theoretical maximum residency on an SM. NCU: Occupancy section “Achieved Occupancy” (derived from active warps vs hardware limits). Low values suggest insufficient parallelism or latency hiding.
+- L1 Hit Rate: Percent of L1/TEX cacheable requests served from L1. NCU (Memory Workload Analysis): “L1/TEX Cache Hit Rate” (derived). Sensitive to access path and cache controls; interpret with care alongside Memory/DRAM throughput.
+- L2 Hit Rate: Percent of L2‑cacheable requests served from L2. NCU (Memory Workload Analysis): “L2 Cache Hit Rate” (derived). Higher L2 hit can reduce DRAM throughput and improve effective bandwidth.
+- Mean Duration: Average single‑invocation kernel duration (μs). NCU: per‑kernel “Duration” field. Longer durations typically indicate heavier compute or larger tiles.
 
 **Key Insights:**
 1. **Complete Dataset**: All 20 kernels have valid classifications.
