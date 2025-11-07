@@ -26,6 +26,15 @@ This report shows:
 - GPU: NVIDIA GeForce RTX 5090 (Blackwell architecture, sm_120)
 - Compute Capability: 12.0
 
+**RTX 5090 Critical Specs (Official):**
+- CUDA Cores: 21,760 (NVIDIA product page)
+- Base/Boost Clock: 2.01 GHz / 2.41 GHz (NVIDIA product page)
+- Memory: 32 GB GDDR7, 512‑bit interface; Memory Bandwidth: 1,792 GB/s (NVIDIA product page / Blackwell architecture brief)
+- L2 Cache: 96 MB (NVIDIA RTX Blackwell GPU Architecture PDF)
+- AI TOPS: 3,352 TOPS (NVIDIA product page)
+- FP32 Compute Peak (derived): ~104.8 TFLOPS = 21,760 cores × 2 FLOPs/clk × 2.41 GHz
+- Notes: values above reflect official specifications; derived FP32 peak is computed from official cores/clock. Compute capability sm_120 per NVIDIA Blackwell documentation.
+
 **Software:**
 - CUDA: 12.8
 - PyTorch: 2.10.0.dev20251102+cu128

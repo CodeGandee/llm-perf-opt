@@ -26,6 +26,15 @@
 - GPU：NVIDIA GeForce RTX 5090（Blackwell 架构，sm_120）
 - 计算能力：12.0
 
+RTX 5090 关键规格（官方）：
+- CUDA 核心数：21,760（NVIDIA 官方产品页）
+- 基准/加速频率：2.01 GHz / 2.41 GHz（NVIDIA 官方产品页）
+- 显存：32 GB GDDR7，512‑bit 总线；显存带宽：1,792 GB/s（NVIDIA 官方产品页 / Blackwell 架构白皮书）
+- L2 缓存：96 MB（NVIDIA RTX Blackwell GPU Architecture PDF）
+- AI TOPS：3,352 TOPS（NVIDIA 官方产品页）
+- FP32 理论峰值（推导）：约 104.8 TFLOPS = 21,760 核 × 2 FLOPs/clk × 2.41 GHz
+- 说明：以上为官方参数；FP32 峰值基于官方核心/频率推导。计算能力 sm_120 参见 NVIDIA Blackwell 文档。
+
 软件：
 - CUDA：12.8
 - PyTorch：2.10.0.dev20251102+cu128
