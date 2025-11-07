@@ -104,8 +104,8 @@ NCU profiling was performed on all top 20 kernels, with **100% success rate** yi
 | DRAM Throughput | 9.89% | 34.23% | 12.62% | 21.80% |
 | Memory Throughput | 32.23% | 41.20% | 27.52% | 34.62% |
 | Achieved Occupancy | 31.51% | 43.22% | 39.32% | 39.51% |
-| L1 Hit Rate | - | - | - | 8.96% |
-| L2 Hit Rate | - | - | - | 39.95% |
+| L1 Hit Rate | 6.54% | 9.51% | 9.65% | 8.96% |
+| L2 Hit Rate | 71.93% | 16.40% | 51.97% | 39.95% |
 | Mean Duration | 137.44 μs | 9.67 μs | 39.75 μs | 45.75 μs |
 
 How to interpret this table:
@@ -113,7 +113,7 @@ How to interpret this table:
 - Compute‑bound kernels show higher SM throughput (36.21%) and longer average duration (137.44 μs), indicating math‑heavy kernels that benefit from tensor‑core utilization, tiling, and ILP.
 - Memory‑bound kernels show higher DRAM/memory throughput (34.23%/41.20%) and short average durations (9.67 μs), indicating bandwidth‑limited, low‑arithmetic‑intensity work that benefits from fusion, layout, and reuse.
 - Balanced kernels underutilize both compute and memory, suggesting opportunities for fusion or specialization.
-- L1/L2 hit rates here are overall means; per‑class cache breakdowns are available in the raw NCU data.
+- L1/L2 hit rates: per‑class means are shown here for completeness, but cache hit rates can vary by access path (e.g., streaming loads, cache‑bypass, cp.async→SMEM). Treat per‑class cache numbers as indicative rather than definitive; full per‑kernel details are in the raw NCU data.
 
 **Key Insights:**
 1. **Complete Dataset**: All 20 kernels have valid classifications.
