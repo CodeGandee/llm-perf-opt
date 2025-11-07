@@ -100,6 +100,11 @@ NCU profiling was performed on all top 20 kernels, with **100% success rate** yi
 2. **Memory‑bound**: arithmetic intensity < the ridge point and memory throughput meaningfully exceeds SM throughput; bottlenecked by DRAM/L2 bandwidth or latency and data locality (coalescing/reuse).
 3. **Balanced**: neither compute nor memory utilization approaches their respective roofs (both low relative to peak); typically benefits from fusion, kernel specialization, and data‑layout changes.
 
+**Thresholds Used:**
+1. **Ridge point**: 80 FLOPs/byte for this workload (computed as P_peak / BW_eff; observed ridge ranged ~50–100 FLOPs/byte, we fixed 80 for classification).
+2. **Utilization dominance**: “meaningfully exceeds” means either a ratio ≥ 1.3× or an absolute gap ≥ 5 percentage points between SM vs Memory throughput.
+3. **Low‑utilization gate**: if both SM and Memory throughput < 20% of peak, classify as Balanced regardless of AI.
+
 **Performance Characteristics by Classification:**
 
 | Metric | Compute-Bound | Memory-Bound | Balanced | Overall Mean |
@@ -459,10 +464,11 @@ This section summarizes collection settings and the rule used to classify kernel
   - Compute peak: device BF16/Tensor Core peak performance for the RTX 5090 (Blackwell).
   - Memory peak: theoretical GDDR7 bandwidth (≈1.79 TB/s) and measured effective bandwidth from NCU; the ridge point uses the effective bandwidth.
 - Ridge point: computed as P_peak / BW_eff; for this workload it falls in the ~50–100 FLOPs/byte range depending on measured BW_eff.
-- Classification rule:
-  - Memory‑bound: arithmetic intensity < ridge point and memory throughput meaningfully higher than SM throughput.
-  - Compute‑bound: arithmetic intensity ≥ ridge point and SM/Tensor utilization meaningfully higher than memory throughput.
-  - Balanced: neither memory nor compute utilization approaches their respective roofs (low across both dimensions).
+- Classification rule and thresholds:
+  - Ridge point: 80 FLOPs/byte (fixed for classification; derived from P_peak / BW_eff).
+  - Compute‑bound: AI ≥ ridge AND (SM throughput ≥ 1.3× Memory OR SM − Memory ≥ 5 pp);
+  - Memory‑bound: AI < ridge AND (Memory throughput ≥ 1.3× SM OR Memory − SM ≥ 5 pp);
+  - Balanced: otherwise; additionally, if SM and Memory < 20% of peak, classify as Balanced.
 
 ## Appendix: Full Kernel Function Names
 
