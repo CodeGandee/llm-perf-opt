@@ -108,28 +108,28 @@ NCU profiling was performed on all top 20 kernels, with **100% success rate** yi
 | L2 Hit Rate | 71.93% | 16.40% | 51.97% | 39.95% |
 | Mean Duration | 137.44 μs | 9.67 μs | 39.75 μs | 45.75 μs |
 
-**How to Interpret This Table:**
-- Values are per‑class averages across kernels (unweighted by runtime); the overall mean averages all 20.
-- Compute‑bound kernels show higher SM throughput (36.21%) and longer average duration (137.44 μs), indicating math‑heavy kernels that benefit from tensor‑core utilization, tiling, and ILP.
-- Memory‑bound kernels show higher DRAM/memory throughput (34.23%/41.20%) and short average durations (9.67 μs), indicating bandwidth‑limited, low‑arithmetic‑intensity work that benefits from fusion, layout, and reuse.
-- Balanced kernels underutilize both compute and memory, suggesting opportunities for fusion or specialization.
-- L1/L2 hit rates: per‑class means are shown here for completeness, but cache hit rates can vary by access path (e.g., streaming loads, cache‑bypass, cp.async→SMEM). Treat per‑class cache numbers as indicative rather than definitive; full per‑kernel details are in the raw NCU data.
+**Key Insights:**
+1. Complete dataset: all 20 kernels have valid classifications.
+2. Resource utilization: overall means indicate low utilization (SM 15.75%, memory 34.62%, achieved occupancy 39.51%).
+3. Memory‑bound majority (45%): nearly half the kernels are constrained by memory bandwidth.
+4. Compute‑bound share (20%): four kernels are compute‑bound and longer‑running on average (137.44 μs).
+5. Duration distribution: compute‑bound kernels take longer than memory‑bound (9.67 μs avg), consistent with complex math operations.
 
 **Metric Definitions:**
-- SM Throughput: Percent of peak SM compute activity achieved by the kernel. NCU metric: `sm__throughput.avg.pct_of_peak_sustained_active`. Indicates compute pressure; high values often correlate with compute‑bound kernels.
-- DRAM Throughput: Percent of peak off‑chip memory bandwidth (GDDR/HBM) used. NCU metric: `dram__throughput.avg.pct_of_peak_sustained_active`. Indicates external memory pressure; high values mean heavy DRAM traffic.
-- Memory Throughput: Aggregate memory subsystem activity across caches and DRAM. NCU metric: `mem__throughput.avg.pct_of_peak_sustained_active`. Can be high even when DRAM% is low if most traffic is served by L1/L2; not additive with DRAM%.
-- Achieved Occupancy: Fraction of active warps relative to the theoretical maximum residency on an SM. NCU: Occupancy section “Achieved Occupancy” (derived from active warps vs hardware limits). Low values suggest insufficient parallelism or latency hiding.
-- L1 Hit Rate: Percent of L1/TEX cacheable requests served from L1. NCU (Memory Workload Analysis): “L1/TEX Cache Hit Rate” (derived). Sensitive to access path and cache controls; interpret with care alongside Memory/DRAM throughput.
-- L2 Hit Rate: Percent of L2‑cacheable requests served from L2. NCU (Memory Workload Analysis): “L2 Cache Hit Rate” (derived). Higher L2 hit can reduce DRAM throughput and improve effective bandwidth.
-- Mean Duration: Average single‑invocation kernel duration (μs). NCU: per‑kernel “Duration” field. Longer durations typically indicate heavier compute or larger tiles.
+1. SM Throughput: percent of peak SM compute activity achieved by the kernel. NCU metric: `sm__throughput.avg.pct_of_peak_sustained_active`. Indicates compute pressure; high values often correlate with compute‑bound kernels.
+2. DRAM Throughput: percent of peak off‑chip memory bandwidth (GDDR/HBM) used. NCU metric: `dram__throughput.avg.pct_of_peak_sustained_active`. Indicates external memory pressure; high values mean heavy DRAM traffic.
+3. Memory Throughput: aggregate memory subsystem activity across caches and DRAM. NCU metric: `mem__throughput.avg.pct_of_peak_sustained_active`. Can be high even when DRAM% is low if most traffic is served by L1/L2; not additive with DRAM%.
+4. Achieved Occupancy: fraction of active warps relative to the theoretical maximum residency on an SM. NCU: Occupancy section “Achieved Occupancy” (derived from active warps vs hardware limits). Low values suggest insufficient parallelism or latency hiding.
+5. L1 Hit Rate: percent of L1/TEX cacheable requests served from L1. NCU (Memory Workload Analysis): “L1/TEX Cache Hit Rate” (derived). Sensitive to access path and cache controls; interpret with care alongside Memory/DRAM throughput.
+6. L2 Hit Rate: percent of L2‑cacheable requests served from L2. NCU (Memory Workload Analysis): “L2 Cache Hit Rate” (derived). Higher L2 hit can reduce DRAM throughput and improve effective bandwidth.
+7. Mean Duration: average single‑invocation kernel duration (μs). NCU: per‑kernel “Duration” field. Longer durations typically indicate heavier compute or larger tiles.
 
-**Key Insights:**
-1. **Complete Dataset**: All 20 kernels have valid classifications.
-2. **Resource Utilization**: Overall means indicate low utilization (SM 15.75%, memory 34.62%, achieved occupancy 39.51%).
-3. **Memory-Bound Majority (45%)**: Nearly half the kernels are constrained by memory bandwidth.
-4. **Compute-Bound Share (20%)**: Four kernels are compute‑bound and longer‑running on average (137.44 μs).
-5. **Duration Distribution**: Compute‑bound kernels take longer than memory‑bound (9.67 μs avg), consistent with complex math operations.
+**How to Interpret This Table:**
+1. Values are per‑class averages across kernels (unweighted by runtime); the overall mean averages all 20.
+2. Compute‑bound kernels show higher SM throughput (36.21%) and longer average duration (137.44 μs), indicating math‑heavy kernels that benefit from tensor‑core utilization, tiling, and ILP.
+3. Memory‑bound kernels show higher DRAM/memory throughput (34.23%/41.20%) and short average durations (9.67 μs), indicating bandwidth‑limited, low‑arithmetic‑intensity work that benefits from fusion, layout, and reuse.
+4. Balanced kernels underutilize both compute and memory, suggesting opportunities for fusion or specialization.
+5. L1/L2 hit rates: per‑class means are shown for completeness, but cache hit rates can vary by access path (e.g., streaming loads, cache‑bypass, cp.async→SMEM). Treat per‑class cache numbers as indicative rather than definitive; full per‑kernel details are in the raw NCU data.
 
 ### Top Kernels by Duration (NCU)
 

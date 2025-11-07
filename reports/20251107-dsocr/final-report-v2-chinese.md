@@ -115,21 +115,21 @@
 4. 计算受限占比 20%，且平均时长更长（137.44 μs）。
 5. 时长分布：计算受限内核明显长于内存受限（后者均值 9.67 μs），符合计算复杂度更高的特征。
 
-**表格解读提示：**
-- 该表为“按内核平均”的分类均值（未按运行总时长加权）；“总体均值”为 20 个内核的简单平均。
-- 计算受限：SM 吞吐更高（36.21%）、平均更长（137.44 μs），应优先优化张量核利用、铺片与指令级并行。
-- 内存受限：DRAM/内存吞吐更高（34.23%/41.20%）、平均更短（9.67 μs），应优先做融合、布局与复用优化。
-- 均衡：计算与内存均未接近屋脊，适合考虑融合或专用化。
-- L1/L2 命中率：此处给出按类别均值，但命中率受访问路径（如流式加载、cache‑bypass、cp.async→共享内存）影响较大，仅作参考；每内核细节请见原始 NCU 数据。
-
 **指标定义：**
-- SM 吞吐：内核达到的 SM 计算活动占峰值百分比。NCU 指标：`sm__throughput.avg.pct_of_peak_sustained_active`。体现计算压力；高值常对应计算受限。
-- DRAM 吞吐：片外显存带宽（GDDR/HBM）使用占峰值百分比。NCU 指标：`dram__throughput.avg.pct_of_peak_sustained_active`。体现外部内存压力；高值表示大量 DRAM 访问。
-- 内存吞吐：跨缓存与 DRAM 的整体内存子系统活动。NCU 指标：`mem__throughput.avg.pct_of_peak_sustained_active`。即便 DRAM% 较低，若大部分由 L1/L2 提供也可能较高；与 DRAM% 非加和关系。
-- 实际占用率：相对于理论最大驻留 warp 的活动 warp 比例。NCU：Occupancy 章节 “Achieved Occupancy”（派生指标，基于活动 warp 与硬件上限）。偏低通常表示并行度或延迟隐藏不足。
-- L1 命中率：L1/TEX 可缓存请求在 L1 命中的百分比。NCU（Memory Workload Analysis）：“L1/TEX Cache Hit Rate”（派生）。受访问路径与缓存控制影响较大；需结合 Memory/DRAM 吞吐综合解读。
-- L2 命中率：L2 可缓存请求在 L2 命中的百分比。NCU（Memory Workload Analysis）：“L2 Cache Hit Rate”（派生）。较高的 L2 命中可降低 DRAM 吞吐、提升有效带宽。
-- 平均时长：该内核单次调用平均时长（μs）。NCU：内核行的 “Duration”。更长通常意味着计算更重或分块更大。
+1. SM 吞吐：内核达到的 SM 计算活动占峰值百分比。NCU 指标：`sm__throughput.avg.pct_of_peak_sustained_active`。体现计算压力；高值常对应计算受限。
+2. DRAM 吞吐：片外显存带宽（GDDR/HBM）使用占峰值百分比。NCU 指标：`dram__throughput.avg.pct_of_peak_sustained_active`。体现外部内存压力；高值表示大量 DRAM 访问。
+3. 内存吞吐：跨缓存与 DRAM 的整体内存子系统活动。NCU 指标：`mem__throughput.avg.pct_of_peak_sustained_active`。即便 DRAM% 较低，若大部分由 L1/L2 提供也可能较高；与 DRAM% 非加和关系。
+4. 实际占用率：相对于理论最大驻留 warp 的活动 warp 比例。NCU：Occupancy 章节 “Achieved Occupancy”（派生指标，基于活动 warp 与硬件上限）。偏低通常表示并行度或延迟隐藏不足。
+5. L1 命中率：L1/TEX 可缓存请求在 L1 命中的百分比。NCU（Memory Workload Analysis）：“L1/TEX Cache Hit Rate”（派生）。受访问路径与缓存控制影响较大；需结合 Memory/DRAM 吞吐综合解读。
+6. L2 命中率：L2 可缓存请求在 L2 命中的百分比。NCU（Memory Workload Analysis）：“L2 Cache Hit Rate”（派生）。较高的 L2 命中可降低 DRAM 吞吐、提升有效带宽。
+7. 平均时长：该内核单次调用平均时长（μs）。NCU：内核行的 “Duration”。更长通常意味着计算更重或分块更大。
+
+**表格解读提示：**
+1. 该表为“按内核平均”的分类均值（未按运行总时长加权）；“总体均值”为 20 个内核的简单平均。
+2. 计算受限：SM 吞吐更高（36.21%）、平均更长（137.44 μs），应优先优化张量核利用、铺片与指令级并行。
+3. 内存受限：DRAM/内存吞吐更高（34.23%/41.20%）、平均更短（9.67 μs），应优先做融合、布局与复用优化。
+4. 均衡：计算与内存均未接近屋脊，适合考虑融合或专用化。
+5. L1/L2 命中率：此处给出按类别均值，但命中率受访问路径（如流式加载、cache‑bypass、cp.async→共享内存）影响较大，仅作参考；每内核细节请见原始 NCU 数据。
 
 ### 按单次时长排序（NCU）
 
