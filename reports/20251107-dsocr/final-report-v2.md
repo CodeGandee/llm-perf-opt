@@ -2,7 +2,7 @@
 
 ## Overview
 
-This is the **Version 2** report with complete profiling data for all 20 top kernels. Version 1 had 2 kernels with missing data (kernel_0009 and kernel_0016); these have been successfully profiled in V2.
+This report presents complete profiling data for the top 20 kernels observed during decode.
 
 The intention of this report is to present the findings from kernel-level profiling of the DeepSeek-OCR model using NVIDIA Nsight Systems (nsys) and Nsight Compute (ncu), to identify the performance characteristics and potential bottlenecks during inference, to guide future NPU design (inference oriented).
 
@@ -14,11 +14,9 @@ This report shows:
 - Classification of kernels by type (compute-bound, memory-bound, balanced)
 - Implementation details of profiling setup and methodology
 
-**Key improvements in V2:**
-- **100% kernel coverage**: All 20 kernels successfully profiled (vs 18/20 in V1)
-- **kernel_0009** now classified as balanced (was unknown in V1)
-- **kernel_0016** now classified as compute_bound (was unknown in V1)
-- More comprehensive roofline analysis with complete dataset
+**Highlights:**
+- **100% kernel coverage**: All 20 kernels successfully profiled
+- More comprehensive roofline analysis with the complete dataset
 
 ## Experiment
 
@@ -56,25 +54,30 @@ This report shows:
 
 ### Top Kernels by Total Time
 
-The following table shows the top 15 kernels by cumulative execution time during the decode phase of inference, as measured by Nsight Systems. Kernels are categorized by source library and given human-friendly names based on their functionality.
+The following table shows the top 20 kernels by cumulative execution time during the decode phase of inference, as measured by Nsight Systems (NVTX‑gated on decode). Kernels are categorized by source library and given human‑friendly names based on their functionality.
 
 | Time % | Library | Kernel Name | Description |
 |--------|---------|-------------|-------------|
-| 34.4% | cuBLAS | GEMV-1 (BF16, template=7) | Matrix-vector multiplication, dominates due to decode autoregressiveness |
-| 14.8% | cuBLAS | GEMV-2 (BF16, template=6) | Matrix-vector multiplication, alternative tiling strategy |
-| 6.0% | PyTorch ATen | Direct Copy (float) | Memory copy/cast operations for intermediate tensors |
-| 4.2% | PyTorch ATen | Elementwise Multiply (BF16, vec) | Vectorized element-wise multiplication for attention masks |
-| 3.9% | PyTorch ATen | SiLU Activation (BF16, vec) | Vectorized SiLU (Swish) activation in FFN |
-| 2.9% | PyTorch ATen | Elementwise Multiply (BF16) | Non-vectorized element-wise multiplication |
-| 2.8% | PyTorch ATen | Cat Batched Copy (vec, 128-tile) | Concatenation operations for multi-head outputs |
-| 2.7% | PyTorch ATen | Copy/Cast (BF16, vec) | BF16-specific vectorized copy operations |
-| 2.4% | FlashAttention | Flash Forward Split-KV (BF16) | IO-aware fused attention with split K/V strategy |
-| 2.0% | PyTorch ATen | Elementwise Add (BF16, vec) | Vectorized addition for residual connections |
-| 1.8% | PyTorch ATen | Cat Batched Copy (vec, 64-tile) | Concatenation with smaller tile size |
-| 1.8% | PyTorch ATen | Elementwise Multiply (float) | FP32 element-wise multiplication |
+| 34.4% | cuBLAS | GEMV (BF16, template=7) | Matrix-vector multiplication for decode |
+| 14.8% | cuBLAS | GEMV (BF16, template=6) | Matrix-vector multiplication for decode |
+| 6.0% | PyTorch ATen | Direct Copy (float) | Memory copy/cast for intermediates |
+| 4.2% | PyTorch ATen | Elementwise Multiply (BF16, vec) | Vectorized elementwise multiply |
+| 3.9% | PyTorch ATen | SiLU Activation (BF16, vec) | Vectorized SiLU activation in FFN |
+| 2.9% | PyTorch ATen | Elementwise Multiply (BF16) | Elementwise multiply (BF16) |
+| 2.8% | PyTorch ATen | Cat Batched Copy (vec, 128-tile) | Concatenate heads (vectorized) |
+| 2.7% | PyTorch ATen | Copy/Cast (BF16, vec) | BF16 vectorized copy |
+| 2.4% | FlashAttention | Flash Forward Split-KV (BF16) | IO-aware fused attention with split K/V |
+| 2.0% | PyTorch ATen | Elementwise Add (BF16, vec) | Vectorized add for residuals |
+| 1.8% | PyTorch ATen | Cat Batched Copy (vec, 64-tile) | Concatenate heads (64 tile) |
+| 1.8% | PyTorch ATen | Elementwise Multiply (float) | FP32 elementwise multiply |
 | 1.6% | PyTorch ATen | Mean Reduction (float) | Reduction operations for normalization |
 | 1.5% | PyTorch ATen | Elementwise Neg (BF16) | Negation operations |
-| 1.4% | FlashAttention | Flash Split-KV Combine | Combines split-KV outputs from attention |
+| 1.4% | FlashAttention | Flash Split-KV Combine | Combine split-KV outputs |
+| 1.3% | PyTorch ATen | TopK Gather (float) | Gather top-K values/indices |
+| 1.2% | PyTorch ATen | Index Put (elementwise) | Advanced indexing write |
+| 1.2% | PyTorch ATen | Bitonic Sort (KV in-place) | In-place key-value bitonic sort |
+| 1.1% | PyTorch ATen | Elementwise Multiply (float, vec) | Vectorized elementwise multiply |
+| 1.0% | PyTorch ATen | Sum Reduction (float) | Sum reduction |
 
 **Key Observations:**
 - **GEMV Dominance (49.2%)**: The two cuBLAS GEMV variants account for nearly half of all execution time, which is characteristic of autoregressive decode where batch size = 1 and matrix-vector products dominate over matrix-matrix products.
@@ -84,7 +87,7 @@ The following table shows the top 15 kernels by cumulative execution time during
 
 ### Kernel Classification
 
-NCU profiling was performed on all top 20 kernels, with **100% success rate** yielding valid metrics for all kernels (compared to 18/20 in V1). The kernels were classified based on roofline analysis:
+NCU profiling was performed on all top 20 kernels, with **100% success rate** yielding valid metrics for all kernels. The kernels were classified based on roofline analysis:
 
 | Classification | Count | % of Profiled |
 |----------------|-------|---------------|
@@ -105,19 +108,19 @@ NCU profiling was performed on all top 20 kernels, with **100% success rate** yi
 | L2 Hit Rate | - | - | - | 39.95% |
 | Mean Duration | 137.44 μs | 9.67 μs | 39.75 μs | 45.75 μs |
 
-**Key Insights:**
-1. **Complete Dataset (V2 Improvement)**: All 20 kernels now have valid classifications, eliminating uncertainty from V1.
-2. **Improved SM Throughput (15.75%)**: Higher than V1 (10.35%), indicating better compute utilization with complete dataset.
-3. **Higher Memory Throughput (34.62% vs V1's 27.35%)**: The newly profiled kernels contribute to higher average memory utilization.
-4. **Better Occupancy (39.51% vs V1's 30.13%)**: Significantly improved with complete kernel data.
-5. **Memory-Bound Majority (45%)**: Nearly half of all kernels are constrained by memory bandwidth.
-6. **Compute-Bound Growth**: Now 4 compute-bound kernels (20%) vs 3 in V1 (16.7%), with kernel_0016 joining this category.
-7. **Duration Distribution**: Compute-bound kernels take significantly longer (137.44 μs avg) than memory-bound (9.67 μs), indicating complex compute operations.
-8. **L2 Cache Degradation**: L2 hit rate dropped from 53.48% in V1 to 39.95% in V2, suggesting the newly profiled kernels have worse cache behavior.
+How to interpret this table:
+- Values are per‑class averages across kernels (unweighted by runtime); the overall mean averages all 20.
+- Compute‑bound kernels show higher SM throughput (36.21%) and longer average duration (137.44 μs), indicating math‑heavy kernels that benefit from tensor‑core utilization, tiling, and ILP.
+- Memory‑bound kernels show higher DRAM/memory throughput (34.23%/41.20%) and short average durations (9.67 μs), indicating bandwidth‑limited, low‑arithmetic‑intensity work that benefits from fusion, layout, and reuse.
+- Balanced kernels underutilize both compute and memory, suggesting opportunities for fusion or specialization.
+- L1/L2 hit rates here are overall means; per‑class cache breakdowns are available in the raw NCU data.
 
-**Newly Classified Kernels (V1 → V2):**
-- **kernel_0009**: Unknown → **Balanced** (fmha_cutlassF memory-efficient attention)
-- **kernel_0016**: Unknown → **Compute-bound** (CUTLASS GEMM kernel)
+**Key Insights:**
+1. **Complete Dataset**: All 20 kernels have valid classifications.
+2. **Resource Utilization**: Overall means indicate low utilization (SM 15.75%, memory 34.62%, achieved occupancy 39.51%).
+3. **Memory-Bound Majority (45%)**: Nearly half the kernels are constrained by memory bandwidth.
+4. **Compute-Bound Share (20%)**: Four kernels are compute‑bound and longer‑running on average (137.44 μs).
+5. **Duration Distribution**: Compute‑bound kernels take longer than memory‑bound (9.67 μs avg), consistent with complex math operations.
 
 ### Top Kernels by Duration (NCU)
 
@@ -137,12 +140,12 @@ The following kernels had the longest individual execution times in V2:
 | 7.97 | Memory-bound | ATen Mean Reduction (float, 512 threads) |
 
 **Analysis:**
-- **Longest kernel increased dramatically (404.70 μs vs V1's 165.09 μs)**: A 2.45x increase, suggesting either different execution patterns or measurement differences in V2.
-- **Memory-Efficient Attention appears (160.74 μs)**: This is kernel_0009 (previously unknown in V1), now classified as balanced. It's the 2nd longest-running kernel, indicating attention computation is a major contributor.
-- **CUTLASS GEMM dominance**: 3 of top 4 longest kernels are compute-bound CUTLASS GEMM operations with large tiles (128×256, 256×128).
-- **Balanced kernels are expensive**: kernel_0009 (fmha attention, 160.74 μs) and elementwise add (94.91 μs) show that balanced classification doesn't mean cheap—these kernels are underutilizing both compute and memory.
-- **Memory-bound kernels are short-lived**: Average 9.67 μs, reflecting bandwidth-limited, low–arithmetic intensity operations with small work sizes.
-- **FlashAttention at 10.34 μs**: Remarkably efficient given the complexity of fused attention—much faster than the 160.74 μs memory-efficient attention variant.
+- **Longest kernel (404.70 μs)**: Indicates a long‑tail duration distribution driven by large‑tile GEMM.
+- **Memory‑Efficient Attention (160.74 μs)**: Balanced classification; 2nd longest, showing attention is a major contributor.
+- **CUTLASS GEMM dominance**: 3 of top 4 longest kernels are compute‑bound CUTLASS GEMM operations with large tiles (128×256, 256×128).
+- **Balanced kernels can be costly**: kernel_0009 (fmha attention, 160.74 μs) and elementwise add (94.91 μs) underutilize both compute and memory.
+- **Memory‑bound kernels are short‑lived**: Average 9.67 μs, reflecting bandwidth‑limited, low–arithmetic intensity operations with small work sizes.
+- **FlashAttention at 10.34 μs**: Efficient for a fused attention kernel; far faster than the 160.74 μs memory‑efficient attention variant.
 
 ### Histograms of Kernel Execution Metrics
 
@@ -271,31 +274,31 @@ The roofline analysis confirms that the majority of kernels are operating well b
 
 ### Summary of Findings
 
-1. **Complete Profiling Coverage (V2 Achievement)**: Successfully profiled all 20 top kernels with 100% data coverage, compared to 90% in V1. The two previously unknown kernels (kernel_0009 and kernel_0016) are now fully characterized.
+1. **Complete Profiling Coverage**: Successfully profiled all 20 top kernels with 100% data coverage.
 
-2. **GEMV Bottleneck (49.2% of time)**: The autoregressive decode phase is dominated by cuBLAS GEMV operations, which is expected for single-token generation. These operations are inherently memory-bound with poor compute utilization on modern GPUs.
+2. **GEMV Bottleneck (49.2% of time)**: The autoregressive decode phase is dominated by cuBLAS GEMV operations, which is expected for single‑token generation. These operations are inherently memory‑bound with poor compute utilization on modern GPUs.
 
-3. **Improved but Still Low Hardware Utilization**:
-   - SM throughput increased to 15.75% (vs 10.35% in V1) with complete dataset
-   - Memory throughput at 34.62% (vs 27.35% in V1) shows better characterization
-   - Achieved occupancy improved to 39.51% (vs 30.13% in V1)
-   - Still indicates massive underutilization despite improvements
+3. **Low Hardware Utilization (absolute)**:
+   - SM throughput 15.75%
+   - Memory throughput 34.62%
+   - Achieved occupancy 39.51%
+   - Indicates substantial underutilization with room for optimization
 
-4. **Memory Hierarchy Changes with Complete Data**:
-   - L1 hit rate remains poor at 8.96% (similar to V1's 8.85%)
-   - L2 hit rate decreased to 39.95% (vs 53.48% in V1), indicating newly profiled kernels have worse cache behavior
-   - Suggests kernel_0009 (memory-efficient attention) and kernel_0016 (CUTLASS GEMM) have poor cache locality
+4. **Memory Hierarchy**:
+   - L1 hit rate is poor at 8.96%
+   - L2 hit rate is 39.95%
+   - Suggests kernel_0009 (memory‑efficient attention) and kernel_0016 (CUTLASS GEMM) have poor cache locality
 
 5. **Kernel Fusion Opportunities**: The prevalence of small elementwise operations (multiply, add, activation functions) consuming 21.7% of time suggests significant potential for kernel fusion to reduce memory traffic and launch overhead.
 
 6. **Mixed Precision Overhead**: Frequent BF16 ↔ FP32 conversions (6% of time in copy/cast operations) indicate suboptimal data type management.
 
-7. **Attention Kernel Insights (V2 Discovery)**:
-   - **kernel_0009** (Memory-Efficient Attention): 160.74 μs execution time, classified as balanced, indicating it underutilizes both compute and memory
+7. **Attention Kernel Insights**:
+   - **kernel_0009** (Memory‑Efficient Attention): 160.74 μs execution time, classified as balanced, indicating it underutilizes both compute and memory
    - Comparison with FlashAttention (10.34 μs) shows 15.5x difference, highlighting the efficiency gains of different attention implementations
-   - Suggests opportunities to replace memory-efficient attention with FlashAttention variants
+   - Suggests opportunities to replace memory‑efficient attention with FlashAttention variants
 
-8. **Compute-Bound Kernel Growth**: V2 reveals 4 compute-bound kernels (20% of total) vs 3 in V1, with kernel_0016 (CUTLASS GEMM) joining this category. These kernels average 137.44 μs—significantly longer than memory-bound (9.67 μs) or balanced (39.75 μs) kernels.
+8. **Compute‑Bound Share**: 4 compute‑bound kernels (20% of total). These kernels average 137.44 μs—significantly longer than memory‑bound (9.67 μs) or balanced (39.75 μs) kernels.
 
 ### Performance Bottlenecks Identified
 
@@ -340,7 +343,7 @@ Based on the profiling results, the following architectural considerations are r
 
 #### 1. Tensor Core / CUDA Core Balance
 
-**Finding**: Only 16.7% of profiled kernels are compute-bound, and even these achieve only 34% SM throughput.
+**Finding**: 20% of profiled kernels are compute‑bound, and even these achieve only ~34% SM throughput.
 
 **Recommendation**:
 - **Reduce tensor core density** compared to training-oriented GPUs (e.g., 30-40% of die area vs. 50%+ on H100)
@@ -350,7 +353,7 @@ Based on the profiling results, the following architectural considerations are r
 
 #### 2. Memory Bandwidth Requirements
 
-**Finding**: Average memory throughput of 27.35%, but memory-bound kernels show 41.56% throughput, still below saturation.
+**Finding**: Overall average memory throughput of 34.62%; memory‑bound kernels average 41.20% throughput, still below saturation.
 
 **Recommendation**:
 - **Memory bandwidth can be lower** than training GPUs without sacrificing performance for these workloads
@@ -360,7 +363,7 @@ Based on the profiling results, the following architectural considerations are r
 
 #### 3. L1 / L2 Cache Ratio and Sizing
 
-**Finding**: L1 hit rate of 8.96%, L2 hit rate of 39.95% (V2), suggesting working sets exceed L1 but only partially fit in L2.
+**Finding**: L1 hit rate of 8.96%, L2 hit rate of 39.95%, suggesting working sets exceed L1 but only partially fit in L2.
 
 **Recommendation**:
 - **Increase L2 cache significantly** (target: 128–256 MB vs. 40 MB on A100; 50 MB on H100)
@@ -402,7 +405,7 @@ Based on the profiling results, the following architectural considerations are r
 
 #### 7. Parallelism and Occupancy
 
-**Finding**: Low occupancy (30%) indicates insufficient parallelism for available resources.
+**Finding**: Achieved occupancy around 39% indicates insufficient parallelism for available resources.
 
 **Recommendation**:
 - **Reduce SM count** compared to training GPUs (e.g., 60-80 SMs vs. 132 on H100)
@@ -473,6 +476,11 @@ The following table maps human-friendly kernel names to their full mangled funct
 | 13 | 1.6% | Mean Reduction (float) | PyTorch ATen | `void at::native::reduce_kernel<(int)512, (int)1, at::native::ReduceOp<float, at::native::MeanOps<float, float, float, float>, unsigned int, float, (int)4, (int)4>>(T3)` |
 | 14 | 1.5% | Elementwise Neg (BF16) | PyTorch ATen | `void at::native::elementwise_kernel<(int)128, (int)4, void at::native::gpu_kernel_impl_nocast<at::native::neg_kernel_cuda(at::TensorIteratorBase &)::[lambda() (instance 2)]::operator ()() const::[lambda() (instance 9)]::operator ()() const::[lambda(c10::BFloat16) (instance 1)]>(at::TensorIteratorBase &, const T1 &)::[lambda(int) (instance 1)]>(int, T3)` |
 | 15 | 1.4% | Flash Split-KV Combine | FlashAttention | `void flash::flash_fwd_splitkv_combine_kernel<Flash_fwd_kernel_traits<(int)128, (int)64, (int)128, (int)4, (bool)0, (bool)0, cutlass::bfloat16_t, Flash_kernel_traits<(int)128, (int)64, (int)128, (int)4, cutlass::bfloat16_t>>, (int)4, (int)3, (bool)1>(flash::Flash_fwd_params)` |
+| 16 | 1.3% | TopK Gather (float) | PyTorch ATen | `void at::native::sbtopk::gatherTopK<float, unsigned int, (int)1, (bool)0>(at::cuda::detail::TensorInfo<const T1, T2>, T2, T2, bool, T2, T2, at::cuda::detail::TensorInfo<T1, T2>, T2, at::cuda::detail::TensorInfo<long, T2>, T2, T1 *)` |
+| 17 | 1.2% | Index Put (elementwise) | PyTorch ATen | `void at::native::index_elementwise_kernel<(int)128, (int)4, void at::native::gpu_index_kernel<void at::native::index_put_kernel_impl<at::native::OpaqueType<(int)2>>(at::TensorIterator &, c10::ArrayRef<long>, c10::ArrayRef<long>)::[lambda(char *, const char *, long) (instance 1)]>(at::TensorIteratorBase &, c10::ArrayRef<long>, c10::ArrayRef<long>, const T1 &, bool)::[lambda(int) (instance 1)]>(long, T3)` |
+| 18 | 1.2% | Bitonic Sort (KV in-place) | PyTorch ATen | `void at::native::bitonicSortKVInPlace<(int)-2, (int)-1, (int)16, (int)16, long, long, at::native::LTOp<long, (bool)1>, unsigned int>(at::cuda::detail::TensorInfo<T5, T8>, T8, T8, T8, at::cuda::detail::TensorInfo<T6, T8>, T8, T7)` |
+| 19 | 1.1% | Elementwise Multiply (float, vec) | PyTorch ATen | `void at::native::vectorized_elementwise_kernel<(int)4, at::native::AUnaryFunctor<float, float, float, at::native::binary_internal::MulFunctor<float>>, std::array<char *, (unsigned long)2>>(int, T2, T3)` |
+| 20 | 1.0% | Sum Reduction (float) | PyTorch ATen | `void at::native::reduce_kernel<(int)128, (int)4, at::native::ReduceOp<float, at::native::func_wrapper_t<float, at::native::sum_functor<float, float, float>::operator ()(at::TensorIterator &)::[lambda(float, float) (instance 1)]>, unsigned int, float, (int)4, (int)4>>(T3)` |
 
 ### Notes on Function Name Interpretation
 
