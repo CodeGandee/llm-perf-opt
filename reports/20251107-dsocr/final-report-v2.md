@@ -108,7 +108,7 @@ NCU profiling was performed on all top 20 kernels, with **100% success rate** yi
 | L2 Hit Rate | 71.93% | 16.40% | 51.97% | 39.95% |
 | Mean Duration | 137.44 μs | 9.67 μs | 39.75 μs | 45.75 μs |
 
-How to interpret this table:
+**How to Interpret This Table:**
 - Values are per‑class averages across kernels (unweighted by runtime); the overall mean averages all 20.
 - Compute‑bound kernels show higher SM throughput (36.21%) and longer average duration (137.44 μs), indicating math‑heavy kernels that benefit from tensor‑core utilization, tiling, and ILP.
 - Memory‑bound kernels show higher DRAM/memory throughput (34.23%/41.20%) and short average durations (9.67 μs), indicating bandwidth‑limited, low‑arithmetic‑intensity work that benefits from fusion, layout, and reuse.
