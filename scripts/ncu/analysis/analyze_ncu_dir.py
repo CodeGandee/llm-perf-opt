@@ -70,12 +70,17 @@ Thicket output
 
 Usage examples
 - Pixi (recommended):
-  pixi run -e rtx5090 python scripts/ncu/analysis/analyze_ncu_dir.py tmp/ncu-profile/<run_id>
+  - CSV directory input:
+    pixi run -e rtx5090 python scripts/ncu/analysis/analyze_ncu_dir.py tmp/ncu-profile/<run_id>
+  - NCU report input (.ncu-rep via ncu_report API):
+    pixi run -e rtx5090 python scripts/ncu/analysis/analyze_ncu_dir.py tmp/ncu-profile/<run_id>/profile.ncu-rep
 
 Dependencies
 - Required: pandas, matplotlib
 - Optional: llnl-thicket, llnl-hatchet (for writing thicket.json). Script otherwise runs
   without them; Thicket output is skipped if not available.
+- Optional (preferred): NVIDIA Nsight Compute Python Report Interface (ncu_report) available
+  on PYTHONPATH, typically under /opt/nvidia/nsight-compute/<ver>/extras/python.
 
 Notes & limitations
 - Nsight Compute versions can change metric names/sections; this script targets common
@@ -107,6 +112,12 @@ except Exception:
     Graph = None  # type: ignore[assignment]
     Node = None  # type: ignore[assignment]
     HatchetGraphFrame = None  # type: ignore[assignment]
+
+# Optional: NVIDIA Nsight Compute Python Report Interface (preferred)
+try:
+    import ncu_report  # type: ignore
+except Exception:
+    ncu_report = None  # type: ignore
 
 
 NUMERIC_COL = "Metric Value"
@@ -153,8 +164,8 @@ def find_kernel_dirs(input_dir: Path) -> List[KernelPaths]:
 
 
 def read_csv_safe(path: Path) -> pd.DataFrame:
-    # Allow for thousands separators in numeric fields. Read everything as str first and parse later.
-    df = pd.read_csv(path)
+    # Let pandas handle thousands separators where present.
+    df = pd.read_csv(path, thousands=",")
     # Normalize column names by stripping quotes if any (pandas typically handles this already).
     df.columns = [str(c).strip() for c in df.columns]
     return df
@@ -192,10 +203,10 @@ def pivot_metrics(df: pd.DataFrame) -> Tuple[pd.DataFrame, Dict[str, object]]:
         if col in df.columns and len(df[col]) > 0:
             info[col] = df[col].iloc[0]
 
-    # Clean numeric values
+    # Clean numeric values (vectorized)
     if NUMERIC_COL in df.columns:
         df = df.copy()
-        df[NUMERIC_COL] = df[NUMERIC_COL].map(_parse_numeric)
+        df[NUMERIC_COL] = pd.to_numeric(df[NUMERIC_COL], errors="coerce")
 
     # Average across IDs per metric name
     if METRIC_COL not in df.columns:
@@ -337,6 +348,8 @@ def parse_roofline_points(path: Path) -> Optional[pd.DataFrame]:
         out["flops_per_s"] = pd.to_numeric(out["flops_per_s_raw"], errors="coerce") * 1e12
     elif "gflop" in y_name_l:
         out["flops_per_s"] = pd.to_numeric(out["flops_per_s_raw"], errors="coerce") * 1e9
+    elif "mflop" in y_name_l:
+        out["flops_per_s"] = pd.to_numeric(out["flops_per_s_raw"], errors="coerce") * 1e6
     else:
         out["flops_per_s"] = pd.to_numeric(out["flops_per_s_raw"], errors="coerce")
     out = out.dropna(subset=["ai_flops_per_byte", "flops_per_s"])  # type: ignore[arg-type]
@@ -345,7 +358,195 @@ def parse_roofline_points(path: Path) -> Optional[pd.DataFrame]:
     return out[["ai_flops_per_byte", "flops_per_s"]]
 
 
-def analyze_dir(input_dir: Path) -> None:
+# ------------------------------
+# ncu_report (API) path support
+# ------------------------------
+
+def _safe_action_metric_value(action, name: str) -> Optional[float]:
+    try:
+        m = action.metric_by_name(name)
+        return None if m is None else m.value()
+    except Exception:
+        return None
+
+
+def analyze_ncu_report(report_path: Path, margin: float = 5.0) -> None:
+    if ncu_report is None:
+        raise SystemExit("ncu_report module not available; ensure Nsight Compute extras/python is on PYTHONPATH")
+    ctx = ncu_report.load_report(str(report_path))
+
+    analysis_dir = report_path.parent / "analysis"
+    hist_dir = analysis_dir / "histograms"
+    per_kernel_roofline_dir = analysis_dir / "roofline_per_kernel"
+    analysis_dir.mkdir(parents=True, exist_ok=True)
+    hist_dir.mkdir(parents=True, exist_ok=True)
+    per_kernel_roofline_dir.mkdir(parents=True, exist_ok=True)
+
+    summary_rows: List[Dict[str, object]] = []
+    long_rows: List[pd.DataFrame] = []
+
+    for range_idx in range(len(ctx)):
+        r = ctx[range_idx]
+        for action_idx in range(len(r)):
+            a = r[action_idx]
+            kernel_id = f"kernel_{range_idx:04d}_{action_idx:04d}"
+
+            # Names
+            try:
+                kernel_name = a.name()
+            except Exception:
+                kernel_name = None
+            try:
+                kernel_name_demangled = a.name(demangle=True)
+            except Exception:
+                kernel_name_demangled = kernel_name
+
+            # Launch dimensions (may be strings or tuples)
+            grid_size = _safe_action_metric_value(a, "launch__grid_size")
+            block_size = _safe_action_metric_value(a, "launch__block_size")
+
+            # Core metrics (names may vary by version; these are common)
+            sm_pct = _safe_action_metric_value(a, "smsp__throughput.avg.pct_of_peak_sustained_elapsed")
+            dram_pct = _safe_action_metric_value(a, "dram__throughput.avg.pct_of_peak_sustained_elapsed")
+            mem_pct = _safe_action_metric_value(a, "gpu__compute_memory_throughput.avg.pct_of_peak_sustained_elapsed")
+            l1tex_pct = _safe_action_metric_value(a, "l1tex__throughput.avg.pct_of_peak_sustained_elapsed")
+            l2_pct = _safe_action_metric_value(a, "l2_throughput.avg.pct_of_peak_sustained_elapsed")
+            duration_ns = _safe_action_metric_value(a, "gpu__time_duration.sum")
+            duration_us = (duration_ns / 1000.0) if (duration_ns is not None) else None
+            l1tex_hit = _safe_action_metric_value(a, "l1tex__t_sector_hit_rate.pct")
+            l2_hit = _safe_action_metric_value(a, "lts__t_sector_hit_rate.pct")
+            occ_achieved = _safe_action_metric_value(a, "sm__warps_active.avg.pct_of_peak_sustained_active")
+            occ_theoretical = _safe_action_metric_value(a, "sm__maximum_warps_per_active_cycle_pct")
+
+            metrics = {
+                "sm_throughput_pct": sm_pct,
+                "dram_throughput_pct": dram_pct,
+                "mem_throughput_pct": mem_pct,
+                "l1tex_throughput_pct": l1tex_pct,
+                "l2_throughput_pct": l2_pct,
+                "duration_us": duration_us,
+                "l1tex_hit_rate_pct": l1tex_hit,
+                "l2_hit_rate_pct": l2_hit,
+                "achieved_occupancy_pct": occ_achieved,
+                "theoretical_occupancy_pct": occ_theoretical,
+            }
+
+            bound = classify_bound(sm_pct, dram_pct, margin=margin)
+            row: Dict[str, object] = {
+                "kernel_id": kernel_id,
+                "kernel_name": kernel_name_demangled or kernel_name,
+                "kernel_name_raw": kernel_name,
+                "range_idx": range_idx,
+                "action_idx": action_idx,
+                "grid_size": grid_size,
+                "block_size": block_size,
+                **metrics,
+                "classification": bound,
+            }
+            summary_rows.append(row)
+
+            # Long form (API section)
+            rows = []
+            for k, v in metrics.items():
+                if v is None:
+                    continue
+                rows.append({"kernel_id": kernel_id, "section": "API", "metric_name": k, "value": float(v)})
+            if rows:
+                long_rows.append(pd.DataFrame(rows))
+
+            # Per-kernel roofline: no physical AI/FLOPs/s available via this path (without extra metric names)
+            if sm_pct is not None and dram_pct is not None:
+                fig, ax = plt.subplots(figsize=(4, 4), dpi=120)
+                ax.scatter([dram_pct], [sm_pct], c=["C0"], label=kernel_id)
+                ax.plot([0, 100], [0, 100], linestyle="--", color="gray", linewidth=1, label="x=y")
+                ax.set_xlabel("DRAM Throughput (%)")
+                ax.set_ylabel("Compute (SM) Throughput (%)")
+                ax.set_title(f"Roofline (normalized) • {kernel_id}")
+                ax.set_xlim(0, 100)
+                ax.set_ylim(0, 100)
+                ax.grid(True, linestyle=":", alpha=0.5)
+                ax.legend(loc="lower right", fontsize=8)
+                fig.tight_layout()
+                fig.savefig(per_kernel_roofline_dir / f"{sanitize_filename(kernel_id)}.png")
+                plt.close(fig)
+
+    # Summaries
+    summary_df = pd.DataFrame(summary_rows)
+    analysis_dir.mkdir(parents=True, exist_ok=True)
+    summary_df.to_csv(analysis_dir / "metrics_summary.csv", index=False)
+    summary_df.to_pickle(analysis_dir / "metrics_summary.pkl")
+    (summary_df[["kernel_id", "classification"]]
+     .to_csv(analysis_dir / "classification_summary.csv", index=False))
+    all_long_df = pd.concat(long_rows, ignore_index=True) if long_rows else pd.DataFrame()
+    if not all_long_df.empty:
+        all_long_df.to_csv(analysis_dir / "all_metrics_long.csv", index=False)
+
+    # Aggregate normalized plot
+    if not summary_df.empty and {"dram_throughput_pct", "sm_throughput_pct"}.issubset(summary_df.columns):
+        plot_df = summary_df.dropna(subset=["dram_throughput_pct", "sm_throughput_pct"])  # type: ignore[arg-type]
+        if not plot_df.empty:
+            fig, ax = plt.subplots(figsize=(6, 6), dpi=150)
+            ax.scatter(plot_df["dram_throughput_pct"], plot_df["sm_throughput_pct"], c="C1")
+            for _, r in plot_df.iterrows():
+                label = str(r["kernel_id"]) if pd.notna(r["kernel_id"]) else ""
+                ax.annotate(label, (r["dram_throughput_pct"], r["sm_throughput_pct"]), fontsize=7, alpha=0.7)
+            ax.plot([0, 100], [0, 100], linestyle="--", color="gray", linewidth=1)
+            ax.set_xlabel("DRAM Throughput (%)")
+            ax.set_ylabel("Compute (SM) Throughput (%)")
+            ax.set_title("Roofline (normalized throughput) across kernels")
+            ax.set_xlim(0, 100)
+            ax.set_ylim(0, 100)
+            ax.grid(True, linestyle=":", alpha=0.5)
+            fig.tight_layout()
+            fig.savefig(analysis_dir / "roofline_scatter_normalized.png")
+            plt.close(fig)
+
+    # Thicket JSON (flat tree)
+    if (
+        Thicket is not None
+        and Graph is not None
+        and Node is not None
+        and th_helpers is not None
+        and HatchetGraphFrame is not None
+        and not summary_df.empty
+    ):
+        perf_cols = [c for c in summary_df.columns if c not in {
+            "kernel_id", "kernel_name", "kernel_name_raw", "range_idx", "action_idx",
+            "grid_size", "block_size", "classification"
+        } and pd.to_numeric(summary_df[c], errors="coerce").notna().any()]
+
+        if perf_cols:
+            kernel_ids = list(summary_df["kernel_id"].astype(str))
+            root = Node.from_lists(["NCU Kernels", *kernel_ids])
+            graph = Graph([root])
+            child_nodes = {child.frame["name"]: child for child in root.children}
+            profile_label = report_path.name
+            rows_th = []
+            for _, sr in summary_df.iterrows():
+                node_obj = child_nodes.get(str(sr["kernel_id"]))
+                if node_obj is None:
+                    continue
+                row = {"node": node_obj, "profile": profile_label}
+                for c in perf_cols:
+                    row[c] = _parse_numeric(sr[c])
+                rows_th.append(row)
+            if rows_th:
+                df_perf = pd.DataFrame(rows_th).set_index(["node", "profile"])
+                stats_df = th_helpers._new_statsframe_df(df_perf)
+                stats_gf = HatchetGraphFrame(graph=graph, dataframe=stats_df, exc_metrics=[], inc_metrics=[], default_metric=perf_cols[0])
+                th = Thicket(graph=graph, dataframe=df_perf, exc_metrics=[], inc_metrics=[], default_metric=perf_cols[0], performance_cols=perf_cols, statsframe=stats_gf)
+                try:
+                    json_str = th.to_json()
+                    (analysis_dir / "thicket.json").write_text(json_str)
+                except Exception:
+                    print("Warning: failed to serialize Thicket JSON for ncu_report path")
+
+
+def analyze_dir(input_dir: Path, margin: float = 5.0) -> None:
+    # Support both .ncu-rep file (preferred API) and legacy CSV directory
+    if input_dir.is_file() and input_dir.suffix == ".ncu-rep":
+        return analyze_ncu_report(input_dir, margin=margin)
+
     kernels = find_kernel_dirs(input_dir)
     if not kernels:
         raise SystemExit(f"No kernel_* directories found in {input_dir}")
@@ -380,7 +581,7 @@ def analyze_dir(input_dir: Path) -> None:
             occ_wide, _ = pivot_metrics(occ_df)
 
         metrics = extract_selected_metrics(sol_wide, mwa_wide, occ_wide)
-        bound = classify_bound(metrics.get("sm_throughput_pct"), metrics.get("dram_throughput_pct"))
+        bound = classify_bound(metrics.get("sm_throughput_pct"), metrics.get("dram_throughput_pct"), margin=margin)
 
         row: Dict[str, object] = {
             "kernel_id": kernel_id,
@@ -607,17 +808,23 @@ def analyze_dir(input_dir: Path) -> None:
 
 
 def main() -> None:
-    parser = argparse.ArgumentParser(description="Analyze Nsight Compute (ncu) kernel directory")
+    parser = argparse.ArgumentParser(description="Analyze Nsight Compute (ncu) data from a CSV directory or an .ncu-rep file")
     parser.add_argument(
-        "input_dir",
+        "input_path",
         type=str,
-        help="Path to ncu profile directory (containing kernel_*/ subdirs)",
+        help="Path to NCU CSV directory (kernel_* subdirs) or a .ncu-rep report file",
+    )
+    parser.add_argument(
+        "--classify-margin",
+        type=float,
+        default=5.0,
+        help="Margin (percentage points) for memory/compute-bound classification (default: 5.0)",
     )
     args = parser.parse_args()
-    input_dir = Path(args.input_dir).resolve()
-    if not input_dir.exists() or not input_dir.is_dir():
-        raise SystemExit(f"Input directory not found or not a directory: {input_dir}")
-    analyze_dir(input_dir)
+    input_path = Path(args.input_path).resolve()
+    if not input_path.exists():
+        raise SystemExit(f"Input path not found: {input_path}")
+    analyze_dir(input_path, margin=args.classify_margin)
 
 
 if __name__ == "__main__":
