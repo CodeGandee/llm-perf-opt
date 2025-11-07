@@ -122,6 +122,15 @@
 - 均衡：计算与内存均未接近屋脊，适合考虑融合或专用化。
 - L1/L2 命中率：此处给出按类别均值，但命中率受访问路径（如流式加载、cache‑bypass、cp.async→共享内存）影响较大，仅作参考；每内核细节请见原始 NCU 数据。
 
+**指标定义：**
+- SM 吞吐：内核达到的 SM 计算活动占峰值百分比（`sm__throughput.avg.pct_of_peak_sustained_active`）。体现计算压力；高值常对应计算受限。
+- DRAM 吞吐：片外显存带宽（GDDR/HBM）使用占峰值百分比（`dram__throughput.avg.pct_of_peak_sustained_active`）。体现外部内存压力；高值表示大量 DRAM 访问。
+- 内存吞吐：跨缓存与 DRAM 的整体内存子系统活动（`mem__throughput.avg.pct_of_peak_sustained_active`）。即便 DRAM% 较低，若大部分由 L1/L2 提供也可能较高；与 DRAM% 非加和关系。
+- 实际占用率：相对于理论最大驻留 warp 的活动 warp 比例（Occupancy 章节的 achieved occupancy）。偏低通常表示并行度或延迟隐藏不足。
+- L1 命中率：L1/TEX 可缓存请求在 L1 命中的百分比。受访问路径与缓存控制影响较大；需结合 Memory/DRAM 吞吐综合解读。
+- L2 命中率：L2 可缓存请求在 L2 命中的百分比。较高的 L2 命中可降低 DRAM 吞吐、提升有效带宽。
+- 平均时长：NCU 统计的该内核单次调用平均时长（μs）。更长通常意味着计算更重或分块更大。
+
 ### 按单次时长排序（NCU）
 
 下列内核在本次分析中具有最长的单次执行时长：
