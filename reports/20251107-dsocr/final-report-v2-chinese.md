@@ -54,9 +54,9 @@ V2 的主要改进：
 - Nsight Compute：Roofline、SpeedOfLight、MemoryWorkloadAnalysis、Occupancy 等章节
 - 内核选择：基于 Nsys 总时间 Top 20（按解码阶段累计执行时间）
 
-### 按总时间排序的内核（Top 15）
+### 按总时间排序的内核（Top 20）
 
-下表展示解码阶段（decode）累计执行时间排名前 15 的内核（由 Nsight Systems 度量）。按来源库进行归类，并给出基于功能的易读名称。
+下表展示解码阶段（decode，NVTX 门控）累计执行时间排名前 20 的内核（由 Nsight Systems 度量）。按来源库进行归类，并给出基于功能的易读名称。
 
 | 时间占比 | 库 | 内核名 | 说明 |
 |---------|----|--------|------|
@@ -66,15 +66,20 @@ V2 的主要改进：
 | 4.2% | PyTorch ATen | Elementwise Multiply (BF16, vec) | 向量化点乘（如注意力掩码） |
 | 3.9% | PyTorch ATen | SiLU Activation (BF16, vec) | FFN 中向量化 SiLU（Swish）激活 |
 | 2.9% | PyTorch ATen | Elementwise Multiply (BF16) | 非向量化点乘 |
-| 2.8% | PyTorch ATen | Cat Batched Copy (vec, 128-tile) | 多头输出拼接拷贝 |
+| 2.8% | PyTorch ATen | Cat Batched Copy (vec, 128-tile) | 多头输出拼接拷贝（向量化） |
 | 2.7% | PyTorch ATen | Copy/Cast (BF16, vec) | BF16 专用向量化拷贝 |
 | 2.4% | FlashAttention | Flash Forward Split-KV (BF16) | 面向 IO 的分裂 K/V 融合注意力 |
 | 2.0% | PyTorch ATen | Elementwise Add (BF16, vec) | 向量化加法（残差） |
-| 1.8% | PyTorch ATen | Cat Batched Copy (vec, 64-tile) | 更小分块的拼接拷贝 |
+| 1.8% | PyTorch ATen | Cat Batched Copy (vec, 64-tile) | 更小分块的拼接拷贝（64-tile） |
 | 1.8% | PyTorch ATen | Elementwise Multiply (float) | FP32 点乘 |
 | 1.6% | PyTorch ATen | Mean Reduction (float) | 归一化相关归约 |
 | 1.5% | PyTorch ATen | Elementwise Neg (BF16) | 取负运算 |
 | 1.4% | FlashAttention | Flash Split-KV Combine | 合并分裂 K/V 的输出 |
+| 1.3% | PyTorch ATen | TopK 聚合（float） | 提取 Top-K 值/索引 |
+| 1.2% | PyTorch ATen | Index Put（逐元素） | 高级索引写入（Index Put） |
+| 1.2% | PyTorch ATen | 双调排序（KV 原地） | 键值对双调排序（原地） |
+| 1.1% | PyTorch ATen | 向量化点乘（float） | 向量化点乘（float） |
+| 1.0% | PyTorch ATen | 求和归约（float） | 求和归约 |
 
 关键观察：
 - GEMV 主导（49.2%）：两种 cuBLAS GEMV 变体占据近一半的执行时间，符合 batch=1 的自回归解码特征（GEMV 多于 GEMM）。
@@ -133,7 +138,7 @@ V2 的主要改进：
 | 18.34 | 内存受限 | cuBLAS GEMV (BF16, template=6) |
 | 18.08 | 内存受限 | ATen Direct Copy (float, 12288 blocks) |
 | 10.34 | 内存受限 | FlashAttention Split-KV Forward |
-| 9.82 | 计算受限 | ATen Cat Batched Copy (512-thread blocks) |
+| 9.82 | 内存受限 | ATen Cat Batched Copy (512-thread blocks) |
 | 7.97 | 内存受限 | ATen Mean Reduction (float, 512 threads) |
 
 分析：
@@ -141,7 +146,7 @@ V2 的主要改进：
 - 记忆高效注意力出现（160.74 μs）：即 V1 未知的 kernel_0009，现归为“均衡”，为第 2 慢内核，说明注意力计算贡献显著。
 - CUTLASS GEMM 占优：前 4 个中的 3 个为大分块的计算受限 GEMM。
 - “均衡”并不便宜：如 kernel_0009（注意力，160.74 μs）与 elementwise add（94.91 μs），同时低效使用计算与内存。
-- 内存受限内核更“短平快”：均值 9.67 μs，符合快速内存操作特征。
+- 内存受限内核更“短时”：均值 9.67 μs，体现带宽受限、算术强度低且工作量较小的特征。
 - FlashAttention 仅 10.34 μs：作为复杂的融合注意力，显著快于 160.74 μs 的记忆高效注意力变体。
 
 ### 内核执行指标的直方图
@@ -220,7 +225,7 @@ L2 吞吐多数位于 1-30%，存在 80-90% 的离群点，表征重度 L2 流�
 
 ![Duration Distribution](ncu-v2/analysis/histograms/duration_us.png)
 
-内核时长分布在 2-170 μs，多数内核很短（<10 μs），其启动开销相对计算时间可能较高。
+内核时长约分布在 2–405 μs（长尾），多数内核很短（<10 μs），其启动开销相对计算时间可能较高。上界长尾包含 CUTLASS GEMM（如 404.70 μs）。
 
 内存忙碌百分比（Memory Busy %）
 
@@ -246,7 +251,7 @@ L2 吞吐多数位于 1-30%，存在 80-90% 的离群点，表征重度 L2 流�
 
 要点：
 - 多数内核位于低算术强度区域（<100 FLOPs/byte），表现为内存受限；
-- 很少有内核接近“计算屋脊”（右上斜线）；
+- 很少有内核接近“计算屋脊”（顶部水平线）；“内存屋脊”为对角线；
 - 实际性能与屋脊线的差距显示出可观的优化空间。
 
 #### 物理屋脊线
@@ -325,7 +330,7 @@ L2 吞吐多数位于 1-30%，存在 80-90% 的离群点，表征重度 L2 流�
 
 #### 1. Tensor Core / CUDA Core 配比
 
-发现：仅 16.7% 的内核为计算受限，且 SM 吞吐仅约 34%。
+发现：仅 20% 的内核为计算受限，且这些内核的 SM 吞吐仅约 34%。
 
 建议：
 - 相比训练型 GPU 适度降低张量核密度（例如晶体管面积占比 30-40%，而非 H100 的 50%+）
@@ -335,7 +340,7 @@ L2 吞吐多数位于 1-30%，存在 80-90% 的离群点，表征重度 L2 流�
 
 #### 2. 内存带宽需求
 
-发现：平均内存吞吐 27.35%，内存受限内核平均 41.56%，仍未饱和。
+发现：总体平均内存吞吐 34.62%，内存受限内核平均 41.20%，仍未达到带宽上限。
 
 建议：
 - 相比训练型 GPU 可适当降低带宽配置而不显著影响此类推理工作负载
@@ -345,10 +350,10 @@ L2 吞吐多数位于 1-30%，存在 80-90% 的离群点，表征重度 L2 流�
 
 #### 3. L1 / L2 缓存比例与容量
 
-发现：L1 命中率 8.85%，L2 命中率 53.48%，表明工作集超出 L1，但可部分驻留在 L2。
+发现：L1 命中率 8.96%，L2 命中率 39.95%（V2），表明工作集超出 L1，且仅部分可在 L2 得到复用。
 
 建议：
-- 大幅提升 L2（目标 128-256 MB；A100 为 50 MB）
+- 大幅提升 L2（目标 128–256 MB；A100 为 40 MB，H100 为 50 MB）
 - 缩小或可配置化 L1（与共享内存可互换）
 - 在 L1 与 L2 之间增设 victim cache 捕获逐出数据
 - 为 KV-Cache 设立高带宽片上 SRAM（32-64 MB）以降低 DRAM 访问
@@ -387,7 +392,7 @@ L2 吞吐多数位于 1-30%，存在 80-90% 的离群点，表征重度 L2 流�
 
 #### 7. 并行度与占用率
 
-发现：占用率 ~30%，说明并行度不足。
+发现：实际占用率约 39%（V1 为 30%），并行度仍不足。
 
 建议：
 - 相比训练型 GPU 适当减少 SM 数量（如 60-80 vs. H100 的 132）
@@ -418,6 +423,21 @@ L2 吞吐多数位于 1-30%，存在 80-90% 的离群点，表征重度 L2 流�
 
 ---
 
+## 附录：方法细节
+
+本节简述采集设置与内核分类规则：
+
+- Nsight Systems：使用 NVTX 对解码阶段（decode）门控，按累计时间选取 Top 内核；
+- Nsight Compute：收集 SpeedOfLight、MemoryWorkloadAnalysis、Roofline、Occupancy 等章节；保留完整函数签名；
+- 屋脊线峰值：
+  - 计算峰值：RTX 5090（Blackwell）设备 BF16/张量核理论峰值；
+  - 内存峰值：GDDR7 理论带宽（约 1.79 TB/s）与 NCU 实测有效带宽；分界点以有效带宽计算；
+- 分界点（ridge point）：P_peak / BW_eff；在本工作负载下随实测带宽落于约 50–100 FLOPs/byte 区间；
+- 分类规则：
+  - 内存受限：算术强度 < 分界点，且内存吞吐显著高于 SM 吞吐；
+  - 计算受限：算术强度 ≥ 分界点，且 SM/张量核利用显著高于内存吞吐；
+  - 均衡：计算与内存利用均未接近各自屋脊（双低）。
+
 ## 附录：完整内核函数名
 
 本附录给出完整（未截断）的内核函数名，便于溯源与调试。对应“按总时间排序的内核”章节中的条目。
@@ -443,6 +463,11 @@ L2 吞吐多数位于 1-30%，存在 80-90% 的离群点，表征重度 L2 流�
 | 13 | 1.6% | Mean Reduction (float) | PyTorch ATen | `void at::native::reduce_kernel<(int)512, (int)1, at::native::ReduceOp<float, at::native::MeanOps<float, float, float, float>, unsigned int, float, (int)4, (int)4>>(T3)` |
 | 14 | 1.5% | Elementwise Neg (BF16) | PyTorch ATen | `void at::native::elementwise_kernel<(int)128, (int)4, void at::native::gpu_kernel_impl_nocast<at::native::neg_kernel_cuda(at::TensorIteratorBase &)::[lambda() (instance 2)]::operator ()() const::[lambda() (instance 9)]::operator ()() const::[lambda(c10::BFloat16) (instance 1)]>(at::TensorIteratorBase &, const T1 &)::[lambda(int) (instance 1)]>(int, T3)` |
 | 15 | 1.4% | Flash Split-KV Combine | FlashAttention | `void flash::flash_fwd_splitkv_combine_kernel<Flash_fwd_kernel_traits<(int)128, (int)64, (int)128, (int)4, (bool)0, (bool)0, cutlass::bfloat16_t, Flash_kernel_traits<(int)128, (int)64, (int)128, (int)4, cutlass::bfloat16_t>>, (int)4, (int)3, (bool)1>(flash::Flash_fwd_params)` |
+| 16 | 1.3% | TopK 聚合（float） | PyTorch ATen | `void at::native::sbtopk::gatherTopK<float, unsigned int, (int)1, (bool)0>(at::cuda::detail::TensorInfo<const T1, T2>, T2, T2, bool, T2, T2, at::cuda::detail::TensorInfo<T1, T2>, T2, at::cuda::detail::TensorInfo<long, T2>, T2, T1 *)` |
+| 17 | 1.2% | Index Put（逐元素） | PyTorch ATen | `void at::native::index_elementwise_kernel<(int)128, (int)4, void at::native::gpu_index_kernel<void at::native::index_put_kernel_impl<at::native::OpaqueType<(int)2>>(at::TensorIterator &, c10::ArrayRef<long>, c10::ArrayRef<long>)::[lambda(char *, const char *, long) (instance 1)]>(at::TensorIteratorBase &, c10::ArrayRef<long>, c10::ArrayRef<long>, const T1 &, bool)::[lambda(int) (instance 1)]>(long, T3)` |
+| 18 | 1.2% | 双调排序（KV 原地） | PyTorch ATen | `void at::native::bitonicSortKVInPlace<(int)-2, (int)-1, (int)16, (int)16, long, long, at::native::LTOp<long, (bool)1>, unsigned int>(at::cuda::detail::TensorInfo<T5, T8>, T8, T8, T8, at::cuda::detail::TensorInfo<T6, T8>, T8, T7)` |
+| 19 | 1.1% | 向量化点乘（float） | PyTorch ATen | `void at::native::vectorized_elementwise_kernel<(int)4, at::native::AUnaryFunctor<float, float, float, at::native::binary_internal::MulFunctor<float>>, std::array<char *, (unsigned long)2>>(int, T2, T3)` |
+| 20 | 1.0% | 求和归约（float） | PyTorch ATen | `void at::native::reduce_kernel<(int)128, (int)4, at::native::ReduceOp<float, at::native::func_wrapper_t<float, at::native::sum_functor<float, float, float>::operator ()(at::TensorIterator &)::[lambda(float, float) (instance 1)]>, unsigned int, float, (int)4, (int)4>>(T3)` |
 
 ### 函数名解读说明
 
