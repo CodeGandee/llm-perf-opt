@@ -94,7 +94,11 @@ NCU profiling was performed on all top 20 kernels, with **100% success rate** yi
 | Memory-bound | 9 | 45.0% |
 | Balanced | 7 | 35.0% |
 | Compute-bound | 4 | 20.0% |
-| **Unknown** | **0** | **0%** ✓ |
+
+**Class Definitions:**
+1. **Compute‑bound**: arithmetic intensity ≥ the ridge point and SM/Tensor utilization meaningfully exceeds memory throughput; bottlenecked by math throughput, ILP/tiling, or instruction scheduling.
+2. **Memory‑bound**: arithmetic intensity < the ridge point and memory throughput meaningfully exceeds SM throughput; bottlenecked by DRAM/L2 bandwidth or latency and data locality (coalescing/reuse).
+3. **Balanced**: neither compute nor memory utilization approaches their respective roofs (both low relative to peak); typically benefits from fusion, kernel specialization, and data‑layout changes.
 
 **Performance Characteristics by Classification:**
 
