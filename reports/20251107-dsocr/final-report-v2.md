@@ -133,7 +133,7 @@ The following kernels had the longest individual execution times in V2:
 | 18.34 | Memory-bound | cuBLAS GEMV (BF16, template=6) |
 | 18.08 | Memory-bound | ATen Direct Copy (float, 12288 blocks) |
 | 10.34 | Memory-bound | FlashAttention Split-KV Forward |
-| 9.82 | Compute-bound | ATen Cat Batched Copy (512-thread blocks) |
+| 9.82 | Memory-bound | ATen Cat Batched Copy (512-thread blocks) |
 | 7.97 | Memory-bound | ATen Mean Reduction (float, 512 threads) |
 
 **Analysis:**
@@ -141,7 +141,7 @@ The following kernels had the longest individual execution times in V2:
 - **Memory-Efficient Attention appears (160.74 μs)**: This is kernel_0009 (previously unknown in V1), now classified as balanced. It's the 2nd longest-running kernel, indicating attention computation is a major contributor.
 - **CUTLASS GEMM dominance**: 3 of top 4 longest kernels are compute-bound CUTLASS GEMM operations with large tiles (128×256, 256×128).
 - **Balanced kernels are expensive**: kernel_0009 (fmha attention, 160.74 μs) and elementwise add (94.91 μs) show that balanced classification doesn't mean cheap—these kernels are underutilizing both compute and memory.
-- **Memory-bound kernels remain fast**: Average 9.67 μs, consistent with quick memory operations.
+- **Memory-bound kernels are short-lived**: Average 9.67 μs, reflecting bandwidth-limited, low–arithmetic intensity operations with small work sizes.
 - **FlashAttention at 10.34 μs**: Remarkably efficient given the complexity of fused attention—much faster than the 160.74 μs memory-efficient attention variant.
 
 ### Histograms of Kernel Execution Metrics
@@ -220,7 +220,7 @@ Theoretical occupancy shows most kernels should achieve 80-100% occupancy, but a
 
 ![Duration Distribution](ncu-v2/analysis/histograms/duration_us.png)
 
-Kernel durations span 2-170 μs, with most kernels being short-lived (<10 μs), potentially suffering from launch overhead relative to compute time.
+Kernel durations span roughly 2–405 μs (long‑tailed), with most kernels being short‑lived (<10 μs), potentially suffering from launch overhead relative to compute time. The upper tail includes CUTLASS GEMM kernels (e.g., 404.70 μs).
 
 **Memory Busy Percentage**
 
@@ -246,7 +246,7 @@ Roofline analysis provides a visual representation of kernel performance relativ
 
 The normalized roofline plot shows kernel performance relative to theoretical peaks. Key observations:
 - Most kernels cluster in the **low arithmetic intensity region** (< 100 FLOPs/byte), indicating they are memory-bound
-- Very few kernels approach the **compute roof** (diagonal line at the top)
+- Very few kernels approach the **compute roof** (horizontal line at the top); the memory roof is the diagonal line
 - The gap between actual performance and the roofline indicates significant optimization headroom
 
 #### Physical Roofline
@@ -261,9 +261,9 @@ The physical roofline shows actual hardware throughput characteristics with real
 Individual per-kernel roofline plots (both normalized and physical) are available in `ncu-v2/analysis/roofline_per_kernel/` for detailed analysis of specific kernels.
 
 **Roofline Interpretation:**
-- **Memory-bound kernels** (44% of profiled kernels) cluster in the low arithmetic intensity region, constrained by memory bandwidth rather than compute throughput. These kernels would benefit from memory access optimizations, kernel fusion, and data layout improvements.
-- **Compute-bound kernels** (17% of profiled kernels) appear in the higher arithmetic intensity region but still operate at only ~34% SM throughput, suggesting inefficient tensor core utilization or insufficient parallelism.
-- **Balanced kernels** (39% of profiled kernels) fall in the transition region with very low resource utilization across all metrics, indicating they are neither efficiently using memory nor compute.
+- **Memory-bound kernels** (45% of profiled kernels) cluster in the low arithmetic intensity region, constrained by memory bandwidth rather than compute throughput. These kernels would benefit from memory access optimizations, kernel fusion, and data layout improvements.
+- **Compute-bound kernels** (20% of profiled kernels) appear in the higher arithmetic intensity region but still operate at only ~34% SM throughput, suggesting inefficient tensor core utilization or insufficient parallelism.
+- **Balanced kernels** (35% of profiled kernels) fall in the transition region with very low resource utilization across all metrics, indicating they are neither efficiently using memory nor compute.
 
 The roofline analysis confirms that the majority of kernels are operating well below both the memory bandwidth roof and the compute roof, indicating substantial optimization headroom—most kernels achieve less than 50% of their theoretical performance ceiling.
 
@@ -360,10 +360,10 @@ Based on the profiling results, the following architectural considerations are r
 
 #### 3. L1 / L2 Cache Ratio and Sizing
 
-**Finding**: L1 hit rate of 8.85%, L2 hit rate of 53.48%, suggesting working sets exceed L1 but partially fit in L2.
+**Finding**: L1 hit rate of 8.96%, L2 hit rate of 39.95% (V2), suggesting working sets exceed L1 but only partially fit in L2.
 
 **Recommendation**:
-- **Increase L2 cache significantly** (target: 128-256 MB vs. 50 MB on A100)
+- **Increase L2 cache significantly** (target: 128–256 MB vs. 40 MB on A100; 50 MB on H100)
 - **Decrease L1 cache** or make it more configurable (allow trading L1 for shared memory)
 - Implement **victim cache** between L1 and L2 to capture evicted data
 - Add **KV-cache-specific buffers** with high-bandwidth on-chip SRAM (32-64 MB) to reduce DRAM traffic for attention
@@ -432,6 +432,21 @@ Based on the profiling results, the following architectural considerations are r
 **Profiling Artifacts**: All raw data, metrics, histograms, roofline plots, and analysis scripts are available in the `reports/20251107-dsocr/ncu-v2/analysis/` directory.
 
 ---
+
+## Appendix: Methodology Details
+
+This section summarizes collection settings and the rule used to classify kernels.
+
+- Nsight Systems: CUDA timeline gated via NVTX on the decode phase to select top kernels by total time.
+- Nsight Compute: Sections collected include SpeedOfLight, MemoryWorkloadAnalysis, Roofline, and Occupancy; kernel names recorded with full signatures.
+- Peaks for roofline:
+  - Compute peak: device BF16/Tensor Core peak performance for the RTX 5090 (Blackwell).
+  - Memory peak: theoretical GDDR7 bandwidth (≈1.79 TB/s) and measured effective bandwidth from NCU; the ridge point uses the effective bandwidth.
+- Ridge point: computed as P_peak / BW_eff; for this workload it falls in the ~50–100 FLOPs/byte range depending on measured BW_eff.
+- Classification rule:
+  - Memory‑bound: arithmetic intensity < ridge point and memory throughput meaningfully higher than SM throughput.
+  - Compute‑bound: arithmetic intensity ≥ ridge point and SM/Tensor utilization meaningfully higher than memory throughput.
+  - Balanced: neither memory nor compute utilization approaches their respective roofs (low across both dimensions).
 
 ## Appendix: Full Kernel Function Names
 
