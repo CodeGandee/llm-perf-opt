@@ -101,9 +101,12 @@ NCU profiling was performed on all top 20 kernels, with **100% success rate** yi
 3. **Balanced**: neither compute nor memory utilization approaches their respective roofs (both low relative to peak); typically benefits from fusion, kernel specialization, and data‑layout changes.
 
 **Thresholds Used:**
-1. **Ridge point**: 80 FLOPs/byte for this workload (computed as P_peak / BW_eff; observed ridge ranged ~50–100 FLOPs/byte, we fixed 80 for classification).
-2. **Utilization dominance**: “meaningfully exceeds” means either a ratio ≥ 1.3× or an absolute gap ≥ 5 percentage points between SM vs Memory throughput.
-3. **Low‑utilization gate**: if both SM and Memory throughput < 20% of peak, classify as Balanced regardless of AI.
+1. **Ridge point**: 80 FLOPs/byte for this workload; ridge = P_peak / BW_eff (compute peak ÷ effective bandwidth). We observed a 50–100 FLOPs/byte transition band and fix 80 for stability.
+2. **Compute roof choice**: use FP32 SM peak (not tensor‑core peak) since many decode‑phase kernels (elementwise/ATen, GEMV) don’t fully engage tensor cores.
+3. **Example numbers**: FP32 peak ≈ 105 TFLOP/s; effective bandwidth ≈ 1.3 TB/s ⇒ 105 / 1.3 ≈ 80 FLOPs/byte (illustrative; BW_eff varies by run).
+4. **Utilization dominance**: “meaningfully exceeds” means either a ratio ≥ 1.3× or an absolute gap ≥ 5 percentage points between SM vs Memory throughput.
+5. **Low‑utilization gate**: if both SM and Memory throughput < 20% of peak, classify as Balanced regardless of AI.
+6. **Alternatives**: recompute ridge per run as P_peak(dtype)/BW_eff (e.g., BF16 tensor peak for GEMM‑heavy); estimate BW_eff from peak/95th percentile memory‑bound kernels. Per‑kernel ridge is possible but we keep a single value for simplicity.
 
 **Performance Characteristics by Classification:**
 
@@ -470,12 +473,6 @@ This section summarizes collection settings and the rule used to classify kernel
   - Memory‑bound: AI < ridge AND (Memory throughput ≥ 1.3× SM OR Memory − SM ≥ 5 pp);
   - Balanced: otherwise; additionally, if SM and Memory < 20% of peak, classify as Balanced.
 
-**Ridge Point Rationale (Why 80 FLOPs/byte):**
-1. Formula: ridge = P_peak / BW_eff (FLOP/s divided by effective bytes/s) — the boundary between memory‑ and compute‑bound on the roofline.
-2. Compute roof choice: decode mixes elementwise/ATen and GEMV/GEMM kernels, many not fully engaging tensor cores; we therefore use the FP32 SM peak as a robust cross‑kernel compute roof rather than the higher tensor‑core peak.
-3. Observed transition band: our normalized/physical rooflines show a transition around 50–100 FLOPs/byte. Fixing 80 FLOPs/byte provides a stable midpoint that yields consistent classifications across runs.
-4. Example numbers (order‑of‑magnitude): FP32 peak ≈ 105 TFLOP/s; effective bandwidth for this decode workload ≈ 1.3 TB/s ⇒ 105 / 1.3 ≈ 80 FLOPs/byte (illustrative; BW_eff varies by run).
-5. Alternatives: recompute ridge per run as P_peak(dType)/BW_eff (choose P_peak to match dominant compute mode; estimate BW_eff from peak or 95th‑percentile memory‑bound kernels). For maximum fidelity, per‑kernel ridge can be used, but we fix 80 for simplicity and stability.
 
 ## Appendix: Full Kernel Function Names
 
