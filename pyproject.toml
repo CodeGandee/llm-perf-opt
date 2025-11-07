@@ -1,6 +1,6 @@
 [project]
 authors = [{name = "igamenovoer", email = "igamenovoer@xx.com"}]
-dependencies = ["transformers==4.46.3", "tokenizers==0.20.3", "einops>=0.8.1,<0.9", "addict>=2.4.0,<3", "easydict>=1.13,<2", "mypy>=1.18.2,<2", "ruff>=0.14.3,<0.15", "nvtx>=0.2.13,<0.3", "hydra-core>=1.3.2,<2", "pydantic>=2.12.3,<3", "attrs>=25.4.0,<26", "cattrs>=25.3.0,<26", "omegaconf>=2.3.0,<3", "nvidia-ml-py>=13.580.82,<14", "fvcore>=0.1.5.post20221221,<0.2", "mdutils>=1.8.1,<2", "mkdocs-material>=9.6.22,<10", "pandas>=2.3.3,<3", "matplotlib>=3.10.7,<4", "plotly>=6.3.1,<7", "llnl-thicket>=2025.1.0,<2026", "ruamel-yaml>=0.18.16,<0.19", "rich>=14.2.0,<15", "click>=8.3.0,<9"]
+dependencies = ["transformers==4.46.3", "tokenizers==0.20.3", "einops>=0.8.1,<0.9", "addict>=2.4.0,<3", "easydict>=1.13,<2", "mypy>=1.18.2,<2", "ruff>=0.14.3,<0.15", "nvtx>=0.2.13,<0.3", "hydra-core>=1.3.2,<2", "pydantic>=2.12.3,<3", "attrs>=25.4.0,<26", "cattrs>=25.3.0,<26", "omegaconf>=2.3.0,<3", "nvidia-ml-py>=13.580.82,<14", "fvcore>=0.1.5.post20221221,<0.2", "mdutils>=1.8.1,<2", "mkdocs-material>=9.6.22,<10", "pandas>=2.3.3,<3", "matplotlib>=3.10.7,<4", "plotly>=6.3.1,<7", "llnl-thicket>=2025.1.0,<2026", "ruamel-yaml>=0.18.16,<0.19", "rich>=14.2.0,<15", "click>=8.3.0,<9", "seaborn>=0.13.2,<0.14", "hatchet>=1.4.1,<2"]
 name = "llm-perf-opt"
 requires-python = ">= 3.11"
 version = "0.1.0"
@@ -31,6 +31,10 @@ ninja = "*"
 
 [tool.pixi.system-requirements]
 cuda = "12.0"
+
+# Add ncu_report module to PYTHONPATH for all Unix environments
+[tool.pixi.activation.env]
+PYTHONPATH = "/opt/nvidia/nsight-compute/2025.1.1/extras/python"
 
 [tool.pixi.pypi-options]
 # Prefer vLLM nightly wheels for latest features
@@ -103,6 +107,7 @@ stage1-run-no-static = { cmd = "python -m llm_perf_opt.runners.llm_profile_runne
 stage2-profile = { cmd = "python -m llm_perf_opt.runners.deep_profile_runner 'hydra.run.dir=tmp/profile-output/${now:%Y%m%d-%H%M%S}' pipeline.nsys.enable=true pipeline.ncu.enable=false pipeline.static_analysis.enable=false" }
 stage-all-run = { cmd = "bash scripts/stage-all-run.sh" }
 direct-infer-dev20 = { cmd = "python -m llm_perf_opt.runners.direct_inference_runner 'hydra.run.dir=tmp/profile-output/${now:%Y%m%d-%H%M%S}' dataset.subset_filelist=datasets/omnidocbench/subsets/dev-20.txt device=cuda:0 pipeline.direct_inference.enable=true pipeline.torch_profiler.enable=false pipeline.static_analysis.enable=false pipeline.nsys.enable=false pipeline.ncu.enable=false dataset.sampling.num_epochs=1 dataset.sampling.num_samples_per_epoch=null dataset.sampling.randomize=false infer.max_new_tokens=8192 pipeline.direct_inference.output.prediction.enable=true pipeline.direct_inference.output.visualization.enable=true" }
+nsys-dsocr-all = { cmd = "scripts/nsys/nsys-profile-dsocr-stages.sh" }
 
 [tool.ruff]
 target-version = "py311"

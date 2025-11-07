@@ -24,7 +24,7 @@ set -euo pipefail
 #   TOPK=5 ./test-ncu-profile.sh --bash         # override topk
 
 # --- Configuration ---
-TOPK=${TOPK:-5}
+TOPK=${TOPK:-10}
 KERNEL_CONFIG="scripts/ncu/examples/top-10-kernels.yaml"
 LAUNCH_SKIP=${LAUNCH_SKIP:-50}
 LAUNCH_COUNT=${LAUNCH_COUNT:-10}
