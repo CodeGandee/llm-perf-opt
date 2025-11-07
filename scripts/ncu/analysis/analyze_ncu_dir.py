@@ -40,12 +40,16 @@ Outputs (written under <input_dir>/analysis/)
 - histograms/<metric>.png
   Histograms across kernels for selected metrics (e.g., sm_throughput_pct, dram_throughput_pct,
   achieved_occupancy_pct, memory_throughput_gbs, etc.).
-- roofline_scatter.png or roofline_scatter_normalized.png
-  If NCU roofline data are present and non-empty, plots Arithmetic Intensity (FLOPs/Byte)
-  on x-axis vs Performance (FLOPs/s) on y-axis (both on log scales). Otherwise, emits a
-  normalized fallback plot of DRAM Throughput (%) vs Compute (SM) Throughput (%).
-- roofline_per_kernel/<kernel>.png
-  Per-kernel roofline (physical if available, else normalized fallback).
+- roofline_scatter_physical.png (if available)
+  Physical roofline plot: Arithmetic Intensity (FLOPs/Byte) on x-axis vs Performance (FLOPs/s)
+  on y-axis (both on log scales), generated when NCU roofline data are present and non-empty.
+- roofline_scatter_normalized.png
+  Normalized roofline plot: DRAM Throughput (%) vs Compute (SM) Throughput (%), generated
+  whenever throughput metrics are available.
+- roofline_per_kernel/<kernel>_physical.png (if available)
+  Per-kernel physical roofline plots.
+- roofline_per_kernel/<kernel>_normalized.png
+  Per-kernel normalized roofline plots.
 - thicket.json (optional)
   A JSON-serialized Thicket object representing a flat tree (root with one child per
   kernel). This is convenient for EDA with Thicket; it is not a call-tree mapping. For
@@ -57,11 +61,12 @@ Classification rule (simple heuristic)
 - balanced otherwise (within ±5%).
 
 Roofline
-- Preferred: Nsight Compute’s SpeedOfLight_RooflineChart.csv provides Arithmetic Intensity
-  (FLOPs/Byte) and Performance (FLOPs/s). We parse any variant columns containing those
-  units, normalizing GFLOP/s or TFLOP/s to FLOP/s.
-- Fallback: When roofline CSVs are empty or missing, we generate a normalized scatter of
-  DRAM Throughput (%) vs Compute (SM) Throughput (%) for quick directional insight.
+- Physical (preferred): Nsight Compute's SpeedOfLight_RooflineChart.csv provides Arithmetic
+  Intensity (FLOPs/Byte) and Performance (FLOPs/s). We parse any variant columns containing
+  those units, normalizing GFLOP/s or TFLOP/s to FLOP/s. Generated when data is available.
+- Normalized (always): When SM Throughput (%) and DRAM Throughput (%) metrics are available,
+  we generate a normalized scatter plot for quick directional insight. This is generated
+  alongside the physical roofline, not as a replacement.
 
 Thicket output
 - When Thicket+Hatchet are importable in the environment, we build a flat Thicket object
@@ -85,8 +90,9 @@ Dependencies
 Notes & limitations
 - Nsight Compute versions can change metric names/sections; this script targets common
   fields in SpeedOfLight, Memory Workload Analysis, and Occupancy sections.
-- Roofline CSVs are often empty unless explicitly requested during NCU export; in that
-  case only the normalized plot is produced.
+- Physical roofline plots require SpeedOfLight_RooflineChart.csv data, which is often empty
+  unless explicitly requested during NCU export. Normalized roofline plots are always generated
+  when throughput metrics are available, providing complementary insights.
 - We do not infer FLOP rates or arithmetic intensity if NCU did not export them.
 """
 
@@ -137,6 +143,8 @@ class KernelPaths:
     occupancy: Optional[Path]
     scheduler: Optional[Path]
     details: Optional[Path]
+    roofline_csv: Optional[Path]
+    metrics_csv: Optional[Path]
 
 
 def find_kernel_dirs(input_dir: Path) -> List[KernelPaths]:
@@ -158,6 +166,8 @@ def find_kernel_dirs(input_dir: Path) -> List[KernelPaths]:
                 occupancy=f("ncu.section_Occupancy.csv"),
                 scheduler=f("ncu.section_SchedulerStats.csv"),
                 details=f("ncu.details.csv"),
+                roofline_csv=f("ncu.section_SpeedOfLight_RooflineChart.csv"),
+                metrics_csv=f("ncu.metrics.csv"),
             )
         )
     return kernels
@@ -312,50 +322,126 @@ def parse_roofline_points(path: Path) -> Optional[pd.DataFrame]:
     if df.empty:
         return None
 
-    # Identify columns heuristically
+    # Two possible export formats:
+    # 1) Header-only CSV with columns like 'Arithmetic Intensity (FLOP/Byte)' and 'Performance (GFLOP/s)'
+    # 2) print-details=all long-form rows with 'Metric Name' and 'Metric Value'
     cols_lower = {c.lower(): c for c in df.columns}
-    x_col: Optional[str] = None
-    for lc, orig in cols_lower.items():
-        if "intensity" in lc and "flop" in lc and "byte" in lc:
-            x_col = orig
-            break
-    if x_col is None:
-        for lc, orig in cols_lower.items():
-            if "intensity" in lc:
-                x_col = orig
-                break
 
+    # Case 1: direct numeric columns
+    x_col: Optional[str] = None
     y_col: Optional[str] = None
     for lc, orig in cols_lower.items():
-        if "flop" in lc and "/s" in lc:
+        if ("intensity" in lc) and ("flop" in lc) and ("byte" in lc):
+            x_col = orig
+        if ("flop" in lc) and ("/s" in lc):
             y_col = orig
-            break
-    if y_col is None:
-        for lc, orig in cols_lower.items():
-            if "gflop" in lc or "tflop" in lc:
-                y_col = orig
-                break
-    if x_col is None or y_col is None:
-        return None
+    if x_col and y_col:
+        out = pd.DataFrame({
+            "ai_flops_per_byte": pd.to_numeric(df[x_col], errors="coerce"),
+            "flops_per_s_raw": df[y_col],
+        }).dropna()
+        y_name_l = y_col.lower()
+        if "tflop" in y_name_l:
+            out["flops_per_s"] = pd.to_numeric(out["flops_per_s_raw"], errors="coerce") * 1e12
+        elif "gflop" in y_name_l:
+            out["flops_per_s"] = pd.to_numeric(out["flops_per_s_raw"], errors="coerce") * 1e9
+        else:
+            out["flops_per_s"] = pd.to_numeric(out["flops_per_s_raw"], errors="coerce")
+        return out[["ai_flops_per_byte", "flops_per_s"]].dropna()
 
-    out = pd.DataFrame({
-        "ai_flops_per_byte": pd.to_numeric(df[x_col], errors="coerce"),
-        "flops_per_s_raw": df[y_col],
-    }).dropna()
+    # Case 2: long-form rows with Metric Name/Value
+    if METRIC_COL in df.columns and NUMERIC_COL in df.columns:
+        # Look for achieved AI and FLOP/s entries
+        # Match substrings robustly; prefer rows labeled 'Achieved Value'
+        mnames = df[METRIC_COL].astype(str).str.lower()
+        units = df.get("Metric Unit", pd.Series([None] * len(df))).astype(str).str.lower()
+        values = pd.to_numeric(df[NUMERIC_COL], errors="coerce")
 
-    y_name_l = y_col.lower()
-    if "tflop" in y_name_l:
-        out["flops_per_s"] = pd.to_numeric(out["flops_per_s_raw"], errors="coerce") * 1e12
-    elif "gflop" in y_name_l:
-        out["flops_per_s"] = pd.to_numeric(out["flops_per_s_raw"], errors="coerce") * 1e9
-    elif "mflop" in y_name_l:
-        out["flops_per_s"] = pd.to_numeric(out["flops_per_s_raw"], errors="coerce") * 1e6
+        # arithmetic intensity (FLOP/Byte)
+        mask_ai = mnames.str.contains("intensity") & mnames.str.contains("flop") & units.str.contains("byte")
+        # achieved performance (FLOP/s)
+        mask_perf = (mnames.str.contains("flop") & units.str.contains("/s")) | units.str.contains("flop/s")
+
+        if mask_ai.any() and mask_perf.any():
+            ai_vals = values[mask_ai]
+            perf_vals = values[mask_perf]
+            # Normalize perf to FLOP/s by inspecting units
+            perf_units = units[mask_perf]
+            perf_norm = []
+            for v, u in zip(perf_vals, perf_units):
+                if pd.isna(v):
+                    perf_norm.append(None)
+                elif "tflop" in u:
+                    perf_norm.append(float(v) * 1e12)
+                elif "gflop" in u:
+                    perf_norm.append(float(v) * 1e9)
+                else:
+                    perf_norm.append(float(v))
+            out = pd.DataFrame({
+                "ai_flops_per_byte": ai_vals.reset_index(drop=True),
+                "flops_per_s": pd.Series(perf_norm, dtype=float),
+            }).dropna()
+            if not out.empty:
+                return out
+    return None
+
+
+def compute_roofline_from_metrics(
+    metrics_df: Optional[pd.DataFrame],
+    mem_throughput_gbs: Optional[float],
+    duration_us: Optional[float],
+) -> Tuple[Optional[float], Optional[float]]:
+    """Compute (AI, FLOPs/s) from explicit metrics when available.
+
+    - FLOPs: sum available flop_count_* counters (hp/sp/dp/tensor if present).
+    - Time: prefer gpu__time_duration.sum (ns/us), else fall back to duration_us (SpeedOfLight).
+    - Bytes: use Memory Throughput (Gbyte/s) * time.
+    """
+    if metrics_df is None or metrics_df.empty:
+        return None, None
+    df = metrics_df
+    # Expect columns: Metric Name, Metric Unit, Metric Value
+    if METRIC_COL not in df.columns or NUMERIC_COL not in df.columns:
+        return None, None
+    name = df[METRIC_COL].astype(str)
+    unit = df.get("Metric Unit", pd.Series([None] * len(df))).astype(str)
+    val = pd.to_numeric(df[NUMERIC_COL], errors="coerce")
+
+    # Sum FLOP counters
+    flop_mask = name.str.contains(r"^flop_count_", case=False, regex=True)
+    flops_total = val[flop_mask].sum(min_count=1)
+
+    # Duration preference: gpu__time_duration.sum
+    time_mask = name.str.fullmatch("gpu__time_duration.sum", case=False)
+    if time_mask.any():
+        v = val[time_mask].iloc[0]
+        u = unit[time_mask].iloc[0].lower() if isinstance(unit[time_mask].iloc[0], str) else "ns"
+        if "ms" in u:
+            duration_s = float(v) * 1e-3
+        elif "us" in u or "µs" in u:
+            duration_s = float(v) * 1e-6
+        elif "ns" in u:
+            duration_s = float(v) * 1e-9
+        else:
+            duration_s = float(v)  # assume seconds
+    elif duration_us is not None:
+        duration_s = float(duration_us) * 1e-6
     else:
-        out["flops_per_s"] = pd.to_numeric(out["flops_per_s_raw"], errors="coerce")
-    out = out.dropna(subset=["ai_flops_per_byte", "flops_per_s"])  # type: ignore[arg-type]
-    if out.empty:
-        return None
-    return out[["ai_flops_per_byte", "flops_per_s"]]
+        duration_s = None
+
+    if pd.isna(flops_total) or flops_total is None or duration_s is None or duration_s <= 0:
+        return None, None
+
+    flops_per_s = float(flops_total) / float(duration_s)
+
+    # Compute bytes using measured memory throughput if available
+    if mem_throughput_gbs is None or mem_throughput_gbs <= 0:
+        return None, flops_per_s
+    bytes_moved = float(mem_throughput_gbs) * 1e9 * float(duration_s)
+    if bytes_moved <= 0:
+        return None, flops_per_s
+    ai = float(flops_total) / bytes_moved
+    return ai, flops_per_s
 
 
 # ------------------------------
@@ -455,6 +541,7 @@ def analyze_ncu_report(report_path: Path, margin: float = 5.0) -> None:
                 long_rows.append(pd.DataFrame(rows))
 
             # Per-kernel roofline: no physical AI/FLOPs/s available via this path (without extra metric names)
+            # Generate normalized roofline only
             if sm_pct is not None and dram_pct is not None:
                 fig, ax = plt.subplots(figsize=(4, 4), dpi=120)
                 ax.scatter([dram_pct], [sm_pct], c=["C0"], label=kernel_id)
@@ -467,7 +554,7 @@ def analyze_ncu_report(report_path: Path, margin: float = 5.0) -> None:
                 ax.grid(True, linestyle=":", alpha=0.5)
                 ax.legend(loc="lower right", fontsize=8)
                 fig.tight_layout()
-                fig.savefig(per_kernel_roofline_dir / f"{sanitize_filename(kernel_id)}.png")
+                fig.savefig(per_kernel_roofline_dir / f"{sanitize_filename(kernel_id)}_normalized.png")
                 plt.close(fig)
 
     # Summaries
@@ -606,41 +693,63 @@ def analyze_dir(input_dir: Path, margin: float = 5.0) -> None:
         if not long_df.empty:
             long_rows.append(long_df)
 
-        # Per-kernel roofline plot
-        rl_df = parse_roofline_points(kp.root / "ncu.section_SpeedOfLight_RooflineChart.csv")
+        # Per-kernel roofline plots: generate both physical and normalized when data is available
+
+        # Physical roofline (FLOPs/Byte vs FLOPs/s) - preferred
+        ai_val: Optional[float] = None
+        perf_val: Optional[float] = None
+
+        # Path A: parse roofline chart CSV if it contains numeric points
+        rl_df = parse_roofline_points(kp.roofline_csv) if kp.roofline_csv else None
         if rl_df is not None and not rl_df.empty:
+            ai_val = float(rl_df["ai_flops_per_byte"].median())
+            perf_val = float(rl_df["flops_per_s"].median())
+        else:
+            # Path B: compute from explicit metrics (ncu.metrics.csv) + memory throughput + duration
+            metrics_df = read_csv_safe(kp.metrics_csv) if kp.metrics_csv and kp.metrics_csv.exists() else None
+            ai_c, perf_c = compute_roofline_from_metrics(
+                metrics_df=metrics_df,
+                mem_throughput_gbs=metrics.get("memory_throughput_gbs"),
+                duration_us=metrics.get("duration_us"),
+            )
+            ai_val = ai_c if ai_c is not None else ai_val
+            perf_val = perf_c if perf_c is not None else perf_val
+
+        if ai_val is not None and perf_val is not None:
+            # Persist into summary row for aggregate plotting
+            row["roofline_ai_flops_per_byte"] = ai_val
+            row["roofline_flops_per_s"] = perf_val
+            # Per-kernel physical plot
             fig, ax = plt.subplots(figsize=(4, 4), dpi=140)
-            ax.scatter(rl_df["ai_flops_per_byte"], rl_df["flops_per_s"], c=["C0"], s=18)
+            ax.scatter([ai_val], [perf_val], c=["C0"], s=18)
             ax.set_xscale("log")
             ax.set_yscale("log")
             ax.set_xlabel("Arithmetic Intensity (FLOPs/Byte)")
             ax.set_ylabel("Performance (FLOPs/s)")
-            ax.set_title(f"Roofline • {kernel_id}")
+            ax.set_title(f"Roofline (physical) • {kernel_id}")
             ax.grid(True, which="both", linestyle=":", alpha=0.5)
             fig.tight_layout()
-            fig.savefig(per_kernel_roofline_dir / f"{sanitize_filename(kernel_id)}.png")
+            fig.savefig(per_kernel_roofline_dir / f"{sanitize_filename(kernel_id)}_physical.png")
             plt.close(fig)
-            # also store representative stats (median) back into the row for aggregate plotting
-            row["roofline_ai_flops_per_byte"] = float(rl_df["ai_flops_per_byte"].median())
-            row["roofline_flops_per_s"] = float(rl_df["flops_per_s"].median())
-        else:
-            sm_pct = metrics.get("sm_throughput_pct")
-            dram_pct = metrics.get("dram_throughput_pct")
-            if sm_pct is not None and dram_pct is not None:
-                fig, ax = plt.subplots(figsize=(4, 4), dpi=120)
-                ax.scatter([dram_pct], [sm_pct], c=["C0"], label=kernel_id)
-                ax.plot([0, 100], [0, 100], linestyle="--", color="gray", linewidth=1, label="x=y")
-                ax.set_xlabel("DRAM Throughput (%)")
-                ax.set_ylabel("Compute (SM) Throughput (%)")
-                ax.set_title(f"Roofline (normalized) • {kernel_id}")
-                ax.set_xlim(0, 100)
-                ax.set_ylim(0, 100)
-                ax.grid(True, linestyle=":", alpha=0.5)
-                ax.legend(loc="lower right", fontsize=8)
-                out_path = per_kernel_roofline_dir / f"{sanitize_filename(kernel_id)}.png"
-                fig.tight_layout()
-                fig.savefig(out_path)
-                plt.close(fig)
+
+        # Normalized roofline (% vs %) - always generate when throughput data is available
+        sm_pct = metrics.get("sm_throughput_pct")
+        dram_pct = metrics.get("dram_throughput_pct")
+        if sm_pct is not None and dram_pct is not None:
+            fig, ax = plt.subplots(figsize=(4, 4), dpi=120)
+            ax.scatter([dram_pct], [sm_pct], c=["C0"], label=kernel_id)
+            ax.plot([0, 100], [0, 100], linestyle="--", color="gray", linewidth=1, label="x=y")
+            ax.set_xlabel("DRAM Throughput (%)")
+            ax.set_ylabel("Compute (SM) Throughput (%)")
+            ax.set_title(f"Roofline (normalized) • {kernel_id}")
+            ax.set_xlim(0, 100)
+            ax.set_ylim(0, 100)
+            ax.grid(True, linestyle=":", alpha=0.5)
+            ax.legend(loc="lower right", fontsize=8)
+            out_path = per_kernel_roofline_dir / f"{sanitize_filename(kernel_id)}_normalized.png"
+            fig.tight_layout()
+            fig.savefig(out_path)
+            plt.close(fig)
 
     # Build summary DataFrames
     summary_df = pd.DataFrame(summary_rows)
@@ -732,7 +841,9 @@ def analyze_dir(input_dir: Path, margin: float = 5.0) -> None:
                 except Exception:
                     pass
 
-    # Aggregate roofline scatter across kernels
+    # Aggregate roofline scatter across kernels: generate both physical and normalized
+
+    # Physical roofline aggregate (FLOPS/byte vs FLOPS/s) when data is available
     have_physical = {"roofline_ai_flops_per_byte", "roofline_flops_per_s"}.issubset(summary_df.columns)
     if have_physical:
         plot_df = summary_df.dropna(subset=["roofline_ai_flops_per_byte", "roofline_flops_per_s"])  # type: ignore[arg-type]
@@ -746,30 +857,31 @@ def analyze_dir(input_dir: Path, margin: float = 5.0) -> None:
             ax.set_yscale("log")
             ax.set_xlabel("Arithmetic Intensity (FLOPs/Byte)")
             ax.set_ylabel("Performance (FLOPs/s)")
-            ax.set_title("Roofline across kernels")
+            ax.set_title("Roofline (physical) across kernels")
             ax.grid(True, which="both", linestyle=":", alpha=0.5)
             fig.tight_layout()
-            fig.savefig(analysis_dir / "roofline_scatter.png")
+            fig.savefig(analysis_dir / "roofline_scatter_physical.png")
             plt.close(fig)
-    else:
-        if not summary_df.empty and {"dram_throughput_pct", "sm_throughput_pct"}.issubset(summary_df.columns):
-            plot_df = summary_df.dropna(subset=["dram_throughput_pct", "sm_throughput_pct"])  # type: ignore[arg-type]
-            if not plot_df.empty:
-                fig, ax = plt.subplots(figsize=(6, 6), dpi=150)
-                ax.scatter(plot_df["dram_throughput_pct"], plot_df["sm_throughput_pct"], c="C1")
-                for _, r in plot_df.iterrows():
-                    label = str(r["kernel_id"]) if pd.notna(r["kernel_id"]) else ""
-                    ax.annotate(label, (r["dram_throughput_pct"], r["sm_throughput_pct"]), fontsize=7, alpha=0.7)
-                ax.plot([0, 100], [0, 100], linestyle="--", color="gray", linewidth=1)
-                ax.set_xlabel("DRAM Throughput (%)")
-                ax.set_ylabel("Compute (SM) Throughput (%)")
-                ax.set_title("Roofline (normalized throughput) across kernels")
-                ax.set_xlim(0, 100)
-                ax.set_ylim(0, 100)
-                ax.grid(True, linestyle=":", alpha=0.5)
-                fig.tight_layout()
-                fig.savefig(analysis_dir / "roofline_scatter_normalized.png")
-                plt.close(fig)
+
+    # Normalized roofline aggregate (% vs %) - always generate when throughput data is available
+    if not summary_df.empty and {"dram_throughput_pct", "sm_throughput_pct"}.issubset(summary_df.columns):
+        plot_df = summary_df.dropna(subset=["dram_throughput_pct", "sm_throughput_pct"])  # type: ignore[arg-type]
+        if not plot_df.empty:
+            fig, ax = plt.subplots(figsize=(6, 6), dpi=150)
+            ax.scatter(plot_df["dram_throughput_pct"], plot_df["sm_throughput_pct"], c="C1")
+            for _, r in plot_df.iterrows():
+                label = str(r["kernel_id"]) if pd.notna(r["kernel_id"]) else ""
+                ax.annotate(label, (r["dram_throughput_pct"], r["sm_throughput_pct"]), fontsize=7, alpha=0.7)
+            ax.plot([0, 100], [0, 100], linestyle="--", color="gray", linewidth=1)
+            ax.set_xlabel("DRAM Throughput (%)")
+            ax.set_ylabel("Compute (SM) Throughput (%)")
+            ax.set_title("Roofline (normalized throughput) across kernels")
+            ax.set_xlim(0, 100)
+            ax.set_ylim(0, 100)
+            ax.grid(True, linestyle=":", alpha=0.5)
+            fig.tight_layout()
+            fig.savefig(analysis_dir / "roofline_scatter_normalized.png")
+            plt.close(fig)
 
     # Histograms for selected metrics
     histogram_metrics = [

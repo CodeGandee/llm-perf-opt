@@ -1,0 +1,9 @@
+count: 1
+inputs:
+- path: /workspace/code/llm-perf-opt/.pixi/envs/rtx5090/bin/python -m llm_perf_opt.runners.llm_profile_runner
+    model.path=/home/igame/.cache/huggingface/hub/models--deepseek-ai--DeepSeek-OCR/snapshots/2c968b433af61a059311cbf8997765023806a24d
+    dataset.root=/workspace/datasets/OpenDataLab___OmniDocBench device=cuda:0 infer.max_new_tokens=64
+    pipeline.torch_profiler.enable=false pipeline.static_analysis.enable=false dataset.sampling.num_epochs=1
+    dataset.sampling.num_samples_per_epoch=20 dataset.sampling.randomize=false dataset.subset_filelist=/workspace/code/llm-perf-opt/datasets/omnidocbench/subsets/dev-20.txt
+    hydra.run.dir=/workspace/code/llm-perf-opt/tmp/nsys-profile/20251107-115812/per-stage/clip/tmp/workload
+    hydra.job.chdir=true

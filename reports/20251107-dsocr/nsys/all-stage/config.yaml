@@ -1,0 +1,116 @@
+dataset:
+  name: OmniDocBench
+  root: ${hydra:runtime.cwd}/datasets/omnidocbench/source-data
+  subset_filelist: /workspace/code/llm-perf-opt/datasets/omnidocbench/subsets/dev-20.txt
+  fallback_patterns:
+  - images/*.png
+  - images/*.jpg
+  sampling:
+    num_samples_per_epoch: 20
+    num_epochs: 1
+    randomize: false
+    seed: null
+model:
+  name: deepseek_ocr
+  path: ${hydra:runtime.cwd}/models/deepseek-ocr
+  dtype: bf16
+  preprocess:
+    enable: true
+    base_size: 1024
+    image_size: 640
+    crop_mode: true
+    patch_size: 16
+    downsample_ratio: 4
+infer:
+  temperature: 0.0
+  max_new_tokens: 64
+  no_repeat_ngram_size: 20
+  do_sample: false
+  context_len_mode: auto
+  context_len_fixed: 1024
+pipeline:
+  torch_profiler:
+    enabled: true
+    activities:
+    - cpu
+    - cuda
+    record_shapes: false
+    profile_memory: false
+    with_stack: false
+    group_by_input_shape: false
+    warmup_rounds: 2
+    warmup_synthetic: true
+    output:
+      prediction:
+        enable: false
+        save_dir: pred
+      visualization:
+        enable: true
+        save_dir: viz
+      extra:
+        deepseek_ocr:
+          prediction:
+            strip_special_tokens: false
+          visualization:
+            max_images: 16
+            thumbnail_width: 480
+    enable: ${pipeline.torch_profiler.enabled}
+  direct_inference:
+    output:
+      prediction:
+        enable: false
+        save_dir: pred
+      visualization:
+        enable: true
+        save_dir: viz
+      extra:
+        deepseek_ocr:
+          prediction:
+            strip_special_tokens: false
+          visualization:
+            max_images: 16
+            thumbnail_width: 480
+    enable: false
+  nsys:
+    trace: cuda,nvtx,osrt
+    sample: none
+    capture_range: none
+    capture_range_end: null
+    nvtx_capture: prefill
+    enable: true
+    gating_nvtx: false
+  ncu:
+    description: Default Nsight Compute preset aligned with script defaults
+    ncu_cli:
+      target_processes: all
+      replay_mode: kernel
+      nvtx:
+        include: null
+      set: roofline
+      kernel_name_base: demangled
+      metrics:
+      - flop_count_hp
+      - flop_count_sp
+      - gpu__time_duration.sum
+      - sm__throughput.avg.pct_of_peak_sustained_elapsed
+      - dram__throughput.avg.pct_of_peak_sustained_elapsed
+      sections:
+      - SpeedOfLight
+      - MemoryWorkloadAnalysis
+      - Occupancy
+      - SchedulerStats
+      export:
+        csv: true
+      force_overwrite: true
+    enable: false
+    gating_nvtx: true
+  static_analysis:
+    enable: true
+    write_reports: true
+    use_analytic_fallback: true
+    use_synthetic_inputs: true
+  workload:
+    module: null
+experiment: stage1
+device: cuda:0
+use_flash_attn: true

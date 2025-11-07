@@ -97,6 +97,9 @@ LAUNCH_CMD=()
 
 # Default sections (aligned with Python version), include RooflineChart for physical roofline support
 DEFAULT_SECTIONS="SpeedOfLight MemoryWorkloadAnalysis Occupancy SchedulerStats SpeedOfLight_RooflineChart"
+# Default metrics to ensure roofline-computable data even without external config
+# These keep overhead modest while enabling FLOPs/s and AI computation in analysis.
+DEFAULT_METRICS="flop_count_hp,flop_count_sp,gpu__time_duration.sum,sm__throughput.avg.pct_of_peak_sustained_elapsed,dram__throughput.avg.pct_of_peak_sustained_elapsed"
 
 # --- Help ---
 show_help() {
@@ -223,6 +226,7 @@ mkdir -p "$OUT_DIR"
 
 # Build sections list and optional preset from config (fallback to defaults)
 ALL_SECTIONS="$DEFAULT_SECTIONS"
+ALL_METRICS="$DEFAULT_METRICS"
 NCU_PRESET=""
 
 if [[ -n "$NCU_CONFIG_FILE" ]]; then
@@ -242,12 +246,15 @@ except Exception:
 cfg = data.get('ncu_cli', data)
 preset = cfg.get('set')
 sections = cfg.get('sections') or []
+metrics = cfg.get('metrics') or []
 print(preset or "")
 print(json.dumps(sections))
+print(json.dumps(metrics))
 PY
       )
       PRESET_LINE=$(printf "%s" "$CFG_OUT" | sed -n '1p')
       SECTIONS_JSON=$(printf "%s" "$CFG_OUT" | sed -n '2p')
+      METRICS_JSON=$(printf "%s" "$CFG_OUT" | sed -n '3p')
       if [[ -n "$SECTIONS_JSON" && "$SECTIONS_JSON" != "null" ]]; then
         if command -v jq &>/dev/null; then
           CONFIG_SECTIONS=$(printf "%s" "$SECTIONS_JSON" | jq -r '.[]' | xargs)
@@ -255,8 +262,23 @@ PY
           CONFIG_SECTIONS=$(printf "%s" "$SECTIONS_JSON" | $PY_CMD -c 'import sys,json; print(" ".join(json.load(sys.stdin)))')
         fi
       fi
+      if [[ -n "$METRICS_JSON" && "$METRICS_JSON" != "null" ]]; then
+        if command -v jq &>/dev/null; then
+          CONFIG_METRICS=$(printf "%s" "$METRICS_JSON" | jq -r '.[]' | paste -sd, -)
+        else
+          CONFIG_METRICS=$(printf "%s" "$METRICS_JSON" | $PY_CMD - <<'PY2'
+import sys, json
+arr = json.load(sys.stdin)
+print(",".join(arr))
+PY2
+          )
+        fi
+      fi
       if [[ -n "${CONFIG_SECTIONS:-}" ]]; then
         ALL_SECTIONS="$CONFIG_SECTIONS"
+      fi
+      if [[ -n "${CONFIG_METRICS:-}" ]]; then
+        ALL_METRICS="$CONFIG_METRICS"
       fi
       if [[ -n "$PRESET_LINE" ]]; then
         NCU_PRESET="$PRESET_LINE"
@@ -272,6 +294,12 @@ else
   log_info "No --ncu-config specified; using hardcoded defaults"
 fi
 
+# Always ensure RooflineChart section is present to support physical roofline exports
+case " $ALL_SECTIONS " in
+  *" SpeedOfLight_RooflineChart "*) : ;;  # present
+  *) ALL_SECTIONS="$ALL_SECTIONS SpeedOfLight_RooflineChart" ;;
+esac
+
 if [[ ${#EXTRA_SECTIONS[@]} -gt 0 ]]; then
   ALL_SECTIONS="$ALL_SECTIONS ${EXTRA_SECTIONS[*]}"
 fi
@@ -279,6 +307,7 @@ fi
 log_info "Output directory: $(log_highlight "$OUT_DIR")"
 [[ -n "$NCU_PRESET" ]] && log_info "Preset: $NCU_PRESET"
 log_info "Sections: $ALL_SECTIONS"
+log_info "Metrics: ${ALL_METRICS:-<none>}"
 log_info "Launch skip/count: $LAUNCH_SKIP/$LAUNCH_COUNT"
 
 # --- Check tools ---
@@ -513,6 +542,11 @@ for i in $(seq 0 $((KERNEL_COUNT - 1))); do
     NCU_ARGS+=(--section "$section")
   done
 
+  # Add metrics (comma-separated) to guarantee availability for analysis (FLOPs/s & AI)
+  if [[ -n "${ALL_METRICS:-}" ]]; then
+    NCU_ARGS+=(--metrics "$ALL_METRICS")
+  fi
+
   [[ "$FORCE_OVERWRITE" == "yes" ]] && NCU_ARGS+=(--force-overwrite)
 
   # Run NCU profiling
@@ -534,17 +568,30 @@ for i in $(seq 0 $((KERNEL_COUNT - 1))); do
 
       for section in $ALL_SECTIONS; do
         SECTION_CSV="${OUTPUT_BASE}.section_${section}.csv"
-        if ncu --csv --section "$section" --import "$REPORT_PATH" > "$SECTION_CSV" 2>/dev/null; then
-          log_ok "Section CSV: $SECTION_CSV"
+        # For RooflineChart, include body details to expose numeric roofline data
+        if [[ "$section" == "SpeedOfLight_RooflineChart" ]]; then
+          if ncu --csv --section "$section" --print-details all --import "$REPORT_PATH" > "$SECTION_CSV" 2>/dev/null; then
+            [[ -s "$SECTION_CSV" ]] && log_ok "Section CSV: $SECTION_CSV" || log_warn "RooflineChart has no numeric details (empty)"
+          else
+            log_warn "Could not export section with details: $section"
+          fi
         else
-          log_warn "Could not export section: $section"
+          if ncu --csv --section "$section" --import "$REPORT_PATH" > "$SECTION_CSV" 2>/dev/null; then
+            log_ok "Section CSV: $SECTION_CSV"
+          else
+            log_warn "Could not export section: $section"
+          fi
         fi
       done
 
-      # Try SpeedOfLight_RooflineChart
-      ROOFLINE_CSV="${OUTPUT_BASE}.section_SpeedOfLight_RooflineChart.csv"
-      if ncu --csv --section SpeedOfLight_RooflineChart --import "$REPORT_PATH" > "$ROOFLINE_CSV" 2>/dev/null; then
-        log_ok "Section CSV: $ROOFLINE_CSV"
+      # Export collected metrics, if any
+      if [[ -n "${ALL_METRICS:-}" ]]; then
+        METRICS_CSV="${OUTPUT_BASE}.metrics.csv"
+        if ncu --csv --metrics "$ALL_METRICS" --import "$REPORT_PATH" > "$METRICS_CSV" 2>/dev/null; then
+          [[ -s "$METRICS_CSV" ]] && log_ok "Metrics CSV: $METRICS_CSV" || log_warn "Metrics CSV empty"
+        else
+          log_warn "Could not export metrics CSV"
+        fi
       fi
 
       # Export details page

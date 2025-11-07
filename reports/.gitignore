@@ -1,0 +1,28 @@
+# Ignore binary files in subdirectories
+
+# Nsight profiler reports
+**/*.ncu-rep
+**/*.nsys-rep
+**/*.qdrep
+**/*.sqlite
+
+# PyTorch models and checkpoints
+**/*.pt
+**/*.pth
+**/*.bin
+
+# Shared libraries
+**/*.so
+**/*.so.*
+**/*.dylib
+**/*.dll
+
+# Python bytecode
+**/*.pyc
+**/__pycache__/
+
+# Other binary formats
+**/*.pkl
+**/*.pickle
+**/*.npy
+**/*.npz

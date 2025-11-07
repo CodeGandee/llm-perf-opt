@@ -1,0 +1,72 @@
+# Top kernels extracted from Nsight Systems profiling
+# Source: summary_cuda_gpu_kern_sum.csv
+# Sorted by: time_pct (column: Time (%))
+# Format: each kernel has full name and regex pattern
+# The regex pattern is used for ncu --kernel-name filtering
+#
+# NOTE: The regex patterns below use re.escape() for exact matching.
+# You may want to manually edit these patterns to match kernel families
+# instead of exact instances. For example:
+#   - Exact: 'internal::gemvx::kernel<...>(int)7...' (matches one variant)
+#   - Family: '.*internal::gemvx::kernel<.*\(int\)7.*>' (matches all (int)7 variants)
+kernels:
+-   name: std::enable_if<!T7, void>::type internal::gemvx::kernel<int, int, __nv_bfloat16, __nv_bfloat16, __nv_bfloat16, float, (bool)0, (bool)1, (bool)1, (bool)0, (int)7, (bool)0, cublasGemvParamsEx<int, cublasGemvTensorStridedBatched<const __nv_bfloat16>, cublasGemvTensorStridedBatched<const __nv_bfloat16>, cublasGemvTensorStridedBatched<__nv_bfloat16>, float>>(T13)
+    regex: ^std::enable_if<!T7,\ void>::type\ internal::gemvx::kernel<int,\ int,\ __nv_bfloat16,\ __nv_bfloat16,\ __nv_bfloat16,\ float,\ \(bool\)0,\ \(bool\)1,\ \(bool\)1,\ \(bool\)0,\ \(int\)7,\ \(bool\)0,\ cublasGemvParamsEx<int,\ cublasGemvTensorStridedBatched<const\ __nv_bfloat16>,\ cublasGemvTensorStridedBatched<const\ __nv_bfloat16>,\ cublasGemvTensorStridedBatched<__nv_bfloat16>,\ float>>\(T13\)$
+    description: 'Kernel #1 - 24.9% of GPU time, 329035 calls'
+-   name: std::enable_if<!T7, void>::type internal::gemvx::kernel<int, int, __nv_bfloat16, __nv_bfloat16, __nv_bfloat16, float, (bool)0, (bool)1, (bool)1, (bool)0, (int)6, (bool)0, cublasGemvParamsEx<int, cublasGemvTensorStridedBatched<const __nv_bfloat16>, cublasGemvTensorStridedBatched<const __nv_bfloat16>, cublasGemvTensorStridedBatched<__nv_bfloat16>, float>>(T13)
+    regex: ^std::enable_if<!T7,\ void>::type\ internal::gemvx::kernel<int,\ int,\ __nv_bfloat16,\ __nv_bfloat16,\ __nv_bfloat16,\ float,\ \(bool\)0,\ \(bool\)1,\ \(bool\)1,\ \(bool\)0,\ \(int\)6,\ \(bool\)0,\ cublasGemvParamsEx<int,\ cublasGemvTensorStridedBatched<const\ __nv_bfloat16>,\ cublasGemvTensorStridedBatched<const\ __nv_bfloat16>,\ cublasGemvTensorStridedBatched<__nv_bfloat16>,\ float>>\(T13\)$
+    description: 'Kernel #2 - 10.7% of GPU time, 46080 calls'
+-   name: void cutlass::Kernel2<cutlass_80_wmma_tensorop_bf16_s161616gemm_bf16_32x32_128x2_tn_align8>(T1::Params)
+    regex: ^void\ cutlass::Kernel2<cutlass_80_wmma_tensorop_bf16_s161616gemm_bf16_32x32_128x2_tn_align8>\(T1::Params\)$
+    description: 'Kernel #3 - 6.1% of GPU time, 37853 calls'
+-   name: void at::native::unrolled_elementwise_kernel<at::native::direct_copy_kernel_cuda(at::TensorIteratorBase &)::[lambda() (instance 3)]::operator ()() const::[lambda() (instance 7)]::operator ()() const::[lambda(float) (instance 1)], std::array<char *, (unsigned long)2>, (int)4, TrivialOffsetCalculator<(int)1, unsigned int>, TrivialOffsetCalculator<(int)1, unsigned int>, at::native::memory::LoadWithCast<(int)1>, at::native::memory::StoreWithCast<(int)1>>(int, T1, T2, T4, T5, T6, T7)
+    regex: ^void\ at::native::unrolled_elementwise_kernel<at::native::direct_copy_kernel_cuda\(at::TensorIteratorBase\ \&\)::\[lambda\(\)\ \(instance\ 3\)\]::operator\ \(\)\(\)\ const::\[lambda\(\)\ \(instance\ 7\)\]::operator\ \(\)\(\)\ const::\[lambda\(float\)\ \(instance\ 1\)\],\ std::array<char\ \*,\ \(unsigned\ long\)2>,\ \(int\)4,\ TrivialOffsetCalculator<\(int\)1,\ unsigned\ int>,\ TrivialOffsetCalculator<\(int\)1,\ unsigned\ int>,\ at::native::memory::LoadWithCast<\(int\)1>,\ at::native::memory::StoreWithCast<\(int\)1>>\(int,\ T1,\ T2,\ T4,\ T5,\ T6,\ T7\)$
+    description: 'Kernel #4 - 5.2% of GPU time, 129322 calls'
+-   name: void cutlass::Kernel2<cutlass_80_tensorop_bf16_s16816gemm_relu_bf16_256x128_32x3_tn_align8>(T1::Params)
+    regex: ^void\ cutlass::Kernel2<cutlass_80_tensorop_bf16_s16816gemm_relu_bf16_256x128_32x3_tn_align8>\(T1::Params\)$
+    description: 'Kernel #5 - 4.0% of GPU time, 1180 calls'
+-   name: void at::native::vectorized_elementwise_kernel<(int)4, at::native::BinaryFunctor<c10::BFloat16, c10::BFloat16, c10::BFloat16, at::native::binary_internal::MulFunctor<float>>, std::array<char *, (unsigned long)3>>(int, T2, T3)
+    regex: ^void\ at::native::vectorized_elementwise_kernel<\(int\)4,\ at::native::BinaryFunctor<c10::BFloat16,\ c10::BFloat16,\ c10::BFloat16,\ at::native::binary_internal::MulFunctor<float>>,\ std::array<char\ \*,\ \(unsigned\ long\)3>>\(int,\ T2,\ T3\)$
+    description: 'Kernel #6 - 3.4% of GPU time, 146115 calls'
+-   name: void at::native::vectorized_elementwise_kernel<(int)4, at::native::<unnamed>::silu_kernel(at::TensorIteratorBase &)::[lambda() (instance 1)]::operator ()() const::[lambda() (instance 6)]::operator ()() const::[lambda(c10::BFloat16) (instance 1)], std::array<char *, (unsigned long)2>>(int, T2, T3)
+    regex: ^void\ at::native::vectorized_elementwise_kernel<\(int\)4,\ at::native::<unnamed>::silu_kernel\(at::TensorIteratorBase\ \&\)::\[lambda\(\)\ \(instance\ 1\)\]::operator\ \(\)\(\)\ const::\[lambda\(\)\ \(instance\ 6\)\]::operator\ \(\)\(\)\ const::\[lambda\(c10::BFloat16\)\ \(instance\ 1\)\],\ std::array<char\ \*,\ \(unsigned\ long\)2>>\(int,\ T2,\ T3\)$
+    description: 'Kernel #7 - 3.2% of GPU time, 114115 calls'
+-   name: void at::native::vectorized_elementwise_kernel<(int)4, at::native::bfloat16_copy_kernel_cuda(at::TensorIteratorBase &)::[lambda(float) (instance 1)], std::array<char *, (unsigned long)2>>(int, T2, T3)
+    regex: ^void\ at::native::vectorized_elementwise_kernel<\(int\)4,\ at::native::bfloat16_copy_kernel_cuda\(at::TensorIteratorBase\ \&\)::\[lambda\(float\)\ \(instance\ 1\)\],\ std::array<char\ \*,\ \(unsigned\ long\)2>>\(int,\ T2,\ T3\)$
+    description: 'Kernel #8 - 2.5% of GPU time, 113482 calls'
+-   name: fmha_cutlassF_bf16_aligned_64x64_rf_sm80(PyTorchMemEffAttention::AttentionKernel<cutlass::bfloat16_t, cutlass::arch::Sm80, (bool)1, (int)64, (int)64, (int)64, (bool)1, (bool)1>::Params)
+    regex: ^fmha_cutlassF_bf16_aligned_64x64_rf_sm80\(PyTorchMemEffAttention::AttentionKernel<cutlass::bfloat16_t,\ cutlass::arch::Sm80,\ \(bool\)1,\ \(int\)64,\ \(int\)64,\ \(int\)64,\ \(bool\)1,\ \(bool\)1>::Params\)$
+    description: 'Kernel #9 - 2.4% of GPU time, 480 calls'
+-   name: void at::native::elementwise_kernel<(int)128, (int)4, void at::native::gpu_kernel_impl_nocast<at::native::CUDAFunctor_add<c10::BFloat16>>(at::TensorIteratorBase &, const T1 &)::[lambda(int) (instance 1)]>(int, T3)
+    regex: ^void\ at::native::elementwise_kernel<\(int\)128,\ \(int\)4,\ void\ at::native::gpu_kernel_impl_nocast<at::native::CUDAFunctor_add<c10::BFloat16>>\(at::TensorIteratorBase\ \&,\ const\ T1\ \&\)::\[lambda\(int\)\ \(instance\ 1\)\]>\(int,\ T3\)$
+    description: 'Kernel #10 - 2.2% of GPU time, 2180 calls'
+-   name: void at::native::elementwise_kernel<(int)128, (int)4, void at::native::gpu_kernel_impl_nocast<at::native::BinaryFunctor<c10::BFloat16, c10::BFloat16, c10::BFloat16, at::native::binary_internal::MulFunctor<float>>>(at::TensorIteratorBase &, const T1 &)::[lambda(int) (instance 1)]>(int, T3)
+    regex: ^void\ at::native::elementwise_kernel<\(int\)128,\ \(int\)4,\ void\ at::native::gpu_kernel_impl_nocast<at::native::BinaryFunctor<c10::BFloat16,\ c10::BFloat16,\ c10::BFloat16,\ at::native::binary_internal::MulFunctor<float>>>\(at::TensorIteratorBase\ \&,\ const\ T1\ \&\)::\[lambda\(int\)\ \(instance\ 1\)\]>\(int,\ T3\)$
+    description: 'Kernel #11 - 2.2% of GPU time, 62900 calls'
+-   name: void at::native::<unnamed>::CatArrayBatchedCopy_vectorized<at::native::<unnamed>::OpaqueType<(unsigned int)2>, unsigned int, (int)3, (int)128, (int)1, (int)16, (int)8>(char *, at::native::<unnamed>::CatArrInputTensorMetadata<T1, T2, T4, T5>, at::native::<unnamed>::TensorSizeStride<T2, (unsigned int)4>, int, T2)
+    regex: ^void\ at::native::<unnamed>::CatArrayBatchedCopy_vectorized<at::native::<unnamed>::OpaqueType<\(unsigned\ int\)2>,\ unsigned\ int,\ \(int\)3,\ \(int\)128,\ \(int\)1,\ \(int\)16,\ \(int\)8>\(char\ \*,\ at::native::<unnamed>::CatArrInputTensorMetadata<T1,\ T2,\ T4,\ T5>,\ at::native::<unnamed>::TensorSizeStride<T2,\ \(unsigned\ int\)4>,\ int,\ T2\)$
+    description: 'Kernel #12 - 2.0% of GPU time, 30240 calls'
+-   name: void flash::flash_fwd_splitkv_kernel<Flash_fwd_kernel_traits<(int)128, (int)64, (int)128, (int)4, (bool)0, (bool)0, cutlass::bfloat16_t, Flash_kernel_traits<(int)128, (int)64, (int)128, (int)4, cutlass::bfloat16_t>>, (bool)0, (bool)0, (bool)0, (bool)0, (bool)1, (bool)0, (bool)1, (bool)0>(flash::Flash_fwd_params)
+    regex: ^void\ flash::flash_fwd_splitkv_kernel<Flash_fwd_kernel_traits<\(int\)128,\ \(int\)64,\ \(int\)128,\ \(int\)4,\ \(bool\)0,\ \(bool\)0,\ cutlass::bfloat16_t,\ Flash_kernel_traits<\(int\)128,\ \(int\)64,\ \(int\)128,\ \(int\)4,\ cutlass::bfloat16_t>>,\ \(bool\)0,\ \(bool\)0,\ \(bool\)0,\ \(bool\)0,\ \(bool\)1,\ \(bool\)0,\ \(bool\)1,\ \(bool\)0>\(flash::Flash_fwd_params\)$
+    description: 'Kernel #13 - 1.7% of GPU time, 15360 calls'
+-   name: void at::native::vectorized_elementwise_kernel<(int)4, at::native::CUDAFunctor_add<c10::BFloat16>, std::array<char *, (unsigned long)3>>(int, T2, T3)
+    regex: ^void\ at::native::vectorized_elementwise_kernel<\(int\)4,\ at::native::CUDAFunctor_add<c10::BFloat16>,\ std::array<char\ \*,\ \(unsigned\ long\)3>>\(int,\ T2,\ T3\)$
+    description: 'Kernel #14 - 1.5% of GPU time, 76240 calls'
+-   name: void at::native::elementwise_kernel<(int)128, (int)2, void at::native::gpu_kernel_impl_nocast<at::native::BinaryFunctor<float, float, float, at::native::binary_internal::MulFunctor<float>>>(at::TensorIteratorBase &, const T1 &)::[lambda(int) (instance 1)]>(int, T3)
+    regex: ^void\ at::native::elementwise_kernel<\(int\)128,\ \(int\)2,\ void\ at::native::gpu_kernel_impl_nocast<at::native::BinaryFunctor<float,\ float,\ float,\ at::native::binary_internal::MulFunctor<float>>>\(at::TensorIteratorBase\ \&,\ const\ T1\ \&\)::\[lambda\(int\)\ \(instance\ 1\)\]>\(int,\ T3\)$
+    description: 'Kernel #15 - 1.4% of GPU time, 46800 calls'
+-   name: void cutlass::Kernel2<cutlass_80_tensorop_bf16_s16816gemm_relu_bf16_128x256_32x3_tn_align8>(T1::Params)
+    regex: ^void\ cutlass::Kernel2<cutlass_80_tensorop_bf16_s16816gemm_relu_bf16_128x256_32x3_tn_align8>\(T1::Params\)$
+    description: 'Kernel #16 - 1.4% of GPU time, 240 calls'
+-   name: void at::native::<unnamed>::CatArrayBatchedCopy<at::native::<unnamed>::OpaqueType<(unsigned int)2>, unsigned int, (int)4, (int)64, (int)64>(T1 *, at::native::<unnamed>::CatArrInputTensorMetadata<T1, T2, T4, T5>, at::native::<unnamed>::TensorSizeStride<T2, (unsigned int)4>, int, T2)
+    regex: ^void\ at::native::<unnamed>::CatArrayBatchedCopy<at::native::<unnamed>::OpaqueType<\(unsigned\ int\)2>,\ unsigned\ int,\ \(int\)4,\ \(int\)64,\ \(int\)64>\(T1\ \*,\ at::native::<unnamed>::CatArrInputTensorMetadata<T1,\ T2,\ T4,\ T5>,\ at::native::<unnamed>::TensorSizeStride<T2,\ \(unsigned\ int\)4>,\ int,\ T2\)$
+    description: 'Kernel #17 - 1.4% of GPU time, 31680 calls'
+-   name: void at::native::reduce_kernel<(int)512, (int)1, at::native::ReduceOp<float, at::native::MeanOps<float, float, float, float>, unsigned int, float, (int)4, (int)4>>(T3)
+    regex: ^void\ at::native::reduce_kernel<\(int\)512,\ \(int\)1,\ at::native::ReduceOp<float,\ at::native::MeanOps<float,\ float,\ float,\ float>,\ unsigned\ int,\ float,\ \(int\)4,\ \(int\)4>>\(T3\)$
+    description: 'Kernel #18 - 1.2% of GPU time, 32500 calls'
+-   name: void at::native::elementwise_kernel<(int)128, (int)2, void at::native::gpu_kernel_impl_nocast<at::native::direct_copy_kernel_cuda(at::TensorIteratorBase &)::[lambda() (instance 3)]::operator ()() const::[lambda() (instance 7)]::operator ()() const::[lambda(float) (instance 1)]>(at::TensorIteratorBase &, const T1 &)::[lambda(int) (instance 1)]>(int, T3)
+    regex: ^void\ at::native::elementwise_kernel<\(int\)128,\ \(int\)2,\ void\ at::native::gpu_kernel_impl_nocast<at::native::direct_copy_kernel_cuda\(at::TensorIteratorBase\ \&\)::\[lambda\(\)\ \(instance\ 3\)\]::operator\ \(\)\(\)\ const::\[lambda\(\)\ \(instance\ 7\)\]::operator\ \(\)\(\)\ const::\[lambda\(float\)\ \(instance\ 1\)\]>\(at::TensorIteratorBase\ \&,\ const\ T1\ \&\)::\[lambda\(int\)\ \(instance\ 1\)\]>\(int,\ T3\)$
+    description: 'Kernel #19 - 1.1% of GPU time, 1680 calls'
+-   name: void at::native::elementwise_kernel<(int)128, (int)4, void at::native::gpu_kernel_impl_nocast<at::native::neg_kernel_cuda(at::TensorIteratorBase &)::[lambda() (instance 2)]::operator ()() const::[lambda() (instance 9)]::operator ()() const::[lambda(c10::BFloat16) (instance 1)]>(at::TensorIteratorBase &, const T1 &)::[lambda(int) (instance 1)]>(int, T3)
+    regex: ^void\ at::native::elementwise_kernel<\(int\)128,\ \(int\)4,\ void\ at::native::gpu_kernel_impl_nocast<at::native::neg_kernel_cuda\(at::TensorIteratorBase\ \&\)::\[lambda\(\)\ \(instance\ 2\)\]::operator\ \(\)\(\)\ const::\[lambda\(\)\ \(instance\ 9\)\]::operator\ \(\)\(\)\ const::\[lambda\(c10::BFloat16\)\ \(instance\ 1\)\]>\(at::TensorIteratorBase\ \&,\ const\ T1\ \&\)::\[lambda\(int\)\ \(instance\ 1\)\]>\(int,\ T3\)$
+    description: 'Kernel #20 - 1.1% of GPU time, 31200 calls'
