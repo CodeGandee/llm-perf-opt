@@ -56,25 +56,30 @@ This report shows:
 
 ### Top Kernels by Total Time
 
-The following table shows the top 15 kernels by cumulative execution time during the decode phase of inference, as measured by Nsight Systems. Kernels are categorized by source library and given human-friendly names based on their functionality.
+The following table shows the top 20 kernels by cumulative execution time during the decode phase of inference, as measured by Nsight Systems (NVTX‑gated on decode). Kernels are categorized by source library and given human‑friendly names based on their functionality.
 
 | Time % | Library | Kernel Name | Description |
 |--------|---------|-------------|-------------|
-| 34.4% | cuBLAS | GEMV-1 (BF16, template=7) | Matrix-vector multiplication, dominates due to decode autoregressiveness |
-| 14.8% | cuBLAS | GEMV-2 (BF16, template=6) | Matrix-vector multiplication, alternative tiling strategy |
-| 6.0% | PyTorch ATen | Direct Copy (float) | Memory copy/cast operations for intermediate tensors |
-| 4.2% | PyTorch ATen | Elementwise Multiply (BF16, vec) | Vectorized element-wise multiplication for attention masks |
-| 3.9% | PyTorch ATen | SiLU Activation (BF16, vec) | Vectorized SiLU (Swish) activation in FFN |
-| 2.9% | PyTorch ATen | Elementwise Multiply (BF16) | Non-vectorized element-wise multiplication |
-| 2.8% | PyTorch ATen | Cat Batched Copy (vec, 128-tile) | Concatenation operations for multi-head outputs |
-| 2.7% | PyTorch ATen | Copy/Cast (BF16, vec) | BF16-specific vectorized copy operations |
-| 2.4% | FlashAttention | Flash Forward Split-KV (BF16) | IO-aware fused attention with split K/V strategy |
-| 2.0% | PyTorch ATen | Elementwise Add (BF16, vec) | Vectorized addition for residual connections |
-| 1.8% | PyTorch ATen | Cat Batched Copy (vec, 64-tile) | Concatenation with smaller tile size |
-| 1.8% | PyTorch ATen | Elementwise Multiply (float) | FP32 element-wise multiplication |
+| 34.4% | cuBLAS | GEMV (BF16, template=7) | Matrix-vector multiplication for decode |
+| 14.8% | cuBLAS | GEMV (BF16, template=6) | Matrix-vector multiplication for decode |
+| 6.0% | PyTorch ATen | Direct Copy (float) | Memory copy/cast for intermediates |
+| 4.2% | PyTorch ATen | Elementwise Multiply (BF16, vec) | Vectorized elementwise multiply |
+| 3.9% | PyTorch ATen | SiLU Activation (BF16, vec) | Vectorized SiLU activation in FFN |
+| 2.9% | PyTorch ATen | Elementwise Multiply (BF16) | Elementwise multiply (BF16) |
+| 2.8% | PyTorch ATen | Cat Batched Copy (vec, 128-tile) | Concatenate heads (vectorized) |
+| 2.7% | PyTorch ATen | Copy/Cast (BF16, vec) | BF16 vectorized copy |
+| 2.4% | FlashAttention | Flash Forward Split-KV (BF16) | IO-aware fused attention with split K/V |
+| 2.0% | PyTorch ATen | Elementwise Add (BF16, vec) | Vectorized add for residuals |
+| 1.8% | PyTorch ATen | Cat Batched Copy (vec, 64-tile) | Concatenate heads (64 tile) |
+| 1.8% | PyTorch ATen | Elementwise Multiply (float) | FP32 elementwise multiply |
 | 1.6% | PyTorch ATen | Mean Reduction (float) | Reduction operations for normalization |
 | 1.5% | PyTorch ATen | Elementwise Neg (BF16) | Negation operations |
-| 1.4% | FlashAttention | Flash Split-KV Combine | Combines split-KV outputs from attention |
+| 1.4% | FlashAttention | Flash Split-KV Combine | Combine split-KV outputs |
+| 1.3% | PyTorch ATen | TopK Gather (float) | Gather top-K values/indices |
+| 1.2% | PyTorch ATen | Index Put (elementwise) | Advanced indexing write |
+| 1.2% | PyTorch ATen | Bitonic Sort (KV in-place) | In-place key-value bitonic sort |
+| 1.1% | PyTorch ATen | Elementwise Multiply (float, vec) | Vectorized elementwise multiply |
+| 1.0% | PyTorch ATen | Sum Reduction (float) | Sum reduction |
 
 **Key Observations:**
 - **GEMV Dominance (49.2%)**: The two cuBLAS GEMV variants account for nearly half of all execution time, which is characteristic of autoregressive decode where batch size = 1 and matrix-vector products dominate over matrix-matrix products.
@@ -473,6 +478,11 @@ The following table maps human-friendly kernel names to their full mangled funct
 | 13 | 1.6% | Mean Reduction (float) | PyTorch ATen | `void at::native::reduce_kernel<(int)512, (int)1, at::native::ReduceOp<float, at::native::MeanOps<float, float, float, float>, unsigned int, float, (int)4, (int)4>>(T3)` |
 | 14 | 1.5% | Elementwise Neg (BF16) | PyTorch ATen | `void at::native::elementwise_kernel<(int)128, (int)4, void at::native::gpu_kernel_impl_nocast<at::native::neg_kernel_cuda(at::TensorIteratorBase &)::[lambda() (instance 2)]::operator ()() const::[lambda() (instance 9)]::operator ()() const::[lambda(c10::BFloat16) (instance 1)]>(at::TensorIteratorBase &, const T1 &)::[lambda(int) (instance 1)]>(int, T3)` |
 | 15 | 1.4% | Flash Split-KV Combine | FlashAttention | `void flash::flash_fwd_splitkv_combine_kernel<Flash_fwd_kernel_traits<(int)128, (int)64, (int)128, (int)4, (bool)0, (bool)0, cutlass::bfloat16_t, Flash_kernel_traits<(int)128, (int)64, (int)128, (int)4, cutlass::bfloat16_t>>, (int)4, (int)3, (bool)1>(flash::Flash_fwd_params)` |
+| 16 | 1.3% | TopK Gather (float) | PyTorch ATen | `void at::native::sbtopk::gatherTopK<float, unsigned int, (int)1, (bool)0>(at::cuda::detail::TensorInfo<const T1, T2>, T2, T2, bool, T2, T2, at::cuda::detail::TensorInfo<T1, T2>, T2, at::cuda::detail::TensorInfo<long, T2>, T2, T1 *)` |
+| 17 | 1.2% | Index Put (elementwise) | PyTorch ATen | `void at::native::index_elementwise_kernel<(int)128, (int)4, void at::native::gpu_index_kernel<void at::native::index_put_kernel_impl<at::native::OpaqueType<(int)2>>(at::TensorIterator &, c10::ArrayRef<long>, c10::ArrayRef<long>)::[lambda(char *, const char *, long) (instance 1)]>(at::TensorIteratorBase &, c10::ArrayRef<long>, c10::ArrayRef<long>, const T1 &, bool)::[lambda(int) (instance 1)]>(long, T3)` |
+| 18 | 1.2% | Bitonic Sort (KV in-place) | PyTorch ATen | `void at::native::bitonicSortKVInPlace<(int)-2, (int)-1, (int)16, (int)16, long, long, at::native::LTOp<long, (bool)1>, unsigned int>(at::cuda::detail::TensorInfo<T5, T8>, T8, T8, T8, at::cuda::detail::TensorInfo<T6, T8>, T8, T7)` |
+| 19 | 1.1% | Elementwise Multiply (float, vec) | PyTorch ATen | `void at::native::vectorized_elementwise_kernel<(int)4, at::native::AUnaryFunctor<float, float, float, at::native::binary_internal::MulFunctor<float>>, std::array<char *, (unsigned long)2>>(int, T2, T3)` |
+| 20 | 1.0% | Sum Reduction (float) | PyTorch ATen | `void at::native::reduce_kernel<(int)128, (int)4, at::native::ReduceOp<float, at::native::func_wrapper_t<float, at::native::sum_functor<float, float, float>::operator ()(at::TensorIterator &)::[lambda(float, float) (instance 1)]>, unsigned int, float, (int)4, (int)4>>(T3)` |
 
 ### Notes on Function Name Interpretation
 
