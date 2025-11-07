@@ -470,6 +470,13 @@ This section summarizes collection settings and the rule used to classify kernel
   - Memory‑bound: AI < ridge AND (Memory throughput ≥ 1.3× SM OR Memory − SM ≥ 5 pp);
   - Balanced: otherwise; additionally, if SM and Memory < 20% of peak, classify as Balanced.
 
+**Ridge Point Rationale (Why 80 FLOPs/byte):**
+1. Formula: ridge = P_peak / BW_eff (FLOP/s divided by effective bytes/s) — the boundary between memory‑ and compute‑bound on the roofline.
+2. Compute roof choice: decode mixes elementwise/ATen and GEMV/GEMM kernels, many not fully engaging tensor cores; we therefore use the FP32 SM peak as a robust cross‑kernel compute roof rather than the higher tensor‑core peak.
+3. Observed transition band: our normalized/physical rooflines show a transition around 50–100 FLOPs/byte. Fixing 80 FLOPs/byte provides a stable midpoint that yields consistent classifications across runs.
+4. Example numbers (order‑of‑magnitude): FP32 peak ≈ 105 TFLOP/s; effective bandwidth for this decode workload ≈ 1.3 TB/s ⇒ 105 / 1.3 ≈ 80 FLOPs/byte (illustrative; BW_eff varies by run).
+5. Alternatives: recompute ridge per run as P_peak(dType)/BW_eff (choose P_peak to match dominant compute mode; estimate BW_eff from peak or 95th‑percentile memory‑bound kernels). For maximum fidelity, per‑kernel ridge can be used, but we fix 80 for simplicity and stability.
+
 ## Appendix: Full Kernel Function Names
 
 This appendix provides the complete, unabbreviated kernel function names for traceability and debugging purposes. These correspond to the kernels listed in the "Top Kernels by Total Time" section.
