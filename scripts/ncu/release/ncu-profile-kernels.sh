@@ -27,7 +27,7 @@ set -euo pipefail
 #   --topk <K>                     First K kernels from YAML (with --kernel-config)
 #   --ncu-config <yaml>            Optional NCU CLI config YAML (plain YAML; e.g., conf/profiling/ncu/ncu.default.yaml)
 #   --extra-sections <s...>        Extra NCU sections beyond defaults
-#   --num-kernel-call-skip <N>     Skip first N kernel invocations (default: 200)
+#   --num-kernel-call-skip <N>     Skip first N kernel invocations (default: 1)
 #   --num-kernel-call-profile <M>  Profile M invocations after skipping (default: 1)
 #   --force-overwrite              Overwrite existing reports
 #   --                             Separator before target launch command
@@ -90,7 +90,7 @@ OUT_DIR=""
 TOPK=""
 NCU_CONFIG_FILE=""
 EXTRA_SECTIONS=()
-LAUNCH_SKIP=200
+LAUNCH_SKIP=1
 LAUNCH_COUNT=1
 FORCE_OVERWRITE="no"
 LAUNCH_CMD=()
@@ -99,7 +99,11 @@ LAUNCH_CMD=()
 DEFAULT_SECTIONS="SpeedOfLight MemoryWorkloadAnalysis Occupancy SchedulerStats SpeedOfLight_RooflineChart"
 # Default metrics to ensure roofline-computable data even without external config
 # These keep overhead modest while enabling FLOPs/s and AI computation in analysis.
-DEFAULT_METRICS="flop_count_hp,flop_count_sp,gpu__time_duration.sum,sm__throughput.avg.pct_of_peak_sustained_elapsed,dram__throughput.avg.pct_of_peak_sustained_elapsed"
+# BF16 roofline metrics per https://docs.nvidia.com/nsight-compute/:
+#   - sm__ops_path_tensor_src_bf16_dst_* for BF16 tensor core FLOPs
+#   - dram__bytes_read/write for memory traffic (AI denominator)
+#   - gpu__time_duration for converting ops to FLOP/s
+DEFAULT_METRICS="flop_count_hp.sum,flop_count_sp.sum,sm__ops_path_tensor_src_bf16_dst_fp32.sum,sm__ops_path_tensor_src_bf16_dst_bf16.sum,dram__bytes_read.sum,dram__bytes_write.sum,gpu__time_duration.sum,sm__throughput.avg.pct_of_peak_sustained_elapsed,dram__throughput.avg.pct_of_peak_sustained_elapsed"
 
 # --- Help ---
 show_help() {
@@ -115,7 +119,7 @@ Options:
   --topk <num>                 Profile only top K kernels from YAML (requires --kernel-config)
   --ncu-config <yaml>          Optional NCU CLI config YAML to derive sections/preset
   --extra-sections <s1> <s2>   Additional ncu sections beyond defaults
-  --num-kernel-call-skip <N>   Skip first N kernel invocations (default: 200)
+  --num-kernel-call-skip <N>   Skip first N kernel invocations (default: 1)
   --num-kernel-call-profile <M> Profile M invocations after skipping (default: 1)
   --force-overwrite            Overwrite existing reports
 

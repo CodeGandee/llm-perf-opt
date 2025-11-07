@@ -16,6 +16,107 @@ import os
 import torch
 
 
+def _get_device_specs_table() -> dict:
+    """Return comprehensive device specs table (TFLOPS and memory bandwidth).
+
+    Returns
+    -------
+    dict
+        Nested dict: device_name -> {"tflops": {precision: value}, "bandwidth_gbs": value}
+
+    Notes
+    -----
+    Memory bandwidth sources:
+    - RTX 5090: 1792 GB/s (GDDR7, official spec 2025)
+    - RTX 4090: 1008 GB/s (GDDR6X, official spec)
+    - RTX 3090: 936 GB/s (GDDR6X, official spec)
+    - H100 SXM: 3350 GB/s (HBM3, official spec)
+    - H100 PCIe: 2000 GB/s (HBM3, official spec)
+    - H200: 4800 GB/s (HBM3e, official spec)
+    - A100: 1935 GB/s (HBM2e, official spec)
+    """
+    return {
+        # Data Center GPUs
+        "NVIDIA H100 SXM": {
+            "tflops": {
+                "fp32": 67.0,
+                "fp16": 1979.0,  # Tensor Core
+                "bf16": 1979.0,  # Tensor Core
+                "tf32": 989.0,   # Tensor Core
+            },
+            "bandwidth_gbs": 3350.0,  # HBM3
+        },
+        "NVIDIA H100 PCIe": {
+            "tflops": {
+                "fp32": 51.0,
+                "fp16": 1513.0,
+                "bf16": 1513.0,
+                "tf32": 756.0,
+            },
+            "bandwidth_gbs": 2000.0,  # HBM3
+        },
+        "NVIDIA H200": {
+            "tflops": {
+                "fp32": 67.0,
+                "fp16": 1979.0,
+                "bf16": 1979.0,
+                "tf32": 989.0,
+            },
+            "bandwidth_gbs": 4800.0,  # HBM3e
+        },
+        "NVIDIA A100": {
+            "tflops": {
+                "fp32": 19.5,
+                "fp16": 312.0,
+                "bf16": 312.0,
+                "tf32": 156.0,
+            },
+            "bandwidth_gbs": 1935.0,  # HBM2e
+        },
+        "NVIDIA A800": {
+            "tflops": {
+                "fp32": 19.5,
+                "fp16": 312.0,
+                "bf16": 312.0,
+                "tf32": 156.0,
+            },
+            "bandwidth_gbs": 1935.0,  # HBM2e
+        },
+        # Consumer GPUs
+        "NVIDIA GeForce RTX 4090": {
+            "tflops": {
+                "fp32": 82.6,
+                "fp16": 661.0,  # Tensor Core
+                "bf16": 661.0,  # Tensor Core
+            },
+            "bandwidth_gbs": 1008.0,  # GDDR6X
+        },
+        # RTX 50‑series (Blackwell)
+        # Sources:
+        # - NVIDIA RTX Blackwell GPU Architecture (public PDF; GB202 specs)
+        # - Puget Systems AI review indicating ~209.5 TFLOPS (BF16/FP16 dense) for RTX 5090
+        #   https://www.pugetsystems.com/labs/articles/nvidia-geforce-rtx-5090-amp-5080-ai-review/
+        # - TechPowerUp: 1792 GB/s bandwidth (GDDR7, 512-bit bus, 28 Gbps)
+        # Approx FP32 computed from CUDA cores (21,760) * 2.407 GHz * 2 FLOPs / 1e12 ≈ 104.8 TFLOPS.
+        "NVIDIA GeForce RTX 5090": {
+            "tflops": {
+                "fp32": 104.8,
+                "fp16": 209.5,  # Tensor Core (dense)
+                "bf16": 209.5,  # Tensor Core (dense)
+            },
+            "bandwidth_gbs": 1792.0,  # GDDR7
+        },
+        "NVIDIA GeForce RTX 3090": {
+            "tflops": {
+                "fp32": 35.6,
+                "fp16": 285.0,  # Tensor Core (sparse spec; use with caution)
+                "bf16": 285.0,  # Tensor Core
+            },
+            "bandwidth_gbs": 936.0,  # GDDR6X
+        },
+    }
+
+
 def get_device_name(index: int = 0) -> str:
     """Return the CUDA device name (or 'cpu' if CUDA unavailable).
 
@@ -58,61 +159,10 @@ def get_peak_tflops(device_name: str, precision: str = "bf16") -> float:
     """
 
     # Nested table: device -> precision -> TFLOPS
-    table = {
-        # Data Center GPUs
-        "NVIDIA H100 SXM": {
-            "fp32": 67.0,
-            "fp16": 1979.0,  # Tensor Core
-            "bf16": 1979.0,  # Tensor Core
-            "tf32": 989.0,   # Tensor Core
-        },
-        "NVIDIA H100 PCIe": {
-            "fp32": 51.0,
-            "fp16": 1513.0,
-            "bf16": 1513.0,
-            "tf32": 756.0,
-        },
-        "NVIDIA H200": {
-            "fp32": 67.0,
-            "fp16": 1979.0,
-            "bf16": 1979.0,
-            "tf32": 989.0,
-        },
-        "NVIDIA A100": {
-            "fp32": 19.5,
-            "fp16": 312.0,
-            "bf16": 312.0,
-            "tf32": 156.0,
-        },
-        "NVIDIA A800": {
-            "fp32": 19.5,
-            "fp16": 312.0,
-            "bf16": 312.0,
-            "tf32": 156.0,
-        },
-        # Consumer GPUs
-        "NVIDIA GeForce RTX 4090": {
-            "fp32": 82.6,
-            "fp16": 661.0,  # Tensor Core
-            "bf16": 661.0,  # Tensor Core
-        },
-        # RTX 50‑series (Blackwell)
-        # Sources:
-        # - NVIDIA RTX Blackwell GPU Architecture (public PDF; GB202 specs)
-        # - Puget Systems AI review indicating ~209.5 TFLOPS (BF16/FP16 dense) for RTX 5090
-        #   https://www.pugetsystems.com/labs/articles/nvidia-geforce-rtx-5090-amp-5080-ai-review/
-        # Approx FP32 computed from CUDA cores (21,760) * 2.407 GHz * 2 FLOPs / 1e12 ≈ 104.8 TFLOPS.
-        "NVIDIA GeForce RTX 5090": {
-            "fp32": 104.8,
-            "fp16": 209.5,  # Tensor Core (dense)
-            "bf16": 209.5,  # Tensor Core (dense)
-        },
-        "NVIDIA GeForce RTX 3090": {
-            "fp32": 35.6,
-            "fp16": 285.0,  # Tensor Core (sparse spec; use with caution)
-            "bf16": 285.0,  # Tensor Core
-        },
-    }
+    table = _get_device_specs_table()
+
+    # Extract only TFLOPS sub-dict
+    tflops_table = {k: v["tflops"] for k, v in table.items()}
 
     # Normalize precision to lowercase
     prec = precision.lower()
@@ -120,7 +170,7 @@ def get_peak_tflops(device_name: str, precision: str = "bf16") -> float:
         prec = "bf16"  # default to bf16 if unrecognized
 
     # Find matching device (substring match)
-    for key, prec_dict in table.items():
+    for key, prec_dict in tflops_table.items():
         if key in device_name:
             # Return value for requested precision, fallback to bf16, then first available
             if prec in prec_dict:
@@ -135,6 +185,38 @@ def get_peak_tflops(device_name: str, precision: str = "bf16") -> float:
         return float(os.environ.get("MFU_PEAK_TFLOPS", "100"))
     except Exception:
         return 100.0
+
+
+def get_memory_bandwidth(device_name: str) -> float:
+    """Return theoretical peak memory bandwidth (GB/s) for known devices.
+
+    Parameters
+    ----------
+    device_name : str
+        Friendly GPU device name.
+
+    Returns
+    -------
+    float
+        Memory bandwidth in GB/s. Falls back to ``MEM_BANDWIDTH_GBS`` env var, or ``1000`` if unset.
+
+    Notes
+    -----
+    Values are from official NVIDIA specs and hardware databases (2025).
+    See hw.py source and _get_device_specs_table() for references.
+    """
+    table = _get_device_specs_table()
+
+    # Find matching device (substring match)
+    for key, specs in table.items():
+        if key in device_name:
+            return specs["bandwidth_gbs"]
+
+    # No match found, try environment variable
+    try:
+        return float(os.environ.get("MEM_BANDWIDTH_GBS", "1000"))
+    except Exception:
+        return 1000.0
 
 
 def capture_env() -> dict:

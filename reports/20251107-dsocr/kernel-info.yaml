@@ -1,0 +1,503 @@
+# Auto-generated kernel summary (heuristic). Edit as needed.
+- raw_name: "std::enable_if<!T7, void>::type internal::gemvx::kernel<int, int, __nv_bfloat16, __nv_bfloat16, __nv_bfloat16, float, (bool)0, (bool)1, (bool)1, (bool)0, (int)7, (bool)0, cublasGemvParamsEx<int, cublasGemvTensorStridedBatched<const __nv_bfloat16>, cublasGemvTensorStridedBatched<const __nv_bfloat16>, cublasGemvTensorStridedBatched<__nv_bfloat16>, float>>(T13)"
+  friendly_name: cuBLAS GEMV (matrix-vector, BF16)
+  source_lib: cuBLAS
+  data_shape:
+    generic:
+      - [(M, K), (K,), "->", (M,)]
+    fixed: null
+    tiled: null
+  description: "General-purpose GEMV/GEMM; tile not encoded in name."
+- raw_name: "std::enable_if<!T7, void>::type internal::gemvx::kernel<int, int, __nv_bfloat16, __nv_bfloat16, __nv_bfloat16, float, (bool)0, (bool)1, (bool)1, (bool)0, (int)6, (bool)0, cublasGemvParamsEx<int, cublasGemvTensorStridedBatched<const __nv_bfloat16>, cublasGemvTensorStridedBatched<const __nv_bfloat16>, cublasGemvTensorStridedBatched<__nv_bfloat16>, float>>(T13)"
+  friendly_name: cuBLAS GEMV (matrix-vector, BF16)
+  source_lib: cuBLAS
+  data_shape:
+    generic:
+      - [(M, K), (K,), "->", (M,)]
+    fixed: null
+    tiled: null
+  description: "General-purpose GEMV/GEMM; tile not encoded in name."
+- raw_name: "void cutlass::Kernel2<cutlass_80_wmma_tensorop_bf16_s161616gemm_bf16_32x32_128x2_tn_align8>(T1::Params)"
+  friendly_name: CUTLASS GEMM (Tensor Core, BF16)
+  source_lib: CUTLASS
+  data_shape:
+    generic:
+      - [(M, K), (K, N), "->", (M, N)]
+    fixed: null
+    tiled:
+      - [(32, 128), (128, 32), "->", (32, 32)]
+  description: "Tensor Core GEMM; tile sizes present in name (tile-level computation shown in tiled)."
+- raw_name: "void at::native::unrolled_elementwise_kernel<at::native::direct_copy_kernel_cuda(at::TensorIteratorBase &)::[lambda() (instance 3)]::operator ()() const::[lambda() (instance 7)]::operator ()() const::[lambda(float) (instance 1)], std::array<char *, (unsigned long)2>, (int)4, TrivialOffsetCalculator<(int)1, unsigned int>, TrivialOffsetCalculator<(int)1, unsigned int>, at::native::memory::LoadWithCast<(int)1>, at::native::memory::StoreWithCast<(int)1>>(int, T1, T2, T4, T5, T6, T7)"
+  friendly_name: ATen kernel
+  source_lib: PyTorch ATen
+  data_shape:
+    generic:
+      - [(…), "->", (…)]
+    fixed: null
+    tiled: null
+  description: PyTorch ATen CUDA kernel.
+- raw_name: "void cutlass::Kernel2<cutlass_80_tensorop_bf16_s16816gemm_relu_bf16_256x128_32x3_tn_align8>(T1::Params)"
+  friendly_name: CUTLASS GEMM (Tensor Core, BF16)
+  source_lib: CUTLASS
+  data_shape:
+    generic:
+      - [(M, K), (K, N), "->", (M, N)]
+    fixed: null
+    tiled:
+      - [(256, 32), (32, 128), "->", (256, 128)]
+  description: "Tensor Core GEMM; tile sizes present in name (tile-level computation shown in tiled)."
+- raw_name: "void at::native::vectorized_elementwise_kernel<(int)4, at::native::BinaryFunctor<c10::BFloat16, c10::BFloat16, c10::BFloat16, at::native::binary_internal::MulFunctor<float>>, std::array<char *, (unsigned long)3>>(int, T2, T3)"
+  friendly_name: ATen elementwise multiply (vectorized)
+  source_lib: PyTorch ATen
+  data_shape:
+    generic:
+      - [(N,), "->", (N,)]
+    fixed: null
+    tiled: null
+  description: Vectorized elementwise operation.
+- raw_name: "void at::native::vectorized_elementwise_kernel<(int)4, at::native::<unnamed>::silu_kernel(at::TensorIteratorBase &)::[lambda() (instance 1)]::operator ()() const::[lambda() (instance 6)]::operator ()() const::[lambda(c10::BFloat16) (instance 1)], std::array<char *, (unsigned long)2>>(int, T2, T3)"
+  friendly_name: ATen SiLU activation (vectorized)
+  source_lib: PyTorch ATen
+  data_shape:
+    generic:
+      - [(N,), "->", (N,)]
+    fixed: null
+    tiled: null
+  description: Vectorized elementwise operation.
+- raw_name: "fmha_cutlassF_bf16_aligned_64x64_rf_sm80(PyTorchMemEffAttention::AttentionKernel<cutlass::bfloat16_t, cutlass::arch::Sm80, (bool)1, (int)64, (int)64, (int)64, (bool)1, (bool)1>::Params)"
+  friendly_name: Memory-Efficient Attention (CUTLASS BF16)
+  source_lib: PyTorch MemEffAttention
+  data_shape:
+    generic:
+      - ["Q:(B,H,T,D)", "K:(B,H,S,D)", "V:(B,H,S,D)", "->", "O:(B,H,T,D)"]
+    fixed:
+      - ["Q:(B,H,T,64)", "K:(B,H,S,64)", "V:(B,H,S,64)", "->", "O:(B,H,T,64)"]
+    tiled:
+      - ["Q_tile:(64, 64)", "K_tile:(64, 64)", "V_tile:(64, 64)", "->", "O_tile:(64, 64)"]
+  description: "PyTorch memory-efficient attention; alignment hints reflect per-head dim (tiled approximated)."
+- raw_name: "void at::native::vectorized_elementwise_kernel<(int)4, at::native::bfloat16_copy_kernel_cuda(at::TensorIteratorBase &)::[lambda(float) (instance 1)], std::array<char *, (unsigned long)2>>(int, T2, T3)"
+  friendly_name: ATen copy/cast (vectorized, bf16)
+  source_lib: PyTorch ATen
+  data_shape:
+    generic:
+      - [(N,), "->", (N,)]
+    fixed: null
+    tiled: null
+  description: Vectorized elementwise operation.
+- raw_name: "void at::native::elementwise_kernel<(int)128, (int)4, void at::native::gpu_kernel_impl_nocast<at::native::CUDAFunctor_add<c10::BFloat16>>(at::TensorIteratorBase &, const T1 &)::[lambda(int) (instance 1)]>(int, T3)"
+  friendly_name: ATen elementwise add
+  source_lib: PyTorch ATen
+  data_shape:
+    generic:
+      - [(N,), (N,), "->", (N,)]
+    fixed: null
+    tiled: null
+  description: TensorIterator-based elementwise kernel.
+- raw_name: "void at::native::elementwise_kernel<(int)128, (int)4, void at::native::gpu_kernel_impl_nocast<at::native::BinaryFunctor<c10::BFloat16, c10::BFloat16, c10::BFloat16, at::native::binary_internal::MulFunctor<float>>>(at::TensorIteratorBase &, const T1 &)::[lambda(int) (instance 1)]>(int, T3)"
+  friendly_name: ATen elementwise multiply
+  source_lib: PyTorch ATen
+  data_shape:
+    generic:
+      - [(N,), (N,), "->", (N,)]
+    fixed: null
+    tiled: null
+  description: TensorIterator-based elementwise kernel.
+- raw_name: "void at::native::<unnamed>::CatArrayBatchedCopy_vectorized<at::native::<unnamed>::OpaqueType<(unsigned int)2>, unsigned int, (int)3, (int)128, (int)1, (int)16, (int)8>(char *, at::native::<unnamed>::CatArrInputTensorMetadata<T1, T2, T4, T5>, at::native::<unnamed>::TensorSizeStride<T2, (unsigned int)4>, int, T2)"
+  friendly_name: ATen cat batched copy (vectorized)
+  source_lib: PyTorch ATen
+  data_shape:
+    generic:
+      - [(B, …), (B, …), "->", (B, …)]
+    fixed: null
+    tiled: null
+  description: Copy during concatenation across batched tensors.
+- raw_name: "void flash::flash_fwd_splitkv_kernel<Flash_fwd_kernel_traits<(int)128, (int)64, (int)128, (int)4, (bool)0, (bool)0, cutlass::bfloat16_t, Flash_kernel_traits<(int)128, (int)64, (int)128, (int)4, cutlass::bfloat16_t>>, (bool)0, (bool)0, (bool)0, (bool)0, (bool)1, (bool)0, (bool)1, (bool)0>(flash::Flash_fwd_params)"
+  friendly_name: FlashAttention Forward (split-KV, BF16)
+  source_lib: FlashAttention
+  data_shape:
+    generic:
+      - ["Q:(B,H,T,D)", "K:(B,H,S,D)", "V:(B,H,S,D)", "->", "O:(B,H,T,D)"]
+    fixed:
+      - ["Q:(B,H,T,64)", "K:(B,H,S,64)", "V:(B,H,S,64)", "->", "O:(B,H,T,64)"]
+    tiled:
+      - ["Q_tile:(128, 64)", "K_tile:(128, 64)", "V_tile:(128, 64)", "->", "O_tile:(128, 64)"]
+  description: "IO-aware fused attention forward; traits encode tile sizes."
+- raw_name: "void at::native::vectorized_elementwise_kernel<(int)4, at::native::CUDAFunctor_add<c10::BFloat16>, std::array<char *, (unsigned long)3>>(int, T2, T3)"
+  friendly_name: ATen elementwise add (vectorized)
+  source_lib: PyTorch ATen
+  data_shape:
+    generic:
+      - [(N,), "->", (N,)]
+    fixed: null
+    tiled: null
+  description: Vectorized elementwise operation.
+- raw_name: "void cutlass::Kernel2<cutlass_80_tensorop_bf16_s16816gemm_relu_bf16_128x256_32x3_tn_align8>(T1::Params)"
+  friendly_name: CUTLASS GEMM (Tensor Core, BF16)
+  source_lib: CUTLASS
+  data_shape:
+    generic:
+      - [(M, K), (K, N), "->", (M, N)]
+    fixed: null
+    tiled:
+      - [(128, 32), (32, 256), "->", (128, 256)]
+  description: "Tensor Core GEMM; tile sizes present in name (tile-level computation shown in tiled)."
+- raw_name: "void at::native::elementwise_kernel<(int)128, (int)2, void at::native::gpu_kernel_impl_nocast<at::native::BinaryFunctor<float, float, float, at::native::binary_internal::MulFunctor<float>>>(at::TensorIteratorBase &, const T1 &)::[lambda(int) (instance 1)]>(int, T3)"
+  friendly_name: ATen elementwise multiply
+  source_lib: PyTorch ATen
+  data_shape:
+    generic:
+      - [(N,), (N,), "->", (N,)]
+    fixed: null
+    tiled: null
+  description: TensorIterator-based elementwise kernel.
+- raw_name: "void at::native::<unnamed>::CatArrayBatchedCopy<at::native::<unnamed>::OpaqueType<(unsigned int)2>, unsigned int, (int)4, (int)64, (int)64>(T1 *, at::native::<unnamed>::CatArrInputTensorMetadata<T1, T2, T4, T5>, at::native::<unnamed>::TensorSizeStride<T2, (unsigned int)4>, int, T2)"
+  friendly_name: ATen cat batched copy (vectorized)
+  source_lib: PyTorch ATen
+  data_shape:
+    generic:
+      - [(B, …), (B, …), "->", (B, …)]
+    fixed: null
+    tiled: null
+  description: Copy during concatenation across batched tensors.
+- raw_name: "void at::native::reduce_kernel<(int)512, (int)1, at::native::ReduceOp<float, at::native::MeanOps<float, float, float, float>, unsigned int, float, (int)4, (int)4>>(T3)"
+  friendly_name: ATen kernel
+  source_lib: PyTorch ATen
+  data_shape:
+    generic:
+      - [(…), "->", (…)]
+    fixed: null
+    tiled: null
+  description: PyTorch ATen CUDA kernel.
+- raw_name: "void at::native::elementwise_kernel<(int)128, (int)2, void at::native::gpu_kernel_impl_nocast<at::native::direct_copy_kernel_cuda(at::TensorIteratorBase &)::[lambda() (instance 3)]::operator ()() const::[lambda() (instance 7)]::operator ()() const::[lambda(float) (instance 1)]>(at::TensorIteratorBase &, const T1 &)::[lambda(int) (instance 1)]>(int, T3)"
+  friendly_name: ATen elementwise kernel
+  source_lib: PyTorch ATen
+  data_shape:
+    generic:
+      - [(N,), "->", (N,)]
+    fixed: null
+    tiled: null
+  description: TensorIterator-based elementwise kernel.
+- raw_name: "void at::native::elementwise_kernel<(int)128, (int)4, void at::native::gpu_kernel_impl_nocast<at::native::neg_kernel_cuda(at::TensorIteratorBase &)::[lambda() (instance 2)]::operator ()() const::[lambda() (instance 9)]::operator ()() const::[lambda(c10::BFloat16) (instance 1)]>(at::TensorIteratorBase &, const T1 &)::[lambda(int) (instance 1)]>(int, T3)"
+  friendly_name: ATen elementwise kernel
+  source_lib: PyTorch ATen
+  data_shape:
+    generic:
+      - [(N,), "->", (N,)]
+    fixed: null
+    tiled: null
+  description: TensorIterator-based elementwise kernel.
+- raw_name: "void at::native::elementwise_kernel<(int)128, (int)4, void at::native::gpu_kernel_impl_nocast<at::native::direct_copy_kernel_cuda(at::TensorIteratorBase &)::[lambda() (instance 3)]::operator ()() const::[lambda() (instance 12)]::operator ()() const::[lambda(c10::BFloat16) (instance 1)]>(at::TensorIteratorBase &, const T1 &)::[lambda(int) (instance 1)]>(int, T3)"
+  friendly_name: ATen elementwise kernel
+  source_lib: PyTorch ATen
+  data_shape:
+    generic:
+      - [(N,), "->", (N,)]
+    fixed: null
+    tiled: null
+  description: TensorIterator-based elementwise kernel.
+- raw_name: "void flash::flash_fwd_splitkv_combine_kernel<Flash_fwd_kernel_traits<(int)128, (int)64, (int)128, (int)4, (bool)0, (bool)0, cutlass::bfloat16_t, Flash_kernel_traits<(int)128, (int)64, (int)128, (int)4, cutlass::bfloat16_t>>, (int)4, (int)3, (bool)1>(flash::Flash_fwd_params)"
+  friendly_name: CUDA kernel
+  source_lib: CUDA
+  data_shape:
+    generic:
+      - [(…), "->", (…)]
+    fixed: null
+    tiled: null
+  description: CUDA device kernel.
+- raw_name: "void cutlass::Kernel2<cutlass_80_wmma_tensorop_bf16_s161616gemm_bf16_32x32_64x1_tn_align8>(T1::Params)"
+  friendly_name: CUTLASS GEMM (Tensor Core, BF16)
+  source_lib: CUTLASS
+  data_shape:
+    generic:
+      - [(M, K), (K, N), "->", (M, N)]
+    fixed: null
+    tiled:
+      - [(32, 64), (64, 32), "->", (32, 32)]
+  description: "Tensor Core GEMM; tile sizes present in name (tile-level computation shown in tiled)."
+- raw_name: "void at::native::sbtopk::gatherTopK<float, unsigned int, (int)1, (bool)0>(at::cuda::detail::TensorInfo<const T1, T2>, T2, T2, bool, T2, T2, at::cuda::detail::TensorInfo<T1, T2>, T2, at::cuda::detail::TensorInfo<long, T2>, T2, T1 *)"
+  friendly_name: ATen kernel
+  source_lib: PyTorch ATen
+  data_shape:
+    generic:
+      - [(…), "->", (…)]
+    fixed: null
+    tiled: null
+  description: PyTorch ATen CUDA kernel.
+- raw_name: "void at::native::index_elementwise_kernel<(int)128, (int)4, void at::native::gpu_index_kernel<void at::native::index_put_kernel_impl<at::native::OpaqueType<(int)2>>(at::TensorIterator &, c10::ArrayRef<long>, c10::ArrayRef<long>)::[lambda(char *, const char *, long) (instance 1)]>(at::TensorIteratorBase &, c10::ArrayRef<long>, c10::ArrayRef<long>, const T1 &, bool)::[lambda(int) (instance 1)]>(long, T3)"
+  friendly_name: ATen kernel
+  source_lib: PyTorch ATen
+  data_shape:
+    generic:
+      - [(…), "->", (…)]
+    fixed: null
+    tiled: null
+  description: PyTorch ATen CUDA kernel.
+- raw_name: "void at::native::bitonicSortKVInPlace<(int)-2, (int)-1, (int)16, (int)16, long, long, at::native::LTOp<long, (bool)1>, unsigned int>(at::cuda::detail::TensorInfo<T5, T8>, T8, T8, T8, at::cuda::detail::TensorInfo<T6, T8>, T8, T7)"
+  friendly_name: ATen kernel
+  source_lib: PyTorch ATen
+  data_shape:
+    generic:
+      - [(…), "->", (…)]
+    fixed: null
+    tiled: null
+  description: PyTorch ATen CUDA kernel.
+- raw_name: "void at::native::vectorized_elementwise_kernel<(int)4, at::native::AUnaryFunctor<float, float, float, at::native::binary_internal::MulFunctor<float>>, std::array<char *, (unsigned long)2>>(int, T2, T3)"
+  friendly_name: ATen elementwise multiply (vectorized)
+  source_lib: PyTorch ATen
+  data_shape:
+    generic:
+      - [(N,), "->", (N,)]
+    fixed: null
+    tiled: null
+  description: Vectorized elementwise operation.
+- raw_name: "void cutlass::Kernel2<cutlass_80_tensorop_bf16_s16816gemm_relu_bf16_128x64_32x6_tn_align8>(T1::Params)"
+  friendly_name: CUTLASS GEMM (Tensor Core, BF16)
+  source_lib: CUTLASS
+  data_shape:
+    generic:
+      - [(M, K), (K, N), "->", (M, N)]
+    fixed: null
+    tiled:
+      - [(128, 32), (32, 64), "->", (128, 64)]
+  description: "Tensor Core GEMM; tile sizes present in name (tile-level computation shown in tiled)."
+- raw_name: "void cutlass::Kernel2<cutlass_80_wmma_tensorop_bf16_s161616gemm_bf16_32x32_32x1_tn_align8>(T1::Params)"
+  friendly_name: CUTLASS GEMM (Tensor Core, BF16)
+  source_lib: CUTLASS
+  data_shape:
+    generic:
+      - [(M, K), (K, N), "->", (M, N)]
+    fixed: null
+    tiled:
+      - [(32, 32), (32, 32), "->", (32, 32)]
+  description: "Tensor Core GEMM; tile sizes present in name (tile-level computation shown in tiled)."
+- raw_name: "void at::native::reduce_kernel<(int)128, (int)4, at::native::ReduceOp<float, at::native::func_wrapper_t<float, at::native::sum_functor<float, float, float>::operator ()(at::TensorIterator &)::[lambda(float, float) (instance 1)]>, unsigned int, float, (int)4, (int)4>>(T3)"
+  friendly_name: ATen kernel
+  source_lib: PyTorch ATen
+  data_shape:
+    generic:
+      - [(…), "->", (…)]
+    fixed: null
+    tiled: null
+  description: PyTorch ATen CUDA kernel.
+- raw_name: "void cutlass::Kernel2<cutlass_80_tensorop_bf16_s16816gemm_relu_bf16_256x64_32x4_tn_align8>(T1::Params)"
+  friendly_name: CUTLASS GEMM (Tensor Core, BF16)
+  source_lib: CUTLASS
+  data_shape:
+    generic:
+      - [(M, K), (K, N), "->", (M, N)]
+    fixed: null
+    tiled:
+      - [(256, 32), (32, 64), "->", (256, 64)]
+  description: "Tensor Core GEMM; tile sizes present in name (tile-level computation shown in tiled)."
+- raw_name: "void at::native::<unnamed>::vectorized_layer_norm_kernel<float, float, (bool)0>(int, T2, const T1 *, const T1 *, const T1 *, T2 *, T2 *, T1 *)"
+  friendly_name: ATen layer norm (vectorized)
+  source_lib: PyTorch ATen
+  data_shape:
+    generic:
+      - [(B,T,D), "->", (B,T,D)]
+    fixed: null
+    tiled: null
+  description: Vectorized layer normalization.
+- raw_name: "void cutlass__5x_cudnn::Kernel<cutlass_tensorop_bf16_s16816fprop_optimized_bf16_128x128_32x3_nhwc_align8>(T1::Params)"
+  friendly_name: cuDNN convolution forward (NHWC, BF16)
+  source_lib: cuDNN
+  data_shape:
+    generic:
+      - ["X:(N,H,W,C)", "W:(KH,KW,C,OC)", "->", "Y:(N,H_out,W_out,OC)"]
+    fixed: null
+    tiled: null
+  description: Convolution forward pass via cuDNN.
+- raw_name: "void cutlass::Kernel2<cutlass_80_tensorop_bf16_s16816gemm_relu_bf16_128x64_64x3_tn_align8>(T1::Params)"
+  friendly_name: CUTLASS GEMM (Tensor Core, BF16)
+  source_lib: CUTLASS
+  data_shape:
+    generic:
+      - [(M, K), (K, N), "->", (M, N)]
+    fixed: null
+    tiled:
+      - [(128, 64), (64, 64), "->", (128, 64)]
+  description: "Tensor Core GEMM; tile sizes present in name (tile-level computation shown in tiled)."
+- raw_name: "void cutlass::Kernel2<cutlass_80_wmma_tensorop_bf16_s161616gemm_bf16_16x16_128x2_tn_align8>(T1::Params)"
+  friendly_name: CUTLASS GEMM (Tensor Core, BF16)
+  source_lib: CUTLASS
+  data_shape:
+    generic:
+      - [(M, K), (K, N), "->", (M, N)]
+    fixed: null
+    tiled:
+      - [(16, 128), (128, 16), "->", (16, 16)]
+  description: "Tensor Core GEMM; tile sizes present in name (tile-level computation shown in tiled)."
+- raw_name: "void cutlass::Kernel2<cutlass_80_tensorop_bf16_s16816gemm_relu_bf16_128x128_64x3_tn_align8>(T1::Params)"
+  friendly_name: CUTLASS GEMM (Tensor Core, BF16)
+  source_lib: CUTLASS
+  data_shape:
+    generic:
+      - [(M, K), (K, N), "->", (M, N)]
+    fixed: null
+    tiled:
+      - [(128, 64), (64, 128), "->", (128, 128)]
+  description: "Tensor Core GEMM; tile sizes present in name (tile-level computation shown in tiled)."
+- raw_name: "void at::native::vectorized_elementwise_kernel<(int)4, at::native::GeluCUDAKernelImpl(at::TensorIteratorBase &, at::native::GeluType)::[lambda() (instance 2)]::operator ()() const::[lambda() (instance 4)]::operator ()() const::[lambda(c10::BFloat16) (instance 1)], std::array<char *, (unsigned long)2>>(int, T2, T3)"
+  friendly_name: ATen elementwise (vectorized)
+  source_lib: PyTorch ATen
+  data_shape:
+    generic:
+      - [(N,), "->", (N,)]
+    fixed: null
+    tiled: null
+  description: Vectorized elementwise operation.
+- raw_name: "void cutlass::Kernel2<cutlass_80_tensorop_bf16_s16816gemm_relu_bf16_64x64_32x6_tn_align8>(T1::Params)"
+  friendly_name: CUTLASS GEMM (Tensor Core, BF16)
+  source_lib: CUTLASS
+  data_shape:
+    generic:
+      - [(M, K), (K, N), "->", (M, N)]
+    fixed: null
+    tiled:
+      - [(64, 32), (32, 64), "->", (64, 64)]
+  description: "Tensor Core GEMM; tile sizes present in name (tile-level computation shown in tiled)."
+- raw_name: sm80_xmma_fprop_implicit_gemm_bf16bf16_bf16f32_f32_nhwckrsc_nhwc_tilesize128x32x32_stage4_warpsize4x1x1_g1_tensor16x8x16_execute_kernel__5x_cudnn
+  friendly_name: cuDNN convolution forward (NHWC, BF16)
+  source_lib: cuDNN
+  data_shape:
+    generic:
+      - ["X:(N,H,W,C)", "W:(KH,KW,C,OC)", "->", "Y:(N,H_out,W_out,OC)"]
+    fixed: null
+    tiled: null
+  description: Convolution forward pass via cuDNN.
+- raw_name: "void cutlass::Kernel2<cutlass_80_wmma_tensorop_bf16_s161616gemm_bf16_16x16_32x1_tn_align2>(T1::Params)"
+  friendly_name: CUTLASS GEMM (Tensor Core, BF16)
+  source_lib: CUTLASS
+  data_shape:
+    generic:
+      - [(M, K), (K, N), "->", (M, N)]
+    fixed: null
+    tiled:
+      - [(16, 32), (32, 16), "->", (16, 16)]
+  description: "Tensor Core GEMM; tile sizes present in name (tile-level computation shown in tiled)."
+- raw_name: "void pytorch_flash::flash_fwd_kernel<Flash_fwd_kernel_traits<(int)64, (int)128, (int)128, (int)4, (bool)0, (bool)0, cutlass::bfloat16_t, Flash_kernel_traits<(int)64, (int)128, (int)128, (int)4, cutlass::bfloat16_t>>, (bool)0, (bool)0, (bool)0, (bool)0, (bool)0, (bool)1, (bool)0, (bool)0>(pytorch_flash::Flash_fwd_params)"
+  friendly_name: CUDA kernel
+  source_lib: CUDA
+  data_shape:
+    generic:
+      - [(…), "->", (…)]
+    fixed: null
+    tiled: null
+  description: CUDA device kernel.
+- raw_name: "void at::native::vectorized_elementwise_kernel<(int)4, at::native::FillFunctor<c10::BFloat16>, std::array<char *, (unsigned long)1>>(int, T2, T3)"
+  friendly_name: ATen elementwise (vectorized)
+  source_lib: PyTorch ATen
+  data_shape:
+    generic:
+      - [(N,), "->", (N,)]
+    fixed: null
+    tiled: null
+  description: Vectorized elementwise operation.
+- raw_name: "void at::native::unrolled_elementwise_kernel<at::native::CUDAFunctor_add<float>, std::array<char *, (unsigned long)3>, (int)4, TrivialOffsetCalculator<(int)2, unsigned int>, TrivialOffsetCalculator<(int)1, unsigned int>, at::native::memory::LoadWithCast<(int)2>, at::native::memory::StoreWithCast<(int)1>>(int, T1, T2, T4, T5, T6, T7)"
+  friendly_name: ATen kernel
+  source_lib: PyTorch ATen
+  data_shape:
+    generic:
+      - [(…), "->", (…)]
+    fixed: null
+    tiled: null
+  description: PyTorch ATen CUDA kernel.
+- raw_name: fused__autocast_to__12152488584593855096
+  friendly_name: CUDA kernel
+  source_lib: CUDA
+  data_shape:
+    generic:
+      - [(…), "->", (…)]
+    fixed: null
+    tiled: null
+  description: CUDA device kernel.
+- raw_name: "void cudnn::engines_precompiled::nchwToNhwcKernel<__nv_bfloat16, __nv_bfloat16, float, (bool)0, (bool)1, (cudnnKernelDataType_t)0>(cudnn::engines_precompiled::nchw2nhwc_params_t<T3>, const T1 *, T2 *)"
+  friendly_name: CUDA kernel
+  source_lib: CUDA
+  data_shape:
+    generic:
+      - [(…), "->", (…)]
+    fixed: null
+    tiled: null
+  description: CUDA device kernel.
+- raw_name: "void at::native::vectorized_elementwise_kernel<(int)4, at::native::FillFunctor<float>, std::array<char *, (unsigned long)1>>(int, T2, T3)"
+  friendly_name: ATen elementwise (vectorized)
+  source_lib: PyTorch ATen
+  data_shape:
+    generic:
+      - [(N,), "->", (N,)]
+    fixed: null
+    tiled: null
+  description: Vectorized elementwise operation.
+- raw_name: "void at::native::unrolled_elementwise_kernel<at::native::AUnaryFunctor<float, float, float, at::native::binary_internal::MulFunctor<float>>, std::array<char *, (unsigned long)2>, (int)4, TrivialOffsetCalculator<(int)1, unsigned int>, TrivialOffsetCalculator<(int)1, unsigned int>, at::native::memory::LoadWithCast<(int)1>, at::native::memory::StoreWithCast<(int)1>>(int, T1, T2, T4, T5, T6, T7)"
+  friendly_name: ATen kernel
+  source_lib: PyTorch ATen
+  data_shape:
+    generic:
+      - [(…), "->", (…)]
+    fixed: null
+    tiled: null
+  description: PyTorch ATen CUDA kernel.
+- raw_name: "void at::native::<unnamed>::upsample_linear1d_out_frame<float, float>(int, T2, bool, at::GenericPackedTensorAccessor<const T1, (unsigned long)3, at::DefaultPtrTraits, long>, at::GenericPackedTensorAccessor<T1, (unsigned long)3, at::DefaultPtrTraits, long>)"
+  friendly_name: ATen kernel
+  source_lib: PyTorch ATen
+  data_shape:
+    generic:
+      - [(…), "->", (…)]
+    fixed: null
+    tiled: null
+  description: PyTorch ATen CUDA kernel.
+- raw_name: "void at::native::<unnamed>::upsample_gen2d_aa_out_frame<float, float, at::native::upsample_antialias::BicubicFilterFunctor>(T2, T2, at::GenericPackedTensorAccessor<const T1, (unsigned long)4, at::DefaultPtrTraits, long>, at::GenericPackedTensorAccessor<T1, (unsigned long)4, at::DefaultPtrTraits, long>, const T3 &)"
+  friendly_name: ATen kernel
+  source_lib: PyTorch ATen
+  data_shape:
+    generic:
+      - [(…), "->", (…)]
+    fixed: null
+    tiled: null
+  description: PyTorch ATen CUDA kernel.
+- raw_name: "void at::native::<unnamed>::CatArrayBatchedCopy<at::native::<unnamed>::OpaqueType<(unsigned int)2>, unsigned int, (int)3, (int)64, (int)64>(T1 *, at::native::<unnamed>::CatArrInputTensorMetadata<T1, T2, T4, T5>, at::native::<unnamed>::TensorSizeStride<T2, (unsigned int)4>, int, T2)"
+  friendly_name: ATen cat batched copy (vectorized)
+  source_lib: PyTorch ATen
+  data_shape:
+    generic:
+      - [(B, …), (B, …), "->", (B, …)]
+    fixed: null
+    tiled: null
+  description: Copy during concatenation across batched tensors.
+- raw_name: "void at::native::vectorized_elementwise_kernel<(int)4, at::native::BinaryFunctor<float, float, float, at::native::binary_internal::MulFunctor<float>>, std::array<char *, (unsigned long)3>>(int, T2, T3)"
+  friendly_name: ATen elementwise multiply (vectorized)
+  source_lib: PyTorch ATen
+  data_shape:
+    generic:
+      - [(N,), "->", (N,)]
+    fixed: null
+    tiled: null
+  description: Vectorized elementwise operation.
+- raw_name: "void at::native::vectorized_elementwise_kernel<(int)4, at::native::sigmoid_kernel_cuda(at::TensorIteratorBase &)::[lambda() (instance 2)]::operator ()() const::[lambda() (instance 2)]::operator ()() const::[lambda(float) (instance 1)], std::array<char *, (unsigned long)2>>(int, T2, T3)"
+  friendly_name: ATen elementwise (vectorized)
+  source_lib: PyTorch ATen
+  data_shape:
+    generic:
+      - [(N,), "->", (N,)]
+    fixed: null
+    tiled: null
+  description: Vectorized elementwise operation.
+- raw_name: "void at::native::<unnamed>::CatArrayBatchedCopy<at::native::<unnamed>::OpaqueType<(unsigned int)2>, unsigned int, (int)2, (int)64, (int)64>(T1 *, at::native::<unnamed>::CatArrInputTensorMetadata<T1, T2, T4, T5>, at::native::<unnamed>::TensorSizeStride<T2, (unsigned int)4>, int, T2)"
+  friendly_name: ATen cat batched copy (vectorized)
+  source_lib: PyTorch ATen
+  data_shape:
+    generic:
+      - [(B, …), (B, …), "->", (B, …)]
+    fixed: null
+    tiled: null
+  description: Copy during concatenation across batched tensors.
+- raw_name: "void at::native::vectorized_gather_kernel<(int)16, long>(char *, char *, T2 *, int, long, long, long, long, bool)"
+  friendly_name: ATen kernel
+  source_lib: PyTorch ATen
+  data_shape:
+    generic:
+      - [(…), "->", (…)]
+    fixed: null
+    tiled: null
+  description: PyTorch ATen CUDA kernel.

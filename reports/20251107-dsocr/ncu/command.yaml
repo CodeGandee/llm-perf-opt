@@ -1,0 +1,29 @@
+timestamp: '2025-11-07T13:52:13+08:00'
+script: 'ncu-profile-kernels.sh'
+version: 'v1-bash'
+output_dir: 'tmp/ncu-profile/20251107-135213'
+kernel_source: 'yaml_config'
+launch_skip: 50
+launch_count: 1
+sections:
+- SpeedOfLight
+- MemoryWorkloadAnalysis
+- Occupancy
+- SchedulerStats
+- SpeedOfLight_RooflineChart
+launch_command:
+- python
+- -m
+- llm_perf_opt.runners.llm_profile_runner
+- hydra.run.dir=tmp/ncu-work/
+- dataset.subset_filelist=datasets/omnidocbench/subsets/dev-3.txt
+- device=cuda:0
+- pipeline.torch_profiler.enable=false
+- pipeline.static_analysis.enable=false
+- dataset.sampling.num_epochs=1
+- dataset.sampling.num_samples_per_epoch=1
+- dataset.sampling.randomize=false
+- infer.max_new_tokens=64
+kernel_config: 'reports/20251107-dsocr/nsys/top-kernels.yaml'
+ncu_version: 'NVIDIA (R) Nsight Compute Command Line Profiler'
+bash_version: '5.2.21(1)-release'

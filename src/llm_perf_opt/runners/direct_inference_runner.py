@@ -10,6 +10,7 @@ from __future__ import annotations
 import logging
 from pathlib import Path
 
+import torch
 import hydra
 from omegaconf import DictConfig
 from hydra.core.hydra_config import HydraConfig
@@ -28,11 +29,24 @@ def main(cfg: DictConfig) -> None:  # pragma: no cover - CLI orchestrator
         logger.info("pipeline.direct_inference.enable=false; nothing to do")
         return
 
+    # Parse dtype from config
+    dtype_str = str(getattr(cfg.model, "dtype", "bf16")).lower()
+    dtype_map = {
+        "fp16": torch.float16,
+        "float16": torch.float16,
+        "bf16": torch.bfloat16,
+        "bfloat16": torch.bfloat16,
+        "fp32": torch.float32,
+        "float32": torch.float32,
+    }
+    model_dtype = dtype_map.get(dtype_str, torch.bfloat16)
+
     # Build session
     session = DeepSeekOCRSession.from_local(
         model_path=cfg.model.path,
         device=cfg.device,
         use_flash_attn=bool(cfg.use_flash_attn),
+        dtype=model_dtype,
     )
 
     # Resolve run root and stage dirs

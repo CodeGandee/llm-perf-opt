@@ -125,6 +125,24 @@ try:
 except Exception:
     ncu_report = None  # type: ignore
 
+# Hardware specs for roofline ceiling lines
+try:
+    import sys
+    import os
+    # Add llm_perf_opt to path for hw module import
+    script_dir = Path(__file__).resolve().parent
+    repo_root = script_dir.parent.parent.parent
+    sys.path.insert(0, str(repo_root / "src"))
+    from llm_perf_opt.profiling.hw import get_device_name, get_peak_tflops, get_memory_bandwidth
+except Exception:
+    # Fallback: define stubs if import fails
+    def get_device_name(index: int = 0) -> str:  # type: ignore
+        return os.environ.get("GPU_NAME", "Unknown GPU")
+    def get_peak_tflops(device_name: str, precision: str = "bf16") -> float:  # type: ignore
+        return float(os.environ.get("MFU_PEAK_TFLOPS", "100"))
+    def get_memory_bandwidth(device_name: str) -> float:  # type: ignore
+        return float(os.environ.get("MEM_BANDWIDTH_GBS", "1000"))
+
 
 NUMERIC_COL = "Metric Value"
 SECTION_COL = "Section Name"
@@ -393,9 +411,16 @@ def compute_roofline_from_metrics(
 ) -> Tuple[Optional[float], Optional[float]]:
     """Compute (AI, FLOPs/s) from explicit metrics when available.
 
-    - FLOPs: sum available flop_count_* counters (hp/sp/dp/tensor if present).
-    - Time: prefer gpu__time_duration.sum (ns/us), else fall back to duration_us (SpeedOfLight).
-    - Bytes: use Memory Throughput (Gbyte/s) * time.
+    BF16 roofline computation per NVIDIA guidelines:
+    - Work (FLOPs): sum BF16 tensor core ops (sm__ops_path_tensor_src_bf16_dst_*)
+                    + standard FLOP counters (flop_count_hp/sp) if available
+    - Traffic (Bytes): dram__bytes_read.sum + dram__bytes_write.sum (preferred)
+                       or fallback to Memory Throughput * time
+    - Time: gpu__time_duration.sum (preferred) or duration_us from SpeedOfLight
+    - AI = FLOPs / Bytes
+    - Performance = FLOPs / Time (FLOP/s)
+
+    Reference: https://docs.nvidia.com/nsight-compute/ BF16 roofline guide
     """
     if metrics_df is None or metrics_df.empty:
         return None, None
@@ -407,9 +432,13 @@ def compute_roofline_from_metrics(
     unit = df.get("Metric Unit", pd.Series([None] * len(df))).astype(str)
     val = pd.to_numeric(df[NUMERIC_COL], errors="coerce")
 
-    # Sum FLOP counters
+    # Sum FLOP counters: BF16 tensor ops (preferred for BF16 kernels) + standard counters
+    # BF16 tensor core ops: sm__ops_path_tensor_src_bf16_dst_fp32 and dst_bf16
+    bf16_mask = name.str.contains(r"sm__ops_path_tensor_src_bf16", case=False, regex=True)
+    # Standard FLOP counters (FP16/FP32)
     flop_mask = name.str.contains(r"^flop_count_", case=False, regex=True)
-    flops_total = val[flop_mask].sum(min_count=1)
+    combined_flop_mask = flop_mask | bf16_mask
+    flops_total = val[combined_flop_mask].sum(min_count=1)
 
     # Duration preference: gpu__time_duration.sum
     time_mask = name.str.fullmatch("gpu__time_duration.sum", case=False)
@@ -434,14 +463,70 @@ def compute_roofline_from_metrics(
 
     flops_per_s = float(flops_total) / float(duration_s)
 
-    # Compute bytes using measured memory throughput if available
-    if mem_throughput_gbs is None or mem_throughput_gbs <= 0:
+    # Compute bytes: prefer explicit DRAM byte counters over throughput estimate
+    # Path A: Direct DRAM byte measurements (preferred for BF16 roofline)
+    dram_read_mask = name.str.fullmatch("dram__bytes_read.sum", case=False)
+    dram_write_mask = name.str.fullmatch("dram__bytes_write.sum", case=False)
+    bytes_moved = None
+
+    if dram_read_mask.any() or dram_write_mask.any():
+        bytes_read = val[dram_read_mask].sum(min_count=1) if dram_read_mask.any() else 0.0
+        bytes_write = val[dram_write_mask].sum(min_count=1) if dram_write_mask.any() else 0.0
+        bytes_moved = float(bytes_read + bytes_write)
+
+    # Path B: Fallback to throughput-based estimate (less accurate)
+    if (bytes_moved is None or bytes_moved <= 0) and mem_throughput_gbs is not None and mem_throughput_gbs > 0:
+        bytes_moved = float(mem_throughput_gbs) * 1e9 * float(duration_s)
+
+    if bytes_moved is None or bytes_moved <= 0:
         return None, flops_per_s
-    bytes_moved = float(mem_throughput_gbs) * 1e9 * float(duration_s)
-    if bytes_moved <= 0:
-        return None, flops_per_s
+
     ai = float(flops_total) / bytes_moved
     return ai, flops_per_s
+
+
+def draw_roofline_ceilings(ax, device_name: str, ai_range: Tuple[float, float], precision: str = "bf16") -> None:
+    """Draw roofline ceiling lines (memory bandwidth and compute) on physical roofline plot.
+
+    Parameters
+    ----------
+    ax : matplotlib.axes.Axes
+        Matplotlib axis object to draw on
+    device_name : str
+        GPU device name for spec lookup
+    ai_range : Tuple[float, float]
+        (min_ai, max_ai) range for x-axis in FLOPs/Byte
+    precision : str, default='bf16'
+        Precision for compute ceiling ('bf16', 'fp16', 'fp32', 'tf32')
+
+    Notes
+    -----
+    Draws three roofline model components:
+    - Memory bandwidth ceiling (diagonal): Performance = Bandwidth × Arithmetic_Intensity
+    - Compute ceiling (horizontal): Performance = Peak_TFLOPs
+    - Ridge point (intersection): where kernel transitions from memory-bound to compute-bound
+    """
+    import numpy as np
+
+    # Get hardware specs
+    bandwidth_gbs = get_memory_bandwidth(device_name)
+    peak_tflops = get_peak_tflops(device_name, precision)
+
+    # Convert to FLOP/s and Bytes/s
+    peak_flops = peak_tflops * 1e12
+    bandwidth_bytes_per_s = bandwidth_gbs * 1e9
+
+    # Memory bandwidth ceiling (diagonal line): Performance = Bandwidth × AI
+    ai_mem = np.logspace(np.log10(ai_range[0]), np.log10(ai_range[1]), 100)
+    perf_mem = bandwidth_bytes_per_s * ai_mem
+    ax.plot(ai_mem, perf_mem, 'r--', linewidth=1.5, alpha=0.7, label=f'Memory BW Ceiling ({bandwidth_gbs:.0f} GB/s)')
+
+    # Compute ceiling (horizontal line): Performance = Peak_TFLOPs
+    ax.axhline(peak_flops, color='g', linestyle='--', linewidth=1.5, alpha=0.7, label=f'Compute Ceiling ({peak_tflops:.1f} TF)')
+
+    # Ridge point (intersection of memory and compute ceilings)
+    ridge_ai = peak_flops / bandwidth_bytes_per_s
+    ax.plot([ridge_ai], [peak_flops], 'ko', markersize=6, label=f'Ridge Point (AI={ridge_ai:.1f})')
 
 
 # ------------------------------
@@ -629,10 +714,13 @@ def analyze_ncu_report(report_path: Path, margin: float = 5.0) -> None:
                     print("Warning: failed to serialize Thicket JSON for ncu_report path")
 
 
-def analyze_dir(input_dir: Path, margin: float = 5.0) -> None:
+def analyze_dir(input_dir: Path, margin: float = 5.0, kernel_desc_map: Optional[Dict[str, Dict[str, object]]] = None) -> None:
     # Support both .ncu-rep file (preferred API) and legacy CSV directory
     if input_dir.is_file() and input_dir.suffix == ".ncu-rep":
-        return analyze_ncu_report(input_dir, margin=margin)
+        return analyze_ncu_report(input_dir, margin=margin, kernel_desc_map=kernel_desc_map or {})
+
+    if kernel_desc_map is None:
+        kernel_desc_map = {}
 
     kernels = find_kernel_dirs(input_dir)
     if not kernels:
@@ -670,9 +758,13 @@ def analyze_dir(input_dir: Path, margin: float = 5.0) -> None:
         metrics = extract_selected_metrics(sol_wide, mwa_wide, occ_wide)
         bound = classify_bound(metrics.get("sm_throughput_pct"), metrics.get("dram_throughput_pct"), margin=margin)
 
+        kernel_name_raw = sol_info.get(KERNEL_NAME_COL)
+        display_name = make_display_name(str(kernel_name_raw), kernel_desc_map) if kernel_name_raw else kernel_id
+
         row: Dict[str, object] = {
             "kernel_id": kernel_id,
-            "kernel_name": sol_info.get(KERNEL_NAME_COL),
+            "kernel_name": kernel_name_raw,
+            "display_name": display_name,
             "grid_size": sol_info.get(GRID_SIZE_COL),
             "block_size": sol_info.get(BLOCK_SIZE_COL),
             "device": sol_info.get("Device"),
@@ -715,19 +807,37 @@ def analyze_dir(input_dir: Path, margin: float = 5.0) -> None:
             ai_val = ai_c if ai_c is not None else ai_val
             perf_val = perf_c if perf_c is not None else perf_val
 
-        if ai_val is not None and perf_val is not None:
+        if ai_val is not None and perf_val is not None and ai_val > 0 and perf_val > 0:
             # Persist into summary row for aggregate plotting
             row["roofline_ai_flops_per_byte"] = ai_val
             row["roofline_flops_per_s"] = perf_val
-            # Per-kernel physical plot
-            fig, ax = plt.subplots(figsize=(4, 4), dpi=140)
-            ax.scatter([ai_val], [perf_val], c=["C0"], s=18)
+
+            # Per-kernel physical plot with roofline ceilings
+            fig, ax = plt.subplots(figsize=(6, 5), dpi=140)
+
+            # Determine AI range (extend around kernel point for better visualization)
+            ai_min = max(ai_val * 0.1, 1e-2)
+            ai_max = max(ai_val * 10, ai_min * 10)  # Ensure ai_max > ai_min
+
+            # Get device name and draw roofline ceilings FIRST (so kernel point is on top)
+            device = sol_info.get("Device", 0)
+            if isinstance(device, int):
+                device_name = get_device_name(device)
+            else:
+                device_name = "NVIDIA GeForce RTX 5090"  # fallback
+            draw_roofline_ceilings(ax, device_name, (ai_min, ai_max), precision="bf16")
+
+            # Draw kernel point on top of ceiling lines
+            ax.scatter([ai_val], [perf_val], c=["C0"], s=30, zorder=10, label=display_name[:40])
+
             ax.set_xscale("log")
             ax.set_yscale("log")
             ax.set_xlabel("Arithmetic Intensity (FLOPs/Byte)")
             ax.set_ylabel("Performance (FLOPs/s)")
-            ax.set_title(f"Roofline (physical) • {kernel_id}")
+            ax.set_title(f"Roofline (physical) • {display_name[:60]}")
+            ax.set_xlim(ai_min, ai_max)
             ax.grid(True, which="both", linestyle=":", alpha=0.5)
+            ax.legend(loc="lower right", fontsize=7)
             fig.tight_layout()
             fig.savefig(per_kernel_roofline_dir / f"{sanitize_filename(kernel_id)}_physical.png")
             plt.close(fig)
@@ -737,11 +847,11 @@ def analyze_dir(input_dir: Path, margin: float = 5.0) -> None:
         dram_pct = metrics.get("dram_throughput_pct")
         if sm_pct is not None and dram_pct is not None:
             fig, ax = plt.subplots(figsize=(4, 4), dpi=120)
-            ax.scatter([dram_pct], [sm_pct], c=["C0"], label=kernel_id)
+            ax.scatter([dram_pct], [sm_pct], c=["C0"], label=display_name[:40])
             ax.plot([0, 100], [0, 100], linestyle="--", color="gray", linewidth=1, label="x=y")
             ax.set_xlabel("DRAM Throughput (%)")
             ax.set_ylabel("Compute (SM) Throughput (%)")
-            ax.set_title(f"Roofline (normalized) • {kernel_id}")
+            ax.set_title(f"Roofline (normalized) • {display_name[:60]}")
             ax.set_xlim(0, 100)
             ax.set_ylim(0, 100)
             ax.grid(True, linestyle=":", alpha=0.5)
@@ -780,6 +890,7 @@ def analyze_dir(input_dir: Path, margin: float = 5.0) -> None:
         skip_cols = {
             "kernel_id",
             "kernel_name",
+            "display_name",
             "grid_size",
             "block_size",
             "device",
@@ -847,18 +958,41 @@ def analyze_dir(input_dir: Path, margin: float = 5.0) -> None:
     have_physical = {"roofline_ai_flops_per_byte", "roofline_flops_per_s"}.issubset(summary_df.columns)
     if have_physical:
         plot_df = summary_df.dropna(subset=["roofline_ai_flops_per_byte", "roofline_flops_per_s"])  # type: ignore[arg-type]
+        # Filter out zero or negative values
+        plot_df = plot_df[(plot_df["roofline_ai_flops_per_byte"] > 0) & (plot_df["roofline_flops_per_s"] > 0)]
         if not plot_df.empty:
-            fig, ax = plt.subplots(figsize=(6, 5), dpi=150)
-            ax.scatter(plot_df["roofline_ai_flops_per_byte"], plot_df["roofline_flops_per_s"], c="C3")
+            fig, ax = plt.subplots(figsize=(8, 6), dpi=150)
+
+            # Determine AI range from all kernel points (extend for better visualization)
+            ai_min = max(plot_df["roofline_ai_flops_per_byte"].min() * 0.1, 1e-2)
+            ai_max = max(plot_df["roofline_ai_flops_per_byte"].max() * 10, ai_min * 10)
+
+            # Get device name and draw roofline ceilings FIRST (so kernel points are on top)
+            # Use first kernel's device info, or fallback to default
+            if "device" in summary_df.columns and pd.notna(summary_df["device"].iloc[0]):
+                device = summary_df["device"].iloc[0]
+                if isinstance(device, int):
+                    device_name = get_device_name(device)
+                else:
+                    device_name = "NVIDIA GeForce RTX 5090"
+            else:
+                device_name = "NVIDIA GeForce RTX 5090"
+            draw_roofline_ceilings(ax, device_name, (ai_min, ai_max), precision="bf16")
+
+            # Draw kernel points on top of ceiling lines
+            ax.scatter(plot_df["roofline_ai_flops_per_byte"], plot_df["roofline_flops_per_s"], c="C3", s=40, zorder=10)
             for _, r in plot_df.iterrows():
-                label = str(r["kernel_id"]) if pd.notna(r["kernel_id"]) else ""
+                label = str(r.get("display_name", r.get("kernel_id", "")))[:40]
                 ax.annotate(label, (r["roofline_ai_flops_per_byte"], r["roofline_flops_per_s"]), fontsize=7, alpha=0.7)
+
             ax.set_xscale("log")
             ax.set_yscale("log")
             ax.set_xlabel("Arithmetic Intensity (FLOPs/Byte)")
             ax.set_ylabel("Performance (FLOPs/s)")
             ax.set_title("Roofline (physical) across kernels")
+            ax.set_xlim(ai_min, ai_max)
             ax.grid(True, which="both", linestyle=":", alpha=0.5)
+            ax.legend(loc="lower right", fontsize=8)
             fig.tight_layout()
             fig.savefig(analysis_dir / "roofline_scatter_physical.png")
             plt.close(fig)
@@ -870,7 +1004,7 @@ def analyze_dir(input_dir: Path, margin: float = 5.0) -> None:
             fig, ax = plt.subplots(figsize=(6, 6), dpi=150)
             ax.scatter(plot_df["dram_throughput_pct"], plot_df["sm_throughput_pct"], c="C1")
             for _, r in plot_df.iterrows():
-                label = str(r["kernel_id"]) if pd.notna(r["kernel_id"]) else ""
+                label = str(r.get("display_name", r.get("kernel_id", "")))[:40]
                 ax.annotate(label, (r["dram_throughput_pct"], r["sm_throughput_pct"]), fontsize=7, alpha=0.7)
             ax.plot([0, 100], [0, 100], linestyle="--", color="gray", linewidth=1)
             ax.set_xlabel("DRAM Throughput (%)")
@@ -919,6 +1053,81 @@ def analyze_dir(input_dir: Path, margin: float = 5.0) -> None:
     print(f"Analysis complete. Outputs in: {analysis_dir}")
 
 
+def load_kernel_descriptions(yaml_path: Optional[Path]) -> Dict[str, Dict[str, object]]:
+    """Load kernel descriptions from YAML file.
+
+    Returns a dict mapping raw_name -> {friendly_name, source_lib, tiled, description}
+    """
+    if yaml_path is None or not yaml_path.exists():
+        return {}
+
+    try:
+        import yaml
+    except ImportError:
+        print(f"Warning: PyYAML not available, skipping kernel descriptions from {yaml_path}")
+        return {}
+
+    try:
+        with open(yaml_path, 'r') as f:
+            data = yaml.safe_load(f)
+        if not isinstance(data, list):
+            return {}
+
+        kernel_map = {}
+        for entry in data:
+            if not isinstance(entry, dict):
+                continue
+            raw_name = entry.get("raw_name")
+            if not raw_name:
+                continue
+            kernel_map[raw_name] = {
+                "friendly_name": entry.get("friendly_name", ""),
+                "source_lib": entry.get("source_lib", ""),
+                "tiled": entry.get("data_shape", {}).get("tiled"),
+                "description": entry.get("description", ""),
+            }
+        return kernel_map
+    except Exception as e:
+        print(f"Warning: Failed to load kernel descriptions from {yaml_path}: {e}")
+        return {}
+
+
+def make_display_name(kernel_name: str, kernel_desc_map: Dict[str, Dict[str, object]]) -> str:
+    """Create a display-friendly kernel name using description mapping.
+
+    For CUTLASS GEMM kernels with tile information, appends tile sizes to disambiguate.
+    """
+    if not kernel_desc_map or kernel_name not in kernel_desc_map:
+        # Fallback: sanitize raw name
+        return sanitize_filename(kernel_name)[:80]
+
+    desc = kernel_desc_map[kernel_name]
+    friendly = desc.get("friendly_name", "")
+    tiled = desc.get("tiled")
+
+    if not friendly:
+        return sanitize_filename(kernel_name)[:80]
+
+    # For CUTLASS GEMM with tile info, append tile dimensions for disambiguation
+    if tiled and isinstance(tiled, list) and len(tiled) > 0:
+        # Extract tile dimensions from tiled specification
+        # Example: [(128, 32), (32, 256), "->", (128, 256)]
+        try:
+            tile_spec = tiled[0]
+            if isinstance(tile_spec, list) and len(tile_spec) >= 3:
+                # Find the output tile (after "->")
+                arrow_idx = tile_spec.index("->") if "->" in tile_spec else -1
+                if arrow_idx >= 0 and arrow_idx + 1 < len(tile_spec):
+                    out_tile = tile_spec[arrow_idx + 1]
+                    if isinstance(out_tile, (list, tuple)) and len(out_tile) == 2:
+                        # Append tile info: "CUTLASS GEMM (128x256)"
+                        return f"{friendly} ({out_tile[0]}x{out_tile[1]})"
+        except (ValueError, IndexError, TypeError):
+            pass
+
+    return friendly
+
+
 def main() -> None:
     parser = argparse.ArgumentParser(description="Analyze Nsight Compute (ncu) data from a CSV directory or an .ncu-rep file")
     parser.add_argument(
@@ -932,11 +1141,19 @@ def main() -> None:
         default=5.0,
         help="Margin (percentage points) for memory/compute-bound classification (default: 5.0)",
     )
+    parser.add_argument(
+        "--kernel-desc",
+        type=str,
+        default=None,
+        help="Path to kernel descriptions YAML (for friendly names and tile info)",
+    )
     args = parser.parse_args()
     input_path = Path(args.input_path).resolve()
     if not input_path.exists():
         raise SystemExit(f"Input path not found: {input_path}")
-    analyze_dir(input_path, margin=args.classify_margin)
+
+    kernel_desc_map = load_kernel_descriptions(Path(args.kernel_desc) if args.kernel_desc else None)
+    analyze_dir(input_path, margin=args.classify_margin, kernel_desc_map=kernel_desc_map)
 
 
 if __name__ == "__main__":

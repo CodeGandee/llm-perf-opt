@@ -56,6 +56,7 @@ class DeepSeekOCRSession:
         device: str = "cuda:0",
         use_flash_attn: bool = True,
         conv_module_path: Optional[str] = None,
+        dtype: Optional[torch.dtype] = None,
     ) -> "DeepSeekOCRSession":
         """Create a session from a local model path.
 
@@ -67,12 +68,17 @@ class DeepSeekOCRSession:
             Device specifier (e.g., 'cuda:0' or 'cpu').
         use_flash_attn : bool, default=True
             Attempt to use flash attention for faster inference.
+        dtype : torch.dtype, optional
+            Model precision (e.g., torch.float16, torch.bfloat16). Defaults to bfloat16.
         """
 
         if not Path(model_path).is_absolute():
             raise ValueError("model_path must be absolute")
 
         inst = cls()
+
+        # Resolve dtype
+        target_dtype = dtype if dtype is not None else torch.bfloat16
 
         tokenizer = AutoTokenizer.from_pretrained(
             model_path, trust_remote_code=True, local_files_only=True
@@ -100,13 +106,14 @@ class DeepSeekOCRSession:
         )
         model = model.eval().to(dev)
         try:
-            model = model.to(dtype=torch.bfloat16)
+            model = model.to(dtype=target_dtype)
         except Exception:
             pass
 
         inst.m_model = model
         inst.m_tokenizer = tokenizer
         inst.m_device = dev
+        inst.m_dtype = target_dtype
         inst.m_model_path = model_path
         # Prefer explicit conversation module path; else try model_path/conversation.py
         try:
