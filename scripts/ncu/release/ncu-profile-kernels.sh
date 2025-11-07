@@ -25,6 +25,7 @@ set -euo pipefail
 #   --kernel-regex <regex>         Single demangled-name regex to match kernels
 #   --output-dir <dir>             Defaults to tmp/ncu-profile/<timestamp>
 #   --topk <K>                     First K kernels from YAML (with --kernel-config)
+#   --ncu-config <yaml>            Optional NCU CLI config YAML (plain YAML; e.g., conf/profiling/ncu/ncu.default.yaml)
 #   --extra-sections <s...>        Extra NCU sections beyond defaults
 #   --num-kernel-call-skip <N>     Skip first N kernel invocations (default: 200)
 #   --num-kernel-call-profile <M>  Profile M invocations after skipping (default: 1)
@@ -32,7 +33,7 @@ set -euo pipefail
 #   --                             Separator before target launch command
 #
 # Default sections:
-#   SpeedOfLight, MemoryWorkloadAnalysis, Occupancy, SchedulerStats
+#   SpeedOfLight, MemoryWorkloadAnalysis, Occupancy, SchedulerStats, SpeedOfLight_RooflineChart
 #
 # Examples:
 #   # Profile single kernel (Python module)
@@ -87,14 +88,15 @@ KERNEL_CONFIG=""
 KERNEL_REGEX=""
 OUT_DIR=""
 TOPK=""
+NCU_CONFIG_FILE=""
 EXTRA_SECTIONS=()
 LAUNCH_SKIP=200
 LAUNCH_COUNT=1
 FORCE_OVERWRITE="no"
 LAUNCH_CMD=()
 
-# Default sections (aligned with Python version)
-DEFAULT_SECTIONS="SpeedOfLight MemoryWorkloadAnalysis Occupancy SchedulerStats"
+# Default sections (aligned with Python version), include RooflineChart for physical roofline support
+DEFAULT_SECTIONS="SpeedOfLight MemoryWorkloadAnalysis Occupancy SchedulerStats SpeedOfLight_RooflineChart"
 
 # --- Help ---
 show_help() {
@@ -108,6 +110,7 @@ Required (one of):
 Options:
   --output-dir <dir>           Directory for profiling results (default: tmp/ncu-profile/<timestamp>)
   --topk <num>                 Profile only top K kernels from YAML (requires --kernel-config)
+  --ncu-config <yaml>          Optional NCU CLI config YAML to derive sections/preset
   --extra-sections <s1> <s2>   Additional ncu sections beyond defaults
   --num-kernel-call-skip <N>   Skip first N kernel invocations (default: 200)
   --num-kernel-call-profile <M> Profile M invocations after skipping (default: 1)
@@ -133,7 +136,7 @@ Examples:
   ncu-profile-kernels.sh --kernel-config top-kernels.yaml --topk 3 \
     -- python inference.py
 
-Default sections: SpeedOfLight, MemoryWorkloadAnalysis, Occupancy, SchedulerStats
+Default sections: SpeedOfLight, MemoryWorkloadAnalysis, Occupancy, SchedulerStats, SpeedOfLight_RooflineChart
 USAGE
 }
 
@@ -152,6 +155,9 @@ while [[ $# -gt 0 ]]; do
     --topk)
       [[ $# -lt 2 ]] && { log_err "--topk requires a value"; exit 2; }
       TOPK="$2"; shift 2;;
+    --ncu-config)
+      [[ $# -lt 2 ]] && { log_err "--ncu-config requires a value"; exit 2; }
+      NCU_CONFIG_FILE="$2"; shift 2;;
     --extra-sections)
       shift
       while [[ $# -gt 0 && ! "$1" =~ ^-- ]]; do
@@ -215,13 +221,63 @@ REPO_ROOT="$(cd "${SCRIPT_DIR}/../../.." && pwd)"
 [[ -z "$OUT_DIR" ]] && OUT_DIR="${REPO_ROOT}/tmp/ncu-profile/$(date +%Y%m%d-%H%M%S)"
 mkdir -p "$OUT_DIR"
 
-# Build sections list
+# Build sections list and optional preset from config (fallback to defaults)
 ALL_SECTIONS="$DEFAULT_SECTIONS"
+NCU_PRESET=""
+
+if [[ -n "$NCU_CONFIG_FILE" ]]; then
+  if [[ -f "$NCU_CONFIG_FILE" ]]; then
+    # Try to load 'ncu_cli.set' and 'ncu_cli.sections' using python (ruamel or pyyaml)
+    if command -v python3 &>/dev/null || command -v python &>/dev/null; then
+      PY_CMD=$(command -v python3 2>/dev/null || command -v python)
+      CFG_OUT=$($PY_CMD - "$NCU_CONFIG_FILE" <<'PY'
+import sys, json
+try:
+    from ruamel.yaml import YAML
+    y = YAML(typ='safe')
+    data = y.load(open(sys.argv[1]))
+except Exception:
+    import yaml
+    data = yaml.safe_load(open(sys.argv[1]))
+cfg = data.get('ncu_cli', data)
+preset = cfg.get('set')
+sections = cfg.get('sections') or []
+print(preset or "")
+print(json.dumps(sections))
+PY
+      )
+      PRESET_LINE=$(printf "%s" "$CFG_OUT" | sed -n '1p')
+      SECTIONS_JSON=$(printf "%s" "$CFG_OUT" | sed -n '2p')
+      if [[ -n "$SECTIONS_JSON" && "$SECTIONS_JSON" != "null" ]]; then
+        if command -v jq &>/dev/null; then
+          CONFIG_SECTIONS=$(printf "%s" "$SECTIONS_JSON" | jq -r '.[]' | xargs)
+        else
+          CONFIG_SECTIONS=$(printf "%s" "$SECTIONS_JSON" | $PY_CMD -c 'import sys,json; print(" ".join(json.load(sys.stdin)))')
+        fi
+      fi
+      if [[ -n "${CONFIG_SECTIONS:-}" ]]; then
+        ALL_SECTIONS="$CONFIG_SECTIONS"
+      fi
+      if [[ -n "$PRESET_LINE" ]]; then
+        NCU_PRESET="$PRESET_LINE"
+      fi
+      log_info "Loaded NCU config: $(log_highlight "$NCU_CONFIG_FILE")"
+    else
+      log_warn "Python not found to parse --ncu-config; using hardcoded defaults"
+    fi
+  else
+    log_warn "NCU config file not found: $NCU_CONFIG_FILE (using defaults)"
+  fi
+else
+  log_info "No --ncu-config specified; using hardcoded defaults"
+fi
+
 if [[ ${#EXTRA_SECTIONS[@]} -gt 0 ]]; then
   ALL_SECTIONS="$ALL_SECTIONS ${EXTRA_SECTIONS[*]}"
 fi
 
 log_info "Output directory: $(log_highlight "$OUT_DIR")"
+[[ -n "$NCU_PRESET" ]] && log_info "Preset: $NCU_PRESET"
 log_info "Sections: $ALL_SECTIONS"
 log_info "Launch skip/count: $LAUNCH_SKIP/$LAUNCH_COUNT"
 
@@ -446,6 +502,11 @@ for i in $(seq 0 $((KERNEL_COUNT - 1))); do
     --launch-count "$LAUNCH_COUNT"
     -o "$OUTPUT_BASE"
   )
+
+  # Add preset if provided
+  if [[ -n "$NCU_PRESET" ]]; then
+    NCU_ARGS+=(--set "$NCU_PRESET")
+  fi
 
   # Add sections
   for section in $ALL_SECTIONS; do

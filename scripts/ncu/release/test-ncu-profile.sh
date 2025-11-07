@@ -66,6 +66,7 @@ if [[ "$BRANCH" == "python" ]]; then
     --kernel-config "$KERNEL_CONFIG" \
     --topk "$TOPK" \
     --output-dir "$OUTPUT_DIR" \
+    --ncu-config conf/profiling/ncu/ncu.default.yaml \
     --num-kernel-call-skip "$LAUNCH_SKIP" \
     --num-kernel-call-profile "$LAUNCH_COUNT" \
     -- \
@@ -85,6 +86,7 @@ else
     --kernel-config "$KERNEL_CONFIG" \
     --topk "$TOPK" \
     --output-dir "$OUTPUT_DIR" \
+    --ncu-config conf/profiling/ncu/ncu.default.yaml \
     --num-kernel-call-skip "$LAUNCH_SKIP" \
     --num-kernel-call-profile "$LAUNCH_COUNT" \
     -- \

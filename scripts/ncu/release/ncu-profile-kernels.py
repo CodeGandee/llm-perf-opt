@@ -17,6 +17,7 @@ Options:
   --output-dir <dir>           Directory for profiling results (default: tmp/ncu-profile/<timestamp>)
   --topk <num>                 Profile only top K kernels from YAML (requires --kernel-config)
   --extra-sections <s1> <s2>   Additional ncu sections beyond defaults
+  --ncu-config <yaml>          Optional NCU CLI config YAML (plain YAML; e.g., conf/profiling/ncu/ncu.default.yaml)
   --num-kernel-call-skip <N>   Skip first N kernel invocations (default: 200)
   --num-kernel-call-profile <M> Profile M invocations after skipping (default: 1)
   --force-overwrite            Overwrite existing reports
@@ -228,6 +229,10 @@ def run_ncu_profile(
         str(output_base),
     ]
 
+    # Add preset and sections
+    preset = run_ncu_profile.preset if hasattr(run_ncu_profile, "preset") else None  # type: ignore[attr-defined]
+    if preset:
+        ncu_args.extend(["--set", str(preset)])
     # Add sections
     for section in sections:
         ncu_args.extend(["--section", section])
@@ -328,6 +333,7 @@ def write_provenance(
     launch_skip: int,
     launch_count: int,
     topk: int | None = None,
+    preset: str | None = None,
 ) -> None:
     """
     Write provenance YAML for reproducibility.
@@ -376,6 +382,8 @@ def write_provenance(
         data["kernel_config"] = str(kernel_config)
     if topk is not None:
         data["topk"] = topk
+    if preset:
+        data["preset"] = preset
 
     # Add tool versions
     try:
@@ -430,7 +438,7 @@ Examples:
   %(prog)s --kernel-config top-kernels.yaml --topk 5 \\
     -- python -m llm_perf_opt.runners.llm_profile_runner device=cuda:0
 
-Default sections: SpeedOfLight, MemoryWorkloadAnalysis, Occupancy, SchedulerStats
+Default sections: SpeedOfLight, MemoryWorkloadAnalysis, Occupancy, SchedulerStats, SpeedOfLight_RooflineChart
         """,
     )
 
@@ -485,6 +493,12 @@ Default sections: SpeedOfLight, MemoryWorkloadAnalysis, Occupancy, SchedulerStat
     parser.add_argument(
         "--force-overwrite", action="store_true", help="Overwrite existing report files"
     )
+    parser.add_argument(
+        "--ncu-config",
+        type=Path,
+        metavar="<yaml>",
+        help="Optional NCU CLI config YAML to derive sections/preset",
+    )
 
     # Launch command separator
     parser.add_argument(
@@ -524,10 +538,41 @@ def main() -> None:
     output_dir.mkdir(parents=True, exist_ok=True)
     log.info(f"Output directory: {log.highlight(str(output_dir))}")
 
-    # Default sections (aligned with v2 bash script)
-    default_sections = ["SpeedOfLight", "MemoryWorkloadAnalysis", "Occupancy", "SchedulerStats"]
-    sections = default_sections + args.extra_sections
+    # Default sections (aligned with bash script), include RooflineChart
+    default_sections = [
+        "SpeedOfLight",
+        "MemoryWorkloadAnalysis",
+        "Occupancy",
+        "SchedulerStats",
+        "SpeedOfLight_RooflineChart",
+    ]
 
+    # Load NCU config if provided
+    preset: str | None = None
+    if args.ncu_config and args.ncu_config.exists():
+        try:
+            yaml = ruamel.yaml.YAML(typ="safe")
+            with open(args.ncu_config, encoding="utf-8") as f:
+                data = yaml.load(f)
+            cfg = data.get("ncu_cli", data)
+            cfg_sections = cfg.get("sections") or []
+            sections = cfg_sections if (isinstance(cfg_sections, list) and cfg_sections) else default_sections
+            preset_val = cfg.get("set")
+            if isinstance(preset_val, str) and preset_val:
+                preset = preset_val
+            log.info(f"Loaded NCU config: {log.highlight(str(args.ncu_config))}")
+        except Exception as e:
+            log.warn(f"Failed to parse --ncu-config: {e}; using defaults")
+            sections = default_sections
+    else:
+        sections = default_sections
+
+    # Append extra sections
+    if args.extra_sections:
+        sections = sections + args.extra_sections
+
+    if preset:
+        log.info(f"Preset: {preset}")
     log.info(f"Sections: {', '.join(sections)}")
     log.info(f"Launch skip/count: {args.num_kernel_call_skip}/{args.num_kernel_call_profile}")
 
@@ -563,6 +608,7 @@ def main() -> None:
         launch_skip=args.num_kernel_call_skip,
         launch_count=args.num_kernel_call_profile,
         topk=args.topk if args.kernel_config else None,
+        preset=preset,
     )
 
     # Determine rank width for directory naming (min 4 digits)
@@ -595,7 +641,8 @@ def main() -> None:
         kernel_dir.mkdir(parents=True, exist_ok=True)
         output_base = kernel_dir / "ncu"
 
-        # Run profiling
+        # Run profiling (pass preset via function attribute for compatibility)
+        run_ncu_profile.preset = preset  # type: ignore[attr-defined]
         success = run_ncu_profile(
             kernel_regex=kernel_regex,
             output_base=output_base,
