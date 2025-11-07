@@ -34,6 +34,7 @@ RTX 5090 关键规格（官方）：
 - AI TOPS：3,352 TOPS（NVIDIA 官方产品页）
 - FP32 理论峰值（推导）：约 104.8 TFLOPS = 21,760 核 × 2 FLOPs/clk × 2.41 GHz
 - 说明：以上为官方参数；FP32 峰值基于官方核心/频率推导。计算能力 sm_120 参见 NVIDIA Blackwell 文档。
+ - 来源： [NVIDIA RTX 5090 产品页](https://www.nvidia.com/en-us/geforce/graphics-cards/50-series/rtx-5090/)，[NVIDIA RTX Blackwell 架构白皮书](https://images.nvidia.com/aem-dam/Solutions/geforce/blackwell/nvidia-rtx-blackwell-gpu-architecture.pdf)，[NVIDIA GeForce 新闻稿](https://www.nvidia.com/en-us/geforce/news/rtx-50-series-graphics-cards-gpu-laptop-announcements/)
 
 软件：
 - CUDA：12.8

@@ -34,6 +34,7 @@ This report shows:
 - AI TOPS: 3,352 TOPS (NVIDIA product page)
 - FP32 Compute Peak (derived): ~104.8 TFLOPS = 21,760 cores × 2 FLOPs/clk × 2.41 GHz
 - Notes: values above reflect official specifications; derived FP32 peak is computed from official cores/clock. Compute capability sm_120 per NVIDIA Blackwell documentation.
+ - Sources: [NVIDIA RTX 5090 product page](https://www.nvidia.com/en-us/geforce/graphics-cards/50-series/rtx-5090/), [NVIDIA RTX Blackwell GPU Architecture PDF](https://images.nvidia.com/aem-dam/Solutions/geforce/blackwell/nvidia-rtx-blackwell-gpu-architecture.pdf), [NVIDIA GeForce news](https://www.nvidia.com/en-us/geforce/news/rtx-50-series-graphics-cards-gpu-laptop-announcements/)
 
 **Software:**
 - CUDA: 12.8
