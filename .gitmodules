@@ -9,3 +9,6 @@
 	path = extern/modelmeter
 	url = git@codeup.aliyun.com:61adcb80e05da4a409ab67b8/intellif/modelmeter.git
 	branch = hz-dev
+[submodule "context/refcode/torchlens"]
+	path = context/refcode/torchlens
+	url = https://github.com/johnmarktaylor91/torchlens.git

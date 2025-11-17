@@ -1,9 +1,9 @@
-nvtx-based ncu profiling, extend current ncu profiling facility to let to support nvtx markers, so that only those nvtx-marked regions are profiled by ncu, and the reporting should aggregate the results by nvtx ranges. 
+analytically analyze the deepseek ocr model, and implement modelmeter layers for it
 
-Specifically, given nvtx-marked regions in the code, the ncu profiling should be able to:
-- report the ncu metrics/sections for each region, including nested regions
-- report ncu metrics/sections for selected kernels within each region
-- metrics/sections must be configurable by user, through hydra configs (similar to current ncu profiling facility)
+## Goal
+- Figure out the main model components (modules) used in DeepSeek-OCR, its call relationships, calling counts, and per-module operator breakdowns.
+- The module-level analysis goes down until we reach pytorch builtin operators (e.g., `torch.nn.Conv2d`, `torch.nn.LayerNorm`, etc.) or well-known custom layers (e.g., FlashAttention).
+- This information will be used to build accurate analytic performance and memory models, which will be implemented under `extern/modelmeter/models/deepseek_ocr/`, according to contracts given in `extern/modelmeter/layers/base.py`
 
-Note:
-- this is an extension of current ncu profiling facility, which already supports kernel-level profiling and reporting, so we must retain the overall structure of current ncu profiling facility and usage pattern.
+## References
+- `context/hints/dsocr-kb/about-dynamic-tracing-deepseek-ocr.md`, approaches to dynamically trace DeepSeek-OCR model execution, we prefer the recommended approach metioned there.
