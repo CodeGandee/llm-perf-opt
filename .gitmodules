@@ -1,6 +1,7 @@
 [submodule "magic-context"]
 	path = magic-context
 	url = git@github.com:igamenovoer/magic-context.git
+	branch = main
 [submodule "context/refcode/thicket"]
 	path = context/refcode/thicket
 	url = https://github.com/LLNL/thicket.git
