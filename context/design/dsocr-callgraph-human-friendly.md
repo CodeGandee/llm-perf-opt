@@ -144,6 +144,31 @@ Semantics:
 - The callgraph used for high-level visualization should prefer:
   - Pattern nodes with `for N` / `parfor N` annotations over a sea of per-index nodes, unless debugging a specific index.
 
+### 3.3 Class-based grouping from call graph structure (visualization)
+
+For the **visualized** graph (DOT/SVG/Mermaid), we further group *instances of the same module class* based on the dynamic call graph:
+
+1. **Same-parent, same-class siblings ⇒ `parfor N`**
+   - If a parent module `P` has multiple child modules `C₁, C₂, …, C_N` such that:
+     - All `Cᵢ` have the **same module class** (e.g., multiple `DeepseekV2MLP` experts under one MoE gate).
+     - All `Cᵢ` are direct children of **the same parent** `P` in the call graph.
+   - Then, for visualization:
+     - We render **one grouped child node** representing this family.
+     - The edge `P → grouped_child` is labeled `parfor N`, indicating that `P` invokes *N same-class siblings* at that call level.
+   - The underlying JSON callgraph may still keep per-instance nodes; the grouping is a **view** for readability.
+
+2. **Same-class serial chains ⇒ `for N`**
+   - If we observe a serial chain of modules `M₁ → M₂ → … → M_N` such that:
+     - Each `Mᵢ` is a **distinct module instance**.
+     - All `Mᵢ` share the **same module class**.
+     - The **output** of `Mᵢ` feeds into the **input** of `Mᵢ₊₁` (a depth-wise stack, not siblings).
+   - Then, for visualization:
+     - We represent this as a **single grouped stack node** with a label like `<ClassName> @ <pattern> for N`.
+     - The **parent→stack** edge (from the manager/container of the chain) is labeled `for N`.
+   - This captures cases where stacked layers are best viewed as a single conceptual depth-wise block.
+
+These class-based grouping rules are applied **on top of** index-based grouping (3.2) by inspecting the **call graph structure** (parents and dynamic edges). They affect only the rendered graph; analytic consumers can still rely on the full per-instance JSON if needed.
+
 ## 4. Summary of Preferences
 
 1. **Node = `nn.Module`**  
@@ -158,7 +183,13 @@ Semantics:
 4. **Stacks of distinct modules ⇒ `for N`**  
    - When modules of the same kind are stacked in depth and called in serial (`out[i]` → `in[i+1]`), they are represented as `<ClassName> @ <pattern> for N`, with an edge from their container labeled `for N`.
 
-5. **Runtime config + I/O tensor metadata per node**  
+5. **Same-class grouping for visualization**  
+   - For readability, visualizations:
+     - Group **same-class siblings under the same parent** into a single node and annotate the parent→group edge with `parfor N`.
+     - Group **same-class modules in a serial chain** into a single stack node and annotate the parent→stack edge with `for N`.
+   - These groupings are derived from the **dynamic edge structure**; they do not require module names to share a particular index pattern, though index-based patterns may be used in the grouped label.
+
+6. **Runtime config + I/O tensor metadata per node**  
    - For every node we also maintain:
      - A `constructor_params` (or similar) dict capturing module config that
        affects tensor dimensions.
