@@ -1,0 +1,10 @@
+{
+  "events": [
+    {
+      "kind": "vision_inputs",
+      "module": "DeepseekOCRModel",
+      "num_images": 1,
+      "num_crops_total": 4
+    }
+  ]
+}

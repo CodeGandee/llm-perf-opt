@@ -23,13 +23,6 @@ import contextlib
 import sys
 
 import torch
-
-# Prefer vendored TorchLens to ensure compatibility with DeepSeek-OCR tracing.
-_REPO_ROOT_FOR_TORCHLENS = Path(__file__).resolve().parents[2]
-_VENDOR_TORCHLENS = _REPO_ROOT_FOR_TORCHLENS / "context" / "refcode" / "torchlens"
-if _VENDOR_TORCHLENS.is_dir():
-    sys.path.insert(0, str(_VENDOR_TORCHLENS))
-
 import torchlens as tl  # type: ignore[import-untyped]
 
 from llm_perf_opt.runners.dsocr_analyzer import AnalysisConfig, DeepseekOCRStaticAnalyzer
@@ -43,6 +36,38 @@ def find_repo_root(start: Path) -> Path:
         if (current / "pyproject.toml").exists():
             return current
     return start
+
+
+def patch_deepseek_quick_gelu() -> None:
+    """Monkey-patch DeepSeek-OCR quick_gelu to a plain function.
+
+    The vendor implementation uses a torch.jit.script'ed helper, which can
+    produce tensors that TorchLens has not tagged with internal metadata.
+    Replacing it with a standard PyTorch function keeps numerics but ensures
+    TorchLens can see the underlying ops.
+    """
+
+    patched = False
+    for mod in list(sys.modules.values()):
+        if mod is None:
+            continue
+        quick = getattr(mod, "quick_gelu", None)
+        if quick is None:
+            continue
+        mod_file = getattr(mod, "__file__", "") or ""
+        if "deepencoder" not in mod_file:
+            continue
+
+        def quick_gelu(x: torch.Tensor) -> torch.Tensor:
+            return x * torch.sigmoid(1.702 * x)
+
+        setattr(mod, "quick_gelu", quick_gelu)
+        patched = True
+        break
+
+    if not patched:
+        # Best-effort; if this fails we still attempt tracing.
+        print("[dsocr-torchlens] WARNING: quick_gelu patch not applied (module not found)")
 
 
 def build_inputs(
@@ -127,6 +152,7 @@ def write_outputs(
     edge_call_counts: Mapping[Tuple[str, str], int],
     op_call_counts: Mapping[str, int],
     module_children: Mapping[str, Iterable[str]],
+    module_classes: Mapping[str, str],
 ) -> None:
     """Write JSON and Graphviz DOT outputs to the given directory."""
 
@@ -143,6 +169,7 @@ def write_outputs(
         "module_children": {
             parent: list(children) for parent, children in module_children.items()
         },
+        "module_classes": {name: cls for name, cls in module_classes.items()},
     }
 
     json_path = out_root / "dsocr-call-graph-torchlens.json"
@@ -171,8 +198,8 @@ def build_argparser() -> argparse.ArgumentParser:
     )
     parser.add_argument(
         "--device",
-        default="cpu",
-        help="Device for model execution (default: cpu).",
+        default="cuda:0",
+        help="Device for model execution (default: cuda:0).",
     )
     parser.add_argument(
         "--seq-len",
@@ -218,8 +245,11 @@ def main() -> None:
     session = DeepSeekOCRSession.from_local(
         model_path=str(model_path),
         device=args.device,
-        use_flash_attn=True,
+        use_flash_attn=False,
     )
+
+    # Runtime patch to make TorchLens compatible with DeepSeek-OCR in this environment.
+    patch_deepseek_quick_gelu()
 
     if session.m_model is None:
         raise RuntimeError("DeepSeekOCRSession did not initialize model")
@@ -282,12 +312,21 @@ def main() -> None:
         else repo_root / "tmp" / "dsocr-torchlens-callgraph"
     )
 
+    # Map TorchLens module names to PyTorch class names using the core model's
+    # named_modules registry.
+    module_classes: Dict[str, str] = {}
+    for name, mod in core.named_modules():
+        if not name:
+            continue
+        module_classes[name] = mod.__class__.__name__
+
     write_outputs(
         out_root=out_root,
         module_call_counts=module_call_counts,
         edge_call_counts=edge_call_counts,
         op_call_counts=op_call_counts,
         module_children=module_children,
+        module_classes=module_classes,
     )
 
 

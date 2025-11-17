@@ -1,0 +1,61 @@
+# DeepSeek-OCR Call Graph – Grouped View
+
+## Metadata
+- **source_json**: /workspace/code/llm-perf-opt/tmp/callgraph/c-20251117-154520/dsocr-call-graph-torchlens.json
+- **generated_at**: 2025-11-17T07:48:45Z
+- **min_family_size**: 2
+- **min_edge_count**: 2
+
+## Groups
+- `sam_model.blocks[0..11]` for 12 under `sam_model` (stage: sam)
+- `sam_model.neck[0..3]` for 4 under `sam_model.neck` (stage: sam)
+- `vision_model.transformer.layers[0..23]` for 24 under `vision_model.transformer` (stage: vision)
+- `layers[0..11]` for 12
+- `layers.1.mlp.experts[0..63]` for 64 under `layers.1.mlp` (stage: llm)
+- `layers.2.mlp.experts[0..18]` for 19 under `layers.2.mlp` (stage: llm)
+- `layers.2.mlp.experts[20..57]` for 38 under `layers.2.mlp` (stage: llm)
+- `layers.2.mlp.experts[59..63]` for 5 under `layers.2.mlp` (stage: llm)
+- `layers.3.mlp.experts[0..52]` for 53 under `layers.3.mlp` (stage: llm)
+- `layers.3.mlp.experts[54..63]` for 10 under `layers.3.mlp` (stage: llm)
+- `layers.4.mlp.experts[0..63]` for 64 under `layers.4.mlp` (stage: llm)
+- `layers.5.mlp.experts[0..63]` for 64 under `layers.5.mlp` (stage: llm)
+- `layers.6.mlp.experts[0..63]` for 64 under `layers.6.mlp` (stage: llm)
+- `layers.7.mlp.experts[0..63]` for 64 under `layers.7.mlp` (stage: llm)
+- `layers.8.mlp.experts[0..5]` for 6 under `layers.8.mlp` (stage: llm)
+- `layers.8.mlp.experts[7..63]` for 57 under `layers.8.mlp` (stage: llm)
+- `layers.9.mlp.experts[0..63]` for 64 under `layers.9.mlp` (stage: llm)
+- `layers.10.mlp.experts[0..63]` for 64 under `layers.10.mlp` (stage: llm)
+- `layers.11.mlp.experts[0..63]` for 64 under `layers.11.mlp` (stage: llm)
+- `sam_model.patch_embed` parfor 4 under `sam_model` (stage: sam)
+- `sam_model.patch_embed.proj` parfor 2 under `sam_model.patch_embed` (stage: sam)
+- `sam_model.blocks.*.norm1` parfor 24 under `sam_model.blocks.*` (stage: sam)
+- `sam_model.blocks.*.attn` parfor 1160 under `sam_model.blocks.*` (stage: sam)
+- `sam_model.blocks.*.attn.qkv` parfor 24 under `sam_model.blocks.*.attn` (stage: sam)
+- `sam_model.blocks.*.attn.proj` parfor 24 under `sam_model.blocks.*.attn` (stage: sam)
+- `sam_model.blocks.*.norm2` parfor 24 under `sam_model.blocks.*` (stage: sam)
+- `sam_model.blocks.*.mlp` parfor 72 under `sam_model.blocks.*` (stage: sam)
+- `sam_model.blocks.*.mlp.lin1` parfor 24 under `sam_model.blocks.*.mlp` (stage: sam)
+- `sam_model.blocks.*.mlp.act` parfor 24 under `sam_model.blocks.*.mlp` (stage: sam)
+- `sam_model.blocks.*.mlp.lin2` parfor 24 under `sam_model.blocks.*.mlp` (stage: sam)
+- `sam_model.net_2` parfor 2 under `sam_model` (stage: sam)
+- `sam_model.net_3` parfor 2 under `sam_model` (stage: sam)
+- `vision_model.embeddings` parfor 30 under `vision_model` (stage: vision)
+- `vision_model.embeddings.position_embedding` parfor 4 under `vision_model.embeddings` (stage: vision)
+- `vision_model.pre_layrnorm` parfor 2 under `vision_model` (stage: vision)
+- `vision_model.transformer` parfor 1152 under `vision_model` (stage: vision)
+- `vision_model.transformer.layers.*.layer_norm1` parfor 48 under `vision_model.transformer.layers.*` (stage: vision)
+- `vision_model.transformer.layers.*.self_attn` parfor 720 under `vision_model.transformer.layers.*` (stage: vision)
+- `vision_model.transformer.layers.*.self_attn.qkv_proj` parfor 48 under `vision_model.transformer.layers.*.self_attn` (stage: vision)
+- `vision_model.transformer.layers.*.self_attn.out_proj` parfor 48 under `vision_model.transformer.layers.*.self_attn` (stage: vision)
+- `vision_model.transformer.layers.*.layer_norm2` parfor 48 under `vision_model.transformer.layers.*` (stage: vision)
+- `vision_model.transformer.layers.*.mlp` parfor 240 under `vision_model.transformer.layers.*` (stage: vision)
+- `vision_model.transformer.layers.*.mlp.fc1` parfor 48 under `vision_model.transformer.layers.*.mlp` (stage: vision)
+- `vision_model.transformer.layers.*.mlp.fc2` parfor 48 under `vision_model.transformer.layers.*.mlp` (stage: vision)
+- `projector.layers` parfor 2 under `projector`
+- `layers.*.input_layernorm` parfor 96 under `layers.*` (stage: llm)
+- `layers.*.self_attn` parfor 792 under `layers.*` (stage: llm)
+- `layers.*.self_attn.rotary_emb` parfor 204 under `layers.*.self_attn` (stage: llm)
+- `layers.*.post_attention_layernorm` parfor 96 under `layers.*` (stage: llm)
+- `layers.*.mlp` parfor 4579 under `layers.*` (stage: llm)
+- `layers.*.mlp.gate` parfor 88 under `layers.*.mlp` (stage: llm)
+- `layers.*.mlp.shared_experts` parfor 55 under `layers.*.mlp` (stage: llm)

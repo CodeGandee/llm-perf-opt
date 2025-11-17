@@ -1,0 +1,5694 @@
+{
+  "stacks": [
+    {
+      "family": "sam_model.blocks",
+      "indices": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11
+      ],
+      "for": 12,
+      "class_name": "Block",
+      "pattern_runtime": "sam_model.blocks.[0-11]"
+    }
+  ],
+  "parfor_edges": [
+    {
+      "parent": "sam_model",
+      "child": "sam_model.patch_embed",
+      "parfor": 4
+    },
+    {
+      "parent": "sam_model.patch_embed",
+      "child": "sam_model.patch_embed.proj",
+      "parfor": 2
+    },
+    {
+      "parent": "sam_model",
+      "child": "sam_model.blocks.0",
+      "parfor": 128
+    },
+    {
+      "parent": "sam_model.blocks.0",
+      "child": "sam_model.blocks.0.norm1",
+      "parfor": 2
+    },
+    {
+      "parent": "sam_model.blocks.0",
+      "child": "sam_model.blocks.0.attn",
+      "parfor": 92
+    },
+    {
+      "parent": "sam_model.blocks.0.attn",
+      "child": "sam_model.blocks.0.attn.qkv",
+      "parfor": 2
+    },
+    {
+      "parent": "sam_model.blocks.0.attn",
+      "child": "sam_model.blocks.0.attn.proj",
+      "parfor": 2
+    },
+    {
+      "parent": "sam_model.blocks.0",
+      "child": "sam_model.blocks.0.norm2",
+      "parfor": 2
+    },
+    {
+      "parent": "sam_model.blocks.0",
+      "child": "sam_model.blocks.0.mlp",
+      "parfor": 6
+    },
+    {
+      "parent": "sam_model.blocks.0.mlp",
+      "child": "sam_model.blocks.0.mlp.lin1",
+      "parfor": 2
+    },
+    {
+      "parent": "sam_model.blocks.0.mlp",
+      "child": "sam_model.blocks.0.mlp.act",
+      "parfor": 2
+    },
+    {
+      "parent": "sam_model.blocks.0.mlp",
+      "child": "sam_model.blocks.0.mlp.lin2",
+      "parfor": 2
+    },
+    {
+      "parent": "sam_model",
+      "child": "sam_model.blocks.1",
+      "parfor": 128
+    },
+    {
+      "parent": "sam_model.blocks.1",
+      "child": "sam_model.blocks.1.norm1",
+      "parfor": 2
+    },
+    {
+      "parent": "sam_model.blocks.1",
+      "child": "sam_model.blocks.1.attn",
+      "parfor": 92
+    },
+    {
+      "parent": "sam_model.blocks.1.attn",
+      "child": "sam_model.blocks.1.attn.qkv",
+      "parfor": 2
+    },
+    {
+      "parent": "sam_model.blocks.1.attn",
+      "child": "sam_model.blocks.1.attn.proj",
+      "parfor": 2
+    },
+    {
+      "parent": "sam_model.blocks.1",
+      "child": "sam_model.blocks.1.norm2",
+      "parfor": 2
+    },
+    {
+      "parent": "sam_model.blocks.1",
+      "child": "sam_model.blocks.1.mlp",
+      "parfor": 6
+    },
+    {
+      "parent": "sam_model.blocks.1.mlp",
+      "child": "sam_model.blocks.1.mlp.lin1",
+      "parfor": 2
+    },
+    {
+      "parent": "sam_model.blocks.1.mlp",
+      "child": "sam_model.blocks.1.mlp.act",
+      "parfor": 2
+    },
+    {
+      "parent": "sam_model.blocks.1.mlp",
+      "child": "sam_model.blocks.1.mlp.lin2",
+      "parfor": 2
+    },
+    {
+      "parent": "sam_model",
+      "child": "sam_model.blocks.2",
+      "parfor": 120
+    },
+    {
+      "parent": "sam_model.blocks.2",
+      "child": "sam_model.blocks.2.norm1",
+      "parfor": 2
+    },
+    {
+      "parent": "sam_model.blocks.2",
+      "child": "sam_model.blocks.2.attn",
+      "parfor": 106
+    },
+    {
+      "parent": "sam_model.blocks.2.attn",
+      "child": "sam_model.blocks.2.attn.qkv",
+      "parfor": 2
+    },
+    {
+      "parent": "sam_model.blocks.2.attn",
+      "child": "sam_model.blocks.2.attn.proj",
+      "parfor": 2
+    },
+    {
+      "parent": "sam_model.blocks.2",
+      "child": "sam_model.blocks.2.norm2",
+      "parfor": 2
+    },
+    {
+      "parent": "sam_model.blocks.2",
+      "child": "sam_model.blocks.2.mlp",
+      "parfor": 6
+    },
+    {
+      "parent": "sam_model.blocks.2.mlp",
+      "child": "sam_model.blocks.2.mlp.lin1",
+      "parfor": 2
+    },
+    {
+      "parent": "sam_model.blocks.2.mlp",
+      "child": "sam_model.blocks.2.mlp.act",
+      "parfor": 2
+    },
+    {
+      "parent": "sam_model.blocks.2.mlp",
+      "child": "sam_model.blocks.2.mlp.lin2",
+      "parfor": 2
+    },
+    {
+      "parent": "sam_model",
+      "child": "sam_model.blocks.3",
+      "parfor": 128
+    },
+    {
+      "parent": "sam_model.blocks.3",
+      "child": "sam_model.blocks.3.norm1",
+      "parfor": 2
+    },
+    {
+      "parent": "sam_model.blocks.3",
+      "child": "sam_model.blocks.3.attn",
+      "parfor": 92
+    },
+    {
+      "parent": "sam_model.blocks.3.attn",
+      "child": "sam_model.blocks.3.attn.qkv",
+      "parfor": 2
+    },
+    {
+      "parent": "sam_model.blocks.3.attn",
+      "child": "sam_model.blocks.3.attn.proj",
+      "parfor": 2
+    },
+    {
+      "parent": "sam_model.blocks.3",
+      "child": "sam_model.blocks.3.norm2",
+      "parfor": 2
+    },
+    {
+      "parent": "sam_model.blocks.3",
+      "child": "sam_model.blocks.3.mlp",
+      "parfor": 6
+    },
+    {
+      "parent": "sam_model.blocks.3.mlp",
+      "child": "sam_model.blocks.3.mlp.lin1",
+      "parfor": 2
+    },
+    {
+      "parent": "sam_model.blocks.3.mlp",
+      "child": "sam_model.blocks.3.mlp.act",
+      "parfor": 2
+    },
+    {
+      "parent": "sam_model.blocks.3.mlp",
+      "child": "sam_model.blocks.3.mlp.lin2",
+      "parfor": 2
+    },
+    {
+      "parent": "sam_model",
+      "child": "sam_model.blocks.4",
+      "parfor": 128
+    },
+    {
+      "parent": "sam_model.blocks.4",
+      "child": "sam_model.blocks.4.norm1",
+      "parfor": 2
+    },
+    {
+      "parent": "sam_model.blocks.4",
+      "child": "sam_model.blocks.4.attn",
+      "parfor": 92
+    },
+    {
+      "parent": "sam_model.blocks.4.attn",
+      "child": "sam_model.blocks.4.attn.qkv",
+      "parfor": 2
+    },
+    {
+      "parent": "sam_model.blocks.4.attn",
+      "child": "sam_model.blocks.4.attn.proj",
+      "parfor": 2
+    },
+    {
+      "parent": "sam_model.blocks.4",
+      "child": "sam_model.blocks.4.norm2",
+      "parfor": 2
+    },
+    {
+      "parent": "sam_model.blocks.4",
+      "child": "sam_model.blocks.4.mlp",
+      "parfor": 6
+    },
+    {
+      "parent": "sam_model.blocks.4.mlp",
+      "child": "sam_model.blocks.4.mlp.lin1",
+      "parfor": 2
+    },
+    {
+      "parent": "sam_model.blocks.4.mlp",
+      "child": "sam_model.blocks.4.mlp.act",
+      "parfor": 2
+    },
+    {
+      "parent": "sam_model.blocks.4.mlp",
+      "child": "sam_model.blocks.4.mlp.lin2",
+      "parfor": 2
+    },
+    {
+      "parent": "sam_model",
+      "child": "sam_model.blocks.5",
+      "parfor": 120
+    },
+    {
+      "parent": "sam_model.blocks.5",
+      "child": "sam_model.blocks.5.norm1",
+      "parfor": 2
+    },
+    {
+      "parent": "sam_model.blocks.5",
+      "child": "sam_model.blocks.5.attn",
+      "parfor": 106
+    },
+    {
+      "parent": "sam_model.blocks.5.attn",
+      "child": "sam_model.blocks.5.attn.qkv",
+      "parfor": 2
+    },
+    {
+      "parent": "sam_model.blocks.5.attn",
+      "child": "sam_model.blocks.5.attn.proj",
+      "parfor": 2
+    },
+    {
+      "parent": "sam_model.blocks.5",
+      "child": "sam_model.blocks.5.norm2",
+      "parfor": 2
+    },
+    {
+      "parent": "sam_model.blocks.5",
+      "child": "sam_model.blocks.5.mlp",
+      "parfor": 6
+    },
+    {
+      "parent": "sam_model.blocks.5.mlp",
+      "child": "sam_model.blocks.5.mlp.lin1",
+      "parfor": 2
+    },
+    {
+      "parent": "sam_model.blocks.5.mlp",
+      "child": "sam_model.blocks.5.mlp.act",
+      "parfor": 2
+    },
+    {
+      "parent": "sam_model.blocks.5.mlp",
+      "child": "sam_model.blocks.5.mlp.lin2",
+      "parfor": 2
+    },
+    {
+      "parent": "sam_model",
+      "child": "sam_model.blocks.6",
+      "parfor": 128
+    },
+    {
+      "parent": "sam_model.blocks.6",
+      "child": "sam_model.blocks.6.norm1",
+      "parfor": 2
+    },
+    {
+      "parent": "sam_model.blocks.6",
+      "child": "sam_model.blocks.6.attn",
+      "parfor": 92
+    },
+    {
+      "parent": "sam_model.blocks.6.attn",
+      "child": "sam_model.blocks.6.attn.qkv",
+      "parfor": 2
+    },
+    {
+      "parent": "sam_model.blocks.6.attn",
+      "child": "sam_model.blocks.6.attn.proj",
+      "parfor": 2
+    },
+    {
+      "parent": "sam_model.blocks.6",
+      "child": "sam_model.blocks.6.norm2",
+      "parfor": 2
+    },
+    {
+      "parent": "sam_model.blocks.6",
+      "child": "sam_model.blocks.6.mlp",
+      "parfor": 6
+    },
+    {
+      "parent": "sam_model.blocks.6.mlp",
+      "child": "sam_model.blocks.6.mlp.lin1",
+      "parfor": 2
+    },
+    {
+      "parent": "sam_model.blocks.6.mlp",
+      "child": "sam_model.blocks.6.mlp.act",
+      "parfor": 2
+    },
+    {
+      "parent": "sam_model.blocks.6.mlp",
+      "child": "sam_model.blocks.6.mlp.lin2",
+      "parfor": 2
+    },
+    {
+      "parent": "sam_model",
+      "child": "sam_model.blocks.7",
+      "parfor": 128
+    },
+    {
+      "parent": "sam_model.blocks.7",
+      "child": "sam_model.blocks.7.norm1",
+      "parfor": 2
+    },
+    {
+      "parent": "sam_model.blocks.7",
+      "child": "sam_model.blocks.7.attn",
+      "parfor": 92
+    },
+    {
+      "parent": "sam_model.blocks.7.attn",
+      "child": "sam_model.blocks.7.attn.qkv",
+      "parfor": 2
+    },
+    {
+      "parent": "sam_model.blocks.7.attn",
+      "child": "sam_model.blocks.7.attn.proj",
+      "parfor": 2
+    },
+    {
+      "parent": "sam_model.blocks.7",
+      "child": "sam_model.blocks.7.norm2",
+      "parfor": 2
+    },
+    {
+      "parent": "sam_model.blocks.7",
+      "child": "sam_model.blocks.7.mlp",
+      "parfor": 6
+    },
+    {
+      "parent": "sam_model.blocks.7.mlp",
+      "child": "sam_model.blocks.7.mlp.lin1",
+      "parfor": 2
+    },
+    {
+      "parent": "sam_model.blocks.7.mlp",
+      "child": "sam_model.blocks.7.mlp.act",
+      "parfor": 2
+    },
+    {
+      "parent": "sam_model.blocks.7.mlp",
+      "child": "sam_model.blocks.7.mlp.lin2",
+      "parfor": 2
+    },
+    {
+      "parent": "sam_model",
+      "child": "sam_model.blocks.8",
+      "parfor": 120
+    },
+    {
+      "parent": "sam_model.blocks.8",
+      "child": "sam_model.blocks.8.norm1",
+      "parfor": 2
+    },
+    {
+      "parent": "sam_model.blocks.8",
+      "child": "sam_model.blocks.8.attn",
+      "parfor": 106
+    },
+    {
+      "parent": "sam_model.blocks.8.attn",
+      "child": "sam_model.blocks.8.attn.qkv",
+      "parfor": 2
+    },
+    {
+      "parent": "sam_model.blocks.8.attn",
+      "child": "sam_model.blocks.8.attn.proj",
+      "parfor": 2
+    },
+    {
+      "parent": "sam_model.blocks.8",
+      "child": "sam_model.blocks.8.norm2",
+      "parfor": 2
+    },
+    {
+      "parent": "sam_model.blocks.8",
+      "child": "sam_model.blocks.8.mlp",
+      "parfor": 6
+    },
+    {
+      "parent": "sam_model.blocks.8.mlp",
+      "child": "sam_model.blocks.8.mlp.lin1",
+      "parfor": 2
+    },
+    {
+      "parent": "sam_model.blocks.8.mlp",
+      "child": "sam_model.blocks.8.mlp.act",
+      "parfor": 2
+    },
+    {
+      "parent": "sam_model.blocks.8.mlp",
+      "child": "sam_model.blocks.8.mlp.lin2",
+      "parfor": 2
+    },
+    {
+      "parent": "sam_model",
+      "child": "sam_model.blocks.9",
+      "parfor": 128
+    },
+    {
+      "parent": "sam_model.blocks.9",
+      "child": "sam_model.blocks.9.norm1",
+      "parfor": 2
+    },
+    {
+      "parent": "sam_model.blocks.9",
+      "child": "sam_model.blocks.9.attn",
+      "parfor": 92
+    },
+    {
+      "parent": "sam_model.blocks.9.attn",
+      "child": "sam_model.blocks.9.attn.qkv",
+      "parfor": 2
+    },
+    {
+      "parent": "sam_model.blocks.9.attn",
+      "child": "sam_model.blocks.9.attn.proj",
+      "parfor": 2
+    },
+    {
+      "parent": "sam_model.blocks.9",
+      "child": "sam_model.blocks.9.norm2",
+      "parfor": 2
+    },
+    {
+      "parent": "sam_model.blocks.9",
+      "child": "sam_model.blocks.9.mlp",
+      "parfor": 6
+    },
+    {
+      "parent": "sam_model.blocks.9.mlp",
+      "child": "sam_model.blocks.9.mlp.lin1",
+      "parfor": 2
+    },
+    {
+      "parent": "sam_model.blocks.9.mlp",
+      "child": "sam_model.blocks.9.mlp.act",
+      "parfor": 2
+    },
+    {
+      "parent": "sam_model.blocks.9.mlp",
+      "child": "sam_model.blocks.9.mlp.lin2",
+      "parfor": 2
+    },
+    {
+      "parent": "sam_model",
+      "child": "sam_model.blocks.10",
+      "parfor": 128
+    },
+    {
+      "parent": "sam_model.blocks.10",
+      "child": "sam_model.blocks.10.norm1",
+      "parfor": 2
+    },
+    {
+      "parent": "sam_model.blocks.10",
+      "child": "sam_model.blocks.10.attn",
+      "parfor": 92
+    },
+    {
+      "parent": "sam_model.blocks.10.attn",
+      "child": "sam_model.blocks.10.attn.qkv",
+      "parfor": 2
+    },
+    {
+      "parent": "sam_model.blocks.10.attn",
+      "child": "sam_model.blocks.10.attn.proj",
+      "parfor": 2
+    },
+    {
+      "parent": "sam_model.blocks.10",
+      "child": "sam_model.blocks.10.norm2",
+      "parfor": 2
+    },
+    {
+      "parent": "sam_model.blocks.10",
+      "child": "sam_model.blocks.10.mlp",
+      "parfor": 6
+    },
+    {
+      "parent": "sam_model.blocks.10.mlp",
+      "child": "sam_model.blocks.10.mlp.lin1",
+      "parfor": 2
+    },
+    {
+      "parent": "sam_model.blocks.10.mlp",
+      "child": "sam_model.blocks.10.mlp.act",
+      "parfor": 2
+    },
+    {
+      "parent": "sam_model.blocks.10.mlp",
+      "child": "sam_model.blocks.10.mlp.lin2",
+      "parfor": 2
+    },
+    {
+      "parent": "sam_model",
+      "child": "sam_model.blocks.11",
+      "parfor": 120
+    },
+    {
+      "parent": "sam_model.blocks.11",
+      "child": "sam_model.blocks.11.norm1",
+      "parfor": 2
+    },
+    {
+      "parent": "sam_model.blocks.11",
+      "child": "sam_model.blocks.11.attn",
+      "parfor": 106
+    },
+    {
+      "parent": "sam_model.blocks.11.attn",
+      "child": "sam_model.blocks.11.attn.qkv",
+      "parfor": 2
+    },
+    {
+      "parent": "sam_model.blocks.11.attn",
+      "child": "sam_model.blocks.11.attn.proj",
+      "parfor": 2
+    },
+    {
+      "parent": "sam_model.blocks.11",
+      "child": "sam_model.blocks.11.norm2",
+      "parfor": 2
+    },
+    {
+      "parent": "sam_model.blocks.11",
+      "child": "sam_model.blocks.11.mlp",
+      "parfor": 6
+    },
+    {
+      "parent": "sam_model.blocks.11.mlp",
+      "child": "sam_model.blocks.11.mlp.lin1",
+      "parfor": 2
+    },
+    {
+      "parent": "sam_model.blocks.11.mlp",
+      "child": "sam_model.blocks.11.mlp.act",
+      "parfor": 2
+    },
+    {
+      "parent": "sam_model.blocks.11.mlp",
+      "child": "sam_model.blocks.11.mlp.lin2",
+      "parfor": 2
+    },
+    {
+      "parent": "sam_model",
+      "child": "sam_model.neck",
+      "parfor": 52
+    },
+    {
+      "parent": "sam_model.neck",
+      "child": "sam_model.neck.0",
+      "parfor": 2
+    },
+    {
+      "parent": "sam_model.neck",
+      "child": "sam_model.neck.1",
+      "parfor": 24
+    },
+    {
+      "parent": "sam_model.neck",
+      "child": "sam_model.neck.2",
+      "parfor": 2
+    },
+    {
+      "parent": "sam_model.neck",
+      "child": "sam_model.neck.3",
+      "parfor": 24
+    },
+    {
+      "parent": "sam_model",
+      "child": "sam_model.net_2",
+      "parfor": 2
+    },
+    {
+      "parent": "sam_model",
+      "child": "sam_model.net_3",
+      "parfor": 2
+    },
+    {
+      "parent": "vision_model",
+      "child": "vision_model.embeddings",
+      "parfor": 30
+    },
+    {
+      "parent": "vision_model.embeddings",
+      "child": "vision_model.embeddings.position_embedding",
+      "parfor": 4
+    },
+    {
+      "parent": "vision_model",
+      "child": "vision_model.pre_layrnorm",
+      "parfor": 2
+    },
+    {
+      "parent": "vision_model",
+      "child": "vision_model.transformer",
+      "parfor": 1152
+    },
+    {
+      "parent": "vision_model.transformer",
+      "child": "vision_model.transformer.layers.0",
+      "parfor": 48
+    },
+    {
+      "parent": "vision_model.transformer.layers.0",
+      "child": "vision_model.transformer.layers.0.layer_norm1",
+      "parfor": 2
+    },
+    {
+      "parent": "vision_model.transformer.layers.0",
+      "child": "vision_model.transformer.layers.0.self_attn",
+      "parfor": 30
+    },
+    {
+      "parent": "vision_model.transformer.layers.0.self_attn",
+      "child": "vision_model.transformer.layers.0.self_attn.qkv_proj",
+      "parfor": 2
+    },
+    {
+      "parent": "vision_model.transformer.layers.0.self_attn",
+      "child": "vision_model.transformer.layers.0.self_attn.out_proj",
+      "parfor": 2
+    },
+    {
+      "parent": "vision_model.transformer.layers.0",
+      "child": "vision_model.transformer.layers.0.layer_norm2",
+      "parfor": 2
+    },
+    {
+      "parent": "vision_model.transformer.layers.0",
+      "child": "vision_model.transformer.layers.0.mlp",
+      "parfor": 10
+    },
+    {
+      "parent": "vision_model.transformer.layers.0.mlp",
+      "child": "vision_model.transformer.layers.0.mlp.fc1",
+      "parfor": 2
+    },
+    {
+      "parent": "vision_model.transformer.layers.0.mlp",
+      "child": "vision_model.transformer.layers.0.mlp.fc2",
+      "parfor": 2
+    },
+    {
+      "parent": "vision_model.transformer",
+      "child": "vision_model.transformer.layers.1",
+      "parfor": 48
+    },
+    {
+      "parent": "vision_model.transformer.layers.1",
+      "child": "vision_model.transformer.layers.1.layer_norm1",
+      "parfor": 2
+    },
+    {
+      "parent": "vision_model.transformer.layers.1",
+      "child": "vision_model.transformer.layers.1.self_attn",
+      "parfor": 30
+    },
+    {
+      "parent": "vision_model.transformer.layers.1.self_attn",
+      "child": "vision_model.transformer.layers.1.self_attn.qkv_proj",
+      "parfor": 2
+    },
+    {
+      "parent": "vision_model.transformer.layers.1.self_attn",
+      "child": "vision_model.transformer.layers.1.self_attn.out_proj",
+      "parfor": 2
+    },
+    {
+      "parent": "vision_model.transformer.layers.1",
+      "child": "vision_model.transformer.layers.1.layer_norm2",
+      "parfor": 2
+    },
+    {
+      "parent": "vision_model.transformer.layers.1",
+      "child": "vision_model.transformer.layers.1.mlp",
+      "parfor": 10
+    },
+    {
+      "parent": "vision_model.transformer.layers.1.mlp",
+      "child": "vision_model.transformer.layers.1.mlp.fc1",
+      "parfor": 2
+    },
+    {
+      "parent": "vision_model.transformer.layers.1.mlp",
+      "child": "vision_model.transformer.layers.1.mlp.fc2",
+      "parfor": 2
+    },
+    {
+      "parent": "vision_model.transformer",
+      "child": "vision_model.transformer.layers.2",
+      "parfor": 48
+    },
+    {
+      "parent": "vision_model.transformer.layers.2",
+      "child": "vision_model.transformer.layers.2.layer_norm1",
+      "parfor": 2
+    },
+    {
+      "parent": "vision_model.transformer.layers.2",
+      "child": "vision_model.transformer.layers.2.self_attn",
+      "parfor": 30
+    },
+    {
+      "parent": "vision_model.transformer.layers.2.self_attn",
+      "child": "vision_model.transformer.layers.2.self_attn.qkv_proj",
+      "parfor": 2
+    },
+    {
+      "parent": "vision_model.transformer.layers.2.self_attn",
+      "child": "vision_model.transformer.layers.2.self_attn.out_proj",
+      "parfor": 2
+    },
+    {
+      "parent": "vision_model.transformer.layers.2",
+      "child": "vision_model.transformer.layers.2.layer_norm2",
+      "parfor": 2
+    },
+    {
+      "parent": "vision_model.transformer.layers.2",
+      "child": "vision_model.transformer.layers.2.mlp",
+      "parfor": 10
+    },
+    {
+      "parent": "vision_model.transformer.layers.2.mlp",
+      "child": "vision_model.transformer.layers.2.mlp.fc1",
+      "parfor": 2
+    },
+    {
+      "parent": "vision_model.transformer.layers.2.mlp",
+      "child": "vision_model.transformer.layers.2.mlp.fc2",
+      "parfor": 2
+    },
+    {
+      "parent": "vision_model.transformer",
+      "child": "vision_model.transformer.layers.3",
+      "parfor": 48
+    },
+    {
+      "parent": "vision_model.transformer.layers.3",
+      "child": "vision_model.transformer.layers.3.layer_norm1",
+      "parfor": 2
+    },
+    {
+      "parent": "vision_model.transformer.layers.3",
+      "child": "vision_model.transformer.layers.3.self_attn",
+      "parfor": 30
+    },
+    {
+      "parent": "vision_model.transformer.layers.3.self_attn",
+      "child": "vision_model.transformer.layers.3.self_attn.qkv_proj",
+      "parfor": 2
+    },
+    {
+      "parent": "vision_model.transformer.layers.3.self_attn",
+      "child": "vision_model.transformer.layers.3.self_attn.out_proj",
+      "parfor": 2
+    },
+    {
+      "parent": "vision_model.transformer.layers.3",
+      "child": "vision_model.transformer.layers.3.layer_norm2",
+      "parfor": 2
+    },
+    {
+      "parent": "vision_model.transformer.layers.3",
+      "child": "vision_model.transformer.layers.3.mlp",
+      "parfor": 10
+    },
+    {
+      "parent": "vision_model.transformer.layers.3.mlp",
+      "child": "vision_model.transformer.layers.3.mlp.fc1",
+      "parfor": 2
+    },
+    {
+      "parent": "vision_model.transformer.layers.3.mlp",
+      "child": "vision_model.transformer.layers.3.mlp.fc2",
+      "parfor": 2
+    },
+    {
+      "parent": "vision_model.transformer",
+      "child": "vision_model.transformer.layers.4",
+      "parfor": 48
+    },
+    {
+      "parent": "vision_model.transformer.layers.4",
+      "child": "vision_model.transformer.layers.4.layer_norm1",
+      "parfor": 2
+    },
+    {
+      "parent": "vision_model.transformer.layers.4",
+      "child": "vision_model.transformer.layers.4.self_attn",
+      "parfor": 30
+    },
+    {
+      "parent": "vision_model.transformer.layers.4.self_attn",
+      "child": "vision_model.transformer.layers.4.self_attn.qkv_proj",
+      "parfor": 2
+    },
+    {
+      "parent": "vision_model.transformer.layers.4.self_attn",
+      "child": "vision_model.transformer.layers.4.self_attn.out_proj",
+      "parfor": 2
+    },
+    {
+      "parent": "vision_model.transformer.layers.4",
+      "child": "vision_model.transformer.layers.4.layer_norm2",
+      "parfor": 2
+    },
+    {
+      "parent": "vision_model.transformer.layers.4",
+      "child": "vision_model.transformer.layers.4.mlp",
+      "parfor": 10
+    },
+    {
+      "parent": "vision_model.transformer.layers.4.mlp",
+      "child": "vision_model.transformer.layers.4.mlp.fc1",
+      "parfor": 2
+    },
+    {
+      "parent": "vision_model.transformer.layers.4.mlp",
+      "child": "vision_model.transformer.layers.4.mlp.fc2",
+      "parfor": 2
+    },
+    {
+      "parent": "vision_model.transformer",
+      "child": "vision_model.transformer.layers.5",
+      "parfor": 48
+    },
+    {
+      "parent": "vision_model.transformer.layers.5",
+      "child": "vision_model.transformer.layers.5.layer_norm1",
+      "parfor": 2
+    },
+    {
+      "parent": "vision_model.transformer.layers.5",
+      "child": "vision_model.transformer.layers.5.self_attn",
+      "parfor": 30
+    },
+    {
+      "parent": "vision_model.transformer.layers.5.self_attn",
+      "child": "vision_model.transformer.layers.5.self_attn.qkv_proj",
+      "parfor": 2
+    },
+    {
+      "parent": "vision_model.transformer.layers.5.self_attn",
+      "child": "vision_model.transformer.layers.5.self_attn.out_proj",
+      "parfor": 2
+    },
+    {
+      "parent": "vision_model.transformer.layers.5",
+      "child": "vision_model.transformer.layers.5.layer_norm2",
+      "parfor": 2
+    },
+    {
+      "parent": "vision_model.transformer.layers.5",
+      "child": "vision_model.transformer.layers.5.mlp",
+      "parfor": 10
+    },
+    {
+      "parent": "vision_model.transformer.layers.5.mlp",
+      "child": "vision_model.transformer.layers.5.mlp.fc1",
+      "parfor": 2
+    },
+    {
+      "parent": "vision_model.transformer.layers.5.mlp",
+      "child": "vision_model.transformer.layers.5.mlp.fc2",
+      "parfor": 2
+    },
+    {
+      "parent": "vision_model.transformer",
+      "child": "vision_model.transformer.layers.6",
+      "parfor": 48
+    },
+    {
+      "parent": "vision_model.transformer.layers.6",
+      "child": "vision_model.transformer.layers.6.layer_norm1",
+      "parfor": 2
+    },
+    {
+      "parent": "vision_model.transformer.layers.6",
+      "child": "vision_model.transformer.layers.6.self_attn",
+      "parfor": 30
+    },
+    {
+      "parent": "vision_model.transformer.layers.6.self_attn",
+      "child": "vision_model.transformer.layers.6.self_attn.qkv_proj",
+      "parfor": 2
+    },
+    {
+      "parent": "vision_model.transformer.layers.6.self_attn",
+      "child": "vision_model.transformer.layers.6.self_attn.out_proj",
+      "parfor": 2
+    },
+    {
+      "parent": "vision_model.transformer.layers.6",
+      "child": "vision_model.transformer.layers.6.layer_norm2",
+      "parfor": 2
+    },
+    {
+      "parent": "vision_model.transformer.layers.6",
+      "child": "vision_model.transformer.layers.6.mlp",
+      "parfor": 10
+    },
+    {
+      "parent": "vision_model.transformer.layers.6.mlp",
+      "child": "vision_model.transformer.layers.6.mlp.fc1",
+      "parfor": 2
+    },
+    {
+      "parent": "vision_model.transformer.layers.6.mlp",
+      "child": "vision_model.transformer.layers.6.mlp.fc2",
+      "parfor": 2
+    },
+    {
+      "parent": "vision_model.transformer",
+      "child": "vision_model.transformer.layers.7",
+      "parfor": 48
+    },
+    {
+      "parent": "vision_model.transformer.layers.7",
+      "child": "vision_model.transformer.layers.7.layer_norm1",
+      "parfor": 2
+    },
+    {
+      "parent": "vision_model.transformer.layers.7",
+      "child": "vision_model.transformer.layers.7.self_attn",
+      "parfor": 30
+    },
+    {
+      "parent": "vision_model.transformer.layers.7.self_attn",
+      "child": "vision_model.transformer.layers.7.self_attn.qkv_proj",
+      "parfor": 2
+    },
+    {
+      "parent": "vision_model.transformer.layers.7.self_attn",
+      "child": "vision_model.transformer.layers.7.self_attn.out_proj",
+      "parfor": 2
+    },
+    {
+      "parent": "vision_model.transformer.layers.7",
+      "child": "vision_model.transformer.layers.7.layer_norm2",
+      "parfor": 2
+    },
+    {
+      "parent": "vision_model.transformer.layers.7",
+      "child": "vision_model.transformer.layers.7.mlp",
+      "parfor": 10
+    },
+    {
+      "parent": "vision_model.transformer.layers.7.mlp",
+      "child": "vision_model.transformer.layers.7.mlp.fc1",
+      "parfor": 2
+    },
+    {
+      "parent": "vision_model.transformer.layers.7.mlp",
+      "child": "vision_model.transformer.layers.7.mlp.fc2",
+      "parfor": 2
+    },
+    {
+      "parent": "vision_model.transformer",
+      "child": "vision_model.transformer.layers.8",
+      "parfor": 48
+    },
+    {
+      "parent": "vision_model.transformer.layers.8",
+      "child": "vision_model.transformer.layers.8.layer_norm1",
+      "parfor": 2
+    },
+    {
+      "parent": "vision_model.transformer.layers.8",
+      "child": "vision_model.transformer.layers.8.self_attn",
+      "parfor": 30
+    },
+    {
+      "parent": "vision_model.transformer.layers.8.self_attn",
+      "child": "vision_model.transformer.layers.8.self_attn.qkv_proj",
+      "parfor": 2
+    },
+    {
+      "parent": "vision_model.transformer.layers.8.self_attn",
+      "child": "vision_model.transformer.layers.8.self_attn.out_proj",
+      "parfor": 2
+    },
+    {
+      "parent": "vision_model.transformer.layers.8",
+      "child": "vision_model.transformer.layers.8.layer_norm2",
+      "parfor": 2
+    },
+    {
+      "parent": "vision_model.transformer.layers.8",
+      "child": "vision_model.transformer.layers.8.mlp",
+      "parfor": 10
+    },
+    {
+      "parent": "vision_model.transformer.layers.8.mlp",
+      "child": "vision_model.transformer.layers.8.mlp.fc1",
+      "parfor": 2
+    },
+    {
+      "parent": "vision_model.transformer.layers.8.mlp",
+      "child": "vision_model.transformer.layers.8.mlp.fc2",
+      "parfor": 2
+    },
+    {
+      "parent": "vision_model.transformer",
+      "child": "vision_model.transformer.layers.9",
+      "parfor": 48
+    },
+    {
+      "parent": "vision_model.transformer.layers.9",
+      "child": "vision_model.transformer.layers.9.layer_norm1",
+      "parfor": 2
+    },
+    {
+      "parent": "vision_model.transformer.layers.9",
+      "child": "vision_model.transformer.layers.9.self_attn",
+      "parfor": 30
+    },
+    {
+      "parent": "vision_model.transformer.layers.9.self_attn",
+      "child": "vision_model.transformer.layers.9.self_attn.qkv_proj",
+      "parfor": 2
+    },
+    {
+      "parent": "vision_model.transformer.layers.9.self_attn",
+      "child": "vision_model.transformer.layers.9.self_attn.out_proj",
+      "parfor": 2
+    },
+    {
+      "parent": "vision_model.transformer.layers.9",
+      "child": "vision_model.transformer.layers.9.layer_norm2",
+      "parfor": 2
+    },
+    {
+      "parent": "vision_model.transformer.layers.9",
+      "child": "vision_model.transformer.layers.9.mlp",
+      "parfor": 10
+    },
+    {
+      "parent": "vision_model.transformer.layers.9.mlp",
+      "child": "vision_model.transformer.layers.9.mlp.fc1",
+      "parfor": 2
+    },
+    {
+      "parent": "vision_model.transformer.layers.9.mlp",
+      "child": "vision_model.transformer.layers.9.mlp.fc2",
+      "parfor": 2
+    },
+    {
+      "parent": "vision_model.transformer",
+      "child": "vision_model.transformer.layers.10",
+      "parfor": 48
+    },
+    {
+      "parent": "vision_model.transformer.layers.10",
+      "child": "vision_model.transformer.layers.10.layer_norm1",
+      "parfor": 2
+    },
+    {
+      "parent": "vision_model.transformer.layers.10",
+      "child": "vision_model.transformer.layers.10.self_attn",
+      "parfor": 30
+    },
+    {
+      "parent": "vision_model.transformer.layers.10.self_attn",
+      "child": "vision_model.transformer.layers.10.self_attn.qkv_proj",
+      "parfor": 2
+    },
+    {
+      "parent": "vision_model.transformer.layers.10.self_attn",
+      "child": "vision_model.transformer.layers.10.self_attn.out_proj",
+      "parfor": 2
+    },
+    {
+      "parent": "vision_model.transformer.layers.10",
+      "child": "vision_model.transformer.layers.10.layer_norm2",
+      "parfor": 2
+    },
+    {
+      "parent": "vision_model.transformer.layers.10",
+      "child": "vision_model.transformer.layers.10.mlp",
+      "parfor": 10
+    },
+    {
+      "parent": "vision_model.transformer.layers.10.mlp",
+      "child": "vision_model.transformer.layers.10.mlp.fc1",
+      "parfor": 2
+    },
+    {
+      "parent": "vision_model.transformer.layers.10.mlp",
+      "child": "vision_model.transformer.layers.10.mlp.fc2",
+      "parfor": 2
+    },
+    {
+      "parent": "vision_model.transformer",
+      "child": "vision_model.transformer.layers.11",
+      "parfor": 48
+    },
+    {
+      "parent": "vision_model.transformer.layers.11",
+      "child": "vision_model.transformer.layers.11.layer_norm1",
+      "parfor": 2
+    },
+    {
+      "parent": "vision_model.transformer.layers.11",
+      "child": "vision_model.transformer.layers.11.self_attn",
+      "parfor": 30
+    },
+    {
+      "parent": "vision_model.transformer.layers.11.self_attn",
+      "child": "vision_model.transformer.layers.11.self_attn.qkv_proj",
+      "parfor": 2
+    },
+    {
+      "parent": "vision_model.transformer.layers.11.self_attn",
+      "child": "vision_model.transformer.layers.11.self_attn.out_proj",
+      "parfor": 2
+    },
+    {
+      "parent": "vision_model.transformer.layers.11",
+      "child": "vision_model.transformer.layers.11.layer_norm2",
+      "parfor": 2
+    },
+    {
+      "parent": "vision_model.transformer.layers.11",
+      "child": "vision_model.transformer.layers.11.mlp",
+      "parfor": 10
+    },
+    {
+      "parent": "vision_model.transformer.layers.11.mlp",
+      "child": "vision_model.transformer.layers.11.mlp.fc1",
+      "parfor": 2
+    },
+    {
+      "parent": "vision_model.transformer.layers.11.mlp",
+      "child": "vision_model.transformer.layers.11.mlp.fc2",
+      "parfor": 2
+    },
+    {
+      "parent": "vision_model.transformer",
+      "child": "vision_model.transformer.layers.12",
+      "parfor": 48
+    },
+    {
+      "parent": "vision_model.transformer.layers.12",
+      "child": "vision_model.transformer.layers.12.layer_norm1",
+      "parfor": 2
+    },
+    {
+      "parent": "vision_model.transformer.layers.12",
+      "child": "vision_model.transformer.layers.12.self_attn",
+      "parfor": 30
+    },
+    {
+      "parent": "vision_model.transformer.layers.12.self_attn",
+      "child": "vision_model.transformer.layers.12.self_attn.qkv_proj",
+      "parfor": 2
+    },
+    {
+      "parent": "vision_model.transformer.layers.12.self_attn",
+      "child": "vision_model.transformer.layers.12.self_attn.out_proj",
+      "parfor": 2
+    },
+    {
+      "parent": "vision_model.transformer.layers.12",
+      "child": "vision_model.transformer.layers.12.layer_norm2",
+      "parfor": 2
+    },
+    {
+      "parent": "vision_model.transformer.layers.12",
+      "child": "vision_model.transformer.layers.12.mlp",
+      "parfor": 10
+    },
+    {
+      "parent": "vision_model.transformer.layers.12.mlp",
+      "child": "vision_model.transformer.layers.12.mlp.fc1",
+      "parfor": 2
+    },
+    {
+      "parent": "vision_model.transformer.layers.12.mlp",
+      "child": "vision_model.transformer.layers.12.mlp.fc2",
+      "parfor": 2
+    },
+    {
+      "parent": "vision_model.transformer",
+      "child": "vision_model.transformer.layers.13",
+      "parfor": 48
+    },
+    {
+      "parent": "vision_model.transformer.layers.13",
+      "child": "vision_model.transformer.layers.13.layer_norm1",
+      "parfor": 2
+    },
+    {
+      "parent": "vision_model.transformer.layers.13",
+      "child": "vision_model.transformer.layers.13.self_attn",
+      "parfor": 30
+    },
+    {
+      "parent": "vision_model.transformer.layers.13.self_attn",
+      "child": "vision_model.transformer.layers.13.self_attn.qkv_proj",
+      "parfor": 2
+    },
+    {
+      "parent": "vision_model.transformer.layers.13.self_attn",
+      "child": "vision_model.transformer.layers.13.self_attn.out_proj",
+      "parfor": 2
+    },
+    {
+      "parent": "vision_model.transformer.layers.13",
+      "child": "vision_model.transformer.layers.13.layer_norm2",
+      "parfor": 2
+    },
+    {
+      "parent": "vision_model.transformer.layers.13",
+      "child": "vision_model.transformer.layers.13.mlp",
+      "parfor": 10
+    },
+    {
+      "parent": "vision_model.transformer.layers.13.mlp",
+      "child": "vision_model.transformer.layers.13.mlp.fc1",
+      "parfor": 2
+    },
+    {
+      "parent": "vision_model.transformer.layers.13.mlp",
+      "child": "vision_model.transformer.layers.13.mlp.fc2",
+      "parfor": 2
+    },
+    {
+      "parent": "vision_model.transformer",
+      "child": "vision_model.transformer.layers.14",
+      "parfor": 48
+    },
+    {
+      "parent": "vision_model.transformer.layers.14",
+      "child": "vision_model.transformer.layers.14.layer_norm1",
+      "parfor": 2
+    },
+    {
+      "parent": "vision_model.transformer.layers.14",
+      "child": "vision_model.transformer.layers.14.self_attn",
+      "parfor": 30
+    },
+    {
+      "parent": "vision_model.transformer.layers.14.self_attn",
+      "child": "vision_model.transformer.layers.14.self_attn.qkv_proj",
+      "parfor": 2
+    },
+    {
+      "parent": "vision_model.transformer.layers.14.self_attn",
+      "child": "vision_model.transformer.layers.14.self_attn.out_proj",
+      "parfor": 2
+    },
+    {
+      "parent": "vision_model.transformer.layers.14",
+      "child": "vision_model.transformer.layers.14.layer_norm2",
+      "parfor": 2
+    },
+    {
+      "parent": "vision_model.transformer.layers.14",
+      "child": "vision_model.transformer.layers.14.mlp",
+      "parfor": 10
+    },
+    {
+      "parent": "vision_model.transformer.layers.14.mlp",
+      "child": "vision_model.transformer.layers.14.mlp.fc1",
+      "parfor": 2
+    },
+    {
+      "parent": "vision_model.transformer.layers.14.mlp",
+      "child": "vision_model.transformer.layers.14.mlp.fc2",
+      "parfor": 2
+    },
+    {
+      "parent": "vision_model.transformer",
+      "child": "vision_model.transformer.layers.15",
+      "parfor": 48
+    },
+    {
+      "parent": "vision_model.transformer.layers.15",
+      "child": "vision_model.transformer.layers.15.layer_norm1",
+      "parfor": 2
+    },
+    {
+      "parent": "vision_model.transformer.layers.15",
+      "child": "vision_model.transformer.layers.15.self_attn",
+      "parfor": 30
+    },
+    {
+      "parent": "vision_model.transformer.layers.15.self_attn",
+      "child": "vision_model.transformer.layers.15.self_attn.qkv_proj",
+      "parfor": 2
+    },
+    {
+      "parent": "vision_model.transformer.layers.15.self_attn",
+      "child": "vision_model.transformer.layers.15.self_attn.out_proj",
+      "parfor": 2
+    },
+    {
+      "parent": "vision_model.transformer.layers.15",
+      "child": "vision_model.transformer.layers.15.layer_norm2",
+      "parfor": 2
+    },
+    {
+      "parent": "vision_model.transformer.layers.15",
+      "child": "vision_model.transformer.layers.15.mlp",
+      "parfor": 10
+    },
+    {
+      "parent": "vision_model.transformer.layers.15.mlp",
+      "child": "vision_model.transformer.layers.15.mlp.fc1",
+      "parfor": 2
+    },
+    {
+      "parent": "vision_model.transformer.layers.15.mlp",
+      "child": "vision_model.transformer.layers.15.mlp.fc2",
+      "parfor": 2
+    },
+    {
+      "parent": "vision_model.transformer",
+      "child": "vision_model.transformer.layers.16",
+      "parfor": 48
+    },
+    {
+      "parent": "vision_model.transformer.layers.16",
+      "child": "vision_model.transformer.layers.16.layer_norm1",
+      "parfor": 2
+    },
+    {
+      "parent": "vision_model.transformer.layers.16",
+      "child": "vision_model.transformer.layers.16.self_attn",
+      "parfor": 30
+    },
+    {
+      "parent": "vision_model.transformer.layers.16.self_attn",
+      "child": "vision_model.transformer.layers.16.self_attn.qkv_proj",
+      "parfor": 2
+    },
+    {
+      "parent": "vision_model.transformer.layers.16.self_attn",
+      "child": "vision_model.transformer.layers.16.self_attn.out_proj",
+      "parfor": 2
+    },
+    {
+      "parent": "vision_model.transformer.layers.16",
+      "child": "vision_model.transformer.layers.16.layer_norm2",
+      "parfor": 2
+    },
+    {
+      "parent": "vision_model.transformer.layers.16",
+      "child": "vision_model.transformer.layers.16.mlp",
+      "parfor": 10
+    },
+    {
+      "parent": "vision_model.transformer.layers.16.mlp",
+      "child": "vision_model.transformer.layers.16.mlp.fc1",
+      "parfor": 2
+    },
+    {
+      "parent": "vision_model.transformer.layers.16.mlp",
+      "child": "vision_model.transformer.layers.16.mlp.fc2",
+      "parfor": 2
+    },
+    {
+      "parent": "vision_model.transformer",
+      "child": "vision_model.transformer.layers.17",
+      "parfor": 48
+    },
+    {
+      "parent": "vision_model.transformer.layers.17",
+      "child": "vision_model.transformer.layers.17.layer_norm1",
+      "parfor": 2
+    },
+    {
+      "parent": "vision_model.transformer.layers.17",
+      "child": "vision_model.transformer.layers.17.self_attn",
+      "parfor": 30
+    },
+    {
+      "parent": "vision_model.transformer.layers.17.self_attn",
+      "child": "vision_model.transformer.layers.17.self_attn.qkv_proj",
+      "parfor": 2
+    },
+    {
+      "parent": "vision_model.transformer.layers.17.self_attn",
+      "child": "vision_model.transformer.layers.17.self_attn.out_proj",
+      "parfor": 2
+    },
+    {
+      "parent": "vision_model.transformer.layers.17",
+      "child": "vision_model.transformer.layers.17.layer_norm2",
+      "parfor": 2
+    },
+    {
+      "parent": "vision_model.transformer.layers.17",
+      "child": "vision_model.transformer.layers.17.mlp",
+      "parfor": 10
+    },
+    {
+      "parent": "vision_model.transformer.layers.17.mlp",
+      "child": "vision_model.transformer.layers.17.mlp.fc1",
+      "parfor": 2
+    },
+    {
+      "parent": "vision_model.transformer.layers.17.mlp",
+      "child": "vision_model.transformer.layers.17.mlp.fc2",
+      "parfor": 2
+    },
+    {
+      "parent": "vision_model.transformer",
+      "child": "vision_model.transformer.layers.18",
+      "parfor": 48
+    },
+    {
+      "parent": "vision_model.transformer.layers.18",
+      "child": "vision_model.transformer.layers.18.layer_norm1",
+      "parfor": 2
+    },
+    {
+      "parent": "vision_model.transformer.layers.18",
+      "child": "vision_model.transformer.layers.18.self_attn",
+      "parfor": 30
+    },
+    {
+      "parent": "vision_model.transformer.layers.18.self_attn",
+      "child": "vision_model.transformer.layers.18.self_attn.qkv_proj",
+      "parfor": 2
+    },
+    {
+      "parent": "vision_model.transformer.layers.18.self_attn",
+      "child": "vision_model.transformer.layers.18.self_attn.out_proj",
+      "parfor": 2
+    },
+    {
+      "parent": "vision_model.transformer.layers.18",
+      "child": "vision_model.transformer.layers.18.layer_norm2",
+      "parfor": 2
+    },
+    {
+      "parent": "vision_model.transformer.layers.18",
+      "child": "vision_model.transformer.layers.18.mlp",
+      "parfor": 10
+    },
+    {
+      "parent": "vision_model.transformer.layers.18.mlp",
+      "child": "vision_model.transformer.layers.18.mlp.fc1",
+      "parfor": 2
+    },
+    {
+      "parent": "vision_model.transformer.layers.18.mlp",
+      "child": "vision_model.transformer.layers.18.mlp.fc2",
+      "parfor": 2
+    },
+    {
+      "parent": "vision_model.transformer",
+      "child": "vision_model.transformer.layers.19",
+      "parfor": 48
+    },
+    {
+      "parent": "vision_model.transformer.layers.19",
+      "child": "vision_model.transformer.layers.19.layer_norm1",
+      "parfor": 2
+    },
+    {
+      "parent": "vision_model.transformer.layers.19",
+      "child": "vision_model.transformer.layers.19.self_attn",
+      "parfor": 30
+    },
+    {
+      "parent": "vision_model.transformer.layers.19.self_attn",
+      "child": "vision_model.transformer.layers.19.self_attn.qkv_proj",
+      "parfor": 2
+    },
+    {
+      "parent": "vision_model.transformer.layers.19.self_attn",
+      "child": "vision_model.transformer.layers.19.self_attn.out_proj",
+      "parfor": 2
+    },
+    {
+      "parent": "vision_model.transformer.layers.19",
+      "child": "vision_model.transformer.layers.19.layer_norm2",
+      "parfor": 2
+    },
+    {
+      "parent": "vision_model.transformer.layers.19",
+      "child": "vision_model.transformer.layers.19.mlp",
+      "parfor": 10
+    },
+    {
+      "parent": "vision_model.transformer.layers.19.mlp",
+      "child": "vision_model.transformer.layers.19.mlp.fc1",
+      "parfor": 2
+    },
+    {
+      "parent": "vision_model.transformer.layers.19.mlp",
+      "child": "vision_model.transformer.layers.19.mlp.fc2",
+      "parfor": 2
+    },
+    {
+      "parent": "vision_model.transformer",
+      "child": "vision_model.transformer.layers.20",
+      "parfor": 48
+    },
+    {
+      "parent": "vision_model.transformer.layers.20",
+      "child": "vision_model.transformer.layers.20.layer_norm1",
+      "parfor": 2
+    },
+    {
+      "parent": "vision_model.transformer.layers.20",
+      "child": "vision_model.transformer.layers.20.self_attn",
+      "parfor": 30
+    },
+    {
+      "parent": "vision_model.transformer.layers.20.self_attn",
+      "child": "vision_model.transformer.layers.20.self_attn.qkv_proj",
+      "parfor": 2
+    },
+    {
+      "parent": "vision_model.transformer.layers.20.self_attn",
+      "child": "vision_model.transformer.layers.20.self_attn.out_proj",
+      "parfor": 2
+    },
+    {
+      "parent": "vision_model.transformer.layers.20",
+      "child": "vision_model.transformer.layers.20.layer_norm2",
+      "parfor": 2
+    },
+    {
+      "parent": "vision_model.transformer.layers.20",
+      "child": "vision_model.transformer.layers.20.mlp",
+      "parfor": 10
+    },
+    {
+      "parent": "vision_model.transformer.layers.20.mlp",
+      "child": "vision_model.transformer.layers.20.mlp.fc1",
+      "parfor": 2
+    },
+    {
+      "parent": "vision_model.transformer.layers.20.mlp",
+      "child": "vision_model.transformer.layers.20.mlp.fc2",
+      "parfor": 2
+    },
+    {
+      "parent": "vision_model.transformer",
+      "child": "vision_model.transformer.layers.21",
+      "parfor": 48
+    },
+    {
+      "parent": "vision_model.transformer.layers.21",
+      "child": "vision_model.transformer.layers.21.layer_norm1",
+      "parfor": 2
+    },
+    {
+      "parent": "vision_model.transformer.layers.21",
+      "child": "vision_model.transformer.layers.21.self_attn",
+      "parfor": 30
+    },
+    {
+      "parent": "vision_model.transformer.layers.21.self_attn",
+      "child": "vision_model.transformer.layers.21.self_attn.qkv_proj",
+      "parfor": 2
+    },
+    {
+      "parent": "vision_model.transformer.layers.21.self_attn",
+      "child": "vision_model.transformer.layers.21.self_attn.out_proj",
+      "parfor": 2
+    },
+    {
+      "parent": "vision_model.transformer.layers.21",
+      "child": "vision_model.transformer.layers.21.layer_norm2",
+      "parfor": 2
+    },
+    {
+      "parent": "vision_model.transformer.layers.21",
+      "child": "vision_model.transformer.layers.21.mlp",
+      "parfor": 10
+    },
+    {
+      "parent": "vision_model.transformer.layers.21.mlp",
+      "child": "vision_model.transformer.layers.21.mlp.fc1",
+      "parfor": 2
+    },
+    {
+      "parent": "vision_model.transformer.layers.21.mlp",
+      "child": "vision_model.transformer.layers.21.mlp.fc2",
+      "parfor": 2
+    },
+    {
+      "parent": "vision_model.transformer",
+      "child": "vision_model.transformer.layers.22",
+      "parfor": 48
+    },
+    {
+      "parent": "vision_model.transformer.layers.22",
+      "child": "vision_model.transformer.layers.22.layer_norm1",
+      "parfor": 2
+    },
+    {
+      "parent": "vision_model.transformer.layers.22",
+      "child": "vision_model.transformer.layers.22.self_attn",
+      "parfor": 30
+    },
+    {
+      "parent": "vision_model.transformer.layers.22.self_attn",
+      "child": "vision_model.transformer.layers.22.self_attn.qkv_proj",
+      "parfor": 2
+    },
+    {
+      "parent": "vision_model.transformer.layers.22.self_attn",
+      "child": "vision_model.transformer.layers.22.self_attn.out_proj",
+      "parfor": 2
+    },
+    {
+      "parent": "vision_model.transformer.layers.22",
+      "child": "vision_model.transformer.layers.22.layer_norm2",
+      "parfor": 2
+    },
+    {
+      "parent": "vision_model.transformer.layers.22",
+      "child": "vision_model.transformer.layers.22.mlp",
+      "parfor": 10
+    },
+    {
+      "parent": "vision_model.transformer.layers.22.mlp",
+      "child": "vision_model.transformer.layers.22.mlp.fc1",
+      "parfor": 2
+    },
+    {
+      "parent": "vision_model.transformer.layers.22.mlp",
+      "child": "vision_model.transformer.layers.22.mlp.fc2",
+      "parfor": 2
+    },
+    {
+      "parent": "vision_model.transformer",
+      "child": "vision_model.transformer.layers.23",
+      "parfor": 48
+    },
+    {
+      "parent": "vision_model.transformer.layers.23",
+      "child": "vision_model.transformer.layers.23.layer_norm1",
+      "parfor": 2
+    },
+    {
+      "parent": "vision_model.transformer.layers.23",
+      "child": "vision_model.transformer.layers.23.self_attn",
+      "parfor": 30
+    },
+    {
+      "parent": "vision_model.transformer.layers.23.self_attn",
+      "child": "vision_model.transformer.layers.23.self_attn.qkv_proj",
+      "parfor": 2
+    },
+    {
+      "parent": "vision_model.transformer.layers.23.self_attn",
+      "child": "vision_model.transformer.layers.23.self_attn.out_proj",
+      "parfor": 2
+    },
+    {
+      "parent": "vision_model.transformer.layers.23",
+      "child": "vision_model.transformer.layers.23.layer_norm2",
+      "parfor": 2
+    },
+    {
+      "parent": "vision_model.transformer.layers.23",
+      "child": "vision_model.transformer.layers.23.mlp",
+      "parfor": 10
+    },
+    {
+      "parent": "vision_model.transformer.layers.23.mlp",
+      "child": "vision_model.transformer.layers.23.mlp.fc1",
+      "parfor": 2
+    },
+    {
+      "parent": "vision_model.transformer.layers.23.mlp",
+      "child": "vision_model.transformer.layers.23.mlp.fc2",
+      "parfor": 2
+    },
+    {
+      "parent": "projector",
+      "child": "projector.layers",
+      "parfor": 2
+    },
+    {
+      "parent": "layers.0",
+      "child": "layers.0.input_layernorm",
+      "parfor": 8
+    },
+    {
+      "parent": "layers.0",
+      "child": "layers.0.self_attn",
+      "parfor": 55
+    },
+    {
+      "parent": "layers.0.self_attn",
+      "child": "layers.0.self_attn.rotary_emb",
+      "parfor": 17
+    },
+    {
+      "parent": "layers.0",
+      "child": "layers.0.post_attention_layernorm",
+      "parfor": 8
+    },
+    {
+      "parent": "layers.0",
+      "child": "layers.0.mlp",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.1",
+      "child": "layers.1.input_layernorm",
+      "parfor": 8
+    },
+    {
+      "parent": "layers.1",
+      "child": "layers.1.self_attn",
+      "parfor": 57
+    },
+    {
+      "parent": "layers.1.self_attn",
+      "child": "layers.1.self_attn.rotary_emb",
+      "parfor": 17
+    },
+    {
+      "parent": "layers.1",
+      "child": "layers.1.post_attention_layernorm",
+      "parfor": 8
+    },
+    {
+      "parent": "layers.1",
+      "child": "layers.1.mlp",
+      "parfor": 418
+    },
+    {
+      "parent": "layers.1.mlp",
+      "child": "layers.1.mlp.gate",
+      "parfor": 8
+    },
+    {
+      "parent": "layers.1.mlp",
+      "child": "layers.1.mlp.experts.0",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.1.mlp",
+      "child": "layers.1.mlp.experts.1",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.1.mlp",
+      "child": "layers.1.mlp.experts.2",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.1.mlp",
+      "child": "layers.1.mlp.experts.3",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.1.mlp",
+      "child": "layers.1.mlp.experts.4",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.1.mlp",
+      "child": "layers.1.mlp.experts.5",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.1.mlp",
+      "child": "layers.1.mlp.experts.6",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.1.mlp",
+      "child": "layers.1.mlp.experts.7",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.1.mlp",
+      "child": "layers.1.mlp.experts.8",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.1.mlp",
+      "child": "layers.1.mlp.experts.9",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.1.mlp",
+      "child": "layers.1.mlp.experts.10",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.1.mlp",
+      "child": "layers.1.mlp.experts.11",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.1.mlp",
+      "child": "layers.1.mlp.experts.12",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.1.mlp",
+      "child": "layers.1.mlp.experts.13",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.1.mlp",
+      "child": "layers.1.mlp.experts.14",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.1.mlp",
+      "child": "layers.1.mlp.experts.15",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.1.mlp",
+      "child": "layers.1.mlp.experts.16",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.1.mlp",
+      "child": "layers.1.mlp.experts.17",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.1.mlp",
+      "child": "layers.1.mlp.experts.18",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.1.mlp",
+      "child": "layers.1.mlp.experts.19",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.1.mlp",
+      "child": "layers.1.mlp.experts.20",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.1.mlp",
+      "child": "layers.1.mlp.experts.21",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.1.mlp",
+      "child": "layers.1.mlp.experts.22",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.1.mlp",
+      "child": "layers.1.mlp.experts.23",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.1.mlp",
+      "child": "layers.1.mlp.experts.24",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.1.mlp",
+      "child": "layers.1.mlp.experts.25",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.1.mlp",
+      "child": "layers.1.mlp.experts.26",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.1.mlp",
+      "child": "layers.1.mlp.experts.27",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.1.mlp",
+      "child": "layers.1.mlp.experts.28",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.1.mlp",
+      "child": "layers.1.mlp.experts.29",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.1.mlp",
+      "child": "layers.1.mlp.experts.30",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.1.mlp",
+      "child": "layers.1.mlp.experts.31",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.1.mlp",
+      "child": "layers.1.mlp.experts.32",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.1.mlp",
+      "child": "layers.1.mlp.experts.33",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.1.mlp",
+      "child": "layers.1.mlp.experts.34",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.1.mlp",
+      "child": "layers.1.mlp.experts.35",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.1.mlp",
+      "child": "layers.1.mlp.experts.36",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.1.mlp",
+      "child": "layers.1.mlp.experts.37",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.1.mlp",
+      "child": "layers.1.mlp.experts.38",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.1.mlp",
+      "child": "layers.1.mlp.experts.39",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.1.mlp",
+      "child": "layers.1.mlp.experts.40",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.1.mlp",
+      "child": "layers.1.mlp.experts.41",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.1.mlp",
+      "child": "layers.1.mlp.experts.42",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.1.mlp",
+      "child": "layers.1.mlp.experts.43",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.1.mlp",
+      "child": "layers.1.mlp.experts.44",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.1.mlp",
+      "child": "layers.1.mlp.experts.45",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.1.mlp",
+      "child": "layers.1.mlp.experts.46",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.1.mlp",
+      "child": "layers.1.mlp.experts.47",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.1.mlp",
+      "child": "layers.1.mlp.experts.48",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.1.mlp",
+      "child": "layers.1.mlp.experts.49",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.1.mlp",
+      "child": "layers.1.mlp.experts.50",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.1.mlp",
+      "child": "layers.1.mlp.experts.51",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.1.mlp",
+      "child": "layers.1.mlp.experts.52",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.1.mlp",
+      "child": "layers.1.mlp.experts.53",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.1.mlp",
+      "child": "layers.1.mlp.experts.54",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.1.mlp",
+      "child": "layers.1.mlp.experts.55",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.1.mlp",
+      "child": "layers.1.mlp.experts.56",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.1.mlp",
+      "child": "layers.1.mlp.experts.57",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.1.mlp",
+      "child": "layers.1.mlp.experts.58",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.1.mlp",
+      "child": "layers.1.mlp.experts.59",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.1.mlp",
+      "child": "layers.1.mlp.experts.60",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.1.mlp",
+      "child": "layers.1.mlp.experts.61",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.1.mlp",
+      "child": "layers.1.mlp.experts.62",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.1.mlp",
+      "child": "layers.1.mlp.experts.63",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.1.mlp",
+      "child": "layers.1.mlp.shared_experts",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.2",
+      "child": "layers.2.input_layernorm",
+      "parfor": 8
+    },
+    {
+      "parent": "layers.2",
+      "child": "layers.2.self_attn",
+      "parfor": 59
+    },
+    {
+      "parent": "layers.2.self_attn",
+      "child": "layers.2.self_attn.rotary_emb",
+      "parfor": 17
+    },
+    {
+      "parent": "layers.2",
+      "child": "layers.2.post_attention_layernorm",
+      "parfor": 8
+    },
+    {
+      "parent": "layers.2",
+      "child": "layers.2.mlp",
+      "parfor": 406
+    },
+    {
+      "parent": "layers.2.mlp",
+      "child": "layers.2.mlp.gate",
+      "parfor": 8
+    },
+    {
+      "parent": "layers.2.mlp",
+      "child": "layers.2.mlp.experts.0",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.2.mlp",
+      "child": "layers.2.mlp.experts.1",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.2.mlp",
+      "child": "layers.2.mlp.experts.2",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.2.mlp",
+      "child": "layers.2.mlp.experts.3",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.2.mlp",
+      "child": "layers.2.mlp.experts.4",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.2.mlp",
+      "child": "layers.2.mlp.experts.5",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.2.mlp",
+      "child": "layers.2.mlp.experts.6",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.2.mlp",
+      "child": "layers.2.mlp.experts.7",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.2.mlp",
+      "child": "layers.2.mlp.experts.8",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.2.mlp",
+      "child": "layers.2.mlp.experts.9",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.2.mlp",
+      "child": "layers.2.mlp.experts.10",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.2.mlp",
+      "child": "layers.2.mlp.experts.11",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.2.mlp",
+      "child": "layers.2.mlp.experts.12",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.2.mlp",
+      "child": "layers.2.mlp.experts.13",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.2.mlp",
+      "child": "layers.2.mlp.experts.14",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.2.mlp",
+      "child": "layers.2.mlp.experts.15",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.2.mlp",
+      "child": "layers.2.mlp.experts.16",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.2.mlp",
+      "child": "layers.2.mlp.experts.17",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.2.mlp",
+      "child": "layers.2.mlp.experts.18",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.2.mlp",
+      "child": "layers.2.mlp.experts.20",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.2.mlp",
+      "child": "layers.2.mlp.experts.21",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.2.mlp",
+      "child": "layers.2.mlp.experts.22",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.2.mlp",
+      "child": "layers.2.mlp.experts.23",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.2.mlp",
+      "child": "layers.2.mlp.experts.24",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.2.mlp",
+      "child": "layers.2.mlp.experts.25",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.2.mlp",
+      "child": "layers.2.mlp.experts.26",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.2.mlp",
+      "child": "layers.2.mlp.experts.27",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.2.mlp",
+      "child": "layers.2.mlp.experts.28",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.2.mlp",
+      "child": "layers.2.mlp.experts.29",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.2.mlp",
+      "child": "layers.2.mlp.experts.30",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.2.mlp",
+      "child": "layers.2.mlp.experts.31",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.2.mlp",
+      "child": "layers.2.mlp.experts.32",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.2.mlp",
+      "child": "layers.2.mlp.experts.33",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.2.mlp",
+      "child": "layers.2.mlp.experts.34",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.2.mlp",
+      "child": "layers.2.mlp.experts.35",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.2.mlp",
+      "child": "layers.2.mlp.experts.36",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.2.mlp",
+      "child": "layers.2.mlp.experts.37",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.2.mlp",
+      "child": "layers.2.mlp.experts.38",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.2.mlp",
+      "child": "layers.2.mlp.experts.39",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.2.mlp",
+      "child": "layers.2.mlp.experts.40",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.2.mlp",
+      "child": "layers.2.mlp.experts.41",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.2.mlp",
+      "child": "layers.2.mlp.experts.42",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.2.mlp",
+      "child": "layers.2.mlp.experts.43",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.2.mlp",
+      "child": "layers.2.mlp.experts.44",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.2.mlp",
+      "child": "layers.2.mlp.experts.45",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.2.mlp",
+      "child": "layers.2.mlp.experts.46",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.2.mlp",
+      "child": "layers.2.mlp.experts.47",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.2.mlp",
+      "child": "layers.2.mlp.experts.48",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.2.mlp",
+      "child": "layers.2.mlp.experts.49",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.2.mlp",
+      "child": "layers.2.mlp.experts.50",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.2.mlp",
+      "child": "layers.2.mlp.experts.51",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.2.mlp",
+      "child": "layers.2.mlp.experts.52",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.2.mlp",
+      "child": "layers.2.mlp.experts.53",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.2.mlp",
+      "child": "layers.2.mlp.experts.54",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.2.mlp",
+      "child": "layers.2.mlp.experts.55",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.2.mlp",
+      "child": "layers.2.mlp.experts.56",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.2.mlp",
+      "child": "layers.2.mlp.experts.57",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.2.mlp",
+      "child": "layers.2.mlp.experts.59",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.2.mlp",
+      "child": "layers.2.mlp.experts.60",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.2.mlp",
+      "child": "layers.2.mlp.experts.61",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.2.mlp",
+      "child": "layers.2.mlp.experts.62",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.2.mlp",
+      "child": "layers.2.mlp.experts.63",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.2.mlp",
+      "child": "layers.2.mlp.shared_experts",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.3",
+      "child": "layers.3.input_layernorm",
+      "parfor": 8
+    },
+    {
+      "parent": "layers.3",
+      "child": "layers.3.self_attn",
+      "parfor": 61
+    },
+    {
+      "parent": "layers.3.self_attn",
+      "child": "layers.3.self_attn.rotary_emb",
+      "parfor": 17
+    },
+    {
+      "parent": "layers.3",
+      "child": "layers.3.post_attention_layernorm",
+      "parfor": 8
+    },
+    {
+      "parent": "layers.3",
+      "child": "layers.3.mlp",
+      "parfor": 412
+    },
+    {
+      "parent": "layers.3.mlp",
+      "child": "layers.3.mlp.gate",
+      "parfor": 8
+    },
+    {
+      "parent": "layers.3.mlp",
+      "child": "layers.3.mlp.experts.0",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.3.mlp",
+      "child": "layers.3.mlp.experts.1",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.3.mlp",
+      "child": "layers.3.mlp.experts.2",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.3.mlp",
+      "child": "layers.3.mlp.experts.3",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.3.mlp",
+      "child": "layers.3.mlp.experts.4",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.3.mlp",
+      "child": "layers.3.mlp.experts.5",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.3.mlp",
+      "child": "layers.3.mlp.experts.6",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.3.mlp",
+      "child": "layers.3.mlp.experts.7",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.3.mlp",
+      "child": "layers.3.mlp.experts.8",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.3.mlp",
+      "child": "layers.3.mlp.experts.9",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.3.mlp",
+      "child": "layers.3.mlp.experts.10",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.3.mlp",
+      "child": "layers.3.mlp.experts.11",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.3.mlp",
+      "child": "layers.3.mlp.experts.12",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.3.mlp",
+      "child": "layers.3.mlp.experts.13",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.3.mlp",
+      "child": "layers.3.mlp.experts.14",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.3.mlp",
+      "child": "layers.3.mlp.experts.15",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.3.mlp",
+      "child": "layers.3.mlp.experts.16",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.3.mlp",
+      "child": "layers.3.mlp.experts.17",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.3.mlp",
+      "child": "layers.3.mlp.experts.18",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.3.mlp",
+      "child": "layers.3.mlp.experts.19",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.3.mlp",
+      "child": "layers.3.mlp.experts.20",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.3.mlp",
+      "child": "layers.3.mlp.experts.21",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.3.mlp",
+      "child": "layers.3.mlp.experts.22",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.3.mlp",
+      "child": "layers.3.mlp.experts.23",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.3.mlp",
+      "child": "layers.3.mlp.experts.24",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.3.mlp",
+      "child": "layers.3.mlp.experts.25",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.3.mlp",
+      "child": "layers.3.mlp.experts.26",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.3.mlp",
+      "child": "layers.3.mlp.experts.27",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.3.mlp",
+      "child": "layers.3.mlp.experts.28",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.3.mlp",
+      "child": "layers.3.mlp.experts.29",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.3.mlp",
+      "child": "layers.3.mlp.experts.30",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.3.mlp",
+      "child": "layers.3.mlp.experts.31",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.3.mlp",
+      "child": "layers.3.mlp.experts.32",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.3.mlp",
+      "child": "layers.3.mlp.experts.33",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.3.mlp",
+      "child": "layers.3.mlp.experts.34",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.3.mlp",
+      "child": "layers.3.mlp.experts.35",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.3.mlp",
+      "child": "layers.3.mlp.experts.36",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.3.mlp",
+      "child": "layers.3.mlp.experts.37",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.3.mlp",
+      "child": "layers.3.mlp.experts.38",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.3.mlp",
+      "child": "layers.3.mlp.experts.39",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.3.mlp",
+      "child": "layers.3.mlp.experts.40",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.3.mlp",
+      "child": "layers.3.mlp.experts.41",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.3.mlp",
+      "child": "layers.3.mlp.experts.42",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.3.mlp",
+      "child": "layers.3.mlp.experts.43",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.3.mlp",
+      "child": "layers.3.mlp.experts.44",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.3.mlp",
+      "child": "layers.3.mlp.experts.45",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.3.mlp",
+      "child": "layers.3.mlp.experts.46",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.3.mlp",
+      "child": "layers.3.mlp.experts.47",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.3.mlp",
+      "child": "layers.3.mlp.experts.48",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.3.mlp",
+      "child": "layers.3.mlp.experts.49",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.3.mlp",
+      "child": "layers.3.mlp.experts.50",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.3.mlp",
+      "child": "layers.3.mlp.experts.51",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.3.mlp",
+      "child": "layers.3.mlp.experts.52",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.3.mlp",
+      "child": "layers.3.mlp.experts.54",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.3.mlp",
+      "child": "layers.3.mlp.experts.55",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.3.mlp",
+      "child": "layers.3.mlp.experts.56",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.3.mlp",
+      "child": "layers.3.mlp.experts.57",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.3.mlp",
+      "child": "layers.3.mlp.experts.58",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.3.mlp",
+      "child": "layers.3.mlp.experts.59",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.3.mlp",
+      "child": "layers.3.mlp.experts.60",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.3.mlp",
+      "child": "layers.3.mlp.experts.61",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.3.mlp",
+      "child": "layers.3.mlp.experts.62",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.3.mlp",
+      "child": "layers.3.mlp.experts.63",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.3.mlp",
+      "child": "layers.3.mlp.shared_experts",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.4",
+      "child": "layers.4.input_layernorm",
+      "parfor": 8
+    },
+    {
+      "parent": "layers.4",
+      "child": "layers.4.self_attn",
+      "parfor": 63
+    },
+    {
+      "parent": "layers.4.self_attn",
+      "child": "layers.4.self_attn.rotary_emb",
+      "parfor": 17
+    },
+    {
+      "parent": "layers.4",
+      "child": "layers.4.post_attention_layernorm",
+      "parfor": 8
+    },
+    {
+      "parent": "layers.4",
+      "child": "layers.4.mlp",
+      "parfor": 418
+    },
+    {
+      "parent": "layers.4.mlp",
+      "child": "layers.4.mlp.gate",
+      "parfor": 8
+    },
+    {
+      "parent": "layers.4.mlp",
+      "child": "layers.4.mlp.experts.0",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.4.mlp",
+      "child": "layers.4.mlp.experts.1",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.4.mlp",
+      "child": "layers.4.mlp.experts.2",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.4.mlp",
+      "child": "layers.4.mlp.experts.3",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.4.mlp",
+      "child": "layers.4.mlp.experts.4",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.4.mlp",
+      "child": "layers.4.mlp.experts.5",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.4.mlp",
+      "child": "layers.4.mlp.experts.6",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.4.mlp",
+      "child": "layers.4.mlp.experts.7",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.4.mlp",
+      "child": "layers.4.mlp.experts.8",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.4.mlp",
+      "child": "layers.4.mlp.experts.9",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.4.mlp",
+      "child": "layers.4.mlp.experts.10",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.4.mlp",
+      "child": "layers.4.mlp.experts.11",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.4.mlp",
+      "child": "layers.4.mlp.experts.12",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.4.mlp",
+      "child": "layers.4.mlp.experts.13",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.4.mlp",
+      "child": "layers.4.mlp.experts.14",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.4.mlp",
+      "child": "layers.4.mlp.experts.15",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.4.mlp",
+      "child": "layers.4.mlp.experts.16",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.4.mlp",
+      "child": "layers.4.mlp.experts.17",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.4.mlp",
+      "child": "layers.4.mlp.experts.18",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.4.mlp",
+      "child": "layers.4.mlp.experts.19",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.4.mlp",
+      "child": "layers.4.mlp.experts.20",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.4.mlp",
+      "child": "layers.4.mlp.experts.21",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.4.mlp",
+      "child": "layers.4.mlp.experts.22",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.4.mlp",
+      "child": "layers.4.mlp.experts.23",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.4.mlp",
+      "child": "layers.4.mlp.experts.24",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.4.mlp",
+      "child": "layers.4.mlp.experts.25",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.4.mlp",
+      "child": "layers.4.mlp.experts.26",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.4.mlp",
+      "child": "layers.4.mlp.experts.27",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.4.mlp",
+      "child": "layers.4.mlp.experts.28",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.4.mlp",
+      "child": "layers.4.mlp.experts.29",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.4.mlp",
+      "child": "layers.4.mlp.experts.30",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.4.mlp",
+      "child": "layers.4.mlp.experts.31",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.4.mlp",
+      "child": "layers.4.mlp.experts.32",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.4.mlp",
+      "child": "layers.4.mlp.experts.33",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.4.mlp",
+      "child": "layers.4.mlp.experts.34",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.4.mlp",
+      "child": "layers.4.mlp.experts.35",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.4.mlp",
+      "child": "layers.4.mlp.experts.36",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.4.mlp",
+      "child": "layers.4.mlp.experts.37",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.4.mlp",
+      "child": "layers.4.mlp.experts.38",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.4.mlp",
+      "child": "layers.4.mlp.experts.39",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.4.mlp",
+      "child": "layers.4.mlp.experts.40",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.4.mlp",
+      "child": "layers.4.mlp.experts.41",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.4.mlp",
+      "child": "layers.4.mlp.experts.42",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.4.mlp",
+      "child": "layers.4.mlp.experts.43",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.4.mlp",
+      "child": "layers.4.mlp.experts.44",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.4.mlp",
+      "child": "layers.4.mlp.experts.45",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.4.mlp",
+      "child": "layers.4.mlp.experts.46",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.4.mlp",
+      "child": "layers.4.mlp.experts.47",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.4.mlp",
+      "child": "layers.4.mlp.experts.48",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.4.mlp",
+      "child": "layers.4.mlp.experts.49",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.4.mlp",
+      "child": "layers.4.mlp.experts.50",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.4.mlp",
+      "child": "layers.4.mlp.experts.51",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.4.mlp",
+      "child": "layers.4.mlp.experts.52",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.4.mlp",
+      "child": "layers.4.mlp.experts.53",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.4.mlp",
+      "child": "layers.4.mlp.experts.54",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.4.mlp",
+      "child": "layers.4.mlp.experts.55",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.4.mlp",
+      "child": "layers.4.mlp.experts.56",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.4.mlp",
+      "child": "layers.4.mlp.experts.57",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.4.mlp",
+      "child": "layers.4.mlp.experts.58",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.4.mlp",
+      "child": "layers.4.mlp.experts.59",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.4.mlp",
+      "child": "layers.4.mlp.experts.60",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.4.mlp",
+      "child": "layers.4.mlp.experts.61",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.4.mlp",
+      "child": "layers.4.mlp.experts.62",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.4.mlp",
+      "child": "layers.4.mlp.experts.63",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.4.mlp",
+      "child": "layers.4.mlp.shared_experts",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.5",
+      "child": "layers.5.input_layernorm",
+      "parfor": 8
+    },
+    {
+      "parent": "layers.5",
+      "child": "layers.5.self_attn",
+      "parfor": 65
+    },
+    {
+      "parent": "layers.5.self_attn",
+      "child": "layers.5.self_attn.rotary_emb",
+      "parfor": 17
+    },
+    {
+      "parent": "layers.5",
+      "child": "layers.5.post_attention_layernorm",
+      "parfor": 8
+    },
+    {
+      "parent": "layers.5",
+      "child": "layers.5.mlp",
+      "parfor": 418
+    },
+    {
+      "parent": "layers.5.mlp",
+      "child": "layers.5.mlp.gate",
+      "parfor": 8
+    },
+    {
+      "parent": "layers.5.mlp",
+      "child": "layers.5.mlp.experts.0",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.5.mlp",
+      "child": "layers.5.mlp.experts.1",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.5.mlp",
+      "child": "layers.5.mlp.experts.2",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.5.mlp",
+      "child": "layers.5.mlp.experts.3",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.5.mlp",
+      "child": "layers.5.mlp.experts.4",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.5.mlp",
+      "child": "layers.5.mlp.experts.5",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.5.mlp",
+      "child": "layers.5.mlp.experts.6",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.5.mlp",
+      "child": "layers.5.mlp.experts.7",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.5.mlp",
+      "child": "layers.5.mlp.experts.8",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.5.mlp",
+      "child": "layers.5.mlp.experts.9",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.5.mlp",
+      "child": "layers.5.mlp.experts.10",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.5.mlp",
+      "child": "layers.5.mlp.experts.11",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.5.mlp",
+      "child": "layers.5.mlp.experts.12",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.5.mlp",
+      "child": "layers.5.mlp.experts.13",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.5.mlp",
+      "child": "layers.5.mlp.experts.14",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.5.mlp",
+      "child": "layers.5.mlp.experts.15",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.5.mlp",
+      "child": "layers.5.mlp.experts.16",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.5.mlp",
+      "child": "layers.5.mlp.experts.17",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.5.mlp",
+      "child": "layers.5.mlp.experts.18",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.5.mlp",
+      "child": "layers.5.mlp.experts.19",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.5.mlp",
+      "child": "layers.5.mlp.experts.20",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.5.mlp",
+      "child": "layers.5.mlp.experts.21",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.5.mlp",
+      "child": "layers.5.mlp.experts.22",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.5.mlp",
+      "child": "layers.5.mlp.experts.23",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.5.mlp",
+      "child": "layers.5.mlp.experts.24",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.5.mlp",
+      "child": "layers.5.mlp.experts.25",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.5.mlp",
+      "child": "layers.5.mlp.experts.26",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.5.mlp",
+      "child": "layers.5.mlp.experts.27",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.5.mlp",
+      "child": "layers.5.mlp.experts.28",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.5.mlp",
+      "child": "layers.5.mlp.experts.29",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.5.mlp",
+      "child": "layers.5.mlp.experts.30",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.5.mlp",
+      "child": "layers.5.mlp.experts.31",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.5.mlp",
+      "child": "layers.5.mlp.experts.32",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.5.mlp",
+      "child": "layers.5.mlp.experts.33",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.5.mlp",
+      "child": "layers.5.mlp.experts.34",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.5.mlp",
+      "child": "layers.5.mlp.experts.35",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.5.mlp",
+      "child": "layers.5.mlp.experts.36",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.5.mlp",
+      "child": "layers.5.mlp.experts.37",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.5.mlp",
+      "child": "layers.5.mlp.experts.38",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.5.mlp",
+      "child": "layers.5.mlp.experts.39",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.5.mlp",
+      "child": "layers.5.mlp.experts.40",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.5.mlp",
+      "child": "layers.5.mlp.experts.41",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.5.mlp",
+      "child": "layers.5.mlp.experts.42",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.5.mlp",
+      "child": "layers.5.mlp.experts.43",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.5.mlp",
+      "child": "layers.5.mlp.experts.44",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.5.mlp",
+      "child": "layers.5.mlp.experts.45",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.5.mlp",
+      "child": "layers.5.mlp.experts.46",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.5.mlp",
+      "child": "layers.5.mlp.experts.47",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.5.mlp",
+      "child": "layers.5.mlp.experts.48",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.5.mlp",
+      "child": "layers.5.mlp.experts.49",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.5.mlp",
+      "child": "layers.5.mlp.experts.50",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.5.mlp",
+      "child": "layers.5.mlp.experts.51",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.5.mlp",
+      "child": "layers.5.mlp.experts.52",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.5.mlp",
+      "child": "layers.5.mlp.experts.53",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.5.mlp",
+      "child": "layers.5.mlp.experts.54",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.5.mlp",
+      "child": "layers.5.mlp.experts.55",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.5.mlp",
+      "child": "layers.5.mlp.experts.56",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.5.mlp",
+      "child": "layers.5.mlp.experts.57",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.5.mlp",
+      "child": "layers.5.mlp.experts.58",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.5.mlp",
+      "child": "layers.5.mlp.experts.59",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.5.mlp",
+      "child": "layers.5.mlp.experts.60",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.5.mlp",
+      "child": "layers.5.mlp.experts.61",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.5.mlp",
+      "child": "layers.5.mlp.experts.62",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.5.mlp",
+      "child": "layers.5.mlp.experts.63",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.5.mlp",
+      "child": "layers.5.mlp.shared_experts",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.6",
+      "child": "layers.6.input_layernorm",
+      "parfor": 8
+    },
+    {
+      "parent": "layers.6",
+      "child": "layers.6.self_attn",
+      "parfor": 67
+    },
+    {
+      "parent": "layers.6.self_attn",
+      "child": "layers.6.self_attn.rotary_emb",
+      "parfor": 17
+    },
+    {
+      "parent": "layers.6",
+      "child": "layers.6.post_attention_layernorm",
+      "parfor": 8
+    },
+    {
+      "parent": "layers.6",
+      "child": "layers.6.mlp",
+      "parfor": 418
+    },
+    {
+      "parent": "layers.6.mlp",
+      "child": "layers.6.mlp.gate",
+      "parfor": 8
+    },
+    {
+      "parent": "layers.6.mlp",
+      "child": "layers.6.mlp.experts.0",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.6.mlp",
+      "child": "layers.6.mlp.experts.1",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.6.mlp",
+      "child": "layers.6.mlp.experts.2",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.6.mlp",
+      "child": "layers.6.mlp.experts.3",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.6.mlp",
+      "child": "layers.6.mlp.experts.4",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.6.mlp",
+      "child": "layers.6.mlp.experts.5",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.6.mlp",
+      "child": "layers.6.mlp.experts.6",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.6.mlp",
+      "child": "layers.6.mlp.experts.7",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.6.mlp",
+      "child": "layers.6.mlp.experts.8",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.6.mlp",
+      "child": "layers.6.mlp.experts.9",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.6.mlp",
+      "child": "layers.6.mlp.experts.10",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.6.mlp",
+      "child": "layers.6.mlp.experts.11",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.6.mlp",
+      "child": "layers.6.mlp.experts.12",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.6.mlp",
+      "child": "layers.6.mlp.experts.13",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.6.mlp",
+      "child": "layers.6.mlp.experts.14",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.6.mlp",
+      "child": "layers.6.mlp.experts.15",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.6.mlp",
+      "child": "layers.6.mlp.experts.16",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.6.mlp",
+      "child": "layers.6.mlp.experts.17",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.6.mlp",
+      "child": "layers.6.mlp.experts.18",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.6.mlp",
+      "child": "layers.6.mlp.experts.19",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.6.mlp",
+      "child": "layers.6.mlp.experts.20",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.6.mlp",
+      "child": "layers.6.mlp.experts.21",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.6.mlp",
+      "child": "layers.6.mlp.experts.22",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.6.mlp",
+      "child": "layers.6.mlp.experts.23",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.6.mlp",
+      "child": "layers.6.mlp.experts.24",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.6.mlp",
+      "child": "layers.6.mlp.experts.25",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.6.mlp",
+      "child": "layers.6.mlp.experts.26",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.6.mlp",
+      "child": "layers.6.mlp.experts.27",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.6.mlp",
+      "child": "layers.6.mlp.experts.28",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.6.mlp",
+      "child": "layers.6.mlp.experts.29",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.6.mlp",
+      "child": "layers.6.mlp.experts.30",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.6.mlp",
+      "child": "layers.6.mlp.experts.31",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.6.mlp",
+      "child": "layers.6.mlp.experts.32",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.6.mlp",
+      "child": "layers.6.mlp.experts.33",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.6.mlp",
+      "child": "layers.6.mlp.experts.34",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.6.mlp",
+      "child": "layers.6.mlp.experts.35",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.6.mlp",
+      "child": "layers.6.mlp.experts.36",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.6.mlp",
+      "child": "layers.6.mlp.experts.37",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.6.mlp",
+      "child": "layers.6.mlp.experts.38",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.6.mlp",
+      "child": "layers.6.mlp.experts.39",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.6.mlp",
+      "child": "layers.6.mlp.experts.40",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.6.mlp",
+      "child": "layers.6.mlp.experts.41",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.6.mlp",
+      "child": "layers.6.mlp.experts.42",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.6.mlp",
+      "child": "layers.6.mlp.experts.43",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.6.mlp",
+      "child": "layers.6.mlp.experts.44",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.6.mlp",
+      "child": "layers.6.mlp.experts.45",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.6.mlp",
+      "child": "layers.6.mlp.experts.46",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.6.mlp",
+      "child": "layers.6.mlp.experts.47",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.6.mlp",
+      "child": "layers.6.mlp.experts.48",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.6.mlp",
+      "child": "layers.6.mlp.experts.49",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.6.mlp",
+      "child": "layers.6.mlp.experts.50",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.6.mlp",
+      "child": "layers.6.mlp.experts.51",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.6.mlp",
+      "child": "layers.6.mlp.experts.52",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.6.mlp",
+      "child": "layers.6.mlp.experts.53",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.6.mlp",
+      "child": "layers.6.mlp.experts.54",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.6.mlp",
+      "child": "layers.6.mlp.experts.55",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.6.mlp",
+      "child": "layers.6.mlp.experts.56",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.6.mlp",
+      "child": "layers.6.mlp.experts.57",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.6.mlp",
+      "child": "layers.6.mlp.experts.58",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.6.mlp",
+      "child": "layers.6.mlp.experts.59",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.6.mlp",
+      "child": "layers.6.mlp.experts.60",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.6.mlp",
+      "child": "layers.6.mlp.experts.61",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.6.mlp",
+      "child": "layers.6.mlp.experts.62",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.6.mlp",
+      "child": "layers.6.mlp.experts.63",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.6.mlp",
+      "child": "layers.6.mlp.shared_experts",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.7",
+      "child": "layers.7.input_layernorm",
+      "parfor": 8
+    },
+    {
+      "parent": "layers.7",
+      "child": "layers.7.self_attn",
+      "parfor": 69
+    },
+    {
+      "parent": "layers.7.self_attn",
+      "child": "layers.7.self_attn.rotary_emb",
+      "parfor": 17
+    },
+    {
+      "parent": "layers.7",
+      "child": "layers.7.post_attention_layernorm",
+      "parfor": 8
+    },
+    {
+      "parent": "layers.7",
+      "child": "layers.7.mlp",
+      "parfor": 418
+    },
+    {
+      "parent": "layers.7.mlp",
+      "child": "layers.7.mlp.gate",
+      "parfor": 8
+    },
+    {
+      "parent": "layers.7.mlp",
+      "child": "layers.7.mlp.experts.0",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.7.mlp",
+      "child": "layers.7.mlp.experts.1",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.7.mlp",
+      "child": "layers.7.mlp.experts.2",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.7.mlp",
+      "child": "layers.7.mlp.experts.3",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.7.mlp",
+      "child": "layers.7.mlp.experts.4",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.7.mlp",
+      "child": "layers.7.mlp.experts.5",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.7.mlp",
+      "child": "layers.7.mlp.experts.6",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.7.mlp",
+      "child": "layers.7.mlp.experts.7",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.7.mlp",
+      "child": "layers.7.mlp.experts.8",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.7.mlp",
+      "child": "layers.7.mlp.experts.9",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.7.mlp",
+      "child": "layers.7.mlp.experts.10",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.7.mlp",
+      "child": "layers.7.mlp.experts.11",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.7.mlp",
+      "child": "layers.7.mlp.experts.12",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.7.mlp",
+      "child": "layers.7.mlp.experts.13",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.7.mlp",
+      "child": "layers.7.mlp.experts.14",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.7.mlp",
+      "child": "layers.7.mlp.experts.15",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.7.mlp",
+      "child": "layers.7.mlp.experts.16",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.7.mlp",
+      "child": "layers.7.mlp.experts.17",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.7.mlp",
+      "child": "layers.7.mlp.experts.18",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.7.mlp",
+      "child": "layers.7.mlp.experts.19",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.7.mlp",
+      "child": "layers.7.mlp.experts.20",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.7.mlp",
+      "child": "layers.7.mlp.experts.21",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.7.mlp",
+      "child": "layers.7.mlp.experts.22",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.7.mlp",
+      "child": "layers.7.mlp.experts.23",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.7.mlp",
+      "child": "layers.7.mlp.experts.24",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.7.mlp",
+      "child": "layers.7.mlp.experts.25",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.7.mlp",
+      "child": "layers.7.mlp.experts.26",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.7.mlp",
+      "child": "layers.7.mlp.experts.27",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.7.mlp",
+      "child": "layers.7.mlp.experts.28",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.7.mlp",
+      "child": "layers.7.mlp.experts.29",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.7.mlp",
+      "child": "layers.7.mlp.experts.30",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.7.mlp",
+      "child": "layers.7.mlp.experts.31",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.7.mlp",
+      "child": "layers.7.mlp.experts.32",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.7.mlp",
+      "child": "layers.7.mlp.experts.33",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.7.mlp",
+      "child": "layers.7.mlp.experts.34",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.7.mlp",
+      "child": "layers.7.mlp.experts.35",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.7.mlp",
+      "child": "layers.7.mlp.experts.36",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.7.mlp",
+      "child": "layers.7.mlp.experts.37",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.7.mlp",
+      "child": "layers.7.mlp.experts.38",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.7.mlp",
+      "child": "layers.7.mlp.experts.39",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.7.mlp",
+      "child": "layers.7.mlp.experts.40",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.7.mlp",
+      "child": "layers.7.mlp.experts.41",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.7.mlp",
+      "child": "layers.7.mlp.experts.42",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.7.mlp",
+      "child": "layers.7.mlp.experts.43",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.7.mlp",
+      "child": "layers.7.mlp.experts.44",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.7.mlp",
+      "child": "layers.7.mlp.experts.45",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.7.mlp",
+      "child": "layers.7.mlp.experts.46",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.7.mlp",
+      "child": "layers.7.mlp.experts.47",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.7.mlp",
+      "child": "layers.7.mlp.experts.48",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.7.mlp",
+      "child": "layers.7.mlp.experts.49",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.7.mlp",
+      "child": "layers.7.mlp.experts.50",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.7.mlp",
+      "child": "layers.7.mlp.experts.51",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.7.mlp",
+      "child": "layers.7.mlp.experts.52",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.7.mlp",
+      "child": "layers.7.mlp.experts.53",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.7.mlp",
+      "child": "layers.7.mlp.experts.54",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.7.mlp",
+      "child": "layers.7.mlp.experts.55",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.7.mlp",
+      "child": "layers.7.mlp.experts.56",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.7.mlp",
+      "child": "layers.7.mlp.experts.57",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.7.mlp",
+      "child": "layers.7.mlp.experts.58",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.7.mlp",
+      "child": "layers.7.mlp.experts.59",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.7.mlp",
+      "child": "layers.7.mlp.experts.60",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.7.mlp",
+      "child": "layers.7.mlp.experts.61",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.7.mlp",
+      "child": "layers.7.mlp.experts.62",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.7.mlp",
+      "child": "layers.7.mlp.experts.63",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.7.mlp",
+      "child": "layers.7.mlp.shared_experts",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.8",
+      "child": "layers.8.input_layernorm",
+      "parfor": 8
+    },
+    {
+      "parent": "layers.8",
+      "child": "layers.8.self_attn",
+      "parfor": 71
+    },
+    {
+      "parent": "layers.8.self_attn",
+      "child": "layers.8.self_attn.rotary_emb",
+      "parfor": 17
+    },
+    {
+      "parent": "layers.8",
+      "child": "layers.8.post_attention_layernorm",
+      "parfor": 8
+    },
+    {
+      "parent": "layers.8",
+      "child": "layers.8.mlp",
+      "parfor": 412
+    },
+    {
+      "parent": "layers.8.mlp",
+      "child": "layers.8.mlp.gate",
+      "parfor": 8
+    },
+    {
+      "parent": "layers.8.mlp",
+      "child": "layers.8.mlp.experts.0",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.8.mlp",
+      "child": "layers.8.mlp.experts.1",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.8.mlp",
+      "child": "layers.8.mlp.experts.2",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.8.mlp",
+      "child": "layers.8.mlp.experts.3",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.8.mlp",
+      "child": "layers.8.mlp.experts.4",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.8.mlp",
+      "child": "layers.8.mlp.experts.5",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.8.mlp",
+      "child": "layers.8.mlp.experts.7",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.8.mlp",
+      "child": "layers.8.mlp.experts.8",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.8.mlp",
+      "child": "layers.8.mlp.experts.9",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.8.mlp",
+      "child": "layers.8.mlp.experts.10",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.8.mlp",
+      "child": "layers.8.mlp.experts.11",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.8.mlp",
+      "child": "layers.8.mlp.experts.12",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.8.mlp",
+      "child": "layers.8.mlp.experts.13",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.8.mlp",
+      "child": "layers.8.mlp.experts.14",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.8.mlp",
+      "child": "layers.8.mlp.experts.15",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.8.mlp",
+      "child": "layers.8.mlp.experts.16",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.8.mlp",
+      "child": "layers.8.mlp.experts.17",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.8.mlp",
+      "child": "layers.8.mlp.experts.18",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.8.mlp",
+      "child": "layers.8.mlp.experts.19",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.8.mlp",
+      "child": "layers.8.mlp.experts.20",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.8.mlp",
+      "child": "layers.8.mlp.experts.21",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.8.mlp",
+      "child": "layers.8.mlp.experts.22",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.8.mlp",
+      "child": "layers.8.mlp.experts.23",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.8.mlp",
+      "child": "layers.8.mlp.experts.24",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.8.mlp",
+      "child": "layers.8.mlp.experts.25",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.8.mlp",
+      "child": "layers.8.mlp.experts.26",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.8.mlp",
+      "child": "layers.8.mlp.experts.27",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.8.mlp",
+      "child": "layers.8.mlp.experts.28",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.8.mlp",
+      "child": "layers.8.mlp.experts.29",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.8.mlp",
+      "child": "layers.8.mlp.experts.30",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.8.mlp",
+      "child": "layers.8.mlp.experts.31",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.8.mlp",
+      "child": "layers.8.mlp.experts.32",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.8.mlp",
+      "child": "layers.8.mlp.experts.33",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.8.mlp",
+      "child": "layers.8.mlp.experts.34",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.8.mlp",
+      "child": "layers.8.mlp.experts.35",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.8.mlp",
+      "child": "layers.8.mlp.experts.36",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.8.mlp",
+      "child": "layers.8.mlp.experts.37",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.8.mlp",
+      "child": "layers.8.mlp.experts.38",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.8.mlp",
+      "child": "layers.8.mlp.experts.39",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.8.mlp",
+      "child": "layers.8.mlp.experts.40",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.8.mlp",
+      "child": "layers.8.mlp.experts.41",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.8.mlp",
+      "child": "layers.8.mlp.experts.42",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.8.mlp",
+      "child": "layers.8.mlp.experts.43",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.8.mlp",
+      "child": "layers.8.mlp.experts.44",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.8.mlp",
+      "child": "layers.8.mlp.experts.45",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.8.mlp",
+      "child": "layers.8.mlp.experts.46",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.8.mlp",
+      "child": "layers.8.mlp.experts.47",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.8.mlp",
+      "child": "layers.8.mlp.experts.48",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.8.mlp",
+      "child": "layers.8.mlp.experts.49",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.8.mlp",
+      "child": "layers.8.mlp.experts.50",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.8.mlp",
+      "child": "layers.8.mlp.experts.51",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.8.mlp",
+      "child": "layers.8.mlp.experts.52",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.8.mlp",
+      "child": "layers.8.mlp.experts.53",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.8.mlp",
+      "child": "layers.8.mlp.experts.54",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.8.mlp",
+      "child": "layers.8.mlp.experts.55",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.8.mlp",
+      "child": "layers.8.mlp.experts.56",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.8.mlp",
+      "child": "layers.8.mlp.experts.57",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.8.mlp",
+      "child": "layers.8.mlp.experts.58",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.8.mlp",
+      "child": "layers.8.mlp.experts.59",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.8.mlp",
+      "child": "layers.8.mlp.experts.60",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.8.mlp",
+      "child": "layers.8.mlp.experts.61",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.8.mlp",
+      "child": "layers.8.mlp.experts.62",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.8.mlp",
+      "child": "layers.8.mlp.experts.63",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.8.mlp",
+      "child": "layers.8.mlp.shared_experts",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.9",
+      "child": "layers.9.input_layernorm",
+      "parfor": 8
+    },
+    {
+      "parent": "layers.9",
+      "child": "layers.9.self_attn",
+      "parfor": 73
+    },
+    {
+      "parent": "layers.9.self_attn",
+      "child": "layers.9.self_attn.rotary_emb",
+      "parfor": 17
+    },
+    {
+      "parent": "layers.9",
+      "child": "layers.9.post_attention_layernorm",
+      "parfor": 8
+    },
+    {
+      "parent": "layers.9",
+      "child": "layers.9.mlp",
+      "parfor": 418
+    },
+    {
+      "parent": "layers.9.mlp",
+      "child": "layers.9.mlp.gate",
+      "parfor": 8
+    },
+    {
+      "parent": "layers.9.mlp",
+      "child": "layers.9.mlp.experts.0",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.9.mlp",
+      "child": "layers.9.mlp.experts.1",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.9.mlp",
+      "child": "layers.9.mlp.experts.2",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.9.mlp",
+      "child": "layers.9.mlp.experts.3",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.9.mlp",
+      "child": "layers.9.mlp.experts.4",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.9.mlp",
+      "child": "layers.9.mlp.experts.5",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.9.mlp",
+      "child": "layers.9.mlp.experts.6",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.9.mlp",
+      "child": "layers.9.mlp.experts.7",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.9.mlp",
+      "child": "layers.9.mlp.experts.8",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.9.mlp",
+      "child": "layers.9.mlp.experts.9",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.9.mlp",
+      "child": "layers.9.mlp.experts.10",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.9.mlp",
+      "child": "layers.9.mlp.experts.11",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.9.mlp",
+      "child": "layers.9.mlp.experts.12",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.9.mlp",
+      "child": "layers.9.mlp.experts.13",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.9.mlp",
+      "child": "layers.9.mlp.experts.14",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.9.mlp",
+      "child": "layers.9.mlp.experts.15",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.9.mlp",
+      "child": "layers.9.mlp.experts.16",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.9.mlp",
+      "child": "layers.9.mlp.experts.17",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.9.mlp",
+      "child": "layers.9.mlp.experts.18",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.9.mlp",
+      "child": "layers.9.mlp.experts.19",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.9.mlp",
+      "child": "layers.9.mlp.experts.20",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.9.mlp",
+      "child": "layers.9.mlp.experts.21",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.9.mlp",
+      "child": "layers.9.mlp.experts.22",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.9.mlp",
+      "child": "layers.9.mlp.experts.23",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.9.mlp",
+      "child": "layers.9.mlp.experts.24",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.9.mlp",
+      "child": "layers.9.mlp.experts.25",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.9.mlp",
+      "child": "layers.9.mlp.experts.26",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.9.mlp",
+      "child": "layers.9.mlp.experts.27",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.9.mlp",
+      "child": "layers.9.mlp.experts.28",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.9.mlp",
+      "child": "layers.9.mlp.experts.29",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.9.mlp",
+      "child": "layers.9.mlp.experts.30",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.9.mlp",
+      "child": "layers.9.mlp.experts.31",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.9.mlp",
+      "child": "layers.9.mlp.experts.32",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.9.mlp",
+      "child": "layers.9.mlp.experts.33",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.9.mlp",
+      "child": "layers.9.mlp.experts.34",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.9.mlp",
+      "child": "layers.9.mlp.experts.35",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.9.mlp",
+      "child": "layers.9.mlp.experts.36",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.9.mlp",
+      "child": "layers.9.mlp.experts.37",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.9.mlp",
+      "child": "layers.9.mlp.experts.38",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.9.mlp",
+      "child": "layers.9.mlp.experts.39",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.9.mlp",
+      "child": "layers.9.mlp.experts.40",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.9.mlp",
+      "child": "layers.9.mlp.experts.41",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.9.mlp",
+      "child": "layers.9.mlp.experts.42",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.9.mlp",
+      "child": "layers.9.mlp.experts.43",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.9.mlp",
+      "child": "layers.9.mlp.experts.44",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.9.mlp",
+      "child": "layers.9.mlp.experts.45",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.9.mlp",
+      "child": "layers.9.mlp.experts.46",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.9.mlp",
+      "child": "layers.9.mlp.experts.47",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.9.mlp",
+      "child": "layers.9.mlp.experts.48",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.9.mlp",
+      "child": "layers.9.mlp.experts.49",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.9.mlp",
+      "child": "layers.9.mlp.experts.50",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.9.mlp",
+      "child": "layers.9.mlp.experts.51",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.9.mlp",
+      "child": "layers.9.mlp.experts.52",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.9.mlp",
+      "child": "layers.9.mlp.experts.53",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.9.mlp",
+      "child": "layers.9.mlp.experts.54",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.9.mlp",
+      "child": "layers.9.mlp.experts.55",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.9.mlp",
+      "child": "layers.9.mlp.experts.56",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.9.mlp",
+      "child": "layers.9.mlp.experts.57",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.9.mlp",
+      "child": "layers.9.mlp.experts.58",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.9.mlp",
+      "child": "layers.9.mlp.experts.59",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.9.mlp",
+      "child": "layers.9.mlp.experts.60",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.9.mlp",
+      "child": "layers.9.mlp.experts.61",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.9.mlp",
+      "child": "layers.9.mlp.experts.62",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.9.mlp",
+      "child": "layers.9.mlp.experts.63",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.9.mlp",
+      "child": "layers.9.mlp.shared_experts",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.10",
+      "child": "layers.10.input_layernorm",
+      "parfor": 8
+    },
+    {
+      "parent": "layers.10",
+      "child": "layers.10.self_attn",
+      "parfor": 75
+    },
+    {
+      "parent": "layers.10.self_attn",
+      "child": "layers.10.self_attn.rotary_emb",
+      "parfor": 17
+    },
+    {
+      "parent": "layers.10",
+      "child": "layers.10.post_attention_layernorm",
+      "parfor": 8
+    },
+    {
+      "parent": "layers.10",
+      "child": "layers.10.mlp",
+      "parfor": 418
+    },
+    {
+      "parent": "layers.10.mlp",
+      "child": "layers.10.mlp.gate",
+      "parfor": 8
+    },
+    {
+      "parent": "layers.10.mlp",
+      "child": "layers.10.mlp.experts.0",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.10.mlp",
+      "child": "layers.10.mlp.experts.1",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.10.mlp",
+      "child": "layers.10.mlp.experts.2",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.10.mlp",
+      "child": "layers.10.mlp.experts.3",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.10.mlp",
+      "child": "layers.10.mlp.experts.4",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.10.mlp",
+      "child": "layers.10.mlp.experts.5",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.10.mlp",
+      "child": "layers.10.mlp.experts.6",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.10.mlp",
+      "child": "layers.10.mlp.experts.7",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.10.mlp",
+      "child": "layers.10.mlp.experts.8",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.10.mlp",
+      "child": "layers.10.mlp.experts.9",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.10.mlp",
+      "child": "layers.10.mlp.experts.10",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.10.mlp",
+      "child": "layers.10.mlp.experts.11",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.10.mlp",
+      "child": "layers.10.mlp.experts.12",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.10.mlp",
+      "child": "layers.10.mlp.experts.13",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.10.mlp",
+      "child": "layers.10.mlp.experts.14",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.10.mlp",
+      "child": "layers.10.mlp.experts.15",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.10.mlp",
+      "child": "layers.10.mlp.experts.16",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.10.mlp",
+      "child": "layers.10.mlp.experts.17",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.10.mlp",
+      "child": "layers.10.mlp.experts.18",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.10.mlp",
+      "child": "layers.10.mlp.experts.19",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.10.mlp",
+      "child": "layers.10.mlp.experts.20",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.10.mlp",
+      "child": "layers.10.mlp.experts.21",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.10.mlp",
+      "child": "layers.10.mlp.experts.22",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.10.mlp",
+      "child": "layers.10.mlp.experts.23",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.10.mlp",
+      "child": "layers.10.mlp.experts.24",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.10.mlp",
+      "child": "layers.10.mlp.experts.25",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.10.mlp",
+      "child": "layers.10.mlp.experts.26",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.10.mlp",
+      "child": "layers.10.mlp.experts.27",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.10.mlp",
+      "child": "layers.10.mlp.experts.28",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.10.mlp",
+      "child": "layers.10.mlp.experts.29",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.10.mlp",
+      "child": "layers.10.mlp.experts.30",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.10.mlp",
+      "child": "layers.10.mlp.experts.31",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.10.mlp",
+      "child": "layers.10.mlp.experts.32",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.10.mlp",
+      "child": "layers.10.mlp.experts.33",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.10.mlp",
+      "child": "layers.10.mlp.experts.34",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.10.mlp",
+      "child": "layers.10.mlp.experts.35",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.10.mlp",
+      "child": "layers.10.mlp.experts.36",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.10.mlp",
+      "child": "layers.10.mlp.experts.37",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.10.mlp",
+      "child": "layers.10.mlp.experts.38",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.10.mlp",
+      "child": "layers.10.mlp.experts.39",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.10.mlp",
+      "child": "layers.10.mlp.experts.40",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.10.mlp",
+      "child": "layers.10.mlp.experts.41",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.10.mlp",
+      "child": "layers.10.mlp.experts.42",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.10.mlp",
+      "child": "layers.10.mlp.experts.43",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.10.mlp",
+      "child": "layers.10.mlp.experts.44",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.10.mlp",
+      "child": "layers.10.mlp.experts.45",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.10.mlp",
+      "child": "layers.10.mlp.experts.46",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.10.mlp",
+      "child": "layers.10.mlp.experts.47",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.10.mlp",
+      "child": "layers.10.mlp.experts.48",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.10.mlp",
+      "child": "layers.10.mlp.experts.49",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.10.mlp",
+      "child": "layers.10.mlp.experts.50",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.10.mlp",
+      "child": "layers.10.mlp.experts.51",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.10.mlp",
+      "child": "layers.10.mlp.experts.52",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.10.mlp",
+      "child": "layers.10.mlp.experts.53",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.10.mlp",
+      "child": "layers.10.mlp.experts.54",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.10.mlp",
+      "child": "layers.10.mlp.experts.55",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.10.mlp",
+      "child": "layers.10.mlp.experts.56",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.10.mlp",
+      "child": "layers.10.mlp.experts.57",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.10.mlp",
+      "child": "layers.10.mlp.experts.58",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.10.mlp",
+      "child": "layers.10.mlp.experts.59",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.10.mlp",
+      "child": "layers.10.mlp.experts.60",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.10.mlp",
+      "child": "layers.10.mlp.experts.61",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.10.mlp",
+      "child": "layers.10.mlp.experts.62",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.10.mlp",
+      "child": "layers.10.mlp.experts.63",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.10.mlp",
+      "child": "layers.10.mlp.shared_experts",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.11",
+      "child": "layers.11.input_layernorm",
+      "parfor": 8
+    },
+    {
+      "parent": "layers.11",
+      "child": "layers.11.self_attn",
+      "parfor": 77
+    },
+    {
+      "parent": "layers.11.self_attn",
+      "child": "layers.11.self_attn.rotary_emb",
+      "parfor": 17
+    },
+    {
+      "parent": "layers.11",
+      "child": "layers.11.post_attention_layernorm",
+      "parfor": 8
+    },
+    {
+      "parent": "layers.11",
+      "child": "layers.11.mlp",
+      "parfor": 418
+    },
+    {
+      "parent": "layers.11.mlp",
+      "child": "layers.11.mlp.gate",
+      "parfor": 8
+    },
+    {
+      "parent": "layers.11.mlp",
+      "child": "layers.11.mlp.experts.0",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.11.mlp",
+      "child": "layers.11.mlp.experts.1",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.11.mlp",
+      "child": "layers.11.mlp.experts.2",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.11.mlp",
+      "child": "layers.11.mlp.experts.3",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.11.mlp",
+      "child": "layers.11.mlp.experts.4",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.11.mlp",
+      "child": "layers.11.mlp.experts.5",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.11.mlp",
+      "child": "layers.11.mlp.experts.6",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.11.mlp",
+      "child": "layers.11.mlp.experts.7",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.11.mlp",
+      "child": "layers.11.mlp.experts.8",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.11.mlp",
+      "child": "layers.11.mlp.experts.9",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.11.mlp",
+      "child": "layers.11.mlp.experts.10",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.11.mlp",
+      "child": "layers.11.mlp.experts.11",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.11.mlp",
+      "child": "layers.11.mlp.experts.12",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.11.mlp",
+      "child": "layers.11.mlp.experts.13",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.11.mlp",
+      "child": "layers.11.mlp.experts.14",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.11.mlp",
+      "child": "layers.11.mlp.experts.15",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.11.mlp",
+      "child": "layers.11.mlp.experts.16",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.11.mlp",
+      "child": "layers.11.mlp.experts.17",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.11.mlp",
+      "child": "layers.11.mlp.experts.18",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.11.mlp",
+      "child": "layers.11.mlp.experts.19",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.11.mlp",
+      "child": "layers.11.mlp.experts.20",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.11.mlp",
+      "child": "layers.11.mlp.experts.21",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.11.mlp",
+      "child": "layers.11.mlp.experts.22",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.11.mlp",
+      "child": "layers.11.mlp.experts.23",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.11.mlp",
+      "child": "layers.11.mlp.experts.24",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.11.mlp",
+      "child": "layers.11.mlp.experts.25",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.11.mlp",
+      "child": "layers.11.mlp.experts.26",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.11.mlp",
+      "child": "layers.11.mlp.experts.27",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.11.mlp",
+      "child": "layers.11.mlp.experts.28",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.11.mlp",
+      "child": "layers.11.mlp.experts.29",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.11.mlp",
+      "child": "layers.11.mlp.experts.30",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.11.mlp",
+      "child": "layers.11.mlp.experts.31",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.11.mlp",
+      "child": "layers.11.mlp.experts.32",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.11.mlp",
+      "child": "layers.11.mlp.experts.33",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.11.mlp",
+      "child": "layers.11.mlp.experts.34",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.11.mlp",
+      "child": "layers.11.mlp.experts.35",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.11.mlp",
+      "child": "layers.11.mlp.experts.36",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.11.mlp",
+      "child": "layers.11.mlp.experts.37",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.11.mlp",
+      "child": "layers.11.mlp.experts.38",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.11.mlp",
+      "child": "layers.11.mlp.experts.39",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.11.mlp",
+      "child": "layers.11.mlp.experts.40",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.11.mlp",
+      "child": "layers.11.mlp.experts.41",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.11.mlp",
+      "child": "layers.11.mlp.experts.42",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.11.mlp",
+      "child": "layers.11.mlp.experts.43",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.11.mlp",
+      "child": "layers.11.mlp.experts.44",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.11.mlp",
+      "child": "layers.11.mlp.experts.45",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.11.mlp",
+      "child": "layers.11.mlp.experts.46",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.11.mlp",
+      "child": "layers.11.mlp.experts.47",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.11.mlp",
+      "child": "layers.11.mlp.experts.48",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.11.mlp",
+      "child": "layers.11.mlp.experts.49",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.11.mlp",
+      "child": "layers.11.mlp.experts.50",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.11.mlp",
+      "child": "layers.11.mlp.experts.51",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.11.mlp",
+      "child": "layers.11.mlp.experts.52",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.11.mlp",
+      "child": "layers.11.mlp.experts.53",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.11.mlp",
+      "child": "layers.11.mlp.experts.54",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.11.mlp",
+      "child": "layers.11.mlp.experts.55",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.11.mlp",
+      "child": "layers.11.mlp.experts.56",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.11.mlp",
+      "child": "layers.11.mlp.experts.57",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.11.mlp",
+      "child": "layers.11.mlp.experts.58",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.11.mlp",
+      "child": "layers.11.mlp.experts.59",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.11.mlp",
+      "child": "layers.11.mlp.experts.60",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.11.mlp",
+      "child": "layers.11.mlp.experts.61",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.11.mlp",
+      "child": "layers.11.mlp.experts.62",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.11.mlp",
+      "child": "layers.11.mlp.experts.63",
+      "parfor": 5
+    },
+    {
+      "parent": "layers.11.mlp",
+      "child": "layers.11.mlp.shared_experts",
+      "parfor": 5
+    }
+  ],
+  "runtime_events": [
+    {
+      "kind": "vision_inputs",
+      "module": "DeepseekOCRModel",
+      "num_images": 1,
+      "num_crops_total": 4
+    }
+  ]
+}

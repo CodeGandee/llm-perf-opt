@@ -1,0 +1,61 @@
+# DeepSeek-OCR Call Graph – Grouped View
+
+## Metadata
+- **source_json**: /workspace/code/llm-perf-opt/tmp/callgraph/a-20251117-171243/dsocr-call-graph-torchlens.json
+- **generated_at**: 2025-11-17T09:13:44Z
+- **min_family_size**: 2
+- **min_edge_count**: 2
+
+## Groups
+- `Block @ sam_model.blocks[0..11]` for 12 under `sam_model` (stage: sam)
+- `Conv2d @ sam_model.neck[0..3]` for 4 under `sam_model.neck` (stage: sam)
+- `NoTPTransformerBlock @ vision_model.transformer.layers[0..23]` for 24 under `vision_model.transformer` (stage: vision)
+- `DeepseekV2DecoderLayer @ layers[0..11]` for 12
+- `DeepseekV2MLP @ layers.1.mlp.experts[0..63]` for 64 under `layers.1.mlp` (stage: llm)
+- `DeepseekV2MLP @ layers.2.mlp.experts[0..18]` for 19 under `layers.2.mlp` (stage: llm)
+- `DeepseekV2MLP @ layers.2.mlp.experts[20..57]` for 38 under `layers.2.mlp` (stage: llm)
+- `DeepseekV2MLP @ layers.2.mlp.experts[59..63]` for 5 under `layers.2.mlp` (stage: llm)
+- `DeepseekV2MLP @ layers.3.mlp.experts[0..52]` for 53 under `layers.3.mlp` (stage: llm)
+- `DeepseekV2MLP @ layers.3.mlp.experts[54..63]` for 10 under `layers.3.mlp` (stage: llm)
+- `DeepseekV2MLP @ layers.4.mlp.experts[0..63]` for 64 under `layers.4.mlp` (stage: llm)
+- `DeepseekV2MLP @ layers.5.mlp.experts[0..63]` for 64 under `layers.5.mlp` (stage: llm)
+- `DeepseekV2MLP @ layers.6.mlp.experts[0..63]` for 64 under `layers.6.mlp` (stage: llm)
+- `DeepseekV2MLP @ layers.7.mlp.experts[0..63]` for 64 under `layers.7.mlp` (stage: llm)
+- `DeepseekV2MLP @ layers.8.mlp.experts[0..5]` for 6 under `layers.8.mlp` (stage: llm)
+- `DeepseekV2MLP @ layers.8.mlp.experts[7..63]` for 57 under `layers.8.mlp` (stage: llm)
+- `DeepseekV2MLP @ layers.9.mlp.experts[0..63]` for 64 under `layers.9.mlp` (stage: llm)
+- `DeepseekV2MLP @ layers.10.mlp.experts[0..63]` for 64 under `layers.10.mlp` (stage: llm)
+- `DeepseekV2MLP @ layers.11.mlp.experts[0..63]` for 64 under `layers.11.mlp` (stage: llm)
+- `PatchEmbed @ sam_model.patch_embed` parfor 4 under `sam_model` (stage: sam)
+- `Conv2d @ sam_model.patch_embed.proj` parfor 2 under `sam_model.patch_embed` (stage: sam)
+- `LayerNorm @ sam_model.blocks.*.norm1` parfor 24 under `sam_model.blocks.*` (stage: sam)
+- `Attention @ sam_model.blocks.*.attn` parfor 1160 under `sam_model.blocks.*` (stage: sam)
+- `Linear @ sam_model.blocks.*.attn.qkv` parfor 24 under `sam_model.blocks.*.attn` (stage: sam)
+- `Linear @ sam_model.blocks.*.attn.proj` parfor 24 under `sam_model.blocks.*.attn` (stage: sam)
+- `LayerNorm @ sam_model.blocks.*.norm2` parfor 24 under `sam_model.blocks.*` (stage: sam)
+- `MLPBlock @ sam_model.blocks.*.mlp` parfor 72 under `sam_model.blocks.*` (stage: sam)
+- `Linear @ sam_model.blocks.*.mlp.lin1` parfor 24 under `sam_model.blocks.*.mlp` (stage: sam)
+- `GELU @ sam_model.blocks.*.mlp.act` parfor 24 under `sam_model.blocks.*.mlp` (stage: sam)
+- `Linear @ sam_model.blocks.*.mlp.lin2` parfor 24 under `sam_model.blocks.*.mlp` (stage: sam)
+- `Conv2d @ sam_model.net_2` parfor 2 under `sam_model` (stage: sam)
+- `Conv2d @ sam_model.net_3` parfor 2 under `sam_model` (stage: sam)
+- `CLIPVisionEmbeddings @ vision_model.embeddings` parfor 30 under `vision_model` (stage: vision)
+- `Embedding @ vision_model.embeddings.position_embedding` parfor 4 under `vision_model.embeddings` (stage: vision)
+- `LayerNorm @ vision_model.pre_layrnorm` parfor 2 under `vision_model` (stage: vision)
+- `NoTPTransformer @ vision_model.transformer` parfor 1152 under `vision_model` (stage: vision)
+- `LayerNorm @ vision_model.transformer.layers.*.layer_norm1` parfor 48 under `vision_model.transformer.layers.*` (stage: vision)
+- `NoTPAttention @ vision_model.transformer.layers.*.self_attn` parfor 720 under `vision_model.transformer.layers.*` (stage: vision)
+- `Linear @ vision_model.transformer.layers.*.self_attn.qkv_proj` parfor 48 under `vision_model.transformer.layers.*.self_attn` (stage: vision)
+- `Linear @ vision_model.transformer.layers.*.self_attn.out_proj` parfor 48 under `vision_model.transformer.layers.*.self_attn` (stage: vision)
+- `LayerNorm @ vision_model.transformer.layers.*.layer_norm2` parfor 48 under `vision_model.transformer.layers.*` (stage: vision)
+- `NoTPFeedForward @ vision_model.transformer.layers.*.mlp` parfor 240 under `vision_model.transformer.layers.*` (stage: vision)
+- `Linear @ vision_model.transformer.layers.*.mlp.fc1` parfor 48 under `vision_model.transformer.layers.*.mlp` (stage: vision)
+- `Linear @ vision_model.transformer.layers.*.mlp.fc2` parfor 48 under `vision_model.transformer.layers.*.mlp` (stage: vision)
+- `Linear @ projector.layers` parfor 2 under `projector`
+- `DeepseekV2RMSNorm @ layers.*.input_layernorm` parfor 96 under `layers.*` (stage: llm)
+- `LlamaAttention @ layers.*.self_attn` parfor 792 under `layers.*` (stage: llm)
+- `LlamaRotaryEmbedding @ layers.*.self_attn.rotary_emb` parfor 204 under `layers.*.self_attn` (stage: llm)
+- `DeepseekV2RMSNorm @ layers.*.post_attention_layernorm` parfor 96 under `layers.*` (stage: llm)
+- `DeepseekV2MLP @ layers.*.mlp` parfor 4579 under `layers.*` (stage: llm)
+- `MoEGate @ layers.*.mlp.gate` parfor 88 under `layers.*.mlp` (stage: llm)
+- `DeepseekV2MLP @ layers.*.mlp.shared_experts` parfor 55 under `layers.*.mlp` (stage: llm)
