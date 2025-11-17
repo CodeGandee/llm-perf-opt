@@ -1,6 +1,6 @@
 # Feature Specification: DeepSeek-OCR Analytic Modeling in ModelMeter
 
-**Feature Branch**: `[004-deepseek-ocr-modelmeter]`  
+**Feature Branch**: `[001-deepseek-ocr-modelmeter]`  
 **Created**: 2025-11-17  
 **Status**: Draft  
 **Input**: User description: "analytically analyze the deepseek ocr model, and implement modelmeter layers for it - Figure out the main model components (modules) used in DeepSeek-OCR, its call relationships, calling counts, and per-module operator breakdowns. - The module-level analysis goes down until we reach pytorch builtin operators (e.g., `torch.nn.Conv2d`, `torch.nn.LayerNorm`, etc.) or well-known custom layers (e.g., FlashAttention). - This information will be used to build accurate analytic performance and memory models, which will be implemented under `extern/modelmeter/models/deepseek_ocr/`, according to contracts given in `extern/modelmeter/layers/base.py` - `context/hints/dsocr-kb/about-dynamic-tracing-deepseek-ocr.md`, approaches to dynamically trace DeepSeek-OCR model execution, we prefer the recommended approach metioned there. note that this is the 004 feature"
@@ -12,6 +12,12 @@
   - Manual test plan and file paths for major functionality under tests/manual/
   - Data models use attrs (default) or pydantic (for web schemas), no business logic
 -->
+
+## Clarifications
+
+### Session 2025-11-17
+
+- Q: What granularity should DeepSeek-OCR modules use in the analytic model? → A: Medium-granularity modules with leaf nodes at framework built-in layers and no deeper analysis.
 
 ## User Scenarios & Testing *(mandatory)*
 
@@ -98,7 +104,7 @@ Manual test script path (planned): `tests/manual/deepseek_ocr/manual_deepseek_oc
 ### Functional Requirements
 
 - **FR-001**: The measurement system MUST expose DeepSeek-OCR as a named model option that users can select when requesting performance and memory analysis.
-- **FR-002**: The system MUST represent DeepSeek-OCR as a hierarchy of modules that reflects its main architectural components (for example, visual encoder, sequence or token model, and output head), each with a stable identifier used in reports and exported data.
+- **FR-002**: The system MUST represent DeepSeek-OCR as a hierarchy of medium-granularity modules that reflects its main architectural components and key sub-blocks (for example, visual encoder, sequence or token model, and output head). Leaf modules MUST correspond to individual low-level operations that are not further decomposed, each with a stable identifier used in reports and exported data.
 - **FR-003**: For each module in the DeepSeek-OCR hierarchy, the system MUST provide aggregated metrics for a standard OCR workload, including execution time, number of calls, and an estimate of memory usage.
 - **FR-004**: The system MUST provide, for each module, a breakdown into underlying operation categories (for example, convolutions, normalizations, linear transformations, attention-like mechanisms, and activation functions) with associated counts and relative cost contributions.
 - **FR-005**: The system MUST capture and expose the call relationships between modules in DeepSeek-OCR, including parent–child links and call counts, so that users can understand the overall call graph and module fan-out/fan-in.
