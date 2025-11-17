@@ -4,3 +4,7 @@
 [submodule "context/refcode/thicket"]
 	path = context/refcode/thicket
 	url = https://github.com/LLNL/thicket.git
+[submodule "extern/modelmeter"]
+	path = extern/modelmeter
+	url = git@codeup.aliyun.com:61adcb80e05da4a409ab67b8/intellif/modelmeter.git
+	branch = hz-dev
