@@ -1,6 +1,6 @@
-# Implementation Guide: Phase 4 – User Story 2 (P2) – Analytic Models for Planning
+# Implementation Guide: Phase 7 – User Story 2 (P2) – Analytic Models for Planning
 
-**Phase**: 4 | **Feature**: DeepSeek-OCR Analytic Modeling in ModelMeter (`001-deepseek-ocr-modelmeter`) | **Tasks**: T017–T024
+**Phase**: 7 | **Feature**: DeepSeek-OCR Analytic Modeling in ModelMeter (`001-deepseek-ocr-modelmeter`) | **Tasks**: T035–T042
 
 ## Goal
 
@@ -8,7 +8,7 @@ Expose a machine-readable analytic model of DeepSeek-OCR (module hierarchy, oper
 
 ## Public APIs
 
-### T019/T020: Operator categories and metrics aggregation
+### T037/T038: Operator categories and metrics aggregation
 
 Extend the domain model and analytic pipeline to populate per-module and per-operator metrics.
 
@@ -43,12 +43,13 @@ In `dsocr_analyzer`, use the `TargetOperatorList` to classify operators and aggr
 
 from llm_perf_opt.data.deepseek_ocr_analytic import ModuleMetricsSnapshot, OperatorMetrics
 
+
 def _build_module_metrics(...):
-    # Pseudocode that walks the module tree and accumulates per-category metrics
+    # Walk module tree and accumulate per-category metrics into ModuleMetricsSnapshot instances.
     ...
 ```
 
-### T021: DeepSeek-OCR analytic contracts and cattrs hooks
+### T039: DeepSeek-OCR analytic contracts and cattrs hooks
 
 Add contract models to `src/llm_perf_opt/contracts/models.py` and register conversion hooks.
 
@@ -65,22 +66,11 @@ class DeepSeekOCRAnalyticRequest:
     workload_profile_id: str = field()
     profile_run_id: str | None = field(default=None)
     force_rebuild: bool = field(default=False)
-
-
-@define(kw_only=True)
-class DeepSeekOCRAnalyticReportSummary:
-    report_id: str = field()
-    model_variant: str = field()
-    workload_profile_id: str = field()
-    predicted_total_time_ms: float = field()
-    measured_total_time_ms: float | None = field(default=None)
-    predicted_vs_measured_ratio: float | None = field(default=None)
-    notes: str = field(default="")
 ```
 
-```python
-# src/llm_perf_opt/contracts/convert.py
+Register conversion in `src/llm_perf_opt/contracts/convert.py`:
 
+```python
 from llm_perf_opt.contracts.models import DeepSeekOCRAnalyticReportSummary
 from llm_perf_opt.data.deepseek_ocr_analytic import AnalyticModelReport
 
@@ -90,7 +80,7 @@ def register_deepseek_ocr_hooks(converter: Converter) -> None:
     ...
 ```
 
-### T022: CLI entry for analytic modeling
+### T040: CLI entry for analytic modeling
 
 Provide a `__main__` handler or dedicated entry that accepts contract-style arguments and triggers analytic model generation.
 
@@ -117,12 +107,12 @@ if __name__ == "__main__":
     main()
 ```
 
-### T017/T018/T023/T024: Export tests and what-if script
+### T035/T036/T041/T042: Export tests and what-if script
 
-- Manual export script `tests/manual/deepseek_ocr/manual_deepseek_ocr_model_export.py` calls CLI and verifies `AnalyticModelReport` serialization.
-- Unit tests in `tests/unit/deepseek_ocr/test_analytic_model_report_io.py` ensure JSON/YAML load/dump correctness.
-- `scripts/analytical/dsocr_analytic_what_if.py` reads an `AnalyticModelReport` artifact and recomputes metrics under modified parameters.
-- Validate alignment with `contracts/openapi.yaml` and `MAPPING.md`.
+- `T035` – Manual export script `tests/manual/deepseek_ocr/manual_deepseek_ocr_model_export.py` calls CLI and verifies `AnalyticModelReport` serialization.
+- `T036` – Unit tests in `tests/unit/deepseek_ocr/test_analytic_model_report_io.py` ensure JSON/YAML load/dump correctness.
+- `T041` – `scripts/analytical/dsocr_analytic_what_if.py` reads an `AnalyticModelReport` and recomputes metrics under modified parameters.
+- `T042` – Validate alignment with `contracts/openapi.yaml` and `MAPPING.md`.
 
 ---
 
@@ -130,13 +120,13 @@ if __name__ == "__main__":
 
 ```mermaid
 graph LR
-    T020[T020: Populate ModuleMetricsSnapshot] --> T017[Manual model export]
-    T020 --> T018[Unit tests for serialization]
-    T019[T019: OperatorCategory mapping] --> T020
-    T021[T021: Contracts & cattrs hooks] --> T022[Analytic CLI main]
-    T022 --> T017
-    T022 --> T023[What-if planning script]
-    T024[Validate against contracts] --> T021
+    T038[T038: Populate ModuleMetricsSnapshot] --> T035[Manual model export]
+    T038 --> T036[Unit tests for serialization]
+    T037[T037: OperatorCategory mapping] --> T038
+    T039[T039: Contracts & cattrs hooks] --> T040[Analytic CLI main]
+    T040 --> T035
+    T040 --> T041[What-if planning script]
+    T042[Validate against contracts] --> T039
 ```
 
 ---
@@ -145,7 +135,7 @@ graph LR
 
 ### Test Input
 
-- Completed Phase 3 (analytic pipeline already outputs basic `AnalyticModelReport`).
+- Completed User Story 1 (Phases 3–6), so `DeepseekOCRStaticAnalyzer` can already produce `AnalyticModelReport`.
 - Artifact directory `tmp/profile-output/<run_id>/static_analysis/analytic_model/` populated by an analytic run.
 
 ### Test Procedure
@@ -174,7 +164,7 @@ pixi run -e rtx5090 python scripts/analytical/dsocr_analytic_what_if.py \
 
 ## References
 
-- Spec: `specs/001-deepseek-ocr-modelmeter/spec.md`
+- Tasks: `specs/001-deepseek-ocr-modelmeter/tasks.md` (Phase 7, T035–T042)
 - Data model: `specs/001-deepseek-ocr-modelmeter/data-model.md`
 - Contracts: `specs/001-deepseek-ocr-modelmeter/contracts/`
 

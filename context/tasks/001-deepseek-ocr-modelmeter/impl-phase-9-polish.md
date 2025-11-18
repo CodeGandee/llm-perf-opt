@@ -1,6 +1,6 @@
-# Implementation Guide: Phase 6 – Polish & Cross-Cutting Concerns
+# Implementation Guide: Phase 9 – Polish & Cross-Cutting Concerns
 
-**Phase**: 6 | **Feature**: DeepSeek-OCR Analytic Modeling in ModelMeter (`001-deepseek-ocr-modelmeter`) | **Tasks**: T029–T032
+**Phase**: 9 | **Feature**: DeepSeek-OCR Analytic Modeling in ModelMeter (`001-deepseek-ocr-modelmeter`) | **Tasks**: T047–T050
 
 ## Goal
 
@@ -8,7 +8,7 @@ Raise overall quality by adding rich docstrings and type hints, extending test c
 
 ## Public APIs
 
-### T029: Docstrings and type hints
+### T047: Docstrings and type hints
 
 Ensure all new public classes and functions introduced in previous phases provide NumPy-style docstrings and type hints.
 
@@ -27,7 +27,7 @@ class DeepseekOCRModel(BaseLayer):
     """
 ```
 
-### T030: Edge-case unit tests
+### T048: Edge-case unit tests
 
 Extend tests to cover extreme workloads and model configurations.
 
@@ -38,7 +38,7 @@ def test_decoder_flops_scale_with_seq_len_extreme():
     ...
 ```
 
-### T031: Run `ruff` and `mypy`
+### T049: Run `ruff` and `mypy`
 
 Use Pixi to run linting and type-checking across updated modules.
 
@@ -48,7 +48,7 @@ pixi run -e rtx5090 ruff check extern/modelmeter src tests
 pixi run -e rtx5090 mypy src
 ```
 
-### T032: Top-level documentation updates
+### T050: Top-level documentation updates
 
 Update `docs/index.md` or `README.md` to link to `specs/001-deepseek-ocr-modelmeter/quickstart.md` and the generated Markdown layer docs.
 
@@ -58,9 +58,9 @@ Update `docs/index.md` or `README.md` to link to `specs/001-deepseek-ocr-modelme
 
 ```mermaid
 graph LR
-    T029[T029: Docstrings & typing] --> T031[Lint & type-check]
-    T030[T030: Edge-case tests] --> T031
-    T031 --> T032[Top-level docs]
+    T047[T047: Docstrings & typing] --> T049[Lint & type-check]
+    T048[T048: Edge-case tests] --> T049
+    T049 --> T050[Top-level docs]
 ```
 
 ---
@@ -91,6 +91,7 @@ pixi run -e rtx5090 mypy src
 
 ## References
 
+- Tasks: `specs/001-deepseek-ocr-modelmeter/tasks.md` (Phase 9, T047–T050)
 - Spec: `specs/001-deepseek-ocr-modelmeter/spec.md`
 - Data model: `specs/001-deepseek-ocr-modelmeter/data-model.md`
 - Contracts: `specs/001-deepseek-ocr-modelmeter/contracts/`
