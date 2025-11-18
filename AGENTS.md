@@ -12,6 +12,7 @@ This document is a concise contributor guide for llm-perf-opt. Follow it for any
 
 ## Build, Test, and Development Commands
 - Environment: install Pixi, then run `pixi install` (default CUDA 12.4 env)
+- Python: run scripts via `pixi run -e rtx5090 python ...` so they execute in the RTX 5090 environment
 - Lint: `pixi run ruff check .`  |  Types: `pixi run mypy src`
 - Unit tests: `pixi run pytest tests/unit/`
 - Integration tests: `pixi run pytest tests/integration/`

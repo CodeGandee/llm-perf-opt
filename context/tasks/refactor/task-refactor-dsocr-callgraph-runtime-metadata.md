@@ -7,9 +7,9 @@
     - Runtime patches applied to DeepSeek-OCR modules.
     - `DsocrCallgraph` model and JSON loader.
     - Option C grouping helpers (`summarize_stacks`, `summarize_parfor_edges`, `build_grouped_dot_from_option_c`, `build_grouped_mermaid_from_option_c`).
-  - `scripts/analytical/dsocr_torchlens_callgraph_option_c.py`
+  - `scripts/analytical/dsocr_callgraph_by_torchlens_adv.py`
     - Orchestrates TorchLens logging and writes the raw callgraph JSON + runtime metadata JSON.
-  - `scripts/analytical/dsocr_parse_callgraph_option_c.py`
+  - `scripts/analytical/dsocr_parse_callgraph_by_torchlens_adv.py`
     - Consumes the callgraph + runtime metadata and emits grouped DOT/SVG/Mermaid.
 
 The refactor will extend this pipeline so that the **callgraph JSON and downstream artifacts include, for each module node**:
@@ -163,7 +163,7 @@ class DsocrCallgraph:
 
 ### Step 4 – Integrate with Option C tracing script
 
-- In `scripts/analytical/dsocr_torchlens_callgraph_option_c.py`:
+- In `scripts/analytical/dsocr_callgraph_by_torchlens_adv.py`:
   - After constructing the `DeepSeekOCRSession` and before `torchlens.log_forward_pass`:
     - Call `collect_constructor_params(session.m_model.model)` and `attach_tensor_io_hooks(session.m_model.model)`.
   - After `torchlens.log_forward_pass` completes:
@@ -207,8 +207,8 @@ write_json(output_path, obj)
 ### Step 6 – Validate and iterate
 
 - Run the full pipeline in the `rtx5090` env:
-  - `pixi run -e rtx5090 python scripts/analytical/dsocr_torchlens_callgraph_option_c.py ...`
-  - `pixi run -e rtx5090 python scripts/analytical/dsocr_parse_callgraph_option_c.py ...`
+  - `pixi run -e rtx5090 python scripts/analytical/dsocr_callgraph_by_torchlens_adv.py ...`
+  - `pixi run -e rtx5090 python scripts/analytical/dsocr_parse_callgraph_by_torchlens_adv.py ...`
 - Inspect updated JSON:
   - Confirm `constructor_params`, `input_metadata`, `output_metadata` are present.
   - Check a few key nodes:
@@ -240,7 +240,7 @@ write_json(output_path, obj)
 - **Compatibility**:
   - `load_callgraph_json` remains backward compatible:
     - Old JSON files without metadata still load (fields default to `{}`).
-  - Downstream scripts (`dsocr_parse_callgraph_option_c.py`) can start using the new fields opportunistically, with guards for missing keys.
+- Downstream scripts (`dsocr_parse_callgraph_by_torchlens_adv.py`) can start using the new fields opportunistically, with guards for missing keys.
 
 - **Risk**:
   - Hook registration could conflict with TorchLens if not done carefully.
@@ -296,11 +296,10 @@ write_json(output_path, obj)
 - Design contract: `context/design/dsocr-callgraph-human-friendly.md`
 - Current TorchLens patching + grouping:
   - `src/llm_perf_opt/patches/dsocr_torchlens.py`
-  - `scripts/analytical/dsocr_torchlens_callgraph_option_c.py`
-  - `scripts/analytical/dsocr_parse_callgraph_option_c.py`
+  - `scripts/analytical/dsocr_callgraph_by_torchlens_adv.py`
+  - `scripts/analytical/dsocr_parse_callgraph_by_torchlens_adv.py`
 - Existing tasks and profiling context:
   - `context/tasks/001-profile-deepseek-ocr`
   - `context/tasks/003-nvtx-ncu-profiling`
 - Third-party library:
   - TorchLens (PyPI): `/torchlens/torchlens` (Context7 library id, if available).
-

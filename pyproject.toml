@@ -108,7 +108,7 @@ stage2-profile = { cmd = "python -m llm_perf_opt.runners.deep_profile_runner 'hy
 stage-all-run = { cmd = "bash scripts/stage-all-run.sh" }
 direct-infer-dev20 = { cmd = "python -m llm_perf_opt.runners.direct_inference_runner 'hydra.run.dir=tmp/profile-output/${now:%Y%m%d-%H%M%S}' dataset.subset_filelist=datasets/omnidocbench/subsets/dev-20.txt device=cuda:0 pipeline.direct_inference.enable=true pipeline.torch_profiler.enable=false pipeline.static_analysis.enable=false pipeline.nsys.enable=false pipeline.ncu.enable=false dataset.sampling.num_epochs=1 dataset.sampling.num_samples_per_epoch=null dataset.sampling.randomize=false infer.max_new_tokens=8192 pipeline.direct_inference.output.prediction.enable=true pipeline.direct_inference.output.visualization.enable=true" }
 nsys-dsocr-all = { cmd = "scripts/nsys/nsys-profile-dsocr-stages.sh" }
-dsocr-torchlens-callgraph = { cmd = "python scripts/analytical/dsocr_torchlens_callgraph.py" }
+dsocr-torchlens-callgraph = { cmd = "python scripts/analytical/dsocr_callgraph_by_torchlens_basic.py" }
 
 [tool.ruff]
 target-version = "py311"

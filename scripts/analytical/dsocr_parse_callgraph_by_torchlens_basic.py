@@ -6,7 +6,7 @@ Usage
         tmp/dsocr-torchlens-callgraph/dsocr-call-graph-torchlens.json
 
 This script reads the TorchLens-derived call graph JSON produced by
-``dsocr_torchlens_callgraph.py``, derives ``for N`` (depth-wise) and
+``dsocr_callgraph_by_torchlens_basic.py``, derives ``for N`` (depth-wise) and
 ``parfor N`` (repeated sibling) groupings, and writes:
 
 - ``dsocr-call-graph-grouped.json`` – machine-readable grouping.

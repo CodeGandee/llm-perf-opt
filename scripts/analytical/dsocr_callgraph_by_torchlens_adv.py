@@ -5,10 +5,10 @@ This script:
   and loop metadata logging.
 - Runs a TorchLens-based forward trace on the vendor core model.
 - Emits:
-  - Dynamic call graph JSON/DOT (same shape as dsocr_torchlens_callgraph.py)
+  - Dynamic call graph JSON/DOT (same shape as dsocr_callgraph_by_torchlens_basic.py)
   - Runtime metadata JSON with coarse loop structure.
 
-NOTE: This script is separate from dsocr_torchlens_callgraph.py and does not
+NOTE: This script is separate from dsocr_callgraph_by_torchlens_basic.py and does not
 modify it. It is intended for analytical use only.
 """
 
