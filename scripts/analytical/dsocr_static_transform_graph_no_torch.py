@@ -231,6 +231,7 @@ def _build_unique_layers(hierarchy: List[Dict[str, Any]]) -> List[Dict[str, Any]
                 "class_names": set(),
                 "var_names": set(),
                 "instance_names": set(),
+                "filepaths": set(),
             }
         return by_qualname[qual]
 
@@ -243,6 +244,7 @@ def _build_unique_layers(hierarchy: List[Dict[str, Any]]) -> List[Dict[str, Any]
             node_class = node.get("class_name")
             node_var = node.get("var_name")
             node_module_name = node.get("instance_name")
+            node_filepath = node.get("filepath")
 
             if isinstance(node_class, str) and node_class:
                 entry["class_names"].add(node_class)
@@ -250,6 +252,8 @@ def _build_unique_layers(hierarchy: List[Dict[str, Any]]) -> List[Dict[str, Any]
                 entry["var_names"].add(node_var)
             if isinstance(node_module_name, str):
                 entry["instance_names"].add(node_module_name)
+            if isinstance(node_filepath, str) and node_filepath:
+                entry["filepaths"].add(node_filepath)
 
             if isinstance(parent_qual, str) and parent_qual:
                 parent_entry = ensure_entry(parent_qual)
@@ -271,6 +275,7 @@ def _build_unique_layers(hierarchy: List[Dict[str, Any]]) -> List[Dict[str, Any]
         class_names = sorted(entry.get("class_names", set()))
         var_names = sorted(entry.get("var_names", set()))
         instance_names = sorted(entry.get("instance_names", set()))
+        filepaths = sorted(entry.get("filepaths", set()))
 
         unique_layers.append(
             {
@@ -278,6 +283,7 @@ def _build_unique_layers(hierarchy: List[Dict[str, Any]]) -> List[Dict[str, Any]
                 "class_name": class_names[0] if class_names else None,
                 "var_name": var_names,
                 "instance_name": instance_names,
+                "filepaths": filepaths,
                 "count": int(entry.get("count", 0)),
                 "parents": sorted(entry.get("parents", set())),
                 "children": sorted(entry.get("children", set())),
