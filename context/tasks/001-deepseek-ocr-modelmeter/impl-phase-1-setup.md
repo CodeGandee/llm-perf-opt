@@ -160,13 +160,16 @@ $EDITOR specs/001-deepseek-ocr-modelmeter/quickstart.md
 
 ## Implementation Summary
 
-*(to be filled after implementation)*
-
 ### What has been implemented
 
-- (after implementation) List concrete changes to `pyproject.toml`, `quickstart.md`, and any helper scripts.
+- Verified `pixi run -e rtx5090 python -V` succeeds (Python >=3.11, currently 3.12.12) and confirmed the `rtx5090` environment is usable for DeepSeek‑OCR analytic work.
+- Confirmed analytic dependencies `torch`, `attrs`, `cattrs`, and `omegaconf` are declared in `pyproject.toml` (via `[project].dependencies` and the default CUDA feature); `modelmeter` is provided via the vendored `extern/modelmeter` package rather than a separate PyPI dependency.
+- Verified TorchInfo static artifacts already exist under `reports/20211117-dsorc-op-analysis/static-20251118-130533/` (`torchinfo-unique-layers.json` and `torchinfo-unique-layers.md`), so regeneration is not required for this phase.
+- Reviewed `specs/001-deepseek-ocr-modelmeter/quickstart.md` and confirmed that the CLI example uses `--mode analytic` and that artifact paths point to `tmp/profile-output/<run_id>/static_analysis/analytic_model/` as required.
 
 ### How to verify
 
-- (after implementation) Document the command sequence and expected outputs for confirming Phase 1 is complete.
-
+- Run `pixi run -e rtx5090 python -V` from the repo root and confirm a Python 3.11–3.12 version is printed without errors.
+- Check that `pyproject.toml` lists analytic dependencies (`torch`, `attrs`, `cattrs`, `omegaconf`) and that `extern/modelmeter` is available under the `extern/` package namespace.
+- Ensure `reports/20211117-dsorc-op-analysis/static-20251118-130533/torchinfo-unique-layers.{json,md}` exist; if not, regenerate them using the command in T002.
+- Open `specs/001-deepseek-ocr-modelmeter/quickstart.md` and confirm that the analytic CLI and output paths match the expected `--mode analytic` and `tmp/profile-output/<run_id>/static_analysis/analytic_model/` layout.

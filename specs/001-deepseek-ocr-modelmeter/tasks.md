@@ -32,9 +32,9 @@ included where explicitly requested in the spec or for critical paths.
 
 **Purpose**: Environment and static-analysis prerequisites for all user stories
 
-- [ ] T001 [P] Verify Pixi `rtx5090` Python 3.11 environment and required analytic dependencies (`torch`, `attrs`, `cattrs`, `omegaconf`, `modelmeter`) are present in `pyproject.toml`
-- [ ] T002 [P] Confirm DeepSeek-OCR TorchInfo static artifacts exist or regenerate them using `scripts/analytical/dsocr_find_static_components.py` with output directory `reports/20211117-dsorc-op-analysis/static-20251118-130533`
-- [ ] T003 Review and adjust `specs/001-deepseek-ocr-modelmeter/quickstart.md` to ensure setup and CLI examples reference the analytic mode and artifact paths under `tmp/profile-output/<run_id>/static_analysis/analytic_model/`
+- [X] T001 [P] Verify Pixi `rtx5090` Python 3.11 environment and required analytic dependencies (`torch`, `attrs`, `cattrs`, `omegaconf`, `modelmeter`) are present in `pyproject.toml`
+- [X] T002 [P] Confirm DeepSeek-OCR TorchInfo static artifacts exist or regenerate them using `scripts/analytical/dsocr_find_static_components.py` with output directory `reports/20211117-dsorc-op-analysis/static-20251118-130533`
+- [X] T003 Review and adjust `specs/001-deepseek-ocr-modelmeter/quickstart.md` to ensure setup and CLI examples reference the analytic mode and artifact paths under `tmp/profile-output/<run_id>/static_analysis/analytic_model/`
 
 ---
 
@@ -62,19 +62,19 @@ included where explicitly requested in the spec or for critical paths.
 
 ### Implementation for User Story 1 – Vision
 
-- [ ] T009 [P] [US1] Implement `Attention(BaseLayer)` in `extern/modelmeter/models/deepseek_ocr/layers/vision/attention.py` using TorchInfo shapes and call counts from `reports/20211117-dsorc-op-analysis/static-20251118-130533/torchinfo-unique-layers.json`
-- [ ] T010 [P] [US1] Implement `Block(BaseLayer)` in `extern/modelmeter/models/deepseek_ocr/layers/vision/block.py` to aggregate attention and MLP vision costs
-- [ ] T011 [P] [US1] Implement `CLIPVisionEmbeddings(BaseLayer)` in `extern/modelmeter/models/deepseek_ocr/layers/vision/clip_vision_embeddings.py` modeling patch + positional embeddings
-- [ ] T012 [P] [US1] Implement `ImageEncoderViT(BaseLayer)` in `extern/modelmeter/models/deepseek_ocr/layers/vision/image_encoder_vit.py` as the main ViT vision encoder analytic model
-- [ ] T013 [P] [US1] Implement `LayerNorm2d(BaseLayer)` in `extern/modelmeter/models/deepseek_ocr/layers/vision/layer_norm2d.py` including forward/backward FLOPs and memory
-- [ ] T014 [P] [US1] Implement `MLPBlock(BaseLayer)` in `extern/modelmeter/models/deepseek_ocr/layers/vision/mlp_block.py` for the vision MLP sub-block FLOPs/I/O
-- [ ] T015 [P] [US1] Implement `MlpProjector(BaseLayer)` in `extern/modelmeter/models/deepseek_ocr/layers/vision/mlp_projector.py` to capture the projection from vision to decoder input space
-- [ ] T016 [P] [US1] Implement `NoTPAttention(BaseLayer)` in `extern/modelmeter/models/deepseek_ocr/layers/vision/notp_attention.py` with attention FLOPs/I/O formulas
-- [ ] T017 [P] [US1] Implement `NoTPFeedForward(BaseLayer)` in `extern/modelmeter/models/deepseek_ocr/layers/vision/notp_feedforward.py` modeling the NoTP MLP stack
-- [ ] T018 [P] [US1] Implement `NoTPTransformer(BaseLayer)` in `extern/modelmeter/models/deepseek_ocr/layers/vision/notp_transformer.py` aggregating per-block NoTP costs
-- [ ] T019 [P] [US1] Implement `NoTPTransformerBlock(BaseLayer)` in `extern/modelmeter/models/deepseek_ocr/layers/vision/notp_transformer_block.py` as a single NoTP block analytic layer
-- [ ] T020 [P] [US1] Implement `PatchEmbed(BaseLayer)` in `extern/modelmeter/models/deepseek_ocr/layers/vision/patch_embed.py` capturing patch projection FLOPs/I/O
-- [ ] T021 [P] [US1] Implement `VitModel(BaseLayer)` in `extern/modelmeter/models/deepseek_ocr/layers/vision/vit_model.py` aggregating encoder blocks into a full vision backbone analytic model
+- [ ] T009 [P] [US1] Implement `Attention(BaseLayer)` in `extern/modelmeter/models/deepseek_ocr/layers/vision/attention.py` using TorchInfo shapes and call counts from `reports/20211117-dsorc-op-analysis/static-20251118-130533/torchinfo-unique-layers.json` (docs: context/hints/dsocr-kb/ops/op-Attention.md)
+- [ ] T010 [P] [US1] Implement `Block(BaseLayer)` in `extern/modelmeter/models/deepseek_ocr/layers/vision/block.py` to aggregate attention and MLP vision costs (docs: context/hints/dsocr-kb/ops/op-Block.md)
+- [ ] T011 [P] [US1] Implement `CLIPVisionEmbeddings(BaseLayer)` in `extern/modelmeter/models/deepseek_ocr/layers/vision/clip_vision_embeddings.py` modeling patch + positional embeddings (docs: context/hints/dsocr-kb/ops/op-CLIPVisionEmbeddings.md)
+- [ ] T012 [P] [US1] Implement `ImageEncoderViT(BaseLayer)` in `extern/modelmeter/models/deepseek_ocr/layers/vision/image_encoder_vit.py` as the main ViT vision encoder analytic model (docs: context/hints/dsocr-kb/ops/op-ImageEncoderViT.md)
+- [ ] T013 [P] [US1] Implement `LayerNorm2d(BaseLayer)` in `extern/modelmeter/models/deepseek_ocr/layers/vision/layer_norm2d.py` including forward/backward FLOPs and memory (docs: context/hints/dsocr-kb/ops/op-LayerNorm2d.md)
+- [ ] T014 [P] [US1] Implement `MLPBlock(BaseLayer)` in `extern/modelmeter/models/deepseek_ocr/layers/vision/mlp_block.py` for the vision MLP sub-block FLOPs/I/O (docs: context/hints/dsocr-kb/ops/op-MLPBlock.md)
+- [ ] T015 [P] [US1] Implement `MlpProjector(BaseLayer)` in `extern/modelmeter/models/deepseek_ocr/layers/vision/mlp_projector.py` to capture the projection from vision to decoder input space (docs: context/hints/dsocr-kb/ops/op-MlpProjector.md)
+- [ ] T016 [P] [US1] Implement `NoTPAttention(BaseLayer)` in `extern/modelmeter/models/deepseek_ocr/layers/vision/notp_attention.py` with attention FLOPs/I/O formulas (docs: context/hints/dsocr-kb/ops/op-NoTPAttention.md)
+- [ ] T017 [P] [US1] Implement `NoTPFeedForward(BaseLayer)` in `extern/modelmeter/models/deepseek_ocr/layers/vision/notp_feedforward.py` modeling the NoTP MLP stack (docs: context/hints/dsocr-kb/ops/op-NoTPFeedForward.md)
+- [ ] T018 [P] [US1] Implement `NoTPTransformer(BaseLayer)` in `extern/modelmeter/models/deepseek_ocr/layers/vision/notp_transformer.py` aggregating per-block NoTP costs (docs: context/hints/dsocr-kb/ops/op-NoTPTransformer.md)
+- [ ] T019 [P] [US1] Implement `NoTPTransformerBlock(BaseLayer)` in `extern/modelmeter/models/deepseek_ocr/layers/vision/notp_transformer_block.py` as a single NoTP block analytic layer (docs: context/hints/dsocr-kb/ops/op-NoTPTransformerBlock.md)
+- [ ] T020 [P] [US1] Implement `PatchEmbed(BaseLayer)` in `extern/modelmeter/models/deepseek_ocr/layers/vision/patch_embed.py` capturing patch projection FLOPs/I/O (docs: context/hints/dsocr-kb/ops/op-PatchEmbed.md)
+- [ ] T021 [P] [US1] Implement `VitModel(BaseLayer)` in `extern/modelmeter/models/deepseek_ocr/layers/vision/vit_model.py` aggregating encoder blocks into a full vision backbone analytic model (docs: context/hints/dsocr-kb/ops/op-VitModel.md)
 
 **Checkpoint**: Vision analytic layers are implemented and sanity-checked in isolation; LLaMA, decoder, and core aggregation remain to be implemented for the full User Story 1 flow.
 
@@ -88,8 +88,8 @@ included where explicitly requested in the spec or for critical paths.
 
 ### Implementation for User Story 1 – LLaMA
 
-- [ ] T022 [P] [US1] Implement `LlamaFlashAttention2(BaseLayer)` in `extern/modelmeter/models/deepseek_ocr/layers/llama/llama_flash_attention2.py`, reusing generic FlashAttention math where possible
-- [ ] T023 [P] [US1] Implement `LlamaRotaryEmbedding(BaseLayer)` in `extern/modelmeter/models/deepseek_ocr/layers/llama/llama_rotary_embedding.py`, modeling parameter and activation memory plus any compute overhead
+- [ ] T022 [P] [US1] Implement `LlamaFlashAttention2(BaseLayer)` in `extern/modelmeter/models/deepseek_ocr/layers/llama/llama_flash_attention2.py`, reusing generic FlashAttention math where possible (docs: context/hints/dsocr-kb/ops/op-LlamaFlashAttention2.md)
+- [ ] T023 [P] [US1] Implement `LlamaRotaryEmbedding(BaseLayer)` in `extern/modelmeter/models/deepseek_ocr/layers/llama/llama_rotary_embedding.py`, modeling parameter and activation memory plus any compute overhead (docs: context/hints/dsocr-kb/ops/op-LlamaRotaryEmbedding.md)
 
 **Checkpoint**: LLaMA analytic layers are implemented and ready to be composed into DeepSeek-OCR decoder and core models.
 
@@ -103,11 +103,11 @@ included where explicitly requested in the spec or for critical paths.
 
 ### Implementation for User Story 1 – Decoder
 
-- [ ] T024 [P] [US1] Implement `DeepseekV2DecoderLayer(BaseLayer)` in `extern/modelmeter/models/deepseek_ocr/layers/decoder/deepseek_v2_decoder_layer.py` aggregating attention + MLP costs
-- [ ] T025 [P] [US1] Implement `DeepseekV2MLP(BaseLayer)` in `extern/modelmeter/models/deepseek_ocr/layers/decoder/deepseek_v2_mlp.py` with analytic FLOPs/I/O formulas for the decoder MLP
-- [ ] T026 [P] [US1] Implement `DeepseekV2MoE(BaseLayer)` in `extern/modelmeter/models/deepseek_ocr/layers/decoder/deepseek_v2_moe.py` modeling active experts, gating, and expert FLOPs/I/O
-- [ ] T027 [P] [US1] Implement `DeepseekV2RMSNorm(BaseLayer)` in `extern/modelmeter/models/deepseek_ocr/layers/decoder/deepseek_v2_rms_norm.py` including forward/backward FLOPs and memory
-- [ ] T028 [P] [US1] Implement `MoEGate(BaseLayer)` in `extern/modelmeter/models/deepseek_ocr/layers/decoder/moe_gate.py` capturing gating compute and associated I/O
+- [ ] T024 [P] [US1] Implement `DeepseekV2DecoderLayer(BaseLayer)` in `extern/modelmeter/models/deepseek_ocr/layers/decoder/deepseek_v2_decoder_layer.py` aggregating attention + MLP costs (docs: context/hints/dsocr-kb/ops/op-DeepseekV2DecoderLayer.md)
+- [ ] T025 [P] [US1] Implement `DeepseekV2MLP(BaseLayer)` in `extern/modelmeter/models/deepseek_ocr/layers/decoder/deepseek_v2_mlp.py` with analytic FLOPs/I/O formulas for the decoder MLP (docs: context/hints/dsocr-kb/ops/op-DeepseekV2MLP.md)
+- [ ] T026 [P] [US1] Implement `DeepseekV2MoE(BaseLayer)` in `extern/modelmeter/models/deepseek_ocr/layers/decoder/deepseek_v2_moe.py` modeling active experts, gating, and expert FLOPs/I/O (docs: context/hints/dsocr-kb/ops/op-DeepseekV2MoE.md)
+- [ ] T027 [P] [US1] Implement `DeepseekV2RMSNorm(BaseLayer)` in `extern/modelmeter/models/deepseek_ocr/layers/decoder/deepseek_v2_rms_norm.py` including forward/backward FLOPs and memory (docs: context/hints/dsocr-kb/ops/op-DeepseekV2RMSNorm.md)
+- [ ] T028 [P] [US1] Implement `MoEGate(BaseLayer)` in `extern/modelmeter/models/deepseek_ocr/layers/decoder/moe_gate.py` capturing gating compute and associated I/O (docs: context/hints/dsocr-kb/ops/op-MoEGate.md)
 
 **Checkpoint**: Decoder analytic layers are implemented, enabling full DeepSeek-OCR model-level aggregation in the next phase.
 
@@ -126,7 +126,7 @@ included where explicitly requested in the spec or for critical paths.
 
 ### Implementation for User Story 1 – Core & Pipeline
 
-- [ ] T031 [US1] Implement a root `DeepseekOCRModel(BaseLayer)` aggregator in `extern/modelmeter/models/deepseek_ocr/layers/core/deepseek_ocr_model.py` that composes vision, decoder, and LLaMA layers to compute per-module FLOPs, I/O, and memory metrics
+- [ ] T031 [US1] Implement a root `DeepseekOCRModel(BaseLayer)` aggregator in `extern/modelmeter/models/deepseek_ocr/layers/core/deepseek_ocr_model.py` that composes vision, decoder, and LLaMA layers to compute per-module FLOPs, I/O, and memory metrics (docs: context/hints/dsocr-kb/ops/op-DeepseekOCRModel.md)
 - [ ] T032 [US1] Extend `DeepseekOCRStaticAnalyzer` in `src/llm_perf_opt/runners/dsocr_analyzer.py` with an analytic code path that instantiates ModelMeter layers, builds an `AnalyticModelReport`, and writes structured artifacts via helpers in `src/llm_perf_opt/utils/paths.py`
 - [ ] T033 [US1] Implement Markdown generation utilities in `src/llm_perf_opt/visualize/analytic_layers.py` that render per-layer and summary docs from `AnalyticModelReport` into the `layer_docs_dir` directory
 - [ ] T034 [US1] Update `extern/modelmeter/models/deepseek_ocr/README.md` and `specs/001-deepseek-ocr-modelmeter/quickstart.md` to include the analytic mode CLI invocation, expected JSON/YAML outputs, and pointers to the generated Markdown layer docs

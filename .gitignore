@@ -47,6 +47,7 @@ coverage.xml
 
 # Environments
 .env
+.env.*
 .venv
 env/
 venv/
@@ -75,6 +76,8 @@ tmp/
 *.tmp
 tmp/stage2/
 outputs/
+.log
+*.log
 # Local profiling DB and generated reports
 run.sqlite
 

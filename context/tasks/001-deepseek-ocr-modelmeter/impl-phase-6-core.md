@@ -19,6 +19,8 @@ These validate end-to-end artifact generation and basic metric monotonicity.
 
 ### T031: `DeepseekOCRModel(BaseLayer)` aggregator – `core/deepseek_ocr_model.py`
 
+Layer docs: `context/hints/dsocr-kb/ops/op-DeepseekOCRModel.md`
+
 ```python
 # extern/modelmeter/models/deepseek_ocr/layers/core/deepseek_ocr_model.py
 
@@ -139,4 +141,3 @@ pixi run -e rtx5090 pytest tests/unit/deepseek_ocr/test_analytic_layers_scaling.
 ### How to verify
 
 - (after implementation) Describe how to locate and inspect all artifacts for a given `report_id`.
-

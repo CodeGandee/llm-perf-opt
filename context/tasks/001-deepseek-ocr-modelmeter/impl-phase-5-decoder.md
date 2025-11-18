@@ -10,6 +10,8 @@ Implement analytic `BaseLayer` subclasses for the DeepSeek-V2 decoder stack and 
 
 ### T024: `DeepseekV2DecoderLayer(BaseLayer)` – `decoder/deepseek_v2_decoder_layer.py`
 
+Layer docs: `context/hints/dsocr-kb/ops/op-DeepseekV2DecoderLayer.md`
+
 ```python
 # extern/modelmeter/models/deepseek_ocr/layers/decoder/deepseek_v2_decoder_layer.py
 
@@ -42,9 +44,13 @@ class DeepseekV2DecoderLayer(BaseLayer):
 
 ### T025: `DeepseekV2MLP(BaseLayer)` – `decoder/deepseek_v2_mlp.py`
 
+Layer docs: `context/hints/dsocr-kb/ops/op-DeepseekV2MLP.md`
+
 Models the decoder MLP inner block FLOPs/I/O and memory.
 
 ### T026: `DeepseekV2MoE(BaseLayer)` – `decoder/deepseek_v2_moe.py`
+
+Layer docs: `context/hints/dsocr-kb/ops/op-DeepseekV2MoE.md`
 
 ```python
 class DeepseekV2MoE(BaseLayer):
@@ -56,9 +62,13 @@ class DeepseekV2MoE(BaseLayer):
 
 ### T027: `DeepseekV2RMSNorm(BaseLayer)` – `decoder/deepseek_v2_rms_norm.py`
 
+Layer docs: `context/hints/dsocr-kb/ops/op-DeepseekV2RMSNorm.md`
+
 Captures RMSNorm FLOPs and memory for decoder layers.
 
 ### T028: `MoEGate(BaseLayer)` – `decoder/moe_gate.py`
+
+Layer docs: `context/hints/dsocr-kb/ops/op-MoEGate.md`
 
 Models gating overhead and any auxiliary compute for MoE.
 
@@ -128,4 +138,3 @@ EOF
 ### How to verify
 
 - (after implementation) Document tests/experiments used to sanity-check decoder FLOPs/IO/memory estimates.
-

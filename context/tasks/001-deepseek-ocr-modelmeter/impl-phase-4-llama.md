@@ -10,6 +10,8 @@ Implement analytic `BaseLayer` subclasses for LLaMA attention primitives used in
 
 ### T022: `LlamaFlashAttention2(BaseLayer)` – `llama/llama_flash_attention2.py`
 
+Layer docs: `context/hints/dsocr-kb/ops/op-LlamaFlashAttention2.md`
+
 ```python
 # extern/modelmeter/models/deepseek_ocr/layers/llama/llama_flash_attention2.py
 
@@ -34,6 +36,8 @@ class LlamaFlashAttention2(BaseLayer):
 ```
 
 ### T023: `LlamaRotaryEmbedding(BaseLayer)` – `llama/llama_rotary_embedding.py`
+
+Layer docs: `context/hints/dsocr-kb/ops/op-LlamaRotaryEmbedding.md`
 
 ```python
 # extern/modelmeter/models/deepseek_ocr/layers/llama/llama_rotary_embedding.py
@@ -114,4 +118,3 @@ EOF
 ### How to verify
 
 - (after implementation) Document scripts/tests to confirm LLaMA FLOPs/IO/memory behaviors.
-

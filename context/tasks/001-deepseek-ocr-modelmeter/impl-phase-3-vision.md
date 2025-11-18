@@ -12,6 +12,8 @@ Each task creates a `BaseLayer` subclass with constructor parameters sufficient 
 
 ### T009: `Attention(BaseLayer)` – `vision/attention.py`
 
+Layer docs: `context/hints/dsocr-kb/ops/op-Attention.md`
+
 ```python
 # extern/modelmeter/models/deepseek_ocr/layers/vision/attention.py
 
@@ -37,6 +39,8 @@ class Attention(BaseLayer):
 
 ### T010: `Block(BaseLayer)` – `vision/block.py`
 
+Layer docs: `context/hints/dsocr-kb/ops/op-Block.md`
+
 Wraps `Attention` + `MLPBlock` + norms into a single analytic layer.
 
 ```python
@@ -49,17 +53,28 @@ class Block(BaseLayer):
 
 ### T011–T021: Remaining vision modules
 
-- `T011` – `CLIPVisionEmbeddings(BaseLayer)` in `clip_vision_embeddings.py`
-- `T012` – `ImageEncoderViT(BaseLayer)` in `image_encoder_vit.py`
-- `T013` – `LayerNorm2d(BaseLayer)` in `layer_norm2d.py`
-- `T014` – `MLPBlock(BaseLayer)` in `mlp_block.py`
-- `T015` – `MlpProjector(BaseLayer)` in `mlp_projector.py`
-- `T016` – `NoTPAttention(BaseLayer)` in `notp_attention.py`
-- `T017` – `NoTPFeedForward(BaseLayer)` in `notp_feedforward.py`
-- `T018` – `NoTPTransformer(BaseLayer)` in `notp_transformer.py`
-- `T019` – `NoTPTransformerBlock(BaseLayer)` in `notp_transformer_block.py`
-- `T020` – `PatchEmbed(BaseLayer)` in `patch_embed.py`
-- `T021` – `VitModel(BaseLayer)` in `vit_model.py`
+- `T011` – `CLIPVisionEmbeddings(BaseLayer)` in `clip_vision_embeddings.py`  
+  Layer docs: `context/hints/dsocr-kb/ops/op-CLIPVisionEmbeddings.md`
+- `T012` – `ImageEncoderViT(BaseLayer)` in `image_encoder_vit.py`  
+  Layer docs: `context/hints/dsocr-kb/ops/op-ImageEncoderViT.md`
+- `T013` – `LayerNorm2d(BaseLayer)` in `layer_norm2d.py`  
+  Layer docs: `context/hints/dsocr-kb/ops/op-LayerNorm2d.md`
+- `T014` – `MLPBlock(BaseLayer)` in `mlp_block.py`  
+  Layer docs: `context/hints/dsocr-kb/ops/op-MLPBlock.md`
+- `T015` – `MlpProjector(BaseLayer)` in `mlp_projector.py`  
+  Layer docs: `context/hints/dsocr-kb/ops/op-MlpProjector.md`
+- `T016` – `NoTPAttention(BaseLayer)` in `notp_attention.py`  
+  Layer docs: `context/hints/dsocr-kb/ops/op-NoTPAttention.md`
+- `T017` – `NoTPFeedForward(BaseLayer)` in `notp_feedforward.py`  
+  Layer docs: `context/hints/dsocr-kb/ops/op-NoTPFeedForward.md`
+- `T018` – `NoTPTransformer(BaseLayer)` in `notp_transformer.py`  
+  Layer docs: `context/hints/dsocr-kb/ops/op-NoTPTransformer.md`
+- `T019` – `NoTPTransformerBlock(BaseLayer)` in `notp_transformer_block.py`  
+  Layer docs: `context/hints/dsocr-kb/ops/op-NoTPTransformerBlock.md`
+- `T020` – `PatchEmbed(BaseLayer)` in `patch_embed.py`  
+  Layer docs: `context/hints/dsocr-kb/ops/op-PatchEmbed.md`
+- `T021` – `VitModel(BaseLayer)` in `vit_model.py`  
+  Layer docs: `context/hints/dsocr-kb/ops/op-VitModel.md`
 
 These classes should follow the same pattern: accept the minimal set of shape/config parameters (channels, patch size, sequence length, etc.) and implement all `BaseLayer` methods using closed-form formulas.
 
@@ -134,4 +149,3 @@ Optionally add small unit tests under `tests/unit/deepseek_ocr/test_vision_layer
 ### How to verify
 
 - (after implementation) Document the scripts or tests used to validate FLOPs/IO/memory formulas for the vision stack.
-
