@@ -1,36 +1,43 @@
 #!/usr/bin/env python
 # ruff: noqa: E402
-"""DeepSeek-OCR: TorchInfo Static Component Analysis
+"""TorchInfo-based static component analysis for DeepSeek-OCR.
 
-This script uses ``torchinfo`` to run a static structural analysis of the
-DeepSeek-OCR model and derive per-stage parameter / MAC (mult-add) counts.
+This module uses ``torchinfo`` to run a static structural analysis of the
+DeepSeek-OCR model and derive per-stage parameter / MAC (mult-add) counts,
+as well as per-layer summaries suitable for downstream tooling.
 
 It complements the fvcore-based analysis in ``scripts/deepseek-ocr-static-analysis.py``
 by reusing the same session + input preparation but leveraging TorchInfo's
 layer-wise summary.
 
-Usage
------
+Examples
+--------
 Run with the RTX 5090 Pixi environment:
 
     pixi run -e rtx5090 python scripts/analytical/dsocr_find_static_components.py \\
-        --device cuda:0
+        --device cuda:0 \\
+        --output tmp/op-analysis/static/<run_id>
 
-Optional arguments allow you to control image/sequence dimensions and output:
+You can control image/sequence dimensions and TorchInfo depth:
 
     pixi run -e rtx5090 python scripts/analytical/dsocr_find_static_components.py \\
         --device cuda:0 \\
         --base-size 1024 \\
         --image-size 640 \\
         --seq-len 1024 \\
-        --depth 4
+        --depth 4 \\
+        --output tmp/op-analysis/static/<run_id>
 
 Outputs
 -------
-- Prints the full TorchInfo summary table to stdout.
-- Prints an aggregated per-stage breakdown (SAM, CLIP, projector, prefill, decode)
-  derived from TorchInfo's leaf layers.
-- Optionally writes the same information to disk via ``--output``.
+When ``--output`` is provided, the script writes the following files:
+
+* ``torchinfo-summary.txt``: raw TorchInfo table.
+* ``torchinfo-stages.json``: per-stage aggregated params / MACs.
+* ``torchinfo-layers.json``: full per-layer + hierarchical metadata.
+* ``torchinfo-unique-layers.json``: unique layer types (including PyTorch
+  builtins) with usage counts, instance names, filepaths, and the
+  ``is_torch_builtin`` flag.
 """
 
 from __future__ import annotations
@@ -167,7 +174,7 @@ def build_argparser() -> argparse.ArgumentParser:
     """Build CLI argument parser."""
 
     parser = argparse.ArgumentParser(
-        description="TorchInfo-based static component analysis for DeepSeek-OCR.",
+        description=(__doc__ or "").strip(),
         formatter_class=argparse.RawDescriptionHelpFormatter,
     )
 
@@ -244,6 +251,12 @@ def build_argparser() -> argparse.ArgumentParser:
         ),
     )
 
+    parser.add_argument(
+        "--print-help-text",
+        action="store_true",
+        help="Print extended module help text (from the docstring) and exit.",
+    )
+
     return parser
 
 
@@ -299,6 +312,10 @@ def main() -> int:
 
     parser = build_argparser()
     args = parser.parse_args()
+
+    if getattr(args, "print_help_text", False):
+        print((__doc__ or "").strip())
+        return 0
 
     model_path = Path(args.model).resolve()
     if not model_path.exists():
