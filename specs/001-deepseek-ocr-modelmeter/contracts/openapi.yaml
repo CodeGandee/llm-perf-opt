@@ -1,0 +1,335 @@
+openapi: 3.1.0
+info:
+  title: DeepSeek-OCR Analytic Modeling API
+  version: 0.1.0
+paths:
+  /analytic/deepseek-ocr/run:
+    post:
+      summary: Build or refresh the analytic model for DeepSeek-OCR
+      description: >
+        Start an analytic modeling run for DeepSeek-OCR using a specified model variant,
+        workload profile, and optional reference profiling run.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DeepSeekOCRAnalyticRequest'
+      responses:
+        '202':
+          description: Analytic modeling request accepted
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DeepSeekOCRAnalyticAccepted'
+  /analytic/deepseek-ocr/{report_id}/summary:
+    get:
+      summary: Fetch a summary of the DeepSeek-OCR analytic model
+      parameters:
+        - in: path
+          name: report_id
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Analytic model summary
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DeepSeekOCRAnalyticReportSummary'
+  /analytic/deepseek-ocr/{report_id}/model:
+    get:
+      summary: Fetch the full DeepSeek-OCR analytic model and module metrics
+      parameters:
+        - in: path
+          name: report_id
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Full analytic model payload
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DeepSeekOCRAnalyticModel'
+
+components:
+  schemas:
+    DeepSeekOCRAnalyticRequest:
+      type: object
+      required: [model_id, model_variant, workload_profile_id]
+      properties:
+        model_id:
+          type: string
+          description: Canonical model identifier (e.g., deepseek-ai/DeepSeek-OCR).
+        model_variant:
+          type: string
+          description: Internal model variant (e.g., deepseek-ocr-v1-base).
+        workload_profile_id:
+          type: string
+          description: Workload profile id (e.g., dsocr-standard-v1).
+        profile_run_id:
+          type: string
+          nullable: true
+          description: Optional Stage 1/Stage 2 profiling run id used for validation.
+        force_rebuild:
+          type: boolean
+          default: false
+          description: >
+            If true, recompute analytic metrics even if a matching model+workload report already exists.
+    DeepSeekOCRAnalyticAccepted:
+      type: object
+      required: [report_id, status]
+      properties:
+        report_id:
+          type: string
+          description: Identifier that can be used to query the analytic model.
+        status:
+          type: string
+          enum: [queued, running]
+    DeepSeekOCRAnalyticReportSummary:
+      type: object
+      required: [report_id, model_variant, workload_profile_id, predicted_total_time_ms]
+      properties:
+        report_id:
+          type: string
+        model_variant:
+          type: string
+        workload_profile_id:
+          type: string
+        predicted_total_time_ms:
+          type: number
+          format: float
+        measured_total_time_ms:
+          type: number
+          format: float
+          nullable: true
+          description: Optional measured runtime for future validation; not required in this development stage.
+        predicted_vs_measured_ratio:
+          type: number
+          format: float
+          nullable: true
+          description: Optional predicted/measured ratio; may be omitted in this development stage.
+        top_modules:
+          type: array
+          description: Top modules by predicted runtime share.
+          items:
+            $ref: '#/components/schemas/AnalyticModuleSummary'
+        notes:
+          type: string
+    AnalyticModuleSummary:
+      type: object
+      required: [module_id, name, stage, share_of_model_time]
+      properties:
+        module_id:
+          type: string
+        name:
+          type: string
+        stage:
+          type: string
+          enum: [vision, projector, prefill, decode, other]
+        share_of_model_time:
+          type: number
+          format: float
+        total_time_ms:
+          type: number
+          format: float
+        total_flops_tflops:
+          type: number
+          format: float
+        memory_activations_gb:
+          type: number
+          format: float
+    DeepSeekOCRAnalyticModel:
+      type: object
+      required: [report_id, model, workload, modules, module_metrics]
+      properties:
+        report_id:
+          type: string
+        model:
+          $ref: '#/components/schemas/DeepSeekOCRModelSpec'
+        workload:
+          $ref: '#/components/schemas/OCRWorkloadProfile'
+        modules:
+          type: array
+          items:
+            $ref: '#/components/schemas/AnalyticModuleNode'
+        operator_categories:
+          type: array
+          items:
+            $ref: '#/components/schemas/OperatorCategory'
+        module_metrics:
+          type: array
+          items:
+            $ref: '#/components/schemas/ModuleMetricsSnapshot'
+        profile_run_id:
+          type: string
+          nullable: true
+          description: Optional profiling run id for later runtime comparison (not required in this stage).
+    DeepSeekOCRModelSpec:
+      type: object
+      required:
+        - model_id
+        - model_variant
+        - config_path
+        - hidden_size
+        - intermediate_size
+        - num_layers
+        - num_attention_heads
+        - vision_backbone
+        - uses_moe
+      properties:
+        model_id:
+          type: string
+        model_variant:
+          type: string
+        hf_revision:
+          type: string
+          nullable: true
+        config_path:
+          type: string
+        hidden_size:
+          type: integer
+        intermediate_size:
+          type: integer
+        num_layers:
+          type: integer
+        num_attention_heads:
+          type: integer
+        vision_backbone:
+          type: string
+          enum: [sam_vit_b, clip_vit_l, other]
+        uses_moe:
+          type: boolean
+        notes:
+          type: string
+    OCRWorkloadProfile:
+      type: object
+      required: [profile_id, seq_len, base_size, image_size, crop_mode, max_new_tokens]
+      properties:
+        profile_id:
+          type: string
+        description:
+          type: string
+        seq_len:
+          type: integer
+        base_size:
+          type: integer
+        image_size:
+          type: integer
+        crop_mode:
+          type: boolean
+        max_new_tokens:
+          type: integer
+        doc_kind:
+          type: string
+          enum: [text_heavy, mixed_layout, image_rich, synthetic]
+        num_pages:
+          type: integer
+    AnalyticModuleNode:
+      type: object
+      required: [module_id, name, qualified_class_name, stage]
+      properties:
+        module_id:
+          type: string
+        name:
+          type: string
+        qualified_class_name:
+          type: string
+        stage:
+          type: string
+          enum: [vision, projector, prefill, decode, other]
+        parent_id:
+          type: string
+          nullable: true
+        children:
+          type: array
+          items:
+            type: string
+        repetition:
+          type: string
+          enum: [none, for, parfor]
+        repetition_count:
+          type: integer
+          nullable: true
+        constructor_params:
+          type: object
+          additionalProperties: {}
+    OperatorCategory:
+      type: object
+      required: [category_id, display_name]
+      properties:
+        category_id:
+          type: string
+        display_name:
+          type: string
+        description:
+          type: string
+        match_classes:
+          type: array
+          items:
+            type: string
+    ModuleMetricsSnapshot:
+      type: object
+      required:
+        - module_id
+        - profile_id
+        - calls
+        - total_time_ms
+        - total_flops_tflops
+        - total_io_tb
+        - memory_weights_gb
+        - memory_activations_gb
+        - memory_kvcache_gb
+        - share_of_model_time
+      properties:
+        module_id:
+          type: string
+        profile_id:
+          type: string
+        calls:
+          type: integer
+        total_time_ms:
+          type: number
+          format: float
+        total_flops_tflops:
+          type: number
+          format: float
+        total_io_tb:
+          type: number
+          format: float
+        memory_weights_gb:
+          type: number
+          format: float
+        memory_activations_gb:
+          type: number
+          format: float
+        memory_kvcache_gb:
+          type: number
+          format: float
+        share_of_model_time:
+          type: number
+          format: float
+        operator_breakdown:
+          type: array
+          items:
+            $ref: '#/components/schemas/OperatorMetrics'
+    OperatorMetrics:
+      type: object
+      required: [category_id, calls, flops_tflops, io_tb, share_of_module_flops]
+      properties:
+        category_id:
+          type: string
+        calls:
+          type: integer
+        flops_tflops:
+          type: number
+          format: float
+        io_tb:
+          type: number
+          format: float
+        share_of_module_flops:
+          type: number
+          format: float

@@ -19,6 +19,10 @@
 
 - Q: What granularity should DeepSeek-OCR modules use in the analytic model? → A: Medium-granularity modules with leaf nodes at framework built-in layers and no deeper analysis.
 
+### Session 2025-11-18
+
+- Q: How should the standard OCR workload be defined and maintained for DeepSeek-OCR? → A: Fully parameterized synthetic workload defined by documented parameters (no pinned dataset).
+
 ## User Scenarios & Testing *(mandatory)*
 
 <!--
@@ -36,18 +40,32 @@
 
 ### User Story 1 - Understand DeepSeek-OCR performance profile (Priority: P1)
 
-An internal performance engineer wants to generate a performance and memory report for the DeepSeek-OCR model so they can see where time and memory are spent across the major components of the model and identify optimization opportunities.
+An internal performance engineer wants to generate a **theoretical** performance and memory report for the DeepSeek-OCR
+model so they can see where analytic time and memory estimates are spent across the major components of the model and
+identify optimization opportunities before any profiling is run.
 
-**Why this priority**: Without a clear breakdown of how DeepSeek-OCR spends time and memory, it is difficult to plan optimizations, hardware budgets, and service-level expectations; this report is the primary value of the feature.
+**Why this priority**: Without a clear breakdown of how DeepSeek-OCR spends time and memory, it is difficult to plan
+optimizations, hardware budgets, and service-level expectations; this report is the primary value of the feature.
 
-**Independent Test**: This story is independently testable by selecting DeepSeek-OCR in the measurement tool, running a standard analysis, and confirming that a structured report appears showing per-component time and memory usage without requiring any other new features.
+**Independent Test**: This story is independently testable by selecting DeepSeek-OCR in the analytic measurement tool,
+running a standard **theoretical** analysis (no additional runtime profiling), and confirming that:
+- structured analysis data (JSON/YAML) is emitted with per-component analytic time and memory estimates, and
+- human-readable Markdown documentation is generated that explains the analyzed layers/operators, their definitions, and
+  how and why the theoretical estimates are computed the way they are.
 
 Manual test script path (planned): `tests/manual/deepseek_ocr/manual_deepseek_ocr_performance_report.py`
 
 **Acceptance Scenarios**:
 
-1. **Given** the measurement tool is configured with DeepSeek-OCR and a standard OCR workload, **When** the performance engineer requests a performance report, **Then** the tool produces a human-readable summary of runtime and memory usage for each major DeepSeek-OCR component (for example, visual encoder, sequence model, and output head).
-2. **Given** the same configuration and workload, **When** the engineer runs the analysis multiple times, **Then** the top-level per-component metrics are stable within an agreed variance range so they can be used for planning.
+1. **Given** the analytic measurement tool is configured with DeepSeek-OCR and a standard OCR workload, **When** the
+   performance engineer requests a performance report, **Then** the tool produces:
+   - a human-readable Markdown report summarizing analytically estimated runtime and memory usage for each major
+     DeepSeek-OCR component (for example, visual encoder, sequence model, and output head), and
+   - Markdown pages that describe the underlying analytic layers/operators and the formulas and assumptions behind their
+     estimates.
+2. **Given** the same configuration and workload, **When** the engineer runs the analytic analysis multiple times,
+   **Then** the top-level per-component metrics and the generated Markdown documentation are stable and deterministic (no
+   dependence on runtime noise) so they can be used for planning and review.
 
 ---
 
@@ -57,7 +75,7 @@ An internal modeling or capacity-planning engineer wants to access a machine-rea
 
 **Why this priority**: Accurate analytic models depend on detailed counts of lower-level operations and their grouping into meaningful modules; without this, any capacity or cost estimates for DeepSeek-OCR are unreliable.
 
-**Independent Test**: This story is independently testable by exporting a structured representation of DeepSeek-OCR’s modules, operation counts, and call relationships from the measurement tool and verifying it can be consumed by a separate modeling script or spreadsheet without manual editing.
+**Independent Test**: This story is independently testable by exporting a structured representation of DeepSeek-OCR’s modules, operation counts, and call relationships from the analytic measurement tool and verifying it can be consumed by a separate modeling script or spreadsheet without manual editing or runtime traces.
 
 Manual test script path (planned): `tests/manual/deepseek_ocr/manual_deepseek_ocr_model_export.py`
 
@@ -103,21 +121,49 @@ Manual test script path (planned): `tests/manual/deepseek_ocr/manual_deepseek_oc
 
 ### Functional Requirements
 
-- **FR-001**: The measurement system MUST expose DeepSeek-OCR as a named model option that users can select when requesting performance and memory analysis.
-- **FR-002**: The system MUST represent DeepSeek-OCR as a hierarchy of medium-granularity modules that reflects its main architectural components and key sub-blocks (for example, visual encoder, sequence or token model, and output head). Leaf modules MUST correspond to individual low-level operations that are not further decomposed, each with a stable identifier used in reports and exported data.
-- **FR-003**: For each module in the DeepSeek-OCR hierarchy, the system MUST provide aggregated metrics for a standard OCR workload, including execution time, number of calls, and an estimate of memory usage.
-- **FR-004**: The system MUST provide, for each module, a breakdown into underlying operation categories (for example, convolutions, normalizations, linear transformations, attention-like mechanisms, and activation functions) with associated counts and relative cost contributions.
-- **FR-005**: The system MUST capture and expose the call relationships between modules in DeepSeek-OCR, including parent–child links and call counts, so that users can understand the overall call graph and module fan-out/fan-in.
-- **FR-006**: The system MUST support exporting the DeepSeek-OCR analytic model and associated metrics as a machine-readable artifact that can be consumed by downstream analytic tools without manual editing.
-- **FR-007**: The system MUST define a reproducible “standard OCR workload” for DeepSeek-OCR (for example, a small set of representative document images) and use it consistently when generating analytic models and reports for this feature.
-- **FR-008**: The implementation of this feature MUST follow existing project quality practices, including clear documentation for public interfaces, automated tests for core behaviors, and adherence to the repository’s static analysis and style checks.
+- **FR-001**: The measurement system MUST expose DeepSeek-OCR as a named model option that users can select when
+  requesting performance and memory analysis.
+- **FR-002**: The system MUST represent DeepSeek-OCR as a hierarchy of medium-granularity modules that reflects its main
+  architectural components and key sub-blocks (for example, visual encoder, sequence or token model, and output head).
+  Leaf modules MUST correspond to individual low-level operations that are not further decomposed, each with a stable
+  identifier used in reports and exported data.
+- **FR-003**: For each module in the DeepSeek-OCR hierarchy, the system MUST provide aggregated metrics for a standard
+  OCR workload, including execution time, number of calls, and an estimate of memory usage.
+- **FR-004**: The system MUST provide, for each module, a breakdown into underlying operation categories (for example,
+  convolutions, normalizations, linear transformations, attention-like mechanisms, and activation functions) with
+  associated counts and relative cost contributions.
+- **FR-005**: The system MUST capture and expose the call relationships between modules in DeepSeek-OCR, including
+  parent–child links and call counts, so that users can understand the overall call graph and module fan-out/fan-in.
+- **FR-006**: The system MUST support exporting the DeepSeek-OCR analytic model and associated metrics as machine-readable
+  artifacts (for example, JSON and/or YAML) that can be consumed by downstream analytic tools without manual editing.
+- **FR-007**: The system MUST define a reproducible “standard OCR workload” for DeepSeek-OCR as a fully parameterized
+  synthetic workload (for example, document length, resolution, content density, and layout complexity) and use a
+  documented parameter set consistently when generating analytic models and reports for this feature.
+- **FR-008**: The implementation of this feature MUST follow existing project quality practices, including clear
+  documentation for public interfaces, automated tests for core behaviors, and adherence to the repository’s static
+  analysis and style checks.
+- **FR-009**: The system MUST generate human-readable Markdown documentation for the analyzed DeepSeek-OCR layers and
+  operators, explaining each layer’s definition, configuration, and the theoretical FLOPs/I/O/memory formulas and
+  assumptions used in the analytic model.
 
 ### Key Entities *(include if feature involves data)*
 
-- **DeepSeek-OCR model definition**: Conceptual description of the DeepSeek-OCR model as a hierarchy of named modules with their relationships, covering the main components relevant for performance and memory analysis.
-- **Module metrics snapshot**: A collection of metrics for each DeepSeek-OCR module under a specific workload, including execution time, call count, memory usage estimates, and categorized operation counts.
-- **OCR workload profile**: Description of the input documents used to characterize DeepSeek-OCR (for example, number of pages, typical content density, and layout complexity), referenced by the analytic model so that results are interpreted in context.
-- **Target operator list**: The current list of DeepSeek-OCR operator and module types targeted by the analytic model is captured in `reports/20211117-dsorc-op-analysis/static-20251118-130533/torchinfo-unique-layers.md`, with a machine-readable version in `reports/20211117-dsorc-op-analysis/static-20251118-130533/torchinfo-unique-layers.json`.
+- **DeepSeek-OCR model definition**: Conceptual description of the DeepSeek-OCR model as a hierarchy of named modules
+  with their relationships, covering the main components relevant for performance and memory analysis.
+- **Module metrics snapshot**: A collection of metrics for each DeepSeek-OCR module under a specific workload, including
+  execution time, call count, memory usage estimates, and categorized operation counts.
+- **OCR workload profile**: Parameterized description of the synthetic input workload used to characterize DeepSeek-OCR
+  (for example, number of pages, typical content density, resolution, and layout complexity), referenced by the analytic
+  model so that results are interpreted in context; the “standard OCR workload” corresponds to a specific, documented
+  parameter set rather than a pinned dataset.
+- **Target operator list**: The current list of DeepSeek-OCR operator and module types targeted by the analytic model is
+  captured in `reports/20211117-dsorc-op-analysis/static-20251118-130533/torchinfo-unique-layers.md`, with a
+  machine-readable version in
+  `reports/20211117-dsorc-op-analysis/static-20251118-130533/torchinfo-unique-layers.json` and potentially additional
+  JSON/YAML derivatives.
+- **Layer/operator documentation pages**: Human-readable Markdown files generated for each analyzed layer/operator that
+  explain the layer definition, configuration, and how the theoretical FLOPs/I/O/memory estimates are derived and
+  justified.
 
 ## Success Criteria *(mandatory)*
 
@@ -128,7 +174,18 @@ Manual test script path (planned): `tests/manual/deepseek_ocr/manual_deepseek_oc
 
 ### Measurable Outcomes
 
-- **SC-001**: Internal users can generate a DeepSeek-OCR performance and memory report from the measurement tool in a single guided flow, and the report is available within 5 minutes for the defined standard workload.
-- **SC-002**: For the standard OCR workload on a chosen target environment, the total processing time predicted by the analytic model for DeepSeek-OCR is within 15% of the measured processing time in at least 90% of test runs.
-- **SC-003**: At least 90% of DeepSeek-OCR’s measured execution time for the standard workload is attributed to named modules and operation categories in the report, with any remaining time clearly labeled as “other” or “unclassified.”
-- **SC-004**: In feedback from at least two internal performance or ML engineers after using the feature, at least 80% report that the DeepSeek-OCR analytic reports are clear, actionable, and sufficient to guide optimization or capacity-planning decisions.
+- **SC-001**: Internal users can generate a DeepSeek-OCR analytic performance and memory report in a single guided flow,
+  using only static information and analytic formulas, and the report (structured JSON/YAML plus Markdown documentation)
+  is available within 5 minutes for the defined standard workload.
+- **SC-002**: For the standard OCR workload, at least two internal performance or ML engineers can manually review the
+  DeepSeek-OCR analytic model (module hierarchy, operator breakdowns, and cost estimates) and the generated Markdown
+  documentation for individual layers/operators, and agree that they are internally consistent, plausible for the known
+  architecture, and suitable as a theoretical planning tool; no automated runtime comparison is required at this
+  development stage.
+- **SC-003**: At least 90% of DeepSeek-OCR’s analytically estimated execution cost (for example, FLOPs or predicted time)
+  for the standard workload is attributed to named modules and operation categories in the report, with any remaining
+  cost clearly labeled as “other” or “unclassified.”
+- **SC-004**: In feedback from at least two internal performance or ML engineers after using the feature, at least 80%
+  report that the DeepSeek-OCR analytic reports and Markdown documentation are clear, actionable, and sufficient to guide
+  theoretical optimization or capacity-planning discussions, with the understanding that numeric runtime validation will
+  be added in a later phase.

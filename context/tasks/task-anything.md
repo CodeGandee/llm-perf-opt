@@ -1,9 +1,5 @@
-analytically analyze the deepseek ocr model, and implement modelmeter layers for it
-
-## Goal
-- Figure out the main model components (modules) used in DeepSeek-OCR, its call relationships, calling counts, and per-module operator breakdowns.
-- The module-level analysis goes down until we reach pytorch builtin operators (e.g., `torch.nn.Conv2d`, `torch.nn.LayerNorm`, etc.) or well-known custom layers (e.g., FlashAttention).
-- This information will be used to build accurate analytic performance and memory models, which will be implemented under `extern/modelmeter/models/deepseek_ocr/`, according to contracts given in `extern/modelmeter/layers/base.py`
-
-## References
-- `context/hints/dsocr-kb/about-dynamic-tracing-deepseek-ocr.md`, approaches to dynamically trace DeepSeek-OCR model execution, we prefer the recommended approach metioned there.
+revise the plan:
+- python env is `rtx5090` in pixi, run with `pixi run -e rtx5090 <python command>`
+- in `constraints`, there is no effective constraints, theoretical analysis is a separate module, will not run in actual profiling, so no impact on profiling overhead. And it does not split into stage-1/stage-2, it is just about estimating what a forward() call would take, including flops/io/memory. Because we will not consider the actual hardware scheduling/overhead/optimization, so no need to compare with actual profiling result.
+- implementation code will mostly be in `extern/modelmeter/models/deepseek_ocr`, with `src/llm_perf_opt` may contain some reusable code for other models in future.
+- we will also implement many helper scripts in `scripts/analytical`, to extract information from model execution, but they are not considered part of the main implementation.

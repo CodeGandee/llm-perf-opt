@@ -46,6 +46,8 @@ This document is a concise contributor guide for llm-perf-opt. Follow it for any
 ## Active Technologies
 - Python 3.11 + Hydra (omegaconf), mdutils, attrs, nvtx (runtime), Nsight Systems/Compute CLIs (nsys/ncu) (003-nvtx-ncu-profiling)
 - Filesystem artifacts under `/workspace/code/llm-perf-opt/tmp/profile-output/<run_id>/` (nsys/, ncu/, torch_profiler/, static_analysis/) (003-nvtx-ncu-profiling)
+- Python 3.11 (Pixi-managed environment, CUDA 12.4 toolchain) + PyTorch, ModelMeter (`extern/modelmeter`), Hydra/omegaconf, attrs, TorchInfo, NVIDIA Nsight (001-deepseek-ocr-modelmeter)
+- Filesystem-only artifacts under `reports/` and `tmp/profile-output/` (no external database or message bus) (001-deepseek-ocr-modelmeter)
 
 ## Recent Changes
 - 003-nvtx-ncu-profiling: Added Python 3.11 + Hydra (omegaconf), mdutils, attrs, nvtx (runtime), Nsight Systems/Compute CLIs (nsys/ncu)
