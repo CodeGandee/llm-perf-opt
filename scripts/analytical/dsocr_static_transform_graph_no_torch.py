@@ -232,6 +232,9 @@ def _build_unique_layers(hierarchy: List[Dict[str, Any]]) -> List[Dict[str, Any]
                 "count": 0,
                 "parents": set(),
                 "children": set(),
+                "class_names": set(),
+                "var_names": set(),
+                "instance_names": set(),
             }
         return by_qualname[qual]
 
@@ -240,6 +243,17 @@ def _build_unique_layers(hierarchy: List[Dict[str, Any]]) -> List[Dict[str, Any]
         if isinstance(qual, str) and qual:
             entry = ensure_entry(qual)
             entry["count"] = int(entry.get("count", 0)) + 1
+
+            node_class = node.get("class_name")
+            node_var = node.get("var_name")
+            node_module_name = node.get("module_name")
+
+            if isinstance(node_class, str) and node_class:
+                entry["class_names"].add(node_class)
+            if isinstance(node_var, str) and node_var:
+                entry["var_names"].add(node_var)
+            if isinstance(node_module_name, str):
+                entry["instance_names"].add(node_module_name)
 
             if isinstance(parent_qual, str) and parent_qual:
                 parent_entry = ensure_entry(parent_qual)
@@ -258,9 +272,16 @@ def _build_unique_layers(hierarchy: List[Dict[str, Any]]) -> List[Dict[str, Any]
 
     unique_layers: List[Dict[str, Any]] = []
     for qual, entry in by_qualname.items():
+        class_names = sorted(entry.get("class_names", set()))
+        var_names = sorted(entry.get("var_names", set()))
+        instance_names = sorted(entry.get("instance_names", set()))
+
         unique_layers.append(
             {
                 "class_name_qualified": qual,
+                "class_name": class_names[0] if class_names else None,
+                "var_name": var_names,
+                "instance_name": instance_names,
                 "count": int(entry.get("count", 0)),
                 "parents": sorted(entry.get("parents", set())),
                 "children": sorted(entry.get("children", set())),
