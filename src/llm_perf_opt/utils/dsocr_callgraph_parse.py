@@ -19,6 +19,8 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any, Dict, Iterable, List, Mapping, MutableMapping, Optional, Tuple
 
+from llm_perf_opt.data.deepseek_ocr_analytic import OperatorSpec, TargetOperatorList
+
 
 @dataclass
 class CallGraphData:
@@ -124,6 +126,58 @@ def load_callgraph_json(path: Path) -> CallGraphData:
         module_children=module_children,
         module_classes=module_classes,
     )
+
+
+def load_target_operator_list(artifact_dir: str) -> TargetOperatorList:
+    """
+    Load TorchInfo operator snapshot into a :class:`TargetOperatorList`.
+
+    Parameters
+    ----------
+    artifact_dir : str
+        Directory containing TorchInfo artifacts such as
+        ``torchinfo-unique-layers.json``.
+
+    Returns
+    -------
+    TargetOperatorList
+        Parsed operator snapshot including artifact paths and operator
+        specs derived from TorchInfo JSON.
+    """
+
+    base = Path(artifact_dir).expanduser().resolve()
+    layers_json = base / "torchinfo-unique-layers.json"
+    layers_md = base / "torchinfo-unique-layers.md"
+    stages_json = base / "torchinfo-stages.json"
+
+    data = json.loads(layers_json.read_text(encoding="utf-8"))
+    layers = data.get("layers", [])
+
+    operators: List[OperatorSpec] = []
+    for entry in layers:
+        is_torch_builtin = bool(entry.get("is_torch_builtin"))
+        operators.append(
+            OperatorSpec(
+                class_name=str(entry.get("class_name", "")),
+                class_name_qualified=str(entry.get("class_name_qualified", "")),
+                is_pytorch_builtin=is_torch_builtin,
+                is_custom=not is_torch_builtin,
+                children_classes=[str(c) for c in entry.get("children", [])],
+                default_category_id="",
+            ),
+        )
+
+    snapshot_id = str(data.get("generated_at", ""))
+
+    return TargetOperatorList(
+        snapshot_id=snapshot_id,
+        source_artifact_dir=str(base),
+        layers_md_path=str(layers_md),
+        layers_json_path=str(layers_json),
+        stages_json_path=str(stages_json),
+        operators=operators,
+    )
+
 
 
 def split_numeric_suffix(name: str) -> Tuple[str, Optional[int]]:

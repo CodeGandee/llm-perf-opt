@@ -44,11 +44,11 @@ included where explicitly requested in the spec or for critical paths.
 
 **⚠️ CRITICAL**: No user story work can begin until this phase is complete
 
-- [ ] T004 [P] Create DeepSeek-OCR analytic layer package structure under `extern/modelmeter/models/deepseek_ocr/layers/` (add `__init__.py`, `core/`, `vision/`, `decoder/`, `llama/` subpackages and stub `BaseLayer` subclasses for each file proposed in `specs/001-deepseek-ocr-modelmeter/plan.md`)
-- [ ] T005 [P] Implement core analytic domain models `DeepSeekOCRModelSpec`, `OCRWorkloadProfile`, and `AnalyticModelReport` in `src/llm_perf_opt/data/deepseek_ocr_analytic.py` and export them from `src/llm_perf_opt/data/__init__.py` according to `specs/001-deepseek-ocr-modelmeter/data-model.md`
-- [ ] T006 [P] Implement supporting analytic domain models (`AnalyticModuleNode`, `OperatorCategory`, `ModuleMetricsSnapshot`, `OperatorMetrics`, `TargetOperatorList`, `OperatorSpec`) in `src/llm_perf_opt/data/deepseek_ocr_analytic.py` with attrs-based validation
-- [ ] T007 [P] Add analytic artifact path helpers to `src/llm_perf_opt/utils/paths.py` for `AnalyticModelReport` outputs and `layer_docs_dir`, ensuring all returned paths are absolute within `tmp/profile-output/<run_id>/static_analysis/analytic_model/`
-- [ ] T008 [P] Implement a `load_target_operator_list` helper in `src/llm_perf_opt/utils/dsocr_callgraph_parse.py` that parses `reports/20211117-dsorc-op-analysis/static-20251118-130533/torchinfo-unique-layers.{json,md}` into a populated `TargetOperatorList`
+- [X] T004 [P] Create DeepSeek-OCR analytic layer package structure under `extern/modelmeter/models/deepseek_ocr/layers/` (add `__init__.py`, `core/`, `vision/`, `decoder/`, `llama/` subpackages and stub `BaseLayer` subclasses for each file proposed in `specs/001-deepseek-ocr-modelmeter/plan.md`)
+- [X] T005 [P] Implement core analytic domain models `DeepSeekOCRModelSpec`, `OCRWorkloadProfile`, and `AnalyticModelReport` in `src/llm_perf_opt/data/deepseek_ocr_analytic.py` and export them from `src/llm_perf_opt/data/__init__.py` according to `specs/001-deepseek-ocr-modelmeter/data-model.md`
+- [X] T006 [P] Implement supporting analytic domain models (`AnalyticModuleNode`, `OperatorCategory`, `ModuleMetricsSnapshot`, `OperatorMetrics`, `TargetOperatorList`, `OperatorSpec`) in `src/llm_perf_opt/data/deepseek_ocr_analytic.py` with attrs-based validation
+- [X] T007 [P] Add analytic artifact path helpers to `src/llm_perf_opt/utils/paths.py` for `AnalyticModelReport` outputs and `layer_docs_dir`, ensuring all returned paths are absolute within `tmp/profile-output/<run_id>/static_analysis/analytic_model/`
+- [X] T008 [P] Implement a `load_target_operator_list` helper in `src/llm_perf_opt/utils/dsocr_callgraph_parse.py` that parses `reports/20211117-dsorc-op-analysis/static-20251118-130533/torchinfo-unique-layers.{json,md}` into a populated `TargetOperatorList`
 
 **Checkpoint**: Foundational models, layer skeletons, and helper utilities are ready; user story implementation can now begin
 
@@ -62,7 +62,7 @@ included where explicitly requested in the spec or for critical paths.
 
 ### Implementation for User Story 1 – Vision
 
-- [ ] T009 [P] [US1] Implement `Attention(BaseLayer)` in `extern/modelmeter/models/deepseek_ocr/layers/vision/attention.py` using TorchInfo shapes and call counts from `reports/20211117-dsorc-op-analysis/static-20251118-130533/torchinfo-unique-layers.json` (docs: context/hints/dsocr-kb/ops/op-Attention.md)
+- [X] T009 [P] [US1] Implement `Attention(BaseLayer)` in `extern/modelmeter/models/deepseek_ocr/layers/vision/attention.py` using TorchInfo shapes and call counts from `reports/20211117-dsorc-op-analysis/static-20251118-130533/torchinfo-unique-layers.json` (docs: context/hints/dsocr-kb/ops/op-Attention.md)
 - [ ] T010 [P] [US1] Implement `Block(BaseLayer)` in `extern/modelmeter/models/deepseek_ocr/layers/vision/block.py` to aggregate attention and MLP vision costs (docs: context/hints/dsocr-kb/ops/op-Block.md)
 - [ ] T011 [P] [US1] Implement `CLIPVisionEmbeddings(BaseLayer)` in `extern/modelmeter/models/deepseek_ocr/layers/vision/clip_vision_embeddings.py` modeling patch + positional embeddings (docs: context/hints/dsocr-kb/ops/op-CLIPVisionEmbeddings.md)
 - [ ] T012 [P] [US1] Implement `ImageEncoderViT(BaseLayer)` in `extern/modelmeter/models/deepseek_ocr/layers/vision/image_encoder_vit.py` as the main ViT vision encoder analytic model (docs: context/hints/dsocr-kb/ops/op-ImageEncoderViT.md)

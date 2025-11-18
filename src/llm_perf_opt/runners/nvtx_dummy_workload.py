@@ -6,6 +6,8 @@ exercise NVTX ranges (stem, residual, head, and conv subranges).
 
 from __future__ import annotations
 
+from typing import Any
+
 import torch
 import hydra
 from omegaconf import DictConfig
@@ -25,7 +27,7 @@ def main(cfg: DictConfig) -> None:  # pragma: no cover - tiny workload
     except Exception:
         bs = 4
 
-    model = get_model("dummy_shallow_resnet", device=device)
+    model: Any = get_model("dummy_shallow_resnet", device=device)
     x = torch.randn(bs, 3, 64, 64, device=device)
     # Warmup
     try:
@@ -39,4 +41,3 @@ def main(cfg: DictConfig) -> None:  # pragma: no cover - tiny workload
 
 if __name__ == "__main__":  # pragma: no cover
     main()
-

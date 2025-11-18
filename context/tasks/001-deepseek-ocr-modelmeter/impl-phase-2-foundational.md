@@ -230,13 +230,75 @@ EOF
 
 ## Implementation Summary
 
-*(to be filled after implementation)*
-
 ### What has been implemented
 
-- (after implementation) Summarize concrete classes in `deepseek_ocr_analytic.py`, path helpers, and layer package files.
+- Added DeepSeek-OCR analytic domain models in `src/llm_perf_opt/data/deepseek_ocr_analytic.py`, including:
+  - Core entities: `DeepSeekOCRModelSpec`, `OCRWorkloadProfile`, `AnalyticModelReport`.
+  - Supporting entities: `AnalyticModuleNode`, `OperatorCategory`, `ModuleMetricsSnapshot`, `OperatorMetrics`,
+    `TargetOperatorList`, `OperatorSpec`.
+  - Validators for absolute path fields (`config_path`, TorchInfo artifact paths, `layer_docs_dir`) and non-negative
+    numeric metrics (FLOPs, I/O, memory, counts, shares).
+- Updated `src/llm_perf_opt/data/__init__.py` to re-export existing Stage 1 profiling models from `models.py` and to
+  export all DeepSeek-OCR analytic data models so downstream code can import from `llm_perf_opt.data`.
+- Created the DeepSeek-OCR analytic layer package skeleton under `extern/modelmeter/models/deepseek_ocr/layers/`:
+  - `__init__.py` exposing `DeepseekOCRModel`.
+  - `core/` with `deepseek_ocr_model.py` implementing `DeepseekOCRModel(BaseLayer)` that aggregates
+    `forward_tensor_core_flops` from injected `vision_layer` and `decoder_layer`.
+  - `vision/` with stub `BaseLayer` subclasses:
+    `Attention`, `Block`, `CLIPVisionEmbeddings`, `ImageEncoderViT`, `LayerNorm2d`, `MLPBlock`, `MlpProjector`,
+    `NoTPAttention`, `NoTPFeedForward`, `NoTPTransformer`, `NoTPTransformerBlock`, `PatchEmbed`, `VitModel`.
+  - `decoder/` with stub `BaseLayer` subclasses:
+    `DeepseekV2DecoderLayer`, `DeepseekV2MLP`, `DeepseekV2MoE`, `DeepseekV2RMSNorm`, `MoEGate`.
+  - `llama/` with stub `BaseLayer` subclasses:
+    `LlamaFlashAttention2`, `LlamaRotaryEmbedding`.
+- Extended `src/llm_perf_opt/utils/paths.py` with:
+  - `workspace_root()` to locate the workspace by walking up from `paths.py` until `pyproject.toml` or `.git` is found.
+  - `analytic_model_dir(run_id)` to return an absolute path under
+    `tmp/profile-output/<run_id>/static_analysis/analytic_model`.
+  - `analytic_layer_docs_dir(run_id)` to return the corresponding `layers/` subdirectory for Markdown docs.
+- Extended `src/llm_perf_opt/utils/dsocr_callgraph_parse.py` with:
+  - Imports of `OperatorSpec` and `TargetOperatorList` from `llm_perf_opt.data.deepseek_ocr_analytic`.
+  - `load_target_operator_list(artifact_dir)` that:
+    - Resolves `artifact_dir` and TorchInfo files (`torchinfo-unique-layers.{json,md}`, `torchinfo-stages.json`) to
+      absolute paths.
+    - Parses `torchinfo-unique-layers.json` into a list of `OperatorSpec` instances.
+    - Returns a populated `TargetOperatorList` with `snapshot_id`, artifact paths, and operator list.
+- Updated `specs/001-deepseek-ocr-modelmeter/tasks.md` Phase 2 entries T004–T008 to `[X]` now that the layer package
+  skeleton, domain models, path helpers, and TorchInfo loader are implemented.
 
 ### How to verify
 
-- (after implementation) Document the script or test suite used to validate model construction and TorchInfo parsing.
+- From the workspace root (`/workspace/code/llm-perf-opt`), run the Phase 2 smoke tests:
+
+  ```bash
+  # 1. Import domain models
+  pixi run -e rtx5090 python -c "from llm_perf_opt.data.deepseek_ocr_analytic import DeepSeekOCRModelSpec, AnalyticModelReport"
+
+  # 2. Import path helpers and confirm absolute analytic model path
+  pixi run -e rtx5090 python -c "from llm_perf_opt.utils.paths import analytic_model_dir; print(analytic_model_dir('test-run'))"
+
+  # 3. Load TargetOperatorList from TorchInfo artifacts
+  pixi run -e rtx5090 python - << 'EOF'
+  from llm_perf_opt.utils.dsocr_callgraph_parse import load_target_operator_list
+  tol = load_target_operator_list('reports/20211117-dsorc-op-analysis/static-20251118-130533')
+  print(f"snapshot_id={tol.snapshot_id}")
+  print(f"num_operators={len(tol.operators)}")
+  print(tol.layers_json_path)
+  EOF
+  ```
+
+- Expected outcomes:
+  - Step 1: Imports succeed without raising exceptions.
+  - Step 2: `analytic_model_dir('test-run')` prints an absolute path of the form
+    `/workspace/code/llm-perf-opt/tmp/profile-output/test-run/static_analysis/analytic_model`.
+  - Step 3: `load_target_operator_list` succeeds, `snapshot_id` matches the `generated_at` field in
+    `torchinfo-unique-layers.json`, `num_operators` equals `num_unique_layers` (currently 29), and
+    `layers_json_path` is an absolute path into the `reports/20211117-dsorc-op-analysis/static-20251118-130533/`
+    directory.
+
+- Optional: run the existing unit tests to ensure Phase 2 changes do not break Stage 1/2 profiling flows:
+
+  ```bash
+  pixi run -e rtx5090 pytest tests/unit -q
+  ```
 

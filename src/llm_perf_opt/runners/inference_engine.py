@@ -77,7 +77,7 @@ def _iter_images(root: str, fallback_patterns: list[str], subset_filelist: str |
     return [pp.resolve() for pp in uniq]
 
 
-def _require_int_max_new_tokens(raw_mnt: object) -> int:
+def _require_int_max_new_tokens(raw_mnt: Any) -> int:
     if raw_mnt is None:
         raise ValueError(
             "infer.max_new_tokens must be an integer; got null/None. "
@@ -440,4 +440,3 @@ def run_stage_dataset(
         )
 
     return runs, preds_for_outputs, summary
-
