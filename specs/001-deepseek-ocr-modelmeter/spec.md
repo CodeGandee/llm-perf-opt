@@ -117,6 +117,7 @@ Manual test script path (planned): `tests/manual/deepseek_ocr/manual_deepseek_oc
 - **DeepSeek-OCR model definition**: Conceptual description of the DeepSeek-OCR model as a hierarchy of named modules with their relationships, covering the main components relevant for performance and memory analysis.
 - **Module metrics snapshot**: A collection of metrics for each DeepSeek-OCR module under a specific workload, including execution time, call count, memory usage estimates, and categorized operation counts.
 - **OCR workload profile**: Description of the input documents used to characterize DeepSeek-OCR (for example, number of pages, typical content density, and layout complexity), referenced by the analytic model so that results are interpreted in context.
+- **Target operator list**: The current list of DeepSeek-OCR operator and module types targeted by the analytic model is captured in `reports/20211117-dsorc-op-analysis/static-20251118-130533/torchinfo-unique-layers.md`, with a machine-readable version in `reports/20211117-dsorc-op-analysis/static-20251118-130533/torchinfo-unique-layers.json`.
 
 ## Success Criteria *(mandatory)*
 
