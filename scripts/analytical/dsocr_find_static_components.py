@@ -38,6 +38,8 @@ When ``--output`` is provided, the script writes the following files:
 * ``torchinfo-unique-layers.json``: unique layer types (including PyTorch
   builtins) with usage counts, instance names, filepaths, and the
   ``is_torch_builtin`` flag.
+* ``torchinfo-unique-layers.md``: Markdown listing of unique layers grouped
+  into non-PyTorch modules and PyTorch builtins.
 """
 
 from __future__ import annotations
@@ -51,6 +53,7 @@ from pathlib import Path
 from typing import Any, Dict, Iterable, List, Mapping
 
 import torch
+from mdutils.mdutils import MdUtils  # type: ignore[import-untyped]
 from torchinfo import ModelStatistics, summary
 
 
@@ -168,6 +171,52 @@ def build_unique_layers_from_hierarchy(hierarchy: List[Dict[str, Any]]) -> List[
 
     unique_layers.sort(key=lambda x: x["class_name_qualified"])
     return unique_layers
+
+
+def write_unique_layers_markdown(output_dir: Path, unique_layers: List[Dict[str, Any]]) -> None:
+    """Write a Markdown summary of unique layers using mdutils.
+
+    Parameters
+    ----------
+    output_dir : pathlib.Path
+        Directory where the Markdown file should be written. The file
+        will be named ``torchinfo-unique-layers.md``.
+    unique_layers : list of dict
+        Unique layer records as produced by ``build_unique_layers_from_hierarchy``.
+    """
+
+    file_base = str(output_dir / "torchinfo-unique-layers")
+    md = MdUtils(file_name=file_base)
+    md.new_header(level=1, title="TorchInfo Unique Layers")
+
+    non_builtin = [layer for layer in unique_layers if not bool(layer.get("is_torch_builtin"))]
+    builtin = [layer for layer in unique_layers if bool(layer.get("is_torch_builtin"))]
+
+    def emit_group(title: str, layers: List[Dict[str, Any]]) -> None:
+        md.new_header(level=2, title=title)
+        if not layers:
+            md.new_paragraph("*(none)*")
+            return
+
+        for layer in layers:
+            class_name = layer.get("class_name") or layer.get("class_name_qualified") or "<unknown>"
+            md.new_header(level=3, title=str(class_name))
+
+            filepaths = [str(p) for p in layer.get("filepaths", [])]
+            children = [str(c) for c in layer.get("children", [])]
+
+            items = [
+                f"class_name: {layer.get('class_name')}",
+                f"class_name_qualified: {layer.get('class_name_qualified')}",
+                f"filepaths: {', '.join(filepaths) if filepaths else '(none)'}",
+                f"children: {', '.join(children) if children else '(none)'}",
+            ]
+            md.new_list(items)
+
+    emit_group("Non‑PyTorch Modules", non_builtin)
+    emit_group("PyTorch Builtins", builtin)
+
+    md.create_md_file()
 
 
 def build_argparser() -> argparse.ArgumentParser:
@@ -528,11 +577,13 @@ def main() -> int:
                 "layers": unique_layers,
             }
             unique_layers_path.write_text(json.dumps(unique_payload, indent=2), encoding="utf-8")
+            write_unique_layers_markdown(output_dir=output_dir, unique_layers=unique_layers)
 
             print(f"✓ Wrote TorchInfo summary text: {txt_path}")
             print(f"✓ Wrote per-stage JSON summary: {stages_json_path}")
             print(f"✓ Wrote per-layer JSON summary: {layers_json_path}")
             print(f"✓ Wrote unique-layer JSON summary: {unique_layers_path}")
+            print(f"✓ Wrote unique-layer Markdown summary: {output_dir / 'torchinfo-unique-layers.md'}")
         except Exception as exc:  # pragma: no cover - defensive logging
             print(f"✗ Failed to write outputs: {exc}")
             import traceback
