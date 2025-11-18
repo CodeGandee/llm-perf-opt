@@ -59,13 +59,9 @@ def _add_stats(a: Dict[str, int], b: Dict[str, int]) -> Dict[str, int]:
 
 
 def _is_torch_builtin(node: Dict[str, Any]) -> bool:
-    """Identify torch built-in layers via their fully-qualified class name."""
+    """Identify torch built-in layers using the exported flag."""
 
-    qualname = node.get("class_name_qualified")
-    if not isinstance(qualname, str):
-        return False
-    # Treat anything under the torch.* namespace as a built-in layer.
-    return qualname.startswith("torch.")
+    return bool(node.get("is_torch_builtin"))
 
 
 def _transform_node(
