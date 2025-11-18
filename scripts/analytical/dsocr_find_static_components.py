@@ -206,10 +206,10 @@ def write_unique_layers_markdown(output_dir: Path, unique_layers: List[Dict[str,
             children = [str(c) for c in layer.get("children", [])]
 
             items = [
-                f"class_name: {layer.get('class_name')}",
-                f"class_name_qualified: {layer.get('class_name_qualified')}",
-                f"filepaths: {', '.join(filepaths) if filepaths else '(none)'}",
-                f"children: {', '.join(children) if children else '(none)'}",
+                f"**class_name**: {layer.get('class_name')}",
+                f"**class_name_qualified**: {layer.get('class_name_qualified')}",
+                f"**filepaths**: {', '.join(filepaths) if filepaths else '(none)'}",
+                f"**children**: {', '.join(children) if children else '(none)'}",
             ]
             md.new_list(items)
 
