@@ -246,7 +246,10 @@ def _build_unique_layers(hierarchy: List[Dict[str, Any]]) -> List[Dict[str, Any]
 
             node_class = node.get("class_name")
             node_var = node.get("var_name")
-            node_module_name = node.get("module_name")
+            # Support both new ``instance_name`` and legacy ``module_name`` keys.
+            node_module_name = node.get("instance_name")
+            if node_module_name is None:
+                node_module_name = node.get("module_name")
 
             if isinstance(node_class, str) and node_class:
                 entry["class_names"].add(node_class)

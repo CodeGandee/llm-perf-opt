@@ -143,7 +143,8 @@ class TorchinfoJSONExporter:
             "layer_id": _to_jsonable(getattr(layer, "layer_id", None)),
             "var_name": getattr(layer, "var_name", None),
             "class_name": getattr(layer, "class_name", None),
-            "module_name": module_name,
+            # Instance name within the PyTorch module tree (from named_modules()).
+            "instance_name": module_name,
             "class_name_qualified": class_name_qualified,
             "depth": int(getattr(layer, "depth", 0) or 0),
             "depth_index": int(getattr(layer, "depth_index", 0) or 0),
