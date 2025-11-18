@@ -50,7 +50,7 @@ sequenceDiagram
 graph TD
     subgraph Phase1["Phase 1: Setup"]
         P1T1[T001: Pixi env] --> P1A1[rtx5090 Python 3.11]
-        P1T2[T002: TorchInfo artifacts] --> P1A2[torchinfo-unique-layers.{json,md}]
+        P1T2[T002: TorchInfo artifacts] --> P1A2[torchinfo-unique-layers-json-and-md]
     end
 
     subgraph Phase2["Phase 2: Foundation"]
@@ -104,4 +104,3 @@ graph TD
 - Spec: `specs/001-deepseek-ocr-modelmeter/spec.md`
 - Data model: `specs/001-deepseek-ocr-modelmeter/data-model.md`
 - Contracts: `specs/001-deepseek-ocr-modelmeter/contracts/`
-
