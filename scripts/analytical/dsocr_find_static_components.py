@@ -205,13 +205,20 @@ def write_unique_layers_markdown(output_dir: Path, unique_layers: List[Dict[str,
             filepaths = [str(p) for p in layer.get("filepaths", [])]
             children = [str(c) for c in layer.get("children", [])]
 
-            items = [
-                f"**class_name**: {layer.get('class_name')}",
-                f"**class_name_qualified**: {layer.get('class_name_qualified')}",
-                f"**filepaths**: {', '.join(filepaths) if filepaths else '(none)'}",
-                f"**children**: {', '.join(children) if children else '(none)'}",
-            ]
-            md.new_list(items)
+            md.new_paragraph(f"**class_name**: {layer.get('class_name')}")
+            md.new_paragraph(f"**class_name_qualified**: {layer.get('class_name_qualified')}")
+
+            if filepaths:
+                md.new_paragraph("**filepaths**:")
+                md.new_list(filepaths)
+            else:
+                md.new_paragraph("**filepaths**: (none)")
+
+            if children:
+                md.new_paragraph("**children**:")
+                md.new_list(children)
+            else:
+                md.new_paragraph("**children**: (none)")
 
     emit_group("Non‑PyTorch Modules", non_builtin)
     emit_group("PyTorch Builtins", builtin)
