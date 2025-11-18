@@ -132,12 +132,19 @@ class TorchinfoJSONExporter:
         module = getattr(layer, "module", None)
         module_name = self.m_named_modules.get(id(module)) if module is not None else None  # type: ignore[union-attr]
 
+        # Fully-qualified class name for the underlying nn.Module, when available.
+        class_name_qualified: str | None = None
+        if module is not None:
+            cls_obj = module.__class__
+            class_name_qualified = f"{cls_obj.__module__}.{cls_obj.__qualname__}"
+
         return {
             "index": index,
             "layer_id": _to_jsonable(getattr(layer, "layer_id", None)),
             "var_name": getattr(layer, "var_name", None),
             "class_name": getattr(layer, "class_name", None),
             "module_name": module_name,
+            "class_name_qualified": class_name_qualified,
             "depth": int(getattr(layer, "depth", 0) or 0),
             "depth_index": int(getattr(layer, "depth_index", 0) or 0),
             "is_leaf_layer": bool(getattr(layer, "is_leaf_layer", False)),
