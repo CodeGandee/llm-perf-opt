@@ -36,7 +36,7 @@ def __init__(self, config: DeepseekV2Config)
 **Created Components**:
 - `self.model`: `DeepseekOCRModel` (transformer with vision encoders)
 - `self.vocab_size`: Vocabulary size (from config)
-- `self.lm_head`: `nn.Linear(hidden_size=1280, vocab_size=102400, bias=False)` – maps final hidden states to vocabulary logits
+- `self.lm_head`: `nn.Linear(hidden_size=config.hidden_size, vocab_size=config.vocab_size, bias=False)` – maps final hidden states to vocabulary logits
 
 **Key Methods**:
 1. **`forward(...)`** (`modeling_deepseekocr.py:540-614`):
@@ -229,7 +229,7 @@ def infer(
 Assume:
 - `B` = batch size
 - `S` = sequence length (text + image tokens)
-- `V` = vocab_size (102,400 for DeepSeek-OCR)
+- `V` = vocab_size (≈1e5; **129,280 for DeepSeek-OCR**)
 - `d_model` = 1280
 
 #### Training Mode (with labels):
@@ -238,26 +238,26 @@ Assume:
    ```
    FLOPs_model = Vision encoding + LLM decoder
                = ~2.5 TFLOPs (vision, see op-DeepseekOCRModel.md)
-                 + 40 layers × [attention + MoE] × S tokens
+                 + num_hidden_layers × [attention + MoE] × S tokens
    ```
 
-2. **LM Head projection**:
+2. **LM Head projection** (example vocab size):
    ```
    FLOPs_lm_head = 2 × B × S × d_model × V
-                 = 2 × 1 × 8192 × 1280 × 102400
+                 = 2 × 1 × 8192 × 1280 × 102400   # replace 102400 with 129280 for the actual DeepSeek-OCR checkpoint
                  ≈ 2.15 TFLOPs
    ```
 
 3. **CrossEntropyLoss**:
    ```
    FLOPs_loss = B × (S-1) × V  (softmax + log + gather)
-              ≈ 1 × 8191 × 102400 ≈ 0.84 GFLOPs
+              ≈ 1 × 8191 × 102400 ≈ 0.84 GFLOPs   # slightly higher for V=129280
    ```
 
-**Total (training, single forward)**:
+**Total (training, single forward, example config)**:
 ```
 ≈ Vision (2.5T) + LLM decoder (varies by S) + LM head (2.15T) + Loss (0.84G)
-≈ 4.65 TFLOPs + LLM decoder FLOPs
+≈ Vision (2.5T) + LM head (~2.15T) + Loss (0.84G) + LLM decoder FLOPs
 ```
 
 #### Inference Mode (generate):
@@ -271,8 +271,9 @@ During autoregressive generation:
 - **Decode pass** (each subsequent token):
   ```
   FLOPs_per_token = LLM decoder (1 token, using KV cache) + LM head (1 token)
-                  ≈ 40 layers × [MoE + Attention with cache] + 2 × 1 × 1280 × 102400
-                  ≈ [varies by MoE] + 0.26 GFLOPs (LM head)
+                  ≈ num_hidden_layers × [MoE + Attention with cache]
+                    + 2 × B × S × d_model × V
+                  ≈ [varies by MoE] + 0.26 GFLOPs (LM head for V≈1e5)
   ```
 
 - **Total generation** (N=8192 new tokens):
@@ -281,7 +282,9 @@ During autoregressive generation:
             ≈ (2.5T + LLM_prefill + 2.15T) + 8192 × (LLM_decode + 0.26G)
   ```
 
-**Key Insight**: The LM head projection (1280 → 102400) accounts for ~2 TFLOPs per forward pass, which is non-trivial but still smaller than vision encoding or LLM decoder compute.
+**Key Insight**: For a vocab size on the order of 1e5 (102400–129280), the LM
+head projection (1280 → V) accounts for ~2 TFLOPs per forward pass, which is
+non-trivial but still smaller than vision encoding or LLM decoder compute.
 
 ### Memory Usage
 
@@ -290,14 +293,14 @@ During autoregressive generation:
 1. **DeepseekOCRModel**:
    ```
    Vision encoders: ~393M parameters (SAM + CLIP + projector)
-   LLM decoder: ~varies (embeddings + 40 layers with MoE)
-   See op-DeepseekOCRModel.md for breakdown
+   LLM decoder: ~varies (embeddings + config.num_hidden_layers layers with MoE)
+   See op-DeepseekOCRModel.md / op-DeepseekV2Model.md for breakdowns
    ```
 
-2. **LM Head**:
+2. **LM Head** (example V=102400):
    ```
-   lm_head: 1280 × 102400 = 131.072M parameters
-   At bf16: 131M × 2 bytes ≈ 262 MB
+   lm_head: 1280 × 102400 = 131.072M parameters  (≈165M for V=129280)
+   At bf16: 131M × 2 bytes ≈ 262 MB (≈330 MB for V=129280)
    ```
 
 **Total model parameters**: ~(393M + LLM_decoder + 131M)

@@ -99,7 +99,7 @@ sequenceDiagram
     end
 
     Embed->>LLM: inputs_embeds<br/>(text + vision tokens)
-    LLM->>LLM: 40 decoder layers<br/>(MoE + Attention)
+    LLM->>LLM: decoder stack<br/>(MoE + Attention, repeated config.num_hidden_layers times)
     LLM-->>Input: hidden_states<br/>(B, seq_len, 1280)
 ```
 
@@ -210,9 +210,9 @@ Assume:
 
 #### LLM Decoder (inherited from DeepseekV2Model):
 ```
-FLOPs_llm ≈ 40 layers × [attention + MoE] × S tokens
-          ≈ varies by sequence length and MoE sparsity
-          (See op-DeepseekV2Model.md for full breakdown)
+FLOPs_llm ≈ num_hidden_layers × [attention + MoE] × S tokens
+          ≈ varies by sequence length, MoE sparsity, and whether MLA is used
+          (See op-DeepseekV2Model.md and op-DeepseekV2DecoderLayer.md for breakdowns)
 ```
 
 **Key Insight**: Vision encoding is a one-time cost during prefill. For a document image with 6 patches, vision accounts for ~2.5 TFLOPs, while the LLM decoder dominates the total compute (especially during long-context OCR generation).
@@ -234,8 +234,10 @@ FLOPs_llm ≈ 40 layers × [attention + MoE] × S tokens
 
 2. **LLM Decoder** (inherited):
    ```
-   See op-DeepseekV2Model.md for full breakdown
-   (includes token embeddings, 40 decoder layers with MoE)
+   See op-DeepseekV2Model.md for full breakdown.
+   Total parameters scale with config.num_hidden_layers and MoE settings
+   (12 layers, 64 routed experts in the DeepSeek-OCR checkpoint; earlier
+   drafts used a 40-layer example configuration).
    ```
 
 #### Activations (during forward pass):

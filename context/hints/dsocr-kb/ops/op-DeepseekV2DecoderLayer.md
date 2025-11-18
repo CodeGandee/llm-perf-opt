@@ -7,7 +7,11 @@
 3. **Mixture-of-Experts (MoE)** or dense MLP based on layer position
 4. **Residual connections** after both attention and feedforward components
 
-This is the fundamental building block of the DeepSeek-OCR LLM decoder, repeated 40 times to form the complete transformer stack. Each layer processes hidden states through attention (capturing token dependencies) and feedforward (applying non-linear transformations).
+This is the fundamental building block of the DeepSeek-style decoder. It is
+instantiated `config.num_hidden_layers` times to form the transformer stack
+(12 layers in the shipped DeepSeek-OCR checkpoint). Each layer processes
+hidden states through attention (capturing token dependencies) and feedforward
+(applying non-linear transformations).
 
 ## Definition
 ```python
@@ -54,37 +58,58 @@ def __init__(self, config: DeepseekV2Config, layer_idx: int)
 ```
 
 **Parameters**:
-- `config`: DeepseekV2Config object containing all hyperparameters
-- `layer_idx`: Layer index (0-39 for DeepSeek-OCR), determines MoE vs dense selection
+- `config`: DeepseekV2Config object containing all hyperparameters.
+- `layer_idx`: Zero-based layer index, used both for KV-cache indexing and to
+  decide whether this layer uses dense MLP or MoE.
 
 **Key config parameters**:
-- `hidden_size`: Hidden dimension (default: 1280)
-- `use_mla`: Whether to use Multi-head Latent Attention (default: True)
-- `_attn_implementation`: "eager" or "flash_attention_2"
-- `n_routed_experts`: Number of MoE experts (default: 160, None disables MoE)
-- `first_k_dense_replace`: First k layers use dense MLP (default: 1)
-- `moe_layer_freq`: Use MoE every k layers (default: 1, meaning all layers after first_k_dense_replace)
-- `rms_norm_eps`: Epsilon for RMSNorm (default: 1e-6)
+- `hidden_size`: Hidden dimension (e.g., 4096 in `DeepseekV2Config` defaults,
+  1280 in DeepSeek-OCR).
+- `use_mla`: Whether to use Multi-head Latent Attention
+  (`True` by default in `DeepseekV2Config`, but `False` in the
+  DeepSeek-OCR checkpoint, which uses standard LLaMA attention).
+- `_attn_implementation`: `"eager"` or `"flash_attention_2"`.
+- `n_routed_experts`: Number of MoE experts (e.g., 64 in DeepSeek-OCR;
+  `None` disables MoE).
+- `first_k_dense_replace`: First k layers use dense MLP (default: 1).
+- `moe_layer_freq`: Use MoE every k layers (default: 1, meaning all layers
+  after `first_k_dense_replace`).
+- `rms_norm_eps`: Epsilon for RMSNorm (default: 1e-6).
 
-**DeepSeek-OCR layer configuration**:
+**Layer configuration examples**:
 ```
-Layer 0-0: Dense MLP (first_k_dense_replace=1)
-Layer 1-39: MoE (every layer, moe_layer_freq=1)
+# Generic MLA+MoE config (DeepSeek-V2-style)
+first_k_dense_replace = 1
+moe_layer_freq        = 1
+n_routed_experts      = 160
+num_hidden_layers     = 40
+→ Layer 0      : Dense MLP
+→ Layers 1..39 : MoE
 
-Total: 1 dense layer + 39 MoE layers = 40 layers
+# DeepSeek-OCR checkpoint (models/deepseek-ocr/config.json)
+first_k_dense_replace = 1
+moe_layer_freq        = 1
+n_routed_experts      = 64
+num_hidden_layers     = 12
+use_mla               = False  # uses LLaMA attention, not MLA
+→ Layer 0      : Dense MLP
+→ Layers 1..11 : MoE
 ```
 
 **Created Components**:
 
 1. **self.self_attn**: Attention module
    - `DeepseekV2Attention` (MLA) or `DeepseekV2FlashAttention2` (MLA + fused)
-   - Or standard MHA variants if `use_mla=False`
-   - Parameters: ~61.4M per layer (see op-DeepseekV2Attention.md)
+     when `config.use_mla=True`.
+   - `LlamaAttention` / `LlamaFlashAttention2` when `config.use_mla=False`
+     (this is what DeepSeek-OCR uses by default).
+   - See `op-DeepseekV2Attention.md` and `op-LlamaFlashAttention2.md` for
+     details and parameter counts.
 
 2. **self.mlp**: Feedforward module
-   - `DeepseekV2MLP` for dense layers: ~10.8M params
-   - `DeepseekV2MoE` for sparse layers: ~876M params
-   - See op-DeepseekV2MLP.md and op-DeepseekV2MoE.md
+   - `DeepseekV2MLP` for dense layers.
+   - `DeepseekV2MoE` for sparse layers when MoE is enabled.
+   - See `op-DeepseekV2MLP.md` and `op-DeepseekV2MoE.md` for formulas.
 
 3. **self.input_layernorm**: Pre-attention RMSNorm
    - Parameters: 1,280 (hidden_size)
@@ -92,31 +117,11 @@ Total: 1 dense layer + 39 MoE layers = 40 layers
 4. **self.post_attention_layernorm**: Pre-MLP RMSNorm
    - Parameters: 1,280
 
-**Parameter count per layer**:
-```python
-# Dense layer (layer 0)
-attention = 61.4M
-mlp = 10.8M
-norms = 2 × 1.28K ≈ 2.56K
-total = 72.2M
-
-At bf16: 72.2M × 2 bytes ≈ 144 MB
-
-# MoE layer (layers 1-39)
-attention = 61.4M
-moe = 876M
-norms = 2.56K
-total = 937.4M
-
-At bf16: 937.4M × 2 bytes ≈ 1.87 GB per MoE layer
-```
-
-**Total for 40 layers**:
-```
-1 dense layer: 144 MB
-39 MoE layers: 39 × 1.87 GB = 72.93 GB
-Total: 73.07 GB (dominates model size!)
-```
+> The parameter and FLOP numbers in this file are based on a specific
+> **40‑layer MLA + MoE** example (1 dense + 39 MoE layers, 160 experts), which
+> is useful as a worked example but does **not** match the DeepSeek-OCR
+> checkpoint. For OCR (12 layers, MHA, 64 routed experts), use the formulas in
+> this file and in the MLP/MoE docs to recompute the true values.
 
 ## Module Internals
 
@@ -298,27 +303,17 @@ MoE layer (layers 1-39):
   Prefill: 31.5M + 10T + 31.5M + 2.95T ≈ 12.95 TFLOPs
 ```
 
-**Total for all 40 layers** (single decode step):
-```
-1 dense layer: 2.44 GFLOPs
-39 MoE layers: 39 × 362.4 GFLOPs = 14.13 TFLOPs
-Total: 14.13 TFLOPs per decode step
-
-Prefill (8192 tokens):
-1 dense layer: 10.27 TFLOPs
-39 MoE layers: 39 × 12.95 TFLOPs = 505 TFLOPs
-Total: 515 TFLOPs per prefill
-```
+> The FLOP figures above assume the same 40‑layer MLA + MoE example. For a
+> different configuration, scale by `config.num_hidden_layers` and adjust the
+> MoE part using the formulas in `op-DeepseekV2MoE.md`.
 
 ### Memory Usage
 
 #### Parameters:
-```
-See constructor section:
-Dense layer: 144 MB
-MoE layer: 1.87 GB
-Total (40 layers): 73.07 GB
-```
+See constructor section and the per‑module docs (`DeepseekV2Attention`,
+`DeepseekV2MLP`, `DeepseekV2MoE`). Total memory scales linearly with
+`config.num_hidden_layers` and depends strongly on whether MLA + MoE are
+enabled.
 
 #### Activations (per forward pass):
 
@@ -344,30 +339,16 @@ MLP intermediate (MoE): ~165 MB
 Peak per layer: ~686 MB
 ```
 
-**Total activation memory** (without gradient checkpointing):
-```
-Decode: 40 layers × 143 MB ≈ 5.72 GB
-Prefill: 40 layers × 686 MB ≈ 27.4 GB
-
-With gradient checkpointing (training):
-Recompute activations during backward pass
-Reduces memory to ~1-2 layers worth: ~1-2 GB
-```
+> The stacked activation numbers (e.g., 40 × 143 MB) again correspond to the
+> 40‑layer example. For DeepSeek-OCR, replace 40 with 12 and adjust attention /
+> MoE choices according to its config.
 
 #### KV Cache (critical for autoregressive decoding):
-```
-Per layer MLA cache:
-  k_pe: 1 × 1 × K × 64 × 2 = 1.05 MB (K=8192)
-  compressed_kv: 1 × K × 512 × 2 = 8.39 MB
-  Total: 9.44 MB per layer
-
-Total for 40 layers:
-  40 × 9.44 MB = 377.6 MB
-
-Grows linearly with context length K:
-  K=16384: 755 MB
-  K=32768: 1.51 GB
-```
+- With MLA (`DeepseekV2Attention`): each layer stores compressed KV caches;
+  see `op-DeepseekV2Attention.md` for exact formulas (e.g., ~9.44 MB per layer
+  at 8K context in the example config).
+- With standard MHA (`LlamaAttention` / `LlamaFlashAttention2`), each layer
+  stores full K/V; see `op-LlamaFlashAttention2.md` for approximate sizes.
 
 ## Related Modules
 - **Used by**: `DeepseekV2Model.layers` (line 1468-1472) - stacked 40 times

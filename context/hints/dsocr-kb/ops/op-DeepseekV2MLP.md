@@ -43,14 +43,22 @@ def __init__(
 ```
 
 **Parameters**:
-- `config`: DeepseekV2Config instance
-- `hidden_size`: Input/output dimension (default: `config.hidden_size` = 1280)
-- `intermediate_size`: Hidden dimension of MLP (default: `config.intermediate_size` for dense, `config.moe_intermediate_size` for MoE experts)
+- `config`: DeepseekV2Config instance.
+- `hidden_size`: Input/output dimension (default: `config.hidden_size`).
+- `intermediate_size`: Hidden dimension of MLP (default:
+  `config.intermediate_size` for dense layers,
+  `config.moe_intermediate_size` for MoE experts).
 
-**DeepSeek-OCR typical values**:
-- Dense MLP: `hidden_size=1280`, `intermediate_size=3584`
-- MoE expert MLP: `hidden_size=1280`, `intermediate_size=1408` (smaller for sparsity)
-- Shared expert MLP: `hidden_size=1280`, `intermediate_size=1408 × n_shared_experts`
+**Example configurations**:
+- Generic 1280‑dim dense MLP (used in earlier design docs):
+  - `hidden_size = 1280`, `intermediate_size = 3584`.
+- Generic 1280‑dim MoE expert:
+  - `hidden_size = 1280`, `intermediate_size = 1408`.
+- DeepSeek-OCR checkpoint (`models/deepseek-ocr/config.json`):
+  - `hidden_size = 1280`
+  - `intermediate_size = 6848` (dense MLP)
+  - `moe_intermediate_size = 896` (per‑expert MLP)
+  - `n_shared_experts = 2` (shared branch uses `2 × moe_intermediate_size`).
 
 **Learned Parameters**:
 - `gate_proj.weight`: Shape `(intermediate_size, hidden_size)`, no bias
@@ -200,14 +208,17 @@ FLOPs ≈ 6 × 1 × 8192 × 1280 × 1408
       ≈ 89 GFLOPs per expert
 ```
 
-**Per-model impact**:
+**Per-model impact (example)**:
 ```
-DeepSeek-OCR (40 layers):
+Example 40-layer config (2 dense + 38 MoE layers, top-2 routing):
 - Dense layers: 2 layers × 227 GFLOPs = 454 GFLOPs
-- MoE layers: 38 layers × (top-2 routing) × 89 GFLOPs = 6,764 GFLOPs
-  (assumes 2 experts activated per token)
+- MoE layers: 38 layers × 2 experts × 89 GFLOPs = 6,764 GFLOPs
 
 Total MLP compute: ~7.2 TFLOPs per forward pass (B=1, S=8192)
+
+For the DeepSeek-OCR checkpoint (12 layers, 11 MoE layers, 64 experts with
+top‑6 routing and moe_intermediate_size=896), MLP FLOPs are substantially
+smaller; reuse the formulas above with the OCR config values.
 ```
 
 **Comparison to standard FFN**:

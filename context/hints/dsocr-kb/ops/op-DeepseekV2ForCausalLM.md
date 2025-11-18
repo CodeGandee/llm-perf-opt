@@ -1,8 +1,8 @@
 # DeepseekV2ForCausalLM
 
 ## What It Is
-`DeepseekV2ForCausalLM` is the complete causal language model for DeepSeek-OCR, adding a language modeling head on top of `DeepseekV2Model`. It combines:
-1. **DeepseekV2Model** - the full transformer decoder (40 layers, embeddings, final norm)
+`DeepseekV2ForCausalLM` is the complete causal language model for DeepseekV2-style LLMs, adding a language modeling head on top of `DeepseekV2Model`. It combines:
+1. **DeepseekV2Model** - the full transformer decoder (embeddings, `config.num_hidden_layers` layers, final norm)
 2. **Language modeling head** (`lm_head`) - linear projection from hidden states to vocabulary logits
 3. **Cross-entropy loss** for training (with label shifting for autoregressive objective)
 4. **Generation utilities** - `prepare_inputs_for_generation` for autoregressive decoding
@@ -31,37 +31,29 @@ def __init__(self, config: DeepseekV2Config)
 ```
 
 **Parameters** (from config):
-- `vocab_size`: Vocabulary size (default: 32000)
-- `hidden_size`: Model hidden dimension (default: 1280)
-- All other params inherited by `DeepseekV2Model`
+- `vocab_size`: Vocabulary size (e.g., 102400 in base DeepseekV2; 129280 in DeepSeek-OCR).
+- `hidden_size`: Model hidden dimension (4096 in DeepseekV2Config defaults; 1280 in DeepSeek-OCR).
+- All other params are consumed by `DeepseekV2Model`.
 
 **Created Components**:
 
 1. **self.model**: Full transformer decoder
    - `DeepseekV2Model(config)`
-   - Parameters: 36.64B (see op-DeepseekV2Model.md)
-   - At bf16: 73.15 GB
+   - Parameter count depends on `config.num_hidden_layers`, attention type
+     (MLA vs MHA) and MoE settings. Earlier drafts used a 40‑layer MLA+MoE
+     example at ~36.6B params (~73 GB at bf16); the DeepSeek-OCR checkpoint
+     (12 layers, MHA, 64 routed experts) is much smaller.
 
 2. **self.lm_head**: Language modeling head
    - `nn.Linear(hidden_size, vocab_size, bias=False)`
-   - Shape: `(1280, 32000)`
-   - Parameters: 1,280 × 32,000 = 40,960,000 ≈ 40.96M
-   - At bf16: 82 MB
+   - Shape: `(hidden_size, vocab_size)`
+   - Parameters: `hidden_size × vocab_size`
 
 **Parameter tying**:
 ```python
 # lm_head.weight is often tied to model.embed_tokens.weight
 # This reduces parameters by 40.96M and improves performance
 # Controlled by config.tie_word_embeddings (default: False for DeepSeek-OCR)
-```
-
-**Total parameters**:
-```python
-model: 36.64B
-lm_head: 40.96M
-Total: 36.68B parameters
-
-At bf16: 36.68B × 2 bytes ≈ 73.36 GB
 ```
 
 ## Module Internals
@@ -77,7 +69,7 @@ sequenceDiagram
     Note over Input: forward() entry
 
     Input->>Model: input_ids, attention_mask, position_ids, past_kv
-    Model->>Model: Process through 40 layers
+    Model->>Model: Process through decoder layers
     Model-->>Head: hidden_states (B, S, 1280)
 
     Head->>Head: logits = lm_head(hidden_states)
@@ -347,9 +339,9 @@ Total: ~12-14 GB
 
 #### KV Cache:
 ```
-Per layer: 9.44 MB (K=8192)
-Total for 40 layers: 377.6 MB
-(Same as DeepseekV2Model, lm_head doesn't add to cache)
+Per layer (MLA example): ~9.44 MB (K=8192)
+Example with 40 layers:  40 × 9.44 MB ≈ 377.6 MB
+(Same as DeepseekV2Model; lm_head doesn't add to cache)
 ```
 
 #### Total inference memory (decode, K=8192):

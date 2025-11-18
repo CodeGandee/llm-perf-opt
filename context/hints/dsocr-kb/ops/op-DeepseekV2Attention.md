@@ -36,30 +36,33 @@ class DeepseekV2Attention(nn.Module):
 ```
 
 ## Constructor Information
-**Location**: `models/deepseek-ocr/modeling_deepseekv2.py:721-949`
+**Location**: `models/deepseek-ocr/modeling_deepseekv2.py:721-949` (class definition and forward)
 
 **Signature**:
 ```python
 def __init__(
     self,
     config: DeepseekV2Config,
-    layer_idx: Optional[int] = None  # Required for KV caching
+    layer_idx: Optional[int] = None,  # Required for KV caching
 )
 ```
 
-**Parameters** (from config):
-- `hidden_size`: Model hidden dimension (default: 1280)
-- `num_attention_heads`: Number of attention heads (default: 128)
-- `q_lora_rank`: Low-rank bottleneck for Q projection (default: 1536, None to disable)
-- `kv_lora_rank`: Low-rank bottleneck for KV projection (default: 512)
-- `qk_nope_head_dim`: Non-RoPE Q/K head dimension (default: 64)
-- `qk_rope_head_dim`: RoPE Q/K head dimension (default: 64)
-- `v_head_dim`: V head dimension (default: 128)
-- `attention_dropout`: Dropout rate for attention weights (default: 0.0)
-- `max_position_embeddings`: Maximum sequence length (default: 8192)
-- `rope_theta`: RoPE base frequency (default: 10000)
+**Key config fields**:
+- `hidden_size`: Model hidden dimension (e.g., 4096 in `DeepseekV2Config` defaults,
+  1280 in the DeepSeek-OCR checkpoint).
+- `num_attention_heads`: Number of attention heads (e.g., 32 in defaults, 10 in DeepSeek-OCR).
+- `q_lora_rank`: Low-rank bottleneck for Q projection (default: 1536, `None` to disable).
+- `kv_lora_rank`: Low-rank bottleneck for KV projection (default: 512).
+- `qk_nope_head_dim`: Non-RoPE Q/K head dimension (default: 128).
+- `qk_rope_head_dim`: RoPE Q/K head dimension (default: 64).
+- `v_head_dim`: V head dimension (default: 128).
+- `attention_dropout`: Dropout rate for attention weights (default: 0.0).
+- `max_position_embeddings`: Maximum sequence length (default: 2048 in config; 8192 in the DeepSeek-OCR checkpoint).
+- `rope_theta`: RoPE base frequency (default: 10000).
+- `use_mla`: Controls whether this module is used (`True`) or the standard
+  `LlamaAttention`/`LlamaFlashAttention2` path is used (`False`).
 
-**DeepSeek-OCR typical dimensions**:
+**Example MLA configuration** (illustrative, not the shipped OCR checkpoint):
 ```
 hidden_size = 1280
 num_attention_heads = 128
@@ -70,6 +73,13 @@ qk_rope_head_dim = 64
 v_head_dim = 128
 q_head_dim = qk_nope_head_dim + qk_rope_head_dim = 128
 ```
+
+> Note: The released DeepSeek-OCR config (`models/deepseek-ocr/config.json`) sets
+> `use_mla = false`, `q_lora_rank = kv_lora_rank = null`, and all RoPE head
+> dimensions to 0, so this MLA implementation is **not** used by default.
+> Instead, `DeepseekV2DecoderLayer` selects `LlamaAttention` /
+> `LlamaFlashAttention2` when `use_mla` is disabled. The formulas and shapes
+> below describe how MLA works when enabled.
 
 **Created Components**:
 
@@ -107,12 +117,12 @@ kv_b_proj: 512 × 128 × (64 + 128) = 12,582,912
 # Output projection
 o_proj: 128 × 128 × 1280 = 20,971,520
 
-# Total per attention layer
+# Total per attention layer (for the example config above)
 total = 1.97M + 1.5K + 25.17M + 737K + 512 + 12.58M + 20.97M
       ≈ 61.4M parameters per attention layer
 At bf16: 61.4M × 2 bytes ≈ 123 MB per layer
 
-# DeepSeek-OCR (40 layers)
+# Example 40-layer MLA stack (illustrative only)
 total_attn = 40 × 123 MB ≈ 4.92 GB
 ```
 
@@ -391,8 +401,9 @@ Total prefill: ~10 TFLOPs per layer (attention-dominated)
 
 #### Parameters:
 ```
-See constructor section: ~61.4M params per layer, 123 MB at bf16
-Total for 40 layers: 4.92 GB
+See constructor section: ~61.4M params per layer, 123 MB at bf16 (for the
+illustrative MLA config).
+Example 40-layer MLA stack: 40 × 123 MB ≈ 4.92 GB
 ```
 
 #### KV Cache (Critical for MLA efficiency):
@@ -407,7 +418,7 @@ K cache: 1 × 128 × 8192 × 128 × 2 = 268.44 MB
 V cache: 268.44 MB
 Total per layer: 536.87 MB
 
-Total for 40 layers: 40 × 536.87 MB = 21.47 GB
+Example 40-layer MHA stack: 40 × 536.87 MB = 21.47 GB
 ```
 
 **Multi-head Latent Attention** (MLA):
@@ -420,7 +431,7 @@ k_pe: 1 × 1 × 8192 × 64 × 2 = 1.05 MB
 compressed_kv: 1 × 8192 × 512 × 2 = 8.39 MB
 Total per layer: 9.44 MB
 
-Total for 40 layers: 40 × 9.44 MB = 377.6 MB
+Example 40-layer MLA stack: 40 × 9.44 MB = 377.6 MB
 ```
 
 **KV cache reduction**:

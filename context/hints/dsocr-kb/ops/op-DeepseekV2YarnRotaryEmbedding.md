@@ -8,7 +8,10 @@ YaRN combines three techniques:
 2. **Attention scaling (mscale)**: Adjusts attention scores to account for longer contexts
 3. **Dimension-aware ramping**: Different frequency bands are scaled differently based on their sensitivity to position
 
-This is the default RoPE variant used in DeepSeek-OCR for handling long document contexts.
+This is an optional RoPE variant used for very long contexts. The shipped
+DeepSeek-OCR checkpoint uses the base `DeepseekV2RotaryEmbedding`
+(`rope_scaling = null`); YaRN becomes active only if you configure
+`rope_scaling.type == "yarn"`.
 
 ## Definition
 ```python
@@ -310,8 +313,11 @@ Total per YaRN RoPE module: ~8 MB (4x larger than base RoPE with 8192 context)
 ```
 
 **Per model**:
-- DeepSeek-OCR with 32K context: 40 layers × 8 MB = **320 MB** (vs 80 MB for 8K context)
-- Memory scales linearly with extended context length
+- Total YaRN RoPE memory scales linearly with the number of decoder layers that
+  use it and with the extended context length. For example, a model with
+  `num_hidden_layers = L`, `dim = 64` and `max_position_embeddings = 32768`
+  will use roughly `L × 8 MB` for YaRN caches (vs. `L × 2 MB` for an 8K base
+  RoPE cache).
 
 #### YaRN-specific Overhead:
 ```

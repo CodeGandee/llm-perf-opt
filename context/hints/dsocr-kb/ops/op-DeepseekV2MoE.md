@@ -1,12 +1,18 @@
 # DeepseekV2MoE
 
 ## What It Is
-`DeepseekV2MoE` implements the Mixture-of-Experts (MoE) layer in DeepSeek-OCR, combining:
+`DeepseekV2MoE` implements the Mixture-of-Experts (MoE) layer in
+DeepseekV2-style models, combining:
 1. **Expert routing** via `MoEGate` to select top-k experts per token
-2. **Routed experts** (160 experts, each a `DeepseekV2MLP`) for sparse computation
-3. **Shared experts** (optional, 2 experts) for common knowledge across all tokens
+2. **Routed experts** (`n_routed_experts` MLPs) for sparse computation
+3. **Shared experts** (optional, `n_shared_experts` MLPs) for common knowledge
+   across all tokens
 
-MoE enables massive model capacity (160 experts × 5.4M params ≈ 864M params per layer) while maintaining efficient inference (only 2/160 experts active per token). This is a key architectural component that allows DeepSeek-OCR to scale effectively.
+MoE enables massive model capacity while maintaining efficient inference (only
+`num_experts_per_tok` experts active per token). The exact number of experts
+and their dimensions are controlled by configuration:
+`n_routed_experts`, `n_shared_experts`, `moe_intermediate_size`,
+`num_experts_per_tok`, etc.
 
 ## Definition
 ```python
@@ -55,10 +61,14 @@ def __init__(self, config: DeepseekV2Config)
 ```
 
 **Parameters** (from config):
-- `num_experts_per_tok`: Number of routed experts to activate per token (default: 2)
-- `n_routed_experts`: Total number of routed experts (default: 160)
-- `moe_intermediate_size`: Intermediate size for each expert MLP (default: 1408)
-- `n_shared_experts`: Number of shared experts, always active (default: 2, can be None)
+- `num_experts_per_tok`: Number of routed experts to activate per token
+  (e.g., 6 in DeepSeek-OCR; often 2 in large DeepSeek-V2 configs).
+- `n_routed_experts`: Total number of routed experts
+  (e.g., 64 in DeepSeek-OCR, 160 in some larger configs).
+- `moe_intermediate_size`: Intermediate size for each expert MLP
+  (e.g., 896 in DeepSeek-OCR, 1407/1408 in DeepSeek-V2 defaults).
+- `n_shared_experts`: Number of shared experts, always active
+  (e.g., 2 in DeepSeek-OCR; can be `None`).
 - `ep_size`: Expert parallelism size for distributed training (default: 1, single-device)
 - `hidden_size`: Input/output dimension (default: 1280)
 
@@ -78,7 +88,7 @@ def __init__(self, config: DeepseekV2Config)
    - Always processes all tokens (not routed)
    - Adds common knowledge/bias across all inputs
 
-**Parameter count**:
+**Parameter count (example MLA+MoE config)**:
 ```python
 # Per expert (1280 → 1408 → 1280)
 expert_params = 3 × 1280 × 1408 = 5,406,720 params
@@ -96,9 +106,16 @@ gate_params = 160 × 1280 = 204,800 params ≈ 205K
 total = 865M + 10.8M + 205K ≈ 876M params
 At bf16: 876M × 2 bytes ≈ 1.75 GB per MoE layer
 
-# DeepSeek-OCR (38 MoE layers)
-total_moe = 38 × 1.75 GB ≈ 66.5 GB (dominates model size!)
+# Example with 38 MoE layers
+total_moe = 38 × 1.75 GB ≈ 66.5 GB
 ```
+
+> The numbers above correspond to a **large example configuration** with
+> `hidden_size=1280`, `moe_intermediate_size=1408`, `n_routed_experts=160`,
+> `num_experts_per_tok=2`. The DeepSeek-OCR checkpoint instead uses
+> `n_routed_experts=64`, `num_experts_per_tok=6`,
+> `moe_intermediate_size=896`, and has 11 MoE layers (layers 1–11 of a
+> 12‑layer stack), so its MoE parameter count is substantially smaller.
 
 ## Module Internals
 
@@ -416,10 +433,10 @@ Gate: 160 × 1280 × 2 = 410 KB
 Total per MoE layer: ~1.75 GB
 ```
 
-**Total in DeepSeek-OCR (38 MoE layers)**:
+**Total in example 38‑layer MoE stack**:
 ```
 Total MoE params: 38 × 1.75 GB ≈ 66.5 GB
-(~90% of total model size!)
+(dominant contributor to model size in that configuration)
 ```
 
 #### Activations (per forward pass):

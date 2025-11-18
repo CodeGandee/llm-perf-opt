@@ -12,16 +12,17 @@ class DeepseekOCRConfig(DeepseekV2Config):
 ## Constructor Information
 **Location**: `models/deepseek-ocr/modeling_deepseekocr.py:351-352`
 
-**Signature**:
-```python
-def __init__(self, **kwargs):
-    super().__init__(**kwargs)  # Inherits all DeepseekV2Config parameters
-```
+`DeepseekOCRConfig` does not override `__init__`; construction is delegated to
+`DeepseekV2Config.__init__`, so all parameters and defaults come from
+`configuration_deepseek_v2.py` and/or `config.json`.
 
-**Inherited Parameters** (from `DeepseekV2Config`):
-- `vocab_size`: Vocabulary size
-- `hidden_size`: Model embedding dimension (default: 1280 for OCR)
+**Key Parameters** (from `DeepseekV2Config` / `config.json`):
+- `vocab_size`: Vocabulary size (e.g., 102400 in base DeepseekV2;
+  **129280 in DeepSeek-OCR**).
+- `hidden_size`: Model embedding dimension (default: 4096 in
+  `DeepseekV2Config`; **1280 in DeepSeek-OCR**).
 - `num_hidden_layers`: Number of transformer decoder layers
+  (default: 30; **12 in DeepSeek-OCR**).
 - `num_attention_heads`: Number of attention heads
 - `intermediate_size`: MLP intermediate dimension
 - `hidden_act`: Activation function (typically "silu")
@@ -101,7 +102,12 @@ The configuration determines the model's total memory footprint:
 1. **Embedding Table**:
    ```
    Memory = vocab_size × hidden_size × sizeof(dtype)
-   Example: 102,400 × 1,280 × 2 bytes (bf16) = ~250 MB
+
+   Example (base DeepSeek-V2 style):
+       102,400 × 4,096 × 2 bytes (bf16) ≈ 800 MB
+
+   Example (DeepSeek-OCR checkpoint):
+       129,280 × 1,280 × 2 bytes (bf16) ≈ 330 MB
    ```
 
 2. **Transformer Layers**:
@@ -109,8 +115,12 @@ The configuration determines the model's total memory footprint:
    Memory_per_layer ≈ (attention_params + mlp_params)
    Total = num_hidden_layers × Memory_per_layer
 
-   For OCR (40 layers, h=1280, MoE):
+   Example large config (40 layers, h=1280, MLA + MoE):
    ≈ 40 × (attention + MoE) ≈ several GB
+
+   DeepSeek-OCR checkpoint:
+   num_hidden_layers = 12, use_mla = False, n_routed_experts = 64
+   → much smaller total transformer parameter memory.
    ```
 
 3. **Vision Encoders** (SAM + CLIP):
@@ -123,9 +133,13 @@ The configuration determines the model's total memory footprint:
    ```
    Memory = 2 × num_layers × batch_size × seq_len × num_heads × head_dim × sizeof(dtype)
 
-   Example (seq_len=8192, batch=1, bf16):
+   Example MLA config (40 layers, seq_len=8192, batch=1, bf16):
    ≈ 2 × 40 × 1 × 8192 × kv_heads × kv_head_dim × 2 bytes
    ≈ several GB depending on kv_lora_rank compression
+
+   For DeepSeek-OCR (MHA, 12 layers, 10 heads), KV cache is smaller; see
+   `op-DeepseekV2Attention.md` and `op-DeepseekV2FlashAttention2.md` for MLA vs
+   MHA cache formulas.
    ```
 
 **Configuration Keys Affecting Memory**:
@@ -151,15 +165,8 @@ from transformers import AutoConfig, AutoModel
 
 config = AutoConfig.from_pretrained(
     "deepseek-ai/DeepSeek-OCR",
-    trust_remote_code=True
+    trust_remote_code=True,
 )
-# config is a DeepseekOCRConfig instance with all parameters loaded from config.json
-
-# Or instantiate directly
-from modeling_deepseekocr import DeepseekOCRConfig
-config = DeepseekOCRConfig(
-    hidden_size=1280,
-    num_hidden_layers=40,
-    # ... other parameters
-)
+# config is a DeepseekOCRConfig/DeepseekV2Config instance with all parameters
+# loaded from models/deepseek-ocr/config.json
 ```

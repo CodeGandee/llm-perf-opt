@@ -167,7 +167,7 @@ Effect: Positions are "compressed" by factor s, making m=4096 appear as m=2048 t
 
 Assume:
 - `seq_len` = L (e.g., 8192)
-- `dim` = d (e.g., 64 for DeepSeek-OCR's qk_rope_head_dim)
+- `dim` = d (e.g., 64 for a typical MLA configuration; the DeepSeek-OCR checkpoint sets `qk_rope_head_dim = 0` and does not use this class by default)
 
 ```
 1. Division: t / scaling_factor
@@ -220,10 +220,14 @@ sin_cached: (8192, 64) × 2 bytes = 1 MB
 Total per RoPE instance: ~2 MB (dominated by cos/sin caches)
 ```
 
-**In DeepSeek-OCR**:
-- Used once in attention: `self.rotary_emb` in `DeepseekV2Attention._init_rope()`
-- 40 decoder layers share the same RoPE instance (no duplication)
-- **Total RoPE buffer memory: ~2 MB** (negligible in multi-GB model)
+**In DeepSeek-style models**:
+- When `config.rope_scaling["type"] == "linear"`, each `DeepseekV2Attention`
+  instance constructs its own `DeepseekV2LinearScalingRotaryEmbedding`, so total
+  RoPE buffer memory is `~2 MB × num_hidden_layers` for 8K context and
+  `dim=64`.
+- The DeepSeek-OCR checkpoint sets `rope_scaling = null`, so this subclass is
+  **not used by default**; it becomes active only if you enable linear
+  scaling in the config.
 
 #### Temporary Activations (during cache computation):
 

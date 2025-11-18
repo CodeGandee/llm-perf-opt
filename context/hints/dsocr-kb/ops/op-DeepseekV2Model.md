@@ -1,9 +1,10 @@
 # DeepseekV2Model
 
 ## What It Is
-`DeepseekV2Model` is the complete decoder-only transformer stack for DeepSeek-OCR's LLM component. It combines:
+`DeepseekV2Model` is the complete decoder-only transformer stack for DeepSeek-style LLMs. In DeepSeek-OCR it is used as
+the language backbone and is wrapped by `DeepseekOCRModel` / `DeepseekOCRForCausalLM`. It combines:
 1. **Token embedding layer** to convert input IDs to vectors
-2. **40 decoder layers** (`DeepseekV2DecoderLayer`) stacked sequentially
+2. **config.num_hidden_layers decoder layers** (`DeepseekV2DecoderLayer`) stacked sequentially
 3. **Final RMSNorm** for output normalization
 4. **KV cache management** for efficient autoregressive generation
 5. **Attention mask handling** (causal masking for autoregression)
@@ -48,10 +49,13 @@ def __init__(self, config: DeepseekV2Config)
 ```
 
 **Parameters** (from config):
-- `vocab_size`: Vocabulary size (default: 32000)
-- `hidden_size`: Model hidden dimension (default: 1280)
-- `num_hidden_layers`: Number of transformer layers (default: 40)
-- `pad_token_id`: Padding token ID (default: 0)
+- `vocab_size`: Vocabulary size (e.g., 102400 in `DeepseekV2Config` defaults,
+  129280 in the DeepSeek-OCR checkpoint).
+- `hidden_size`: Model hidden dimension (default: 4096 in `DeepseekV2Config`;
+  1280 in DeepSeek-OCR).
+- `num_hidden_layers`: Number of transformer layers (e.g., 30 by default in
+  `DeepseekV2Config`, 12 in DeepSeek-OCR).
+- `pad_token_id`: Padding token ID.
 - `_attn_implementation`: "eager" or "flash_attention_2"
 - `rms_norm_eps`: Epsilon for final RMSNorm (default: 1e-6)
 
@@ -59,30 +63,31 @@ def __init__(self, config: DeepseekV2Config)
 
 1. **self.embed_tokens**: Token embedding table
    - `nn.Embedding(vocab_size, hidden_size, padding_idx)`
-   - Shape: `(32000, 1280)`
-   - Parameters: 32,000 × 1,280 = 40,960,000 ≈ 40.96M
-   - At bf16: 40.96M × 2 bytes ≈ 82 MB
+   - Shape and parameter count depend on `vocab_size` and `hidden_size`.
+     - Example (generic LLM): `vocab_size=102400`, `hidden_size=4096`
+       → 419,430,400 params.
+     - Example (DeepSeek-OCR checkpoint): `vocab_size=129280`,
+       `hidden_size=1280` → 165,478,400 params.
 
 2. **self.layers**: Stack of decoder layers
-   - `ModuleList` of 40 `DeepseekV2DecoderLayer` instances
-   - Layer 0: Dense MLP (144 MB)
-   - Layers 1-39: MoE (1.87 GB each)
-   - Total: 73.07 GB (see op-DeepseekV2DecoderLayer.md)
+   - `ModuleList` of `config.num_hidden_layers` `DeepseekV2DecoderLayer`
+     instances.
+   - Actual per-layer parameter count depends on:
+     - attention implementation (`use_mla` vs MHA, eager vs flash),
+     - MoE configuration (`n_routed_experts`, `num_experts_per_tok`,
+       `moe_intermediate_size`),
+     - `hidden_size` / `intermediate_size`.
+   - See `op-DeepseekV2DecoderLayer.md`, `op-DeepseekV2Attention.md`,
+     `op-DeepseekV2MoE.md`, and `op-DeepseekV2MLP.md` for formulas.
 
 3. **self.norm**: Final output normalization
-   - `DeepseekV2RMSNorm(1280)`
-   - Parameters: 1,280
-   - At bf16: 2.56 KB
+   - `DeepseekV2RMSNorm(hidden_size)`
+   - Parameters: `hidden_size` (e.g., 4096 or 1280).
 
-**Total parameters**:
-```python
-embed_tokens: 40.96M
-layers: Layer 0 (72.2M) + Layers 1-39 (937.4M × 39) = 36,600.8M
-norm: 1,280
-Total: 36,641.8M ≈ 36.64B parameters
-
-At bf16: 36.64B × 2 bytes ≈ 73.28 GB
-```
+> Historical note: some earlier drafts approximated a **40‑layer MLA + MoE**
+> configuration at ~36.6B parameters (~73 GB at bf16). That configuration is
+> **not** the one used by DeepSeek-OCR (12 layers, MHA, 64 routed experts); use
+> the per‑module formulas to compute exact counts for a given config.
 
 ## Module Internals
 
@@ -113,7 +118,7 @@ sequenceDiagram
 
     PosIDs->>Layers: hidden_states, attention_mask, position_ids
 
-    loop For each of 40 layers
+    loop For each decoder layer
         Layers->>Layers: layer_i(hidden_states, mask, pos, past_kv)
         Layers->>Layers: Update hidden_states<br/>Update KV cache
     end
@@ -232,7 +237,7 @@ def forward(
     all_self_attns = () if output_attentions else None
     next_decoder_cache = None
 
-    # 8. Pass through all 40 decoder layers
+    # 8. Pass through all decoder layers
     for decoder_layer in self.layers:
         if output_hidden_states:
             all_hidden_states += (hidden_states,)
@@ -304,103 +309,52 @@ def forward(
 
 Assume:
 - Input shape: `(B, S)` where B=batch, S=sequence length
-- Typical decode: B=1, S=1, cached_context=K=8192
-- Typical prefill: B=1, S=8192, K=8192
+- Cached context: `K` tokens
 
 **Operations**:
 
-1. **Token embedding**: 0 FLOPs (lookup operation)
+1. **Token embedding**: 0 FLOPs (lookup operation).
 
-2. **40 decoder layers**:
-   ```
-   See op-DeepseekV2DecoderLayer.md for per-layer breakdown
-
-   Decode (S=1):
-     Layer 0 (dense): 2.44 GFLOPs
-     Layers 1-39 (MoE): 39 × 362.4 GFLOPs = 14.13 TFLOPs
-     Total: 14.13 TFLOPs per decode step
-
-   Prefill (S=8192):
-     Layer 0 (dense): 10.27 TFLOPs
-     Layers 1-39 (MoE): 39 × 12.95 TFLOPs = 505 TFLOPs
-     Total: 515 TFLOPs per prefill
-   ```
+2. **Decoder layers**:
+   - FLOPs scale linearly with `config.num_hidden_layers`.
+   - See `op-DeepseekV2DecoderLayer.md` for per‑layer formulas (attention +
+     MLP/MoE) for both **prefill** (`S` large, `K≈S`) and **decode**
+     (`S≈1`, `K` large).
 
 3. **Final RMSNorm**:
    ```
-   FLOPs ≈ 3 × B × S × h
-   Decode: 3 × 1 × 1 × 1280 ≈ 3.84 KFLOPs
-   Prefill: 3 × 1 × 8192 × 1280 ≈ 31.5 MFLOPs
+   FLOPs ≈ 3 × B × S × hidden_size
+   Example (B=1, S=8192, hidden_size=1280):
+       ≈ 31.5 MFLOPs
    ```
-
-**Total**:
-```
-Decode: 14.13 TFLOPs per token
-Prefill: 515 TFLOPs for 8192 tokens
-
-Time per decode (RTX 4090, 330 TFLOPS bf16):
-  14.13 TFLOPs / 330 TFLOPS ≈ 43 ms (theoretical, assuming 100% MFU)
-  Actual: ~80-100 ms (50-60% MFU due to memory bandwidth)
-
-Throughput: ~10-12 tokens/second (single batch)
-```
 
 ### Memory Usage
 
 #### Parameters:
-```
-embed_tokens: 82 MB
-layers: 73.07 GB (36.6B params)
-norm: 2.56 KB
-Total: 73.15 GB at bf16
-```
+- **Embedding table**: `vocab_size × hidden_size × sizeof(dtype)`.
+- **Decoder stack**: `num_hidden_layers × (attention + MLP/MoE params)`.
+- **Final norm**: `hidden_size` parameters.
 
-#### Activations (per forward pass):
+The exact numbers depend on configuration. For example:
+- A large 40‑layer MLA+MoE configuration (historical example) can reach
+  ~36.6B parameters (~73 GB at bf16).
+- The shipped DeepSeek-OCR checkpoint (12 layers, MHA, 64 routed experts)
+  is much smaller; see `op-DeepseekV2MoE.md` and `op-DeepseekV2MLP.md` for
+  formulas.
 
-**Decode** (S=1, K=8192):
-```
-inputs_embeds: 1 × 1 × 1280 × 2 = 2.56 KB
-Per layer activations: ~143 MB (see op-DeepseekV2DecoderLayer.md)
-Total: 40 × 143 MB ≈ 5.72 GB
-```
-
-**Prefill** (S=8192):
-```
-inputs_embeds: 1 × 8192 × 1280 × 2 = 21 MB
-Per layer activations: ~686 MB
-Total: 40 × 686 MB ≈ 27.4 GB
-
-With Flash Attention: Reduces attention memory by 70x
-Effective: ~10-12 GB
-```
-
-#### KV Cache:
-```
-Per layer: 9.44 MB (K=8192)
-Total for 40 layers: 377.6 MB
-
-Scales with context:
-  K=16384: 755 MB
-  K=32768: 1.51 GB
-
-MLA achieves ~57x reduction vs standard MHA!
-```
-
-#### Total inference memory (decode, K=8192):
-```
-Model parameters: 73.15 GB
-Activations: 5.72 GB
-KV cache: 377.6 MB
-Total: ~79 GB
-
-Fits on single A100 80GB or H100 80GB!
-```
+#### Activations and KV cache:
+- Activations scale with `B × S × hidden_size × num_hidden_layers`, plus
+  attention‑specific terms (see `op-DeepseekV2DecoderLayer.md`).
+- KV cache size scales with `num_hidden_layers × K` and depends on whether
+  MLA (compressed cache) or standard MHA (full K/V) is used; see
+  `op-DeepseekV2Attention.md` and `op-DeepseekV2FlashAttention2.md`.
 
 ## Related Modules
 - **Used by**:
   - `DeepseekV2ForCausalLM.model` - adds LM head for generation
   - `DeepseekV2ForSequenceClassification.model` - adds classification head
-  - `DeepseekOCRModel.language_model` - integrates with vision encoder
+  - `DeepseekOCRModel` - integrates vision encoders and projector before
+    delegating to this decoder
 - **Contains**:
   - `nn.Embedding` for token embeddings
   - 40 × `DeepseekV2DecoderLayer` for transformer layers
@@ -413,11 +367,11 @@ Fits on single A100 80GB or H100 80GB!
 from modeling_deepseekv2 import DeepseekV2Model, DeepseekV2Config
 
 config = DeepseekV2Config(
-    vocab_size=32000,
+    vocab_size=129280,
     hidden_size=1280,
-    num_hidden_layers=40,
-    use_mla=True,
-    n_routed_experts=160,
+    num_hidden_layers=12,
+    use_mla=False,          # DeepSeek-OCR uses MHA by default
+    n_routed_experts=64,
 )
 
 model = DeepseekV2Model(config)
@@ -433,7 +387,7 @@ outputs = model(
 )
 
 hidden_states = outputs.last_hidden_state  # (1, 8192, 1280)
-past_key_values = outputs.past_key_values  # KV cache for 40 layers
+past_key_values = outputs.past_key_values  # KV cache for all decoder layers
 
 # Decode
 next_token_id = torch.tensor([[12345]])  # (1, 1)
@@ -455,15 +409,15 @@ updated_past_key_values = outputs.past_key_values
 1. **Efficient KV caching**: 377 MB for 8K context (57x smaller than standard attention)
 2. **MoE sparsity**: Only 2/160 experts active per token (80x parameter efficiency)
 3. **Flash Attention**: 70x memory reduction during prefill
-4. **Gradient checkpointing**: Reduces training memory from 27 GB to ~1-2 GB
-5. **Pre-norm stability**: Enables stable training of 40-layer deep network
+4. **Gradient checkpointing**: Reduces training memory for deep stacks
+5. **Pre-norm stability**: Enables stable training of deep decoder stacks
 
 ## Optimization Opportunities
 
 1. **Continuous batching**: Process multiple requests with different sequence lengths
 2. **Speculative decoding**: Generate multiple tokens per forward pass
 3. **KV cache quantization**: Int8/int4 KV cache (2-4x further reduction)
-4. **Pipeline parallelism**: Split 40 layers across multiple GPUs
+4. **Pipeline parallelism**: Split decoder layers across multiple GPUs
 5. **Expert parallelism**: Distribute MoE experts across GPUs
 
 ## References

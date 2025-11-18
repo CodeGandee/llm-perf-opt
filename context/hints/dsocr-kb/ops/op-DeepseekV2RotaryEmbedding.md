@@ -262,8 +262,12 @@ Total per RoPE module: ~2 MB
 ```
 
 **Per model**:
-- DeepSeek-OCR has **40 decoder layers**, each with 1 RoPE instance
-- Total RoPE memory: 40 × 2 MB = **80 MB**
+- For a model with `L` decoder layers (and one RoPE instance per attention
+  module), total RoPE buffer memory is approximately `L × 2 MB` for
+  `max_position_embeddings=8192` and `dim=64`.
+- In the DeepSeek-OCR checkpoint, `config.num_hidden_layers = 12` and
+  `rope_scaling = None`, so total RoPE buffer memory is on the order of
+  `12 × 2 MB ≈ 24 MB`.
 
 **Dynamic expansion**:
 - If sequence length exceeds `max_seq_len_cached`, cache is regenerated on-the-fly

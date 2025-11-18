@@ -261,12 +261,18 @@ Total: ~2 MB per RoPE instance
 ```
 
 **Dynamic Behavior**:
-- Cache grows with `seq_len`: Memory = 2 × seq_len × dim × sizeof(dtype)
+- Cache grows with `seq_len`: Memory = `2 × seq_len × dim × sizeof(dtype)`.
 - For very long contexts (e.g., 128K), memory can be significant:
   ```
   128K context: 2 × 131072 × 64 × 2 bytes = 32 MB
   ```
-- In DeepSeek-OCR (40 layers), single RoPE instance shared across all layers
+- Total memory scales linearly with the number of decoder layers that use this
+  embedding. If every layer uses Dynamic NTK scaling, total RoPE buffer memory
+  is approximately `32 MB × num_hidden_layers` for a 128K context.
+
+> The DeepSeek-OCR checkpoint ships with `rope_scaling = null`, so this
+> Dynamic NTK variant is not active by default; it is available for extended
+> context experiments via configuration.
 
 #### Temporary Activations:
 

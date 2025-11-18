@@ -7,7 +7,10 @@
 3. Use tiling to maximize L2/SRAM reuse
 4. Handle variable-length sequences efficiently with unpadding
 
-This is the **recommended attention implementation** for production inference and training with DeepSeek-OCR.
+This is the **recommended attention implementation** when using MLA with Flash
+Attention 2. The shipped DeepSeek-OCR checkpoint sets `use_mla = false` and
+uses the standard `LlamaFlashAttention2` path instead; this module becomes
+active only if you enable MLA in the config.
 
 ## Definition
 ```python
@@ -427,7 +430,7 @@ key_states: 1 × 128 × 8192 × 128 × 2 = 268.44 MB
 value_states: 268.44 MB
 Total per layer: 536.87 MB
 
-Total for 40 layers: 21.47 GB (same as standard MHA!)
+Example 40-layer stack: 40 × 536.87 MB ≈ 21.47 GB (same as standard MHA)
 ```
 
 **Critical trade-off**:

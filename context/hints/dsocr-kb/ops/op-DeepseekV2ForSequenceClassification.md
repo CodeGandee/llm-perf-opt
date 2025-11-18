@@ -1,8 +1,8 @@
 # DeepseekV2ForSequenceClassification
 
 ## What It Is
-`DeepseekV2ForSequenceClassification` is a sequence classification variant of DeepSeek-OCR, designed for tasks like sentiment analysis, document classification, and text categorization. It combines:
-1. **DeepseekV2Model** - the full transformer decoder (40 layers)
+`DeepseekV2ForSequenceClassification` is a sequence classification variant of the DeepseekV2 decoder, designed for tasks like sentiment analysis, document classification, and text categorization. It combines:
+1. **DeepseekV2Model** - the full transformer decoder (`config.num_hidden_layers` layers)
 2. **Classification head** (`score`) - linear projection from hidden states to class logits
 3. **Flexible loss functions** - MSE for regression, cross-entropy for classification, BCE for multi-label
 4. **Last-token pooling** - uses the hidden state of the last non-padding token for classification
@@ -30,7 +30,7 @@ def __init__(self, config: DeepseekV2Config)
 
 **Parameters** (from config):
 - `num_labels`: Number of classification labels (default: 2 for binary classification)
-- `hidden_size`: Model hidden dimension (default: 1280)
+- `hidden_size`: Model hidden dimension
 - `pad_token_id`: Padding token ID for sequence length determination
 - `problem_type`: "regression", "single_label_classification", or "multi_label_classification" (auto-detected if None)
 - All other params inherited by `DeepseekV2Model`
@@ -39,8 +39,8 @@ def __init__(self, config: DeepseekV2Config)
 
 1. **self.model**: Full transformer decoder
    - `DeepseekV2Model(config)`
-   - Parameters: 36.64B (see op-DeepseekV2Model.md)
-   - At bf16: 73.15 GB
+   - Parameter count depends on the same configuration as in
+     `op-DeepseekV2Model.md` (number of layers, MLA vs MHA, MoE, etc.).
 
 2. **self.score**: Classification head
    - `nn.Linear(hidden_size, num_labels, bias=False)`
@@ -48,15 +48,6 @@ def __init__(self, config: DeepseekV2Config)
    - Parameters: 1,280 × num_labels
    - For binary classification (2 labels): 2,560 params ≈ 2.56K
    - At bf16: 5.12 KB
-
-**Total parameters** (binary classification):
-```python
-model: 36.64B
-score: 2,560
-Total: 36.64B parameters (score head is negligible)
-
-At bf16: 73.15 GB
-```
 
 ## Module Internals
 
@@ -72,7 +63,7 @@ sequenceDiagram
     Note over Input: forward() entry
 
     Input->>Model: input_ids, attention_mask, position_ids
-    Model->>Model: Process through 40 layers
+    Model->>Model: Process through decoder layers
     Model-->>Pool: hidden_states (B, S, 1280)
 
     Pool->>Pool: Find last non-padding token per sequence
@@ -320,8 +311,11 @@ Reduces to ~2-4 GB (recompute activations during backward)
 
 #### KV Cache:
 ```
-Usually not used for classification (single forward pass)
-If use_cache=True: 377.6 MB (K=512, 40 layers)
+Usually not used for classification (single forward pass).
+If use_cache=True, KV cache memory scales with num_hidden_layers and context
+length K (see op-DeepseekV2Model.md for MLA vs MHA cache formulas). The
+“377.6 MB (K=512, 40 layers)” figure in older drafts referred to a specific
+40‑layer MLA example.
 ```
 
 #### Total training memory (batch=32, seq=512):

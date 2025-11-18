@@ -286,17 +286,15 @@ FLOPs ≈ 2×B×S×h×E + 3×B×S×E + B×S×E
 
 Example (B=1, S=8192, h=1280, E=160):
 FLOPs ≈ 2 × 1 × 8192 × (1280 × 160 + 2 × 160)
-      ≈ 2 × 8192 × (204,800 + 320)
-      ≈ 3,359,416,320 FLOPs
       ≈ 3.36 GFLOPs per MoEGate call
 ```
 
-**Per-model impact**:
+**Per-model impact (example)**:
 ```
-DeepSeek-OCR (38 MoE layers):
+Example with 38 MoE layers:
 Total gating FLOPs: 38 × 3.36 GFLOPs ≈ 128 GFLOPs per forward pass
 
-Negligible compared to expert computation (~7 TFLOPs)!
+Negligible compared to expert computation (~multi‑TFLOPs)!
 ```
 
 ### Memory Usage
@@ -313,10 +311,9 @@ bias (if noaux_tc): 160 × 2 = 320 bytes
 Total per MoEGate: ~410 KB
 ```
 
-**Total in DeepSeek-OCR**:
-```
-38 MoE layers × 410 KB ≈ 15.6 MB (negligible)
-```
+> In DeepSeek-OCR there are 11 MoE layers (layers 1–11 of a 12‑layer stack);
+> multiply the per‑layer numbers above by 11 instead of 38 when estimating
+> memory.
 
 #### Activations (per forward pass):
 

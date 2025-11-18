@@ -149,16 +149,21 @@ Example (d=1280, bf16):
 Memory = 1280 × 2 bytes = 2.56 KB per RMSNorm layer
 ```
 
-**Total in DeepSeek-OCR**:
-- Each decoder layer has **2 RMSNorm layers** (pre-attention + post-attention)
-- 40 decoder layers → 80 RMSNorm instances
-- 1 final norm layer
-- **Total: 81 RMSNorm layers**
+**Total in DeepSeek-OCR (shipped checkpoint)**:
+- Each decoder layer has **2 RMSNorm layers** (`input_layernorm`,
+  `post_attention_layernorm` in `DeepseekV2DecoderLayer`).
+- `config.num_hidden_layers = 12` → 24 RMSNorm instances in the stack.
+- 1 final norm layer in `DeepseekV2Model`.
+- **Total: 25 RMSNorm layers** used by the OCR LLM backbone.
 
 ```
-Total RMSNorm parameters = 81 × 1280 = 103,680 parameters
-At bf16: 103,680 × 2 bytes ≈ 203 KB
+Total RMSNorm parameters (DeepSeek-OCR) = 25 × 1280 = 32,000 parameters
+At bf16: 32,000 × 2 bytes ≈ 64 KB
 ```
+
+> If you enable MLA (`use_mla=True`), additional RMSNorm instances are used
+> inside `DeepseekV2Attention` for low‑rank Q/KV projections; the total then
+> depends on that configuration instead.
 
 #### Activations (per forward pass):
 
