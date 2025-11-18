@@ -15,6 +15,8 @@ from __future__ import annotations
 
 from typing import Any, Dict, Mapping, Optional
 
+import inspect
+from pathlib import Path
 import torch
 from torch import nn
 from torchinfo import ModelStatistics
@@ -134,9 +136,19 @@ class TorchinfoJSONExporter:
 
         # Fully-qualified class name for the underlying nn.Module, when available.
         class_name_qualified: str | None = None
+        filepath: str | None = None
+        is_torch_builtin = False
         if module is not None:
             cls_obj = module.__class__
             class_name_qualified = f"{cls_obj.__module__}.{cls_obj.__qualname__}"
+            if cls_obj.__module__.startswith("torch."):
+                is_torch_builtin = True
+            try:
+                src_path = inspect.getfile(cls_obj)
+            except (TypeError, OSError):
+                src_path = None
+            if src_path is not None:
+                filepath = str(Path(src_path).resolve())
 
         return {
             "index": index,
@@ -146,6 +158,8 @@ class TorchinfoJSONExporter:
             # Instance name within the PyTorch module tree (from named_modules()).
             "instance_name": module_name,
             "class_name_qualified": class_name_qualified,
+            "filepath": filepath,
+            "is_torch_builtin": bool(is_torch_builtin),
             "depth": int(getattr(layer, "depth", 0) or 0),
             "depth_index": int(getattr(layer, "depth_index", 0) or 0),
             "is_leaf_layer": bool(getattr(layer, "is_leaf_layer", False)),
