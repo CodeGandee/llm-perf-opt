@@ -41,7 +41,7 @@ import sys
 from dataclasses import asdict, dataclass
 from datetime import datetime
 from pathlib import Path
-from typing import Any, Dict, Iterable, Mapping
+from typing import Any, Dict, Iterable, List, Mapping
 
 import torch
 from torchinfo import ModelStatistics, summary
@@ -77,6 +77,90 @@ class StageTorchinfoStats:
         params_m = self.params / 1e6
         macs_g = self.macs / 1e9
         return f"{self.stage_name.upper():9s} | params={params_m:8.2f}M  macs={macs_g:8.2f}G"
+
+
+def build_unique_layers_from_hierarchy(hierarchy: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
+    """Collect unique layer types (including torch builtins) from hierarchy."""
+
+    by_qualname: Dict[str, Dict[str, Any]] = {}
+
+    def ensure_entry(qual: str) -> Dict[str, Any]:
+        if qual not in by_qualname:
+            by_qualname[qual] = {
+                "class_name_qualified": qual,
+                "count": 0,
+                "parents": set(),
+                "children": set(),
+                "class_names": set(),
+                "var_names": set(),
+                "instance_names": set(),
+                "filepaths": set(),
+                "is_torch_builtin": False,
+            }
+        return by_qualname[qual]
+
+    def visit(node: Dict[str, Any], parent_qual: str | None) -> None:
+        qual = node.get("class_name_qualified")
+        if isinstance(qual, str) and qual:
+            entry = ensure_entry(qual)
+            entry["count"] = int(entry.get("count", 0)) + 1
+
+            node_class = node.get("class_name")
+            node_var = node.get("var_name")
+            node_instance_name = node.get("instance_name")
+            node_filepath = node.get("filepath")
+            node_builtin = bool(node.get("is_torch_builtin"))
+
+            if isinstance(node_class, str) and node_class:
+                entry["class_names"].add(node_class)
+            if isinstance(node_var, str) and node_var:
+                entry["var_names"].add(node_var)
+            if isinstance(node_instance_name, str):
+                entry["instance_names"].add(node_instance_name)
+            if isinstance(node_filepath, str) and node_filepath:
+                entry["filepaths"].add(node_filepath)
+            if node_builtin:
+                entry["is_torch_builtin"] = True
+
+            if isinstance(parent_qual, str) and parent_qual:
+                parent_entry = ensure_entry(parent_qual)
+                entry["parents"].add(parent_qual)
+                parent_entry["children"].add(qual)
+
+            this_parent_qual = qual
+        else:
+            this_parent_qual = parent_qual
+
+        for child in node.get("children") or []:
+            visit(child, this_parent_qual)
+
+    for root in hierarchy:
+        visit(root, parent_qual=None)
+
+    unique_layers: List[Dict[str, Any]] = []
+    for qual, entry in by_qualname.items():
+        class_names = sorted(entry.get("class_names", set()))
+        var_names = sorted(entry.get("var_names", set()))
+        instance_names = sorted(entry.get("instance_names", set()))
+        filepaths = sorted(entry.get("filepaths", set()))
+        is_builtin = bool(entry.get("is_torch_builtin", False))
+
+        unique_layers.append(
+            {
+                "class_name_qualified": qual,
+                "class_name": class_names[0] if class_names else None,
+                "var_name": var_names,
+                "instance_name": instance_names,
+                "filepaths": filepaths,
+                "is_torch_builtin": is_builtin,
+                "count": int(entry.get("count", 0)),
+                "parents": sorted(entry.get("parents", set())),
+                "children": sorted(entry.get("children", set())),
+            },
+        )
+
+    unique_layers.sort(key=lambda x: x["class_name_qualified"])
+    return unique_layers
 
 
 def build_argparser() -> argparse.ArgumentParser:
@@ -374,11 +458,14 @@ def main() -> int:
             txt_path = output_dir / "torchinfo-summary.txt"
             stages_json_path = output_dir / "torchinfo-stages.json"
             layers_json_path = output_dir / "torchinfo-layers.json"
+            unique_layers_path = output_dir / "torchinfo-unique-layers.json"
+
+            generated_at = datetime.utcnow().isoformat(timespec="seconds") + "Z"
 
             txt_path.write_text(str(stats), encoding="utf-8")
 
             stages_payload = {
-                "generated_at": datetime.utcnow().isoformat(timespec="seconds") + "Z",
+                "generated_at": generated_at,
                 "model_path": str(model_path),
                 "device": str(args.device),
                 "base_size": int(args.base_size),
@@ -393,7 +480,7 @@ def main() -> int:
             stages_json_path.write_text(json.dumps(stages_payload, indent=2), encoding="utf-8")
 
             layers_payload = {
-                "generated_at": datetime.utcnow().isoformat(timespec="seconds") + "Z",
+                "generated_at": generated_at,
                 "model_path": str(model_path),
                 "device": str(args.device),
                 "base_size": int(args.base_size),
@@ -408,9 +495,27 @@ def main() -> int:
             }
             layers_json_path.write_text(json.dumps(layers_payload, indent=2), encoding="utf-8")
 
+            unique_layers = build_unique_layers_from_hierarchy(hierarchy)
+            unique_payload = {
+                "generated_at": generated_at,
+                "model_path": str(model_path),
+                "device": str(args.device),
+                "base_size": int(args.base_size),
+                "image_size": int(args.image_size),
+                "seq_len": int(args.seq_len),
+                "crop_mode": bool(args.crop_mode),
+                "depth": int(args.depth),
+                "total_params": total_params,
+                "total_macs": total_macs,
+                "num_unique_layers": len(unique_layers),
+                "layers": unique_layers,
+            }
+            unique_layers_path.write_text(json.dumps(unique_payload, indent=2), encoding="utf-8")
+
             print(f"✓ Wrote TorchInfo summary text: {txt_path}")
             print(f"✓ Wrote per-stage JSON summary: {stages_json_path}")
             print(f"✓ Wrote per-layer JSON summary: {layers_json_path}")
+            print(f"✓ Wrote unique-layer JSON summary: {unique_layers_path}")
         except Exception as exc:  # pragma: no cover - defensive logging
             print(f"✗ Failed to write outputs: {exc}")
             import traceback
