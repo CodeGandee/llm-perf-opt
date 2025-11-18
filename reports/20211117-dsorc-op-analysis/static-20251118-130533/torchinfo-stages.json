@@ -1,0 +1,39 @@
+{
+  "generated_at": "2025-11-18T05:05:40Z",
+  "model_path": "/home/igame/.cache/huggingface/hub/models--deepseek-ai--DeepSeek-OCR/snapshots/2c968b433af61a059311cbf8997765023806a24d",
+  "device": "cuda:0",
+  "base_size": 1024,
+  "image_size": 640,
+  "seq_len": 1024,
+  "crop_mode": true,
+  "depth": 3,
+  "total_params": 3170627840,
+  "total_macs": 184271298048,
+  "stages": {
+    "sam": {
+      "stage_name": "sam",
+      "params": 0,
+      "macs": 0
+    },
+    "clip": {
+      "stage_name": "clip",
+      "params": 0,
+      "macs": 0
+    },
+    "projector": {
+      "stage_name": "projector",
+      "params": 0,
+      "macs": 0
+    },
+    "prefill": {
+      "stage_name": "prefill",
+      "params": 0,
+      "macs": 0
+    },
+    "decode": {
+      "stage_name": "decode",
+      "params": 0,
+      "macs": 0
+    }
+  }
+}
