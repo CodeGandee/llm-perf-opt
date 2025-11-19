@@ -63,18 +63,18 @@ included where explicitly requested in the spec or for critical paths.
 ### Implementation for User Story 1 – Vision
 
 - [X] T009 [P] [US1] Implement `Attention(BaseLayer)` in `extern/modelmeter/models/deepseek_ocr/layers/vision/attention.py` using TorchInfo shapes and call counts from `reports/20211117-dsorc-op-analysis/static-20251118-130533/torchinfo-unique-layers.json` (docs: context/hints/dsocr-kb/ops/op-Attention.md)
-- [ ] T010 [P] [US1] Implement `Block(BaseLayer)` in `extern/modelmeter/models/deepseek_ocr/layers/vision/block.py` to aggregate attention and MLP vision costs (docs: context/hints/dsocr-kb/ops/op-Block.md)
-- [ ] T011 [P] [US1] Implement `CLIPVisionEmbeddings(BaseLayer)` in `extern/modelmeter/models/deepseek_ocr/layers/vision/clip_vision_embeddings.py` modeling patch + positional embeddings (docs: context/hints/dsocr-kb/ops/op-CLIPVisionEmbeddings.md)
-- [ ] T012 [P] [US1] Implement `ImageEncoderViT(BaseLayer)` in `extern/modelmeter/models/deepseek_ocr/layers/vision/image_encoder_vit.py` as the main ViT vision encoder analytic model (docs: context/hints/dsocr-kb/ops/op-ImageEncoderViT.md)
-- [ ] T013 [P] [US1] Implement `LayerNorm2d(BaseLayer)` in `extern/modelmeter/models/deepseek_ocr/layers/vision/layer_norm2d.py` including forward/backward FLOPs and memory (docs: context/hints/dsocr-kb/ops/op-LayerNorm2d.md)
-- [ ] T014 [P] [US1] Implement `MLPBlock(BaseLayer)` in `extern/modelmeter/models/deepseek_ocr/layers/vision/mlp_block.py` for the vision MLP sub-block FLOPs/I/O (docs: context/hints/dsocr-kb/ops/op-MLPBlock.md)
-- [ ] T015 [P] [US1] Implement `MlpProjector(BaseLayer)` in `extern/modelmeter/models/deepseek_ocr/layers/vision/mlp_projector.py` to capture the projection from vision to decoder input space (docs: context/hints/dsocr-kb/ops/op-MlpProjector.md)
-- [ ] T016 [P] [US1] Implement `NoTPAttention(BaseLayer)` in `extern/modelmeter/models/deepseek_ocr/layers/vision/notp_attention.py` with attention FLOPs/I/O formulas (docs: context/hints/dsocr-kb/ops/op-NoTPAttention.md)
-- [ ] T017 [P] [US1] Implement `NoTPFeedForward(BaseLayer)` in `extern/modelmeter/models/deepseek_ocr/layers/vision/notp_feedforward.py` modeling the NoTP MLP stack (docs: context/hints/dsocr-kb/ops/op-NoTPFeedForward.md)
-- [ ] T018 [P] [US1] Implement `NoTPTransformer(BaseLayer)` in `extern/modelmeter/models/deepseek_ocr/layers/vision/notp_transformer.py` aggregating per-block NoTP costs (docs: context/hints/dsocr-kb/ops/op-NoTPTransformer.md)
-- [ ] T019 [P] [US1] Implement `NoTPTransformerBlock(BaseLayer)` in `extern/modelmeter/models/deepseek_ocr/layers/vision/notp_transformer_block.py` as a single NoTP block analytic layer (docs: context/hints/dsocr-kb/ops/op-NoTPTransformerBlock.md)
-- [ ] T020 [P] [US1] Implement `PatchEmbed(BaseLayer)` in `extern/modelmeter/models/deepseek_ocr/layers/vision/patch_embed.py` capturing patch projection FLOPs/I/O (docs: context/hints/dsocr-kb/ops/op-PatchEmbed.md)
-- [ ] T021 [P] [US1] Implement `VitModel(BaseLayer)` in `extern/modelmeter/models/deepseek_ocr/layers/vision/vit_model.py` aggregating encoder blocks into a full vision backbone analytic model (docs: context/hints/dsocr-kb/ops/op-VitModel.md)
+- [X] T010 [P] [US1] Implement `Block(BaseLayer)` in `extern/modelmeter/models/deepseek_ocr/layers/vision/block.py` to aggregate attention and MLP vision costs (docs: context/hints/dsocr-kb/ops/op-Block.md)
+- [X] T011 [P] [US1] Implement `CLIPVisionEmbeddings(BaseLayer)` in `extern/modelmeter/models/deepseek_ocr/layers/vision/clip_vision_embeddings.py` modeling patch + positional embeddings (docs: context/hints/dsocr-kb/ops/op-CLIPVisionEmbeddings.md)
+- [X] T012 [P] [US1] Implement `ImageEncoderViT(BaseLayer)` in `extern/modelmeter/models/deepseek_ocr/layers/vision/image_encoder_vit.py` as the main ViT vision encoder analytic model (docs: context/hints/dsocr-kb/ops/op-ImageEncoderViT.md)
+- [X] T013 [P] [US1] Implement `LayerNorm2d(BaseLayer)` in `extern/modelmeter/models/deepseek_ocr/layers/vision/layer_norm2d.py` including forward/backward FLOPs and memory (docs: context/hints/dsocr-kb/ops/op-LayerNorm2d.md)
+- [X] T014 [P] [US1] Implement `MLPBlock(BaseLayer)` in `extern/modelmeter/models/deepseek_ocr/layers/vision/mlp_block.py` for the vision MLP sub-block FLOPs/I/O (docs: context/hints/dsocr-kb/ops/op-MLPBlock.md)
+- [X] T015 [P] [US1] Implement `MlpProjector(BaseLayer)` in `extern/modelmeter/models/deepseek_ocr/layers/vision/mlp_projector.py` to capture the projection from vision to decoder input space (docs: context/hints/dsocr-kb/ops/op-MlpProjector.md)
+- [X] T016 [P] [US1] Implement `NoTPAttention(BaseLayer)` in `extern/modelmeter/models/deepseek_ocr/layers/vision/notp_attention.py` with attention FLOPs/I/O formulas (docs: context/hints/dsocr-kb/ops/op-NoTPAttention.md)
+- [X] T017 [P] [US1] Implement `NoTPFeedForward(BaseLayer)` in `extern/modelmeter/models/deepseek_ocr/layers/vision/notp_feedforward.py` modeling the NoTP MLP stack (docs: context/hints/dsocr-kb/ops/op-NoTPFeedForward.md)
+- [X] T018 [P] [US1] Implement `NoTPTransformer(BaseLayer)` in `extern/modelmeter/models/deepseek_ocr/layers/vision/notp_transformer.py` aggregating per-block NoTP costs (docs: context/hints/dsocr-kb/ops/op-NoTPTransformer.md)
+- [X] T019 [P] [US1] Implement `NoTPTransformerBlock(BaseLayer)` in `extern/modelmeter/models/deepseek_ocr/layers/vision/notp_transformer_block.py` as a single NoTP block analytic layer (docs: context/hints/dsocr-kb/ops/op-NoTPTransformerBlock.md)
+- [X] T020 [P] [US1] Implement `PatchEmbed(BaseLayer)` in `extern/modelmeter/models/deepseek_ocr/layers/vision/patch_embed.py` capturing patch projection FLOPs/I/O (docs: context/hints/dsocr-kb/ops/op-PatchEmbed.md)
+- [X] T021 [P] [US1] Implement `VitModel(BaseLayer)` in `extern/modelmeter/models/deepseek_ocr/layers/vision/vit_model.py` aggregating encoder blocks into a full vision backbone analytic model (docs: context/hints/dsocr-kb/ops/op-VitModel.md)
 
 **Checkpoint**: Vision analytic layers are implemented and sanity-checked in isolation; LLaMA, decoder, and core aggregation remain to be implemented for the full User Story 1 flow.
 
