@@ -143,17 +143,17 @@ included where explicitly requested in the spec or for critical paths.
 
 ### Tests for User Story 2
 
-- [ ] T035 [P] [US2] Implement manual analytic-model export script `tests/manual/deepseek_ocr/manual_deepseek_ocr_model_export.py` that runs the analytic CLI and writes a standalone `AnalyticModelReport` JSON/YAML file suitable for downstream planning tools
-- [ ] T036 [P] [US2] Add unit tests in `tests/unit/deepseek_ocr/test_analytic_model_report_io.py` to verify round-trip JSON/YAML serialization of `AnalyticModelReport` in `src/llm_perf_opt/data/deepseek_ocr_analytic.py`
+- [X] T035 [P] [US2] Implement manual analytic-model export script `tests/manual/deepseek_ocr/manual_deepseek_ocr_model_export.py` that runs the analytic CLI and writes a standalone `AnalyticModelReport` JSON/YAML file suitable for downstream planning tools
+- [X] T036 [P] [US2] Add unit tests in `tests/unit/deepseek_ocr/test_analytic_model_report_io.py` to verify round-trip JSON/YAML serialization of `AnalyticModelReport` in `src/llm_perf_opt/data/deepseek_ocr_analytic.py`
 
 ### Implementation for User Story 2
 
-- [ ] T037 [P] [US2] Implement operator category mapping logic in `src/llm_perf_opt/data/deepseek_ocr_analytic.py` that assigns TorchInfo `class_name_qualified` values from `TargetOperatorList` to `OperatorCategory` ids for use in capacity-planning exports
-- [ ] T038 [P] [US2] Extend the analytic aggregation pipeline in `src/llm_perf_opt/runners/dsocr_analyzer.py` to populate `ModuleMetricsSnapshot` and `OperatorMetrics` records for each module when building an `AnalyticModelReport`
-- [ ] T039 [P] [US2] Add DeepSeek-OCR analytic contract models (request, accepted, summary, full model) to `src/llm_perf_opt/contracts/models.py` and register `cattrs` hooks in `src/llm_perf_opt/contracts/convert.py` per `specs/001-deepseek-ocr-modelmeter/contracts/python-contracts.md`
-- [ ] T040 [US2] Implement a small CLI wrapper `src/llm_perf_opt/runners/dsocr_analyzer_main.py` (or `__main__` handler in `src/llm_perf_opt/runners/dsocr_analyzer.py`) that accepts `DeepSeekOCRAnalyticRequest` fields and dispatches analytic runs, returning the `report_id` and artifacts directory
-- [ ] T041 [P] [US2] Create an example “what-if” planning script `scripts/analytical/dsocr_analytic_what_if.py` that loads an `AnalyticModelReport` JSON from `tmp/profile-output/<run_id>/static_analysis/analytic_model/` and recomputes projected FLOPs/time for alternative batch sizes or device assumptions
-- [ ] T042 [US2] Validate that implemented analytic outputs match field names and shapes described in `specs/001-deepseek-ocr-modelmeter/contracts/openapi.yaml` and `specs/001-deepseek-ocr-modelmeter/contracts/MAPPING.md`, updating docs or code where discrepancies arise
+- [X] T037 [P] [US2] Implement operator category mapping logic in `src/llm_perf_opt/data/deepseek_ocr_analytic.py` that assigns TorchInfo `class_name_qualified` values from `TargetOperatorList` to `OperatorCategory` ids for use in capacity-planning exports
+- [X] T038 [P] [US2] Extend the analytic aggregation pipeline in `src/llm_perf_opt/runners/dsocr_analyzer.py` to populate `ModuleMetricsSnapshot` and `OperatorMetrics` records for each module when building an `AnalyticModelReport`
+- [X] T039 [P] [US2] Add DeepSeek-OCR analytic contract models (request, accepted, summary, full model) to `src/llm_perf_opt/contracts/models.py` and register `cattrs` hooks in `src/llm_perf_opt/contracts/convert.py` per `specs/001-deepseek-ocr-modelmeter/contracts/python-contracts.md`
+- [X] T040 [US2] Implement a small CLI wrapper `src/llm_perf_opt/runners/dsocr_analyzer_main.py` (or `__main__` handler in `src/llm_perf_opt/runners/dsocr_analyzer.py`) that accepts `DeepSeekOCRAnalyticRequest` fields and dispatches analytic runs, returning the `report_id` and artifacts directory
+- [X] T041 [P] [US2] Create an example “what-if” planning script `scripts/analytical/dsocr_analytic_what_if.py` that loads an `AnalyticModelReport` JSON from `tmp/profile-output/<run_id>/static_analysis/analytic_model/` and recomputes projected FLOPs/time for alternative batch sizes or device assumptions
+- [X] T042 [US2] Validate that implemented analytic outputs match field names and shapes described in `specs/001-deepseek-ocr-modelmeter/contracts/openapi.yaml` and `specs/001-deepseek-ocr-modelmeter/contracts/MAPPING.md`, updating docs or code where discrepancies arise
 
 **Checkpoint**: At this point, User Stories 1 and 2 should both work independently (analytic CLI + exportable analytic model files for planning)
 

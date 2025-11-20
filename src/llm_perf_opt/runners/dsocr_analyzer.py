@@ -36,9 +36,7 @@ from extern.modelmeter.models.deepseek_ocr.layers.vision.clip_vision_embeddings 
 from extern.modelmeter.models.deepseek_ocr.layers.vision.image_encoder_vit import (
     ImageEncoderViT,
 )
-from extern.modelmeter.models.deepseek_ocr.layers.vision.mlp_projector import (
-    MlpProjector,
-)
+from extern.modelmeter.models.deepseek_ocr.layers.vision.mlp_projector import MlpProjector
 from extern.modelmeter.models.deepseek_ocr.layers.vision.notp_attention import (
     NoTPAttention,
 )
@@ -48,17 +46,22 @@ from extern.modelmeter.models.deepseek_ocr.layers.vision.notp_feedforward import
 from extern.modelmeter.models.deepseek_ocr.layers.vision.notp_transformer import (
     NoTPTransformer,
 )
-from extern.modelmeter.models.deepseek_ocr.layers.vision.notp_transformer_block import (
-    NoTPTransformerBlock,
-)
+from extern.modelmeter.models.deepseek_ocr.layers.vision.notp_transformer_block import NoTPTransformerBlock
+from extern.modelmeter.models.deepseek_ocr.layers.vision.vit_model import VitModel
 from llm_perf_opt.data.deepseek_ocr_analytic import (
     AnalyticModelReport,
     AnalyticModuleNode,
     DeepSeekOCRModelSpec,
     ModuleMetricsSnapshot,
     OCRWorkloadProfile,
+    OperatorCategory,
+    OperatorMetrics,
+    build_operator_categories_from_target_list,
+    build_operator_category_index,
+    categorize_operator_class_name,
 )
 from llm_perf_opt.profiling.hw import get_device_name, get_peak_tflops
+from llm_perf_opt.utils.dsocr_callgraph_parse import load_target_operator_list
 from llm_perf_opt.utils.paths import analytic_layer_docs_dir, analytic_model_dir, workspace_root
 from llm_perf_opt.visualize.analytic_layers import write_analytic_layer_docs
 
@@ -1314,6 +1317,12 @@ class DeepseekOCRStaticAnalyzer:
         vit_model: VitModel = vision_layers["vision/vit_model"]  # type: ignore[assignment]
         projector: MlpProjector = vision_layers["vision/mlp_projector"]  # type: ignore[assignment]
 
+        # Best-effort extraction of vision encoder head count; fall back to an internal
+        # attribute if the public property is unavailable in a given ModelMeter rev.
+        img_num_heads = getattr(img_enc, "num_heads", None)
+        if img_num_heads is None:
+            img_num_heads = getattr(img_enc, "m_num_heads", 0)
+
         modules.append(
             AnalyticModuleNode(
                 module_id="vision/image_encoder_vit",
@@ -1332,7 +1341,7 @@ class DeepseekOCRStaticAnalyzer:
                     "patch_size": img_enc.patch_size,
                     "embed_dim": img_enc.embed_dim,
                     "depth": img_enc.depth,
-                    "num_heads": img_enc.num_heads,
+                    "num_heads": img_num_heads,
                 },
             ),
         )
@@ -1525,6 +1534,67 @@ class DeepseekOCRStaticAnalyzer:
             workload=workload,
         )
 
+        # Derive operator categories from the TorchInfo operator snapshot.
+        operator_categories: list[OperatorCategory] = []
+        try:
+            artifact_dir = (
+                Path(workspace_root())
+                / "reports"
+                / "20211117-dsorc-op-analysis"
+                / "static-20251118-130533"
+            )
+            target_ops = load_target_operator_list(str(artifact_dir))
+            operator_categories = build_operator_categories_from_target_list(target_ops)
+        except Exception as exc:  # noqa: BLE001
+            self.m_logger.warning(
+                "Failed to load TorchInfo operator snapshot for operator categories: %s",
+                exc,
+            )
+            operator_categories = []
+
+        # Attach a coarse operator breakdown to each module snapshot using
+        # the module's analytic layer class as the operator family.
+        category_index = build_operator_category_index(operator_categories)
+        modules_by_id = {m.module_id: m for m in modules}
+        known_category_ids = {c.category_id for c in operator_categories}
+
+        for snapshot in module_metrics:
+            module = modules_by_id.get(snapshot.module_id)
+            if module is None:
+                continue
+
+            qualified_name = module.qualified_class_name
+            category_id = category_index.get(qualified_name)
+            if category_id is None:
+                category_id = categorize_operator_class_name(qualified_name)
+                if category_id not in known_category_ids:
+                    display = category_id.replace("_", " ").title()
+                    operator_categories.append(
+                        OperatorCategory(
+                            category_id=category_id,
+                            display_name=display,
+                            description="Analytic module category derived from layer class.",
+                            match_classes=[qualified_name],
+                        ),
+                    )
+                    known_category_ids.add(category_id)
+                    category_index[qualified_name] = category_id
+
+            if snapshot.total_flops_tflops > 0.0:
+                share = 1.0
+            else:
+                share = 0.0
+
+            snapshot.operator_breakdown = [
+                OperatorMetrics(
+                    category_id=category_id,
+                    calls=snapshot.calls,
+                    flops_tflops=snapshot.total_flops_tflops,
+                    io_tb=snapshot.total_io_tb,
+                    share_of_module_flops=share,
+                ),
+            ]
+
         layer_docs_dir = analytic_layer_docs_dir(run_id)
         analytic_dir = analytic_model_dir(run_id)
 
@@ -1533,7 +1603,7 @@ class DeepseekOCRStaticAnalyzer:
             model=model_spec,
             workload=workload,
             modules=modules,
-            operator_categories=[],
+            operator_categories=operator_categories,
             module_metrics=module_metrics,
             profile_run_id=None,
             predicted_total_time_ms=predicted_total_time_ms,

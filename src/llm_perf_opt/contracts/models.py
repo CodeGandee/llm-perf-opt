@@ -1,26 +1,18 @@
-"""Profiling contracts (attrs models).
+"""Contract models (attrs-based schemas).
 
-This module defines request/response schemas for profiling workflows. These
-mirror OpenAPI schemas in
-`specs/001-profile-deepseek-ocr/contracts/openapi.yaml` and the Python
-contracts design in `specs/001-profile-deepseek-ocr/contracts/python-contracts.md`.
+This module defines request/response schemas for profiling workflows and
+DeepSeek-OCR analytic modeling. These mirror OpenAPI schemas in
 
-Classes
--------
-LLMProfileRequest
-    Request payload for starting a profiling run.
-LLMProfileAccepted
-    Acknowledgement for a queued/running profiling request.
-OperatorSummary
-    Aggregated operator-level metrics (time, calls).
-Stats
-    Simple mean/std pair used in aggregates.
-LLMProfileReportSummary
-    Public-facing summary of a profiling run.
+- ``specs/001-profile-deepseek-ocr/contracts/openapi.yaml`` and
+  ``specs/001-profile-deepseek-ocr/contracts/python-contracts.md``; and
+- ``specs/001-deepseek-ocr-modelmeter/contracts/openapi.yaml`` and
+  ``specs/001-deepseek-ocr-modelmeter/contracts/python-contracts.md``.
 
 Notes
 -----
-All filesystem paths are absolute; validators enforce this where applicable.
+- All filesystem paths are absolute; validators enforce this where applicable.
+- Analytic modeling contracts are light-weight views over the internal
+  domain models defined in :mod:`llm_perf_opt.data.deepseek_ocr_analytic`.
 """
 
 from __future__ import annotations
@@ -30,6 +22,8 @@ from typing import Dict, Literal
 
 from attrs import define, field
 from attrs.validators import instance_of
+
+from llm_perf_opt.data.deepseek_ocr_analytic import AnalyticModelReport
 
 
 def _abs_path(_: object, attr: object, value: str) -> None:
@@ -110,3 +104,98 @@ class LLMProfileReportSummary:
     top_operators: list[OperatorSummary] = field(factory=list)
     aggregates: Dict[str, Stats] = field(factory=dict)
     notes: str = field(validator=[instance_of(str)])
+
+
+# ---------------------------------------------------------------------------
+# DeepSeek-OCR analytic modeling contracts
+# ---------------------------------------------------------------------------
+
+
+@define(kw_only=True)
+class DeepSeekOCRAnalyticRequest:
+    """Request to build or refresh the DeepSeek-OCR analytic model."""
+
+    model_id: str = field(
+        validator=[instance_of(str)],
+        metadata={"help": "Canonical model id (e.g., deepseek-ai/DeepSeek-OCR)"},
+    )
+    model_variant: str = field(
+        validator=[instance_of(str)],
+        metadata={"help": "Internal model variant (e.g., deepseek-ocr-v1-base)"},
+    )
+    workload_profile_id: str = field(
+        validator=[instance_of(str)],
+        metadata={"help": "Workload profile id (e.g., dsocr-standard-v1)"},
+    )
+    profile_run_id: str | None = field(
+        default=None,
+        metadata={"help": "Optional Stage1/Stage2 profiling run id for later validation"},
+    )
+    force_rebuild: bool = field(
+        default=False,
+        validator=[instance_of(bool)],
+        metadata={"help": "Force recomputation even if a matching report already exists"},
+    )
+
+
+@define(kw_only=True)
+class DeepSeekOCRAnalyticAccepted:
+    """Acknowledgement of an analytic modeling request."""
+
+    report_id: str = field(validator=[instance_of(str)])
+    status: Literal["queued", "running"] = field(validator=[instance_of(str)])
+
+
+@define(kw_only=True)
+class AnalyticModuleSummary:
+    """Top-level summary record for a single analytic module."""
+
+    module_id: str = field(validator=[instance_of(str)])
+    name: str = field(validator=[instance_of(str)])
+    stage: Literal["vision", "projector", "prefill", "decode", "other"] = field(
+        validator=[instance_of(str)],
+    )
+    share_of_model_time: float = field(validator=[instance_of(float)])
+    total_time_ms: float = field(validator=[instance_of(float)])
+    total_flops_tflops: float = field(validator=[instance_of(float)])
+    memory_activations_gb: float = field(validator=[instance_of(float)])
+
+
+@define(kw_only=True)
+class DeepSeekOCRAnalyticReportSummary:
+    """Summary view over an :class:`AnalyticModelReport`."""
+
+    report_id: str = field(validator=[instance_of(str)])
+    model_variant: str = field(validator=[instance_of(str)])
+    workload_profile_id: str = field(validator=[instance_of(str)])
+    predicted_total_time_ms: float = field(validator=[instance_of(float)])
+    measured_total_time_ms: float | None = field(
+        default=None,
+        metadata={
+            "help": (
+                "Optional measured runtime; typically None in the current "
+                "development stage."
+            ),
+        },
+    )
+    predicted_vs_measured_ratio: float | None = field(
+        default=None,
+        metadata={
+            "help": (
+                "Optional predicted/measured ratio; reserved for future "
+                "runtime comparison."
+            ),
+        },
+    )
+    top_modules: list[AnalyticModuleSummary] = field(factory=list)
+    notes: str = field(validator=[instance_of(str)])
+
+
+@define(kw_only=True)
+class DeepSeekOCRAnalyticModel:
+    """Contract view of the full DeepSeek-OCR analytic model."""
+
+    # For the full-model view we simply expose the internal AnalyticModelReport
+    # as-is. This keeps the web/CLI contract aligned with the domain model
+    # while still allowing a dedicated type name in OpenAPI specs.
+    report: AnalyticModelReport = field()
