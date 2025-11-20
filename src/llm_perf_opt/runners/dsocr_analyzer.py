@@ -23,31 +23,31 @@ import torch
 from attrs import asdict
 from ruamel.yaml import YAML  # type: ignore[import-untyped]
 
-from extern.modelmeter.models.deepseek_ocr.layers.core.deepseek_ocr_model import (
+from modelmeter.models.deepseek_ocr.layers.core.deepseek_ocr_model import (
     DeepseekOCRModel,
     _CompositeLayer,
 )
-from extern.modelmeter.models.deepseek_ocr.layers.decoder.deepseek_v2_decoder_layer import (
+from modelmeter.models.deepseek_ocr.layers.decoder.deepseek_v2_decoder_layer import (
     DeepseekV2DecoderLayer,
 )
-from extern.modelmeter.models.deepseek_ocr.layers.vision.clip_vision_embeddings import (
+from modelmeter.models.deepseek_ocr.layers.vision.clip_vision_embeddings import (
     CLIPVisionEmbeddings,
 )
-from extern.modelmeter.models.deepseek_ocr.layers.vision.image_encoder_vit import (
+from modelmeter.models.deepseek_ocr.layers.vision.image_encoder_vit import (
     ImageEncoderViT,
 )
-from extern.modelmeter.models.deepseek_ocr.layers.vision.mlp_projector import MlpProjector
-from extern.modelmeter.models.deepseek_ocr.layers.vision.notp_attention import (
+from modelmeter.models.deepseek_ocr.layers.vision.mlp_projector import MlpProjector
+from modelmeter.models.deepseek_ocr.layers.vision.notp_attention import (
     NoTPAttention,
 )
-from extern.modelmeter.models.deepseek_ocr.layers.vision.notp_feedforward import (
+from modelmeter.models.deepseek_ocr.layers.vision.notp_feedforward import (
     NoTPFeedForward,
 )
-from extern.modelmeter.models.deepseek_ocr.layers.vision.notp_transformer import (
+from modelmeter.models.deepseek_ocr.layers.vision.notp_transformer import (
     NoTPTransformer,
 )
-from extern.modelmeter.models.deepseek_ocr.layers.vision.notp_transformer_block import NoTPTransformerBlock
-from extern.modelmeter.models.deepseek_ocr.layers.vision.vit_model import VitModel
+from modelmeter.models.deepseek_ocr.layers.vision.notp_transformer_block import NoTPTransformerBlock
+from modelmeter.models.deepseek_ocr.layers.vision.vit_model import VitModel
 from llm_perf_opt.data.deepseek_ocr_analytic import (
     AnalyticModelReport,
     AnalyticModuleNode,

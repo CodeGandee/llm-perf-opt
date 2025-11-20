@@ -9,28 +9,28 @@ These unit tests validate that selected analytic layers:
   or hidden size increases.
 """
 
-from extern.modelmeter.models.deepseek_ocr.layers.decoder.deepseek_v2_decoder_layer import (
+from modelmeter.models.deepseek_ocr.layers.decoder.deepseek_v2_decoder_layer import (
     DeepseekV2DecoderLayer,
 )
-from extern.modelmeter.models.deepseek_ocr.layers.llama.llama_flash_attention2 import (
+from modelmeter.models.deepseek_ocr.layers.llama.llama_flash_attention2 import (
     LlamaFlashAttention2,
 )
-from extern.modelmeter.models.deepseek_ocr.layers.vision.clip_vision_embeddings import (
+from modelmeter.models.deepseek_ocr.layers.vision.clip_vision_embeddings import (
     CLIPVisionEmbeddings,
 )
-from extern.modelmeter.models.deepseek_ocr.layers.vision.notp_attention import (
+from modelmeter.models.deepseek_ocr.layers.vision.notp_attention import (
     NoTPAttention,
 )
-from extern.modelmeter.models.deepseek_ocr.layers.vision.notp_feedforward import (
+from modelmeter.models.deepseek_ocr.layers.vision.notp_feedforward import (
     NoTPFeedForward,
 )
-from extern.modelmeter.models.deepseek_ocr.layers.vision.notp_transformer import (
+from modelmeter.models.deepseek_ocr.layers.vision.notp_transformer import (
     NoTPTransformer,
 )
-from extern.modelmeter.models.deepseek_ocr.layers.vision.notp_transformer_block import (
+from modelmeter.models.deepseek_ocr.layers.vision.notp_transformer_block import (
     NoTPTransformerBlock,
 )
-from extern.modelmeter.models.deepseek_ocr.layers.vision.vit_model import VitModel
+from modelmeter.models.deepseek_ocr.layers.vision.vit_model import VitModel
 
 
 def _assert_non_negative(*values: float) -> None:
@@ -137,4 +137,3 @@ def test_vit_model_scales_with_seq_len() -> None:
     assert flops_large >= flops_small
     assert io_large >= io_small
     assert mem_large >= mem_small
-

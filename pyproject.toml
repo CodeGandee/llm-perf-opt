@@ -34,7 +34,7 @@ cuda = "12.0"
 
 # Add ncu_report module to PYTHONPATH for all Unix environments
 [tool.pixi.activation.env]
-PYTHONPATH = "/opt/nvidia/nsight-compute/2025.1.1/extras/python"
+PYTHONPATH = "/opt/nvidia/nsight-compute/2025.1.1/extras/python:extern"
 
 [tool.pixi.pypi-options]
 # Prefer vLLM nightly wheels for latest features

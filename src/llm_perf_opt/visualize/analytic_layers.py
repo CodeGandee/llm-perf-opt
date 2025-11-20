@@ -12,22 +12,22 @@ from typing import Dict, Optional
 
 from mdutils.mdutils import MdUtils  # type: ignore[import-untyped]
 
-from extern.modelmeter.models.deepseek_ocr.layers.decoder.deepseek_v2_decoder_layer import (
+from modelmeter.models.deepseek_ocr.layers.decoder.deepseek_v2_decoder_layer import (
     DeepseekV2DecoderLayer,
 )
-from extern.modelmeter.models.deepseek_ocr.layers.decoder.deepseek_v2_mlp import (
+from modelmeter.models.deepseek_ocr.layers.decoder.deepseek_v2_mlp import (
     DeepseekV2MLP,
 )
-from extern.modelmeter.models.deepseek_ocr.layers.decoder.deepseek_v2_moe import (
+from modelmeter.models.deepseek_ocr.layers.decoder.deepseek_v2_moe import (
     DeepseekV2MoE,
 )
-from extern.modelmeter.models.deepseek_ocr.layers.llama.llama_flash_attention2 import (
+from modelmeter.models.deepseek_ocr.layers.llama.llama_flash_attention2 import (
     LlamaFlashAttention2,
 )
-from extern.modelmeter.models.deepseek_ocr.layers.vision.image_encoder_vit import (
+from modelmeter.models.deepseek_ocr.layers.vision.image_encoder_vit import (
     ImageEncoderViT,
 )
-from extern.modelmeter.models.deepseek_ocr.layers.vision.mlp_block import MLPBlock
+from modelmeter.models.deepseek_ocr.layers.vision.mlp_block import MLPBlock
 
 from llm_perf_opt.data.deepseek_ocr_analytic import (
     AnalyticModelReport,
