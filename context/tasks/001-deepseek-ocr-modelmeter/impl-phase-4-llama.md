@@ -109,12 +109,55 @@ EOF
 
 ## Implementation Summary
 
-*(to be filled after implementation)*
-
 ### What has been implemented
 
-- (after implementation) List LLaMA analytic layer classes and any shared helpers.
+- Implemented `LlamaFlashAttention2(BaseLayer)` in
+  `extern/modelmeter/models/deepseek_ocr/layers/llama/llama_flash_attention2.py`
+  with a keyword-only constructor
+  (`seq_len`, `hidden_size`, `num_heads`,
+  optional `num_key_value_heads`, `batch_size`,
+  `use_flash_attention`) and closed-form implementations for all
+  `BaseLayer` metrics (forward/backward FLOPs, I/O, arithmetic
+  intensity, and weight/activation/KV-cache memory) following the
+  conventions in `LAYER_IMPL_GUIDE.md` and the vision attention layer.
+- Implemented `LlamaRotaryEmbedding(BaseLayer)` in
+  `extern/modelmeter/models/deepseek_ocr/layers/llama/llama_rotary_embedding.py`
+  with a keyword-only constructor (`seq_len`, `dim`, optional
+  `batch_size`) and a lightweight CUDA-core FLOP / I/O / memory model
+  for RoPE frequency computation and cosine/sine activations.
+- Updated Phase 4 tasks `T022` and `T023` in
+  `specs/001-deepseek-ocr-modelmeter/tasks.md` to `[X]`, marking the
+  LLaMA analytic primitives as complete and ready to be consumed by
+  decoder and core aggregation layers in later phases.
 
 ### How to verify
 
-- (after implementation) Document scripts/tests to confirm LLaMA FLOPs/IO/memory behaviors.
+- Run a small smoke check in the Pixi `rtx5090` environment to confirm
+  that both layers instantiate successfully for representative DeepSeek-OCR
+  LLaMA shapes and return non-negative metrics:
+
+  ```bash
+  cd /workspace/code/llm-perf-opt
+
+  pixi run -e rtx5090 python - << 'EOF'
+  from extern.modelmeter.models.deepseek_ocr.layers.llama.llama_flash_attention2 import (
+      LlamaFlashAttention2,
+  )
+  from extern.modelmeter.models.deepseek_ocr.layers.llama.llama_rotary_embedding import (
+      LlamaRotaryEmbedding,
+  )
+
+  flash = LlamaFlashAttention2(seq_len=512, hidden_size=4096, num_heads=32)
+  rotary = LlamaRotaryEmbedding(seq_len=512, dim=128)
+
+  print("FlashAttention2 TFLOPs (forward, TC):", flash.forward_tensor_core_flops())
+  print("FlashAttention2 KV cache GB:", flash.forward_memory_kvcache())
+  print("RoPE TFLOPs (forward, CUDA):", rotary.forward_cuda_core_flops())
+  print("RoPE activation memory GB:", rotary.forward_memory_activation())
+  EOF
+  ```
+
+- Sanity-check that:
+  - FLOPs/IO/memory metrics are non-negative.
+  - Attention FLOPs grow with `seq_len`, `hidden_size`, and `num_heads`.
+  - RoPE FLOPs and activation memory grow with `seq_len` and `dim`.

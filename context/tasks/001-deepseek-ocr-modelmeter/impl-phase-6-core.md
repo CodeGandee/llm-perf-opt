@@ -132,12 +132,53 @@ pixi run -e rtx5090 pytest tests/unit/deepseek_ocr/test_analytic_layers_scaling.
 
 ## Implementation Summary
 
-*(to be filled after implementation)*
-
 ### What has been implemented
 
-- (after implementation) Summarize aggregator, analytic runner, and Markdown generation wiring.
+- Extended `DeepseekOCRModel(BaseLayer)` in `extern/modelmeter/models/deepseek_ocr/layers/core/deepseek_ocr_model.py`
+  to aggregate all BaseLayer metrics (FLOPs, I/O, memory) across a configurable vision stack and a repeated decoder
+  stack, with an internal `_CompositeLayer` helper used for grouping vision components (`ImageEncoderViT`, `VitModel`,
+  `MlpProjector`).
+- Added an analytic pipeline to `DeepseekOCRStaticAnalyzer` in `src/llm_perf_opt/runners/dsocr_analyzer.py`:
+  - `_build_model_spec` / `_build_workload_profile` construct `DeepSeekOCRModelSpec` and `OCRWorkloadProfile` for the
+    `dsocr-standard-v1` workload.
+  - `_build_vision_layers` and `_build_decoder_layer` instantiate the DeepSeek-OCR analytic layers using the shapes and
+    configs from the Phase 3–5 guides.
+  - `_build_module_nodes_and_metrics` builds `AnalyticModuleNode` and `ModuleMetricsSnapshot` entries for the vision
+    modules, decoder stack, and root `DeepseekOCRModel`, including theoretical time estimates derived from TFLOPs and
+    `get_peak_tflops`.
+  - `run_analytic(...)` assembles an `AnalyticModelReport`, writes `report.json` / `report.yaml` under
+    `tmp/profile-output/<run_id>/static_analysis/analytic_model/`, and calls the Markdown renderer.
+- Implemented `write_analytic_layer_docs(report)` in `src/llm_perf_opt/visualize/analytic_layers.py` to emit a
+  `summary.md` table plus per-module Markdown pages under the directory referenced by
+  `AnalyticModelReport.layer_docs_dir`.
+- Added a manual smoke test `tests/manual/deepseek_ocr/manual_deepseek_ocr_performance_report.py` that runs
+  `python -m llm_perf_opt.runners.dsocr_analyzer --mode analytic` and asserts the presence of
+  `report.json` / `report.yaml` and `layers/` for a chosen `run_id`.
+- Added unit tests in `tests/unit/deepseek_ocr/test_analytic_layers_scaling.py` to ensure representative analytic layers
+  (`LlamaFlashAttention2`, `DeepseekV2DecoderLayer`, `VitModel`) report non-negative metrics and scale monotonically
+  with sequence length and hidden size.
+- Updated `extern/modelmeter/models/deepseek_ocr/README.md` and
+  `specs/001-deepseek-ocr-modelmeter/quickstart.md` to document the analytic CLI invocation, the analytic artifact
+  layout under `tmp/profile-output/<run_id>/static_analysis/analytic_model/`, and the location of the generated
+  Markdown layer docs.
 
 ### How to verify
 
-- (after implementation) Describe how to locate and inspect all artifacts for a given `report_id`.
+- Ensure a DeepSeek-OCR checkpoint is available at
+  `/workspace/code/llm-perf-opt/models/deepseek-ocr` and run:
+
+  ```bash
+  cd /workspace/code/llm-perf-opt
+  pixi run -e rtx5090 python tests/manual/deepseek_ocr/manual_deepseek_ocr_performance_report.py
+  ```
+
+  This will invoke `python -m llm_perf_opt.runners.dsocr_analyzer --mode analytic` with a fresh `run_id` and check for:
+  - `tmp/profile-output/<run_id>/static_analysis/analytic_model/report.json`
+  - `tmp/profile-output/<run_id>/static_analysis/analytic_model/report.yaml`
+  - `tmp/profile-output/<run_id>/static_analysis/analytic_model/layers/summary.md` and per-module `.md` files.
+
+- Optionally, run the scaling tests for additional confidence:
+
+  ```bash
+  pixi run -e rtx5090 pytest tests/unit/deepseek_ocr/test_analytic_layers_scaling.py
+  ```

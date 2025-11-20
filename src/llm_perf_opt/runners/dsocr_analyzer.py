@@ -9,12 +9,58 @@ as input and producing detailed reports without modifying the session or model.
 
 from __future__ import annotations
 
+import argparse
+import json
 import logging
 import math
+import sys
 from dataclasses import dataclass, field
+from datetime import datetime
+from pathlib import Path
 from typing import Any, Optional
 
 import torch
+from attrs import asdict
+from ruamel.yaml import YAML  # type: ignore[import-untyped]
+
+from extern.modelmeter.models.deepseek_ocr.layers.core.deepseek_ocr_model import (
+    DeepseekOCRModel,
+    _CompositeLayer,
+)
+from extern.modelmeter.models.deepseek_ocr.layers.decoder.deepseek_v2_decoder_layer import (
+    DeepseekV2DecoderLayer,
+)
+from extern.modelmeter.models.deepseek_ocr.layers.vision.clip_vision_embeddings import (
+    CLIPVisionEmbeddings,
+)
+from extern.modelmeter.models.deepseek_ocr.layers.vision.image_encoder_vit import (
+    ImageEncoderViT,
+)
+from extern.modelmeter.models.deepseek_ocr.layers.vision.mlp_projector import (
+    MlpProjector,
+)
+from extern.modelmeter.models.deepseek_ocr.layers.vision.notp_attention import (
+    NoTPAttention,
+)
+from extern.modelmeter.models.deepseek_ocr.layers.vision.notp_feedforward import (
+    NoTPFeedForward,
+)
+from extern.modelmeter.models.deepseek_ocr.layers.vision.notp_transformer import (
+    NoTPTransformer,
+)
+from extern.modelmeter.models.deepseek_ocr.layers.vision.notp_transformer_block import (
+    NoTPTransformerBlock,
+)
+from llm_perf_opt.data.deepseek_ocr_analytic import (
+    AnalyticModelReport,
+    AnalyticModuleNode,
+    DeepSeekOCRModelSpec,
+    ModuleMetricsSnapshot,
+    OCRWorkloadProfile,
+)
+from llm_perf_opt.profiling.hw import get_device_name, get_peak_tflops
+from llm_perf_opt.utils.paths import analytic_layer_docs_dir, analytic_model_dir, workspace_root
+from llm_perf_opt.visualize.analytic_layers import write_analytic_layer_docs
 
 
 @dataclass
@@ -1023,3 +1069,623 @@ class DeepseekOCRStaticAnalyzer:
         )
 
         return report
+
+    # ------------------------------------------------------------------
+    # Analytic modeling pipeline (ModelMeter-based)
+    # ------------------------------------------------------------------
+
+    def _infer_model_dims(self) -> tuple[int, int, int, int]:
+        """Best-effort extraction of (hidden_size, intermediate_size, num_layers, num_heads)."""
+
+        hidden_size = 1280
+        intermediate_size = 4 * hidden_size
+        num_layers = 12
+        num_heads = 16
+
+        try:
+            cfg = getattr(self.m_session.m_model, "config", None)
+            if cfg is not None:
+                hidden_size = int(getattr(cfg, "hidden_size", hidden_size))
+                intermediate_size = int(getattr(cfg, "intermediate_size", intermediate_size))
+                num_layers = int(getattr(cfg, "num_hidden_layers", num_layers))
+                num_heads = int(getattr(cfg, "num_attention_heads", num_heads))
+        except Exception:
+            # Fall back to defaults if anything goes wrong.
+            pass
+
+        return hidden_size, intermediate_size, num_layers, num_heads
+
+    def _build_model_spec(self, config_path_fallback: Optional[str] = None) -> DeepSeekOCRModelSpec:
+        """Construct DeepSeek-OCR model metadata for analytic reports."""
+
+        hidden_size, intermediate_size, num_layers, num_heads = self._infer_model_dims()
+        cfg = getattr(self.m_session.m_model, "config", None)
+
+        model_id = "deepseek-ai/DeepSeek-OCR"
+        model_variant = "deepseek-ocr-v1-base"
+
+        model_path = getattr(self.m_session, "m_model_path", None)
+        if isinstance(model_path, str):
+            config_path = str(Path(model_path).resolve())
+        elif config_path_fallback is not None:
+            config_path = str(Path(config_path_fallback).resolve())
+        else:
+            config_path = str(Path.cwd().resolve())
+
+        vision_backbone = "clip_vit_l"
+        uses_moe = False
+        if cfg is not None:
+            try:
+                routed = int(getattr(cfg, "n_routed_experts", 0))
+                uses_moe = routed > 0
+            except Exception:
+                uses_moe = False
+
+        notes = (
+            "Analytic model for DeepSeek-OCR (vision SAM-B + CLIP-L, "
+            "decoder DeepseekV2 stack)."
+        )
+
+        return DeepSeekOCRModelSpec(
+            model_id=model_id,
+            model_variant=model_variant,
+            hf_revision=None,
+            config_path=config_path,
+            hidden_size=hidden_size,
+            intermediate_size=intermediate_size,
+            num_layers=num_layers,
+            num_attention_heads=num_heads,
+            vision_backbone=vision_backbone,
+            uses_moe=uses_moe,
+            notes=notes,
+        )
+
+    def _build_workload_profile(
+        self,
+        config: AnalysisConfig,
+        workload_profile_id: str,
+    ) -> OCRWorkloadProfile:
+        """Construct OCRWorkloadProfile for a given AnalysisConfig."""
+
+        description = (
+            "Standard DeepSeek-OCR synthetic workload "
+            f"({workload_profile_id}, single-page mixed-layout document)."
+        )
+
+        # For this phase we treat max_new_tokens as a fixed calibration value.
+        max_new_tokens = 512
+
+        return OCRWorkloadProfile(
+            profile_id=workload_profile_id,
+            description=description,
+            seq_len=config.seq_len,
+            base_size=config.base_size,
+            image_size=config.image_size,
+            crop_mode=config.crop_mode,
+            max_new_tokens=max_new_tokens,
+            doc_kind="mixed_layout",
+            num_pages=1,
+        )
+
+    def _build_decoder_layer(self, config: AnalysisConfig) -> tuple[DeepseekV2DecoderLayer, int]:
+        """Instantiate analytic decoder layer and infer decoder depth."""
+
+        hidden_size, intermediate_size, num_layers, num_heads = self._infer_model_dims()
+        cfg = getattr(self.m_session.m_model, "config", None)
+
+        num_experts: Optional[int] = None
+        num_key_value_heads: Optional[int] = None
+        k_active = 2
+        num_shared_experts = 0
+
+        if cfg is not None:
+            try:
+                routed = int(getattr(cfg, "n_routed_experts", 0))
+                if routed > 0:
+                    num_experts = routed
+            except Exception:
+                num_experts = None
+
+            try:
+                kv_heads = getattr(cfg, "num_key_value_heads", None)
+                if kv_heads is not None:
+                    num_key_value_heads = int(kv_heads)
+            except Exception:
+                num_key_value_heads = None
+
+            try:
+                k_val = getattr(cfg, "num_experts_per_tok", None)
+                if k_val is not None:
+                    k_active = max(int(k_val), 1)
+            except Exception:
+                k_active = 2
+
+            try:
+                shared_val = getattr(cfg, "n_shared_experts", 0)
+                num_shared_experts = max(int(shared_val), 0)
+            except Exception:
+                num_shared_experts = 0
+
+        decoder_layer = DeepseekV2DecoderLayer(
+            hidden_size=hidden_size,
+            num_heads=num_heads,
+            seq_len=config.seq_len,
+            intermediate_size=intermediate_size,
+            num_experts=num_experts,
+            batch_size=1,
+            num_key_value_heads=num_key_value_heads,
+            k_active=k_active,
+            num_shared_experts=num_shared_experts,
+        )
+
+        return decoder_layer, num_layers
+
+    def _build_vision_layers(self, config: AnalysisConfig) -> dict[str, object]:
+        """Instantiate analytic vision layers for DeepSeek-OCR."""
+
+        # SAM-style encoder for high-resolution features.
+        image_encoder = ImageEncoderViT(
+            img_size=config.base_size,
+            patch_size=config.patch_size,
+            batch_size=1,
+        )
+
+        # CLIP-L vision tower over SAM features.
+        clip_embeddings = CLIPVisionEmbeddings(
+            hidden_size=1024,
+            image_size=224,
+            patch_size=14,
+            num_channels=3,
+            batch_size=1,
+            use_precomputed_patch_embeds=True,
+        )
+        notp_attn = NoTPAttention(hidden_size=1024, num_heads=16, seq_len=257, batch_size=1)
+        notp_ff = NoTPFeedForward(dim=1024, hidden_dim=4096, batch_size=1, seq_len=257)
+        notp_block = NoTPTransformerBlock(attention=notp_attn, mlp=notp_ff)
+        notp_stack = NoTPTransformer(blocks=[notp_block] * 24)
+        vit_model = VitModel(
+            embeddings=clip_embeddings,
+            transformer=notp_stack,
+            hidden_size=1024,
+            seq_len=257,
+            batch_size=1,
+        )
+
+        # Vision-to-decoder projector (SAM+CLIP → decoder embeddings).
+        hidden_size, _, _, _ = self._infer_model_dims()
+        projector = MlpProjector(
+            input_dim=2048,
+            output_dim=hidden_size,
+            num_tokens=577,
+            batch_size=1,
+            depth=2,
+            projector_type="mlp_gelu",
+        )
+
+        return {
+            "vision/image_encoder_vit": image_encoder,
+            "vision/vit_model": vit_model,
+            "vision/mlp_projector": projector,
+        }
+
+    def _build_module_nodes_and_metrics(
+        self,
+        *,
+        model_layer: DeepseekOCRModel,
+        vision_layers: dict[str, object],
+        decoder_layer: DeepseekV2DecoderLayer,
+        num_decoder_layers: int,
+        model_spec: DeepSeekOCRModelSpec,
+        workload: OCRWorkloadProfile,
+    ) -> tuple[list[AnalyticModuleNode], list[ModuleMetricsSnapshot], float]:
+        """Construct AnalyticModuleNode and ModuleMetricsSnapshot lists."""
+
+        modules: list[AnalyticModuleNode] = []
+        metrics: list[ModuleMetricsSnapshot] = []
+
+        profile_id = workload.profile_id
+
+        # Root module.
+        root_id = "model/deepseek_ocr_model"
+        modules.append(
+            AnalyticModuleNode(
+                module_id=root_id,
+                name="DeepseekOCRModel",
+                qualified_class_name=(
+                    "extern.modelmeter.models.deepseek_ocr.layers.core."
+                    "deepseek_ocr_model.DeepseekOCRModel"
+                ),
+                stage="other",
+                parent_id=None,
+                children=[
+                    "vision/image_encoder_vit",
+                    "vision/vit_model",
+                    "vision/mlp_projector",
+                    "decoder/deepseek_v2_decoder_layer",
+                ],
+                repetition="none",
+                repetition_count=None,
+                constructor_params={"num_layers": model_spec.num_layers},
+            ),
+        )
+
+        # Vision modules.
+        img_enc: ImageEncoderViT = vision_layers["vision/image_encoder_vit"]  # type: ignore[assignment]
+        vit_model: VitModel = vision_layers["vision/vit_model"]  # type: ignore[assignment]
+        projector: MlpProjector = vision_layers["vision/mlp_projector"]  # type: ignore[assignment]
+
+        modules.append(
+            AnalyticModuleNode(
+                module_id="vision/image_encoder_vit",
+                name="ImageEncoderViT",
+                qualified_class_name=(
+                    "extern.modelmeter.models.deepseek_ocr.layers.vision."
+                    "image_encoder_vit.ImageEncoderViT"
+                ),
+                stage="vision",
+                parent_id=root_id,
+                children=[],
+                repetition="none",
+                repetition_count=None,
+                constructor_params={
+                    "img_size": img_enc.img_size,
+                    "patch_size": img_enc.patch_size,
+                    "embed_dim": img_enc.embed_dim,
+                    "depth": img_enc.depth,
+                    "num_heads": img_enc.num_heads,
+                },
+            ),
+        )
+        modules.append(
+            AnalyticModuleNode(
+                module_id="vision/vit_model",
+                name="VitModel",
+                qualified_class_name=(
+                    "extern.modelmeter.models.deepseek_ocr.layers.vision."
+                    "vit_model.VitModel"
+                ),
+                stage="vision",
+                parent_id=root_id,
+                children=[],
+                repetition="none",
+                repetition_count=None,
+                constructor_params={
+                    "hidden_size": vit_model.hidden_size,
+                    "seq_len": vit_model.seq_len,
+                    "batch_size": vit_model.batch_size,
+                },
+            ),
+        )
+        modules.append(
+            AnalyticModuleNode(
+                module_id="vision/mlp_projector",
+                name="MlpProjector",
+                qualified_class_name=(
+                    "extern.modelmeter.models.deepseek_ocr.layers.vision."
+                    "mlp_projector.MlpProjector"
+                ),
+                stage="vision",
+                parent_id=root_id,
+                children=[],
+                repetition="none",
+                repetition_count=None,
+                constructor_params={
+                    "input_dim": projector.input_dim,
+                    "output_dim": projector.output_dim,
+                    "num_tokens": projector.num_tokens,
+                    "depth": projector.depth,
+                    "projector_type": projector.projector_type,
+                },
+            ),
+        )
+
+        # Decoder module (stack of identical layers).
+        modules.append(
+            AnalyticModuleNode(
+                module_id="decoder/deepseek_v2_decoder_layer",
+                name="DeepseekV2DecoderLayer",
+                qualified_class_name=(
+                    "extern.modelmeter.models.deepseek_ocr.layers.decoder."
+                    "deepseek_v2_decoder_layer.DeepseekV2DecoderLayer"
+                ),
+                stage="decode",
+                parent_id=root_id,
+                children=[],
+                repetition="for",
+                repetition_count=num_decoder_layers,
+                constructor_params={
+                    "hidden_size": decoder_layer.hidden_size,
+                    "num_heads": decoder_layer.num_heads,
+                    "seq_len": decoder_layer.seq_len,
+                    "intermediate_size": decoder_layer.intermediate_size,
+                    "num_experts": decoder_layer.num_experts,
+                    "batch_size": decoder_layer.batch_size,
+                    "num_key_value_heads": decoder_layer.num_key_value_heads,
+                    "k_active": decoder_layer.k_active,
+                    "num_shared_experts": decoder_layer.num_shared_experts,
+                },
+            ),
+        )
+
+        def _module_metrics(
+            module_id: str,
+            layer: object,
+            calls: int,
+        ) -> ModuleMetricsSnapshot:
+            # All BaseLayer metrics are per-call; aggregate over calls.
+            calls_int = max(int(calls), 1)
+
+            def _val(name: str) -> float:
+                fn = getattr(layer, name)
+                v = fn()
+                return float(v or 0.0)
+
+            flops_tflops = _val("forward_tensor_core_flops") + _val("forward_cuda_core_flops")
+            io_tb = _val("forward_cal_io")
+            mem_w = _val("forward_memory_weight")
+            mem_a = _val("forward_memory_activation")
+            mem_kv = _val("forward_memory_kvcache")
+
+            device_name = get_device_name()
+            peak_tflops = get_peak_tflops(device_name, precision="bf16")
+            # time_ms = FLOPs / peak_TFLOPs * 1e3
+            total_flops_tflops = flops_tflops * float(calls_int)
+            total_time_ms = 1000.0 * total_flops_tflops / max(peak_tflops, 1e-6)
+
+            return ModuleMetricsSnapshot(
+                module_id=module_id,
+                profile_id=profile_id,
+                calls=calls_int,
+                total_time_ms=total_time_ms,
+                total_flops_tflops=total_flops_tflops,
+                total_io_tb=io_tb * float(calls_int),
+                memory_weights_gb=mem_w,
+                memory_activations_gb=mem_a,
+                memory_kvcache_gb=mem_kv,
+                share_of_model_time=0.0,  # filled below
+                operator_breakdown=[],
+            )
+
+        # Leaf modules' metrics.
+        metrics.append(_module_metrics("vision/image_encoder_vit", img_enc, calls=1))
+        metrics.append(_module_metrics("vision/vit_model", vit_model, calls=1))
+        metrics.append(_module_metrics("vision/mlp_projector", projector, calls=1))
+        metrics.append(
+            _module_metrics(
+                "decoder/deepseek_v2_decoder_layer",
+                decoder_layer,
+                calls=num_decoder_layers,
+            ),
+        )
+
+        # Compute shares based on leaf modules only.
+        total_leaf_time = sum(m.total_time_ms for m in metrics)
+        if total_leaf_time > 0.0:
+            for m in metrics:
+                m.share_of_model_time = m.total_time_ms / total_leaf_time
+
+        # Model-level time for AnalyticModelReport.
+        predicted_total_time_ms = model_layer.forward_tensor_core_flops()
+        predicted_total_time_ms += model_layer.forward_cuda_core_flops()
+        device_name = get_device_name()
+        peak_tflops = get_peak_tflops(device_name, precision="bf16")
+        predicted_total_time_ms = 1000.0 * predicted_total_time_ms / max(peak_tflops, 1e-6)
+
+        return modules, metrics, predicted_total_time_ms
+
+    def run_analytic(
+        self,
+        config: AnalysisConfig,
+        *,
+        workload_profile_id: str = "dsocr-standard-v1",
+        run_id: Optional[str] = None,
+    ) -> AnalyticModelReport:
+        """Build AnalyticModelReport and write JSON/YAML and Markdown artifacts.
+
+        This method constructs analytic ModelMeter layers for the
+        DeepSeek-OCR vision and decoder stacks, aggregates their
+        metrics into an :class:`AnalyticModelReport`, and writes:
+
+        - ``report.json`` / ``report.yaml`` under
+          ``tmp/profile-output/<run_id>/static_analysis/analytic_model/``
+        - per-layer Markdown docs under the ``layers/`` subdirectory
+          referenced by :attr:`AnalyticModelReport.layer_docs_dir`.
+        """
+
+        if run_id is None:
+            ts = datetime.now().strftime("%Y%m%d-%H%M%S")
+            run_id = f"dsocr-analytic-{ts}"
+
+        model_spec = self._build_model_spec()
+        workload = self._build_workload_profile(config, workload_profile_id)
+
+        vision_layers = self._build_vision_layers(config)
+        decoder_layer, num_decoder_layers = self._build_decoder_layer(config)
+
+        # Build composite vision layer for model-level aggregation.
+        vision_stack = _CompositeLayer(
+            layers=[
+                vision_layers["vision/image_encoder_vit"],
+                vision_layers["vision/vit_model"],
+                vision_layers["vision/mlp_projector"],
+            ],
+        )
+        model_layer = DeepseekOCRModel.from_layers(
+            vision_stack,
+            decoder_layer,
+            num_decoder_layers=num_decoder_layers,
+        )
+
+        modules, module_metrics, predicted_total_time_ms = self._build_module_nodes_and_metrics(
+            model_layer=model_layer,
+            vision_layers=vision_layers,
+            decoder_layer=decoder_layer,
+            num_decoder_layers=num_decoder_layers,
+            model_spec=model_spec,
+            workload=workload,
+        )
+
+        layer_docs_dir = analytic_layer_docs_dir(run_id)
+        analytic_dir = analytic_model_dir(run_id)
+
+        report = AnalyticModelReport(
+            report_id=run_id,
+            model=model_spec,
+            workload=workload,
+            modules=modules,
+            operator_categories=[],
+            module_metrics=module_metrics,
+            profile_run_id=None,
+            predicted_total_time_ms=predicted_total_time_ms,
+            measured_total_time_ms=None,
+            predicted_vs_measured_ratio=None,
+            notes="DeepSeek-OCR analytic model generated via static layer formulas.",
+            layer_docs_dir=layer_docs_dir,
+        )
+
+        out_dir = Path(analytic_dir)
+        out_dir.mkdir(parents=True, exist_ok=True)
+        Path(layer_docs_dir).mkdir(parents=True, exist_ok=True)
+
+        payload = asdict(report)
+
+        # JSON
+        (out_dir / "report.json").write_text(json.dumps(payload, indent=2), encoding="utf-8")
+
+        # YAML
+        yaml = YAML(typ="safe")
+        with (out_dir / "report.yaml").open("w", encoding="utf-8") as f:
+            yaml.dump(payload, f)
+
+        # Markdown docs
+        write_analytic_layer_docs(report)
+
+        self.m_logger.info(
+            "Analytic model written | run_id=%s dir=%s", run_id, out_dir.as_posix()
+        )
+
+        return report
+
+
+def _parse_cli_args() -> argparse.Namespace:
+    parser = argparse.ArgumentParser(
+        description="DeepSeek-OCR static and analytic modeling utilities.",
+    )
+    parser.add_argument(
+        "--mode",
+        required=True,
+        choices=["analytic"],
+        help="Execution mode (currently only 'analytic' is supported).",
+    )
+    parser.add_argument(
+        "--model",
+        type=str,
+        default=None,
+        help="Local model path (default: <workspace_root>/models/deepseek-ocr).",
+    )
+    parser.add_argument(
+        "--device",
+        type=str,
+        default="cuda:0",
+        help="Device specifier for loading the model (e.g., 'cuda:0' or 'cpu').",
+    )
+    parser.add_argument(
+        "--workload-profile-id",
+        type=str,
+        default="dsocr-standard-v1",
+        help="Workload profile identifier (default: dsocr-standard-v1).",
+    )
+    parser.add_argument(
+        "--run-id",
+        type=str,
+        default=None,
+        help="Optional run identifier used for output directory naming.",
+    )
+    parser.add_argument(
+        "--base-size",
+        type=int,
+        default=1024,
+        help="Base padded size for vision analysis (default: 1024).",
+    )
+    parser.add_argument(
+        "--image-size",
+        type=int,
+        default=640,
+        help="Image tile size for vision analysis (default: 640).",
+    )
+    parser.add_argument(
+        "--seq-len",
+        type=int,
+        default=512,
+        help="Representative sequence length for decoder analysis (default: 512).",
+    )
+    parser.add_argument(
+        "--crop-mode",
+        type=int,
+        choices=[0, 1],
+        default=1,
+        help="Enable dynamic crops (1) or use only the global view (0).",
+    )
+    return parser.parse_args()
+
+
+def main() -> int:
+    """Entry point for ``python -m llm_perf_opt.runners.dsocr_analyzer``."""
+
+    args = _parse_cli_args()
+    if args.mode != "analytic":
+        print("ERROR: only --mode analytic is supported in this entry point.", file=sys.stderr)
+        return 1
+
+    # Resolve model path
+    if args.model is None:
+        model_path = Path(workspace_root()) / "models" / "deepseek-ocr"
+    else:
+        model_path = Path(args.model)
+    model_path = model_path.resolve()
+    if not model_path.exists():
+        print(f"ERROR: model path not found: {model_path}", file=sys.stderr)
+        return 1
+
+    from llm_perf_opt.runners.dsocr_session import DeepSeekOCRSession
+
+    try:
+        session = DeepSeekOCRSession.from_local(
+            model_path=str(model_path),
+            device=args.device,
+            use_flash_attn=True,
+        )
+    except Exception as exc:  # noqa: BLE001
+        print(f"ERROR: failed to initialize DeepSeekOCRSession: {exc}", file=sys.stderr)
+        return 1
+
+    analyzer = DeepseekOCRStaticAnalyzer(session)
+    config = AnalysisConfig(
+        image_h=args.base_size,
+        image_w=args.base_size,
+        base_size=args.base_size,
+        image_size=args.image_size,
+        seq_len=args.seq_len,
+        crop_mode=bool(args.crop_mode),
+        use_analytic_fallback=True,
+        use_synthetic_inputs=True,
+    )
+
+    try:
+        report = analyzer.run_analytic(
+            config,
+            workload_profile_id=args.workload_profile_id,
+            run_id=args.run_id,
+        )
+    except Exception as exc:  # noqa: BLE001
+        print(f"ERROR: analytic modeling failed: {exc}", file=sys.stderr)
+        return 1
+
+    out_dir = analytic_model_dir(report.report_id)
+    print(f"Analytic report generated | report_id={report.report_id}")
+    print(f"Artifacts directory: {out_dir}")
+    return 0
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())

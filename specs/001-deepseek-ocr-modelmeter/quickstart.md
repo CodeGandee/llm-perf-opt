@@ -59,11 +59,13 @@ Expected behavior:
 - Read TorchInfo artifacts from `reports/20211117-dsorc-op-analysis/static-20251118-130533/`.
 - Map DeepSeek‑OCR modules and PyTorch operators into ModelMeter analytic layers implemented as subclasses of
   `extern/modelmeter/layers/base.py`.
-- Produce structured analytic model artifacts (JSON and/or YAML) plus human‑readable Markdown documentation under:
+- Produce structured analytic model artifacts (JSON and YAML) plus human‑readable Markdown documentation under:
   `/workspace/code/llm-perf-opt/tmp/profile-output/<run_id>/static_analysis/analytic_model/`.
-  - Machine‑readable outputs: module hierarchy, per‑module/operator metrics, and workload metadata as `.json`/`.yaml`.
-  - Markdown outputs: one or more pages that describe each analyzed layer/operator, its definition, the theoretical
-    formulas used to compute FLOPs/I/O/memory, and the rationale and assumptions behind those formulas.
+  - Machine‑readable outputs: `report.json` / `report.yaml` containing an `AnalyticModelReport` with module hierarchy,
+    per‑module metrics, and workload metadata.
+  - Markdown outputs: `layers/summary.md` plus per‑module pages that describe each analyzed layer/operator, its
+    definition, the theoretical formulas used to compute FLOPs/I/O/memory, and the rationale and assumptions behind
+    those formulas.
 
 ## 4) Interpreting analytic reports
 

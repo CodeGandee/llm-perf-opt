@@ -88,8 +88,8 @@ included where explicitly requested in the spec or for critical paths.
 
 ### Implementation for User Story 1 – LLaMA
 
-- [ ] T022 [P] [US1] Implement `LlamaFlashAttention2(BaseLayer)` in `extern/modelmeter/models/deepseek_ocr/layers/llama/llama_flash_attention2.py`, reusing generic FlashAttention math where possible (docs: context/hints/dsocr-kb/ops/op-LlamaFlashAttention2.md)
-- [ ] T023 [P] [US1] Implement `LlamaRotaryEmbedding(BaseLayer)` in `extern/modelmeter/models/deepseek_ocr/layers/llama/llama_rotary_embedding.py`, modeling parameter and activation memory plus any compute overhead (docs: context/hints/dsocr-kb/ops/op-LlamaRotaryEmbedding.md)
+- [X] T022 [P] [US1] Implement `LlamaFlashAttention2(BaseLayer)` in `extern/modelmeter/models/deepseek_ocr/layers/llama/llama_flash_attention2.py`, reusing generic FlashAttention math where possible (docs: context/hints/dsocr-kb/ops/op-LlamaFlashAttention2.md)
+- [X] T023 [P] [US1] Implement `LlamaRotaryEmbedding(BaseLayer)` in `extern/modelmeter/models/deepseek_ocr/layers/llama/llama_rotary_embedding.py`, modeling parameter and activation memory plus any compute overhead (docs: context/hints/dsocr-kb/ops/op-LlamaRotaryEmbedding.md)
 
 **Checkpoint**: LLaMA analytic layers are implemented and ready to be composed into DeepSeek-OCR decoder and core models.
 
@@ -103,11 +103,11 @@ included where explicitly requested in the spec or for critical paths.
 
 ### Implementation for User Story 1 – Decoder
 
-- [ ] T024 [P] [US1] Implement `DeepseekV2DecoderLayer(BaseLayer)` in `extern/modelmeter/models/deepseek_ocr/layers/decoder/deepseek_v2_decoder_layer.py` aggregating attention + MLP costs (docs: context/hints/dsocr-kb/ops/op-DeepseekV2DecoderLayer.md)
-- [ ] T025 [P] [US1] Implement `DeepseekV2MLP(BaseLayer)` in `extern/modelmeter/models/deepseek_ocr/layers/decoder/deepseek_v2_mlp.py` with analytic FLOPs/I/O formulas for the decoder MLP (docs: context/hints/dsocr-kb/ops/op-DeepseekV2MLP.md)
-- [ ] T026 [P] [US1] Implement `DeepseekV2MoE(BaseLayer)` in `extern/modelmeter/models/deepseek_ocr/layers/decoder/deepseek_v2_moe.py` modeling active experts, gating, and expert FLOPs/I/O (docs: context/hints/dsocr-kb/ops/op-DeepseekV2MoE.md)
-- [ ] T027 [P] [US1] Implement `DeepseekV2RMSNorm(BaseLayer)` in `extern/modelmeter/models/deepseek_ocr/layers/decoder/deepseek_v2_rms_norm.py` including forward/backward FLOPs and memory (docs: context/hints/dsocr-kb/ops/op-DeepseekV2RMSNorm.md)
-- [ ] T028 [P] [US1] Implement `MoEGate(BaseLayer)` in `extern/modelmeter/models/deepseek_ocr/layers/decoder/moe_gate.py` capturing gating compute and associated I/O (docs: context/hints/dsocr-kb/ops/op-MoEGate.md)
+- [X] T024 [P] [US1] Implement `DeepseekV2DecoderLayer(BaseLayer)` in `extern/modelmeter/models/deepseek_ocr/layers/decoder/deepseek_v2_decoder_layer.py` aggregating attention + MLP costs (docs: context/hints/dsocr-kb/ops/op-DeepseekV2DecoderLayer.md)
+- [X] T025 [P] [US1] Implement `DeepseekV2MLP(BaseLayer)` in `extern/modelmeter/models/deepseek_ocr/layers/decoder/deepseek_v2_mlp.py` with analytic FLOPs/I/O formulas for the decoder MLP (docs: context/hints/dsocr-kb/ops/op-DeepseekV2MLP.md)
+- [X] T026 [P] [US1] Implement `DeepseekV2MoE(BaseLayer)` in `extern/modelmeter/models/deepseek_ocr/layers/decoder/deepseek_v2_moe.py` modeling active experts, gating, and expert FLOPs/I/O (docs: context/hints/dsocr-kb/ops/op-DeepseekV2MoE.md)
+- [X] T027 [P] [US1] Implement `DeepseekV2RMSNorm(BaseLayer)` in `extern/modelmeter/models/deepseek_ocr/layers/decoder/deepseek_v2_rms_norm.py` including forward/backward FLOPs and memory (docs: context/hints/dsocr-kb/ops/op-DeepseekV2RMSNorm.md)
+- [X] T028 [P] [US1] Implement `MoEGate(BaseLayer)` in `extern/modelmeter/models/deepseek_ocr/layers/decoder/moe_gate.py` capturing gating compute and associated I/O (docs: context/hints/dsocr-kb/ops/op-MoEGate.md)
 
 **Checkpoint**: Decoder analytic layers are implemented, enabling full DeepSeek-OCR model-level aggregation in the next phase.
 
@@ -121,15 +121,15 @@ included where explicitly requested in the spec or for critical paths.
 
 ### Tests for User Story 1 (Core)
 
-- [ ] T029 [P] [US1] Create manual performance-report script `tests/manual/deepseek_ocr/manual_deepseek_ocr_performance_report.py` that runs `python -m llm_perf_opt.runners.dsocr_analyzer --mode analytic` and checks for JSON/YAML and Markdown outputs for a `dsocr-standard-v1` workload under `tmp/profile-output/<run_id>/static_analysis/analytic_model/`
-- [ ] T030 [P] [US1] Add unit tests in `tests/unit/deepseek_ocr/test_analytic_layers_scaling.py` to validate that selected DeepSeek analytic layers in `extern/modelmeter/models/deepseek_ocr/layers/` produce non-negative metrics and scale FLOPs/I/O monotonically with sequence length and hidden size
+- [X] T029 [P] [US1] Create manual performance-report script `tests/manual/deepseek_ocr/manual_deepseek_ocr_performance_report.py` that runs `python -m llm_perf_opt.runners.dsocr_analyzer --mode analytic` and checks for JSON/YAML and Markdown outputs for a `dsocr-standard-v1` workload under `tmp/profile-output/<run_id>/static_analysis/analytic_model/`
+- [X] T030 [P] [US1] Add unit tests in `tests/unit/deepseek_ocr/test_analytic_layers_scaling.py` to validate that selected DeepSeek analytic layers in `extern/modelmeter/models/deepseek_ocr/layers/` produce non-negative metrics and scale FLOPs/I/O monotonically with sequence length and hidden size
 
 ### Implementation for User Story 1 – Core & Pipeline
 
-- [ ] T031 [US1] Implement a root `DeepseekOCRModel(BaseLayer)` aggregator in `extern/modelmeter/models/deepseek_ocr/layers/core/deepseek_ocr_model.py` that composes vision, decoder, and LLaMA layers to compute per-module FLOPs, I/O, and memory metrics (docs: context/hints/dsocr-kb/ops/op-DeepseekOCRModel.md)
-- [ ] T032 [US1] Extend `DeepseekOCRStaticAnalyzer` in `src/llm_perf_opt/runners/dsocr_analyzer.py` with an analytic code path that instantiates ModelMeter layers, builds an `AnalyticModelReport`, and writes structured artifacts via helpers in `src/llm_perf_opt/utils/paths.py`
-- [ ] T033 [US1] Implement Markdown generation utilities in `src/llm_perf_opt/visualize/analytic_layers.py` that render per-layer and summary docs from `AnalyticModelReport` into the `layer_docs_dir` directory
-- [ ] T034 [US1] Update `extern/modelmeter/models/deepseek_ocr/README.md` and `specs/001-deepseek-ocr-modelmeter/quickstart.md` to include the analytic mode CLI invocation, expected JSON/YAML outputs, and pointers to the generated Markdown layer docs
+- [X] T031 [US1] Implement a root `DeepseekOCRModel(BaseLayer)` aggregator in `extern/modelmeter/models/deepseek_ocr/layers/core/deepseek_ocr_model.py` that composes vision, decoder, and LLaMA layers to compute per-module FLOPs, I/O, and memory metrics (docs: context/hints/dsocr-kb/ops/op-DeepseekOCRModel.md)
+- [X] T032 [US1] Extend `DeepseekOCRStaticAnalyzer` in `src/llm_perf_opt/runners/dsocr_analyzer.py` with an analytic code path that instantiates ModelMeter layers, builds an `AnalyticModelReport`, and writes structured artifacts via helpers in `src/llm_perf_opt/utils/paths.py`
+- [X] T033 [US1] Implement Markdown generation utilities in `src/llm_perf_opt/visualize/analytic_layers.py` that render per-layer and summary docs from `AnalyticModelReport` into the `layer_docs_dir` directory
+- [X] T034 [US1] Update `extern/modelmeter/models/deepseek_ocr/README.md` and `specs/001-deepseek-ocr-modelmeter/quickstart.md` to include the analytic mode CLI invocation, expected JSON/YAML outputs, and pointers to the generated Markdown layer docs
 
 **Checkpoint**: At this point, User Story 1 should be fully functional and testable independently (analytic CLI + JSON/YAML + Markdown docs for DeepSeek-OCR)
 
