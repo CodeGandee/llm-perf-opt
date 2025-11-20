@@ -456,7 +456,7 @@ The sections below summarize how each group models FLOPs, I/O, memory, and AI, a
 
 ---
 
-## Wholistic Model Analysis
+## Holistic Model Analysis
 
 ### Theoretical Metrics and Scaling
 

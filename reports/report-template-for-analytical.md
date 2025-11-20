@@ -27,7 +27,7 @@ The DNN model consists of the following key layers/modules:
 ...
 
 
-## Wholistic Model Analysis
+## Holistic Model Analysis
 
 ### Theoretical Metrics
 
