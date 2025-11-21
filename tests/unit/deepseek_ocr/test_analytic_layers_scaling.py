@@ -15,6 +15,7 @@ from modelmeter.models.deepseek_ocr.layers.decoder.deepseek_v2_decoder_layer imp
 from modelmeter.models.deepseek_ocr.layers.llama.llama_flash_attention2 import (
     LlamaFlashAttention2,
 )
+from modelmeter.models.deepseek_ocr.layers.stage_cost import SyntheticKVCache
 from modelmeter.models.deepseek_ocr.layers.vision.clip_vision_embeddings import (
     CLIPVisionEmbeddings,
 )
@@ -65,6 +66,32 @@ def test_llama_flash_attention_scales_with_hidden_size() -> None:
     assert io_large >= io_small
 
 
+def test_llama_flash_attention_prefill_vs_decode_modes() -> None:
+    """Stateful attention should report smaller per-token decode I/O."""
+
+    layer = LlamaFlashAttention2(
+        seq_len=256,
+        hidden_size=1024,
+        num_heads=16,
+        batch_size=1,
+    )
+    # Default configuration corresponds to prefill.
+    flops_prefill = (layer.forward_tensor_core_flops() or 0.0) + (
+        layer.forward_cuda_core_flops() or 0.0
+    )
+    io_prefill = layer.forward_cal_io() or 0.0
+
+    layer.set_decode_shape(context_len=256, batch_size=1)
+    flops_decode = (layer.forward_tensor_core_flops() or 0.0) + (
+        layer.forward_cuda_core_flops() or 0.0
+    )
+    io_decode = layer.forward_cal_io() or 0.0
+
+    _assert_non_negative(flops_prefill, io_prefill, flops_decode, io_decode)
+    assert flops_decode <= flops_prefill
+    assert io_decode <= io_prefill
+
+
 def _decoder_metrics(
     *,
     hidden_size: int,
@@ -99,6 +126,80 @@ def test_decoder_layer_scales_with_hidden_size() -> None:
     assert flops_large >= flops_small
     assert io_large >= io_small
     assert mem_large >= mem_small
+
+
+def test_decoder_layer_prefill_vs_decode_modes() -> None:
+    """Stateful decoder should use smaller per-token decode stats."""
+
+    hidden_size = 1024
+    seq_len = 256
+    layer = DeepseekV2DecoderLayer(
+        hidden_size=hidden_size,
+        num_heads=16,
+        seq_len=seq_len,
+        intermediate_size=4 * hidden_size,
+        num_experts=None,
+        batch_size=1,
+    )
+    flops_prefill = (layer.forward_tensor_core_flops() or 0.0) + (
+        layer.forward_cuda_core_flops() or 0.0
+    )
+    io_prefill = layer.forward_cal_io() or 0.0
+    mem_prefill = layer.forward_memory_activation() or 0.0
+
+    # Configure decode state with an attached SyntheticKVCache.
+    kv_cache = SyntheticKVCache(
+        batch=1,
+        num_kv_heads=layer.num_key_value_heads,
+        head_dim=int(layer.hidden_size / layer.num_heads),
+        context_len=seq_len,
+        decode_len=0,
+    )
+    layer.set_decode_state(context_len=seq_len, decode_len=0, batch_size=1, kv_cache=kv_cache)
+    flops_decode = (layer.forward_tensor_core_flops() or 0.0) + (
+        layer.forward_cuda_core_flops() or 0.0
+    )
+    io_decode = layer.forward_cal_io() or 0.0
+    mem_decode = layer.forward_memory_activation() or 0.0
+
+    _assert_non_negative(
+        flops_prefill,
+        io_prefill,
+        mem_prefill,
+        flops_decode,
+        io_decode,
+        mem_decode,
+    )
+    assert flops_decode <= flops_prefill
+    assert io_decode <= io_prefill
+    assert mem_decode <= mem_prefill
+
+
+def test_decoder_layer_step_decode_updates_kv_cache() -> None:
+    """step_decode should advance SyntheticKVCache length."""
+
+    hidden_size = 1024
+    seq_len = 128
+    layer = DeepseekV2DecoderLayer(
+        hidden_size=hidden_size,
+        num_heads=16,
+        seq_len=seq_len,
+        intermediate_size=4 * hidden_size,
+        num_experts=None,
+        batch_size=1,
+    )
+    kv_cache = SyntheticKVCache(
+        batch=1,
+        num_kv_heads=layer.num_key_value_heads,
+        head_dim=int(layer.hidden_size / layer.num_heads),
+        context_len=seq_len,
+        decode_len=0,
+    )
+    layer.set_decode_state(context_len=seq_len, decode_len=0, batch_size=1, kv_cache=kv_cache)
+    before = kv_cache.total_len()
+    layer.step_decode(batch_size=1)
+    after = kv_cache.total_len()
+    assert after == before + 1
 
 
 def _make_vit(seq_len: int) -> VitModel:

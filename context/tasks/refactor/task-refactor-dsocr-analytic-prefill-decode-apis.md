@@ -344,6 +344,20 @@ kv_gb_prefill = prefill_cost.kv_gb
   - KV-cache footprint and its growth over decode tokens.
   with minimal bespoke code and reduced risk of modeling drift.
 
+**Implementation Summary (2024-11-21, branch 001-deepseek-ocr-modelmeter)**
+- Implemented:
+  - `LlamaFlashAttention2` now tracks separate query and context lengths internally via `m_seq_len_q` / `m_seq_len_kv` and uses them in FLOP formulas while keeping the legacy `seq_len` field for backward compatibility.
+  - `DeepseekV2DecoderLayer` gained stage helpers `estimate_prefill_cost()` and `estimate_decode_cost_per_token(context_len=...)` that return a shared `StageCost` structure, and it reuses `estimate_kv_cache_size_gb(...)` for KV-cache modeling.
+  - `DeepseekOCRModel` exposes root-level helpers `estimate_prefill_cost()` and `estimate_decode_cost_per_token(context_len=...)` that aggregate vision, decoder, and optional head layers into a single `StageCost` per stage.
+  - Introduced `StageCost`, `SyntheticKVCache`, and `estimate_kv_cache_size_gb(...)` in `extern/modelmeter/models/deepseek_ocr/layers/stage_cost.py` to centralize stage metrics and KV-cache size calculations.
+  - Existing scaling tests in `tests/unit/deepseek_ocr/test_analytic_layers_scaling.py` cover basic monotonicity of the updated decoder and attention layers (FLOPs, I/O, activation memory).
+- Partially done / still TODO:
+  - `DeepseekV2DecoderLayer` remains configured with a single `seq_len` parameter; per-token decode mode is implemented by constructing a `seq_len=1` layer and overriding the attention primitive’s `m_seq_len_q` / `m_seq_len_kv` fields rather than exposing `seq_len_q` / `seq_len_kv` at the decoder API boundary.
+  - `LlamaFlashAttention2.forward_cal_io()` and `forward_memory_activation()` still use the legacy single `seq_len` for I/O and activation modeling; they are not yet query/context-aware.
+  - `HOLISTIC_ANALYSIS.md` and `LAYER_IO_ESTIMATION_GUIDE.md` continue to describe the older single-`seq_len` usage patterns and still contain TODO bullets for some of the now-implemented helpers; examples have not yet been rewritten to call `estimate_prefill_cost()` / `estimate_decode_cost_per_token(...)` and `StageCost`.
+  - `DeepseekOCRStaticAnalyzer` (`src/llm_perf_opt/runners/dsocr_analyzer.py`) has not yet been refactored to call the new `DeepseekOCRModel` stage helpers; it still reasons directly in terms of `forward_*` metrics and workload shapes. Wiring these helpers into the analyzer and into `AnalyticModelReport` remains follow-up work.
+  - Dedicated tests that validate `estimate_prefill_cost()` / `estimate_decode_cost_per_token(...)` numerically against the previous single-`seq_len` conventions and/or real HF implementations have not yet been added; only coarse scaling and correctness checks are in place today.
+
 **References**
 - Code and docs
   - `extern/modelmeter/models/deepseek_ocr/layers/decoder/deepseek_v2_decoder_layer.py`

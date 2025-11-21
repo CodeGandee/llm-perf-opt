@@ -1525,6 +1525,17 @@ class DeepseekOCRStaticAnalyzer:
             num_decoder_layers=num_decoder_layers,
         )
 
+        # Configure the analytic model for a prefill workload so that
+        # forward_* stats correspond to the full-context pass.
+        try:
+            model_layer.start_prefill(
+                context_len=workload.seq_len,
+                batch_size=1,
+                kv_cache=None,
+            )
+        except Exception as exc:  # noqa: BLE001
+            self.m_logger.warning("Failed to configure DeepseekOCRModel prefill state: %s", exc)
+
         modules, module_metrics, predicted_total_time_ms = self._build_module_nodes_and_metrics(
             model_layer=model_layer,
             vision_layers=vision_layers,
