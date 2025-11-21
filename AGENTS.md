@@ -22,7 +22,6 @@ This document is a concise contributor guide for llm-perf-opt. Follow it for any
 - Bootstrap assets: `./bootstrap.sh --yes`
 
 ## Coding Style & Naming Conventions
-- Python 3.11; 4‑space indentation; max line length 120
 - Use type hints; keep functions small and single‑purpose
 - Naming: modules/functions snake_case; Classes CamelCase; constants UPPER_CASE
 - Run `ruff` (PEP8 + rules in pyproject) and `mypy` before pushing

@@ -1,5 +1,5 @@
-revise the plan:
-- python env is `rtx5090` in pixi, run with `pixi run -e rtx5090 <python command>`
-- in `constraints`, there is no effective constraints, theoretical analysis is a separate module, will not run in actual profiling, so no impact on profiling overhead. And it does not split into stage-1/stage-2, it is just about estimating what a forward() call would take, including flops/io/memory. Because we will not consider the actual hardware scheduling/overhead/optimization, so no need to compare with actual profiling result.
-- implementation code will mostly be in `extern/modelmeter/models/deepseek_ocr`, with `src/llm_perf_opt` may contain some reusable code for other models in future.
-- we will also implement many helper scripts in `scripts/analytical`, to extract information from model execution, but they are not considered part of the main implementation.
+# Estimate Prefill/Decode Cost wrt. Sequence Length
+
+Using the analytical analysis module `extern/modelmeter`, we want to:
+- Estimate the prefill and decode costs as a function of sequence length
+- Verify the estimates against empirical measurements
