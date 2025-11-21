@@ -50,6 +50,13 @@ We already have:
     - `decode_one_token() -> SyntheticKVCache`.
   - In `"prefill"` mode, `forward_*` stats answer “cost of prefill at `(context_len, batch_size)`”.
   - In `"decode"` mode, `forward_*` stats answer “cost of decoding **one more token** from the current KV state”.
+- A common **StageCostMixin** (`modelmeter.models.common.StageCostMixin`) used by most analytic layers, including:
+  - `_CompositeLayer`, `DeepseekOCRModel`, and core vision/decoder primitives.
+  - It exposes:
+    - `get_forward_cost() -> StageCost` and
+    - `get_backward_cost() -> StageCost`,
+    which aggregate all `forward_*` / `backward_*` metrics into a single structured object with fields:
+    `{flops_tflops, io_tb, weights_gb, activations_gb, kv_gb}`.
 
 `HOLISTIC_ANALYSIS.md` has already been updated to describe how to use these APIs for simulated prefill + decode runs.
 
@@ -135,41 +142,29 @@ Add a small script (or CLI entry) that sweeps sequence length and uses the state
       num_decoder_layers=num_layers,
   )
 
-  # 2) Prefill analytics.
+  # 2) Prefill analytics via StageCostMixin.
   kv_cache = analytic_model.start_prefill(context_len=S_prefill, batch_size=B, kv_cache=None)
   assert analytic_model.operation_mode == "prefill"
-  F_prefill = (
-      (analytic_model.forward_tensor_core_flops() or 0.0)
-      + (analytic_model.forward_cuda_core_flops() or 0.0)
-  )
-  IO_prefill = analytic_model.forward_cal_io() or 0.0
-  W_prefill = analytic_model.forward_memory_weight() or 0.0
-  ACT_prefill = analytic_model.forward_memory_activation() or 0.0
-  KV_prefill = analytic_model.forward_memory_kvcache() or 0.0
+  prefill_cost = analytic_model.get_forward_cost()  # StageCost
 
-  # 3) Decode analytics for K steps.
+  # 3) Decode analytics for K steps (accumulated StageCost).
   analytic_model.start_decode(kv_cache=None)  # reuse internal KV cache
   assert analytic_model.operation_mode == "decode"
-  F_decode_total = 0.0
-  IO_decode_total = 0.0
-  ACT_decode_total = 0.0
-  for _ in range(K):
-      F_step = (
-          (analytic_model.forward_tensor_core_flops() or 0.0)
-          + (analytic_model.forward_cuda_core_flops() or 0.0)
-      )
-      IO_step = analytic_model.forward_cal_io() or 0.0
-      ACT_step = analytic_model.forward_memory_activation() or 0.0
 
-      F_decode_total += F_step
-      IO_decode_total += IO_step
-      ACT_decode_total += ACT_step
+  decode_flops_tflops = 0.0
+  decode_io_tb = 0.0
+  decode_acts_gb = 0.0
+  for _ in range(K):
+      step_cost = analytic_model.get_forward_cost()
+      decode_flops_tflops += step_cost.flops_tflops
+      decode_io_tb += step_cost.io_tb
+      decode_acts_gb += step_cost.activations_gb
 
       analytic_model.decode_one_token()
 
-  F_decode_per_token = F_decode_total / max(K, 1)
-  IO_decode_per_token = IO_decode_total / max(K, 1)
-  ACT_decode_per_token = ACT_decode_total / max(K, 1)
+  F_decode_per_token = decode_flops_tflops / max(K, 1)
+  IO_decode_per_token = decode_io_tb / max(K, 1)
+  ACT_decode_per_token = decode_acts_gb / max(K, 1)
   KV_final = analytic_model.forward_memory_kvcache() or 0.0
   ```
 
@@ -319,4 +314,3 @@ Outputs:
 - **Model variants**: DeepSeek‑OCR config variations (different MoE settings, context windows) may require multiple analytic scaling runs; the plan assumes one canonical config to start.
 
 Despite these risks, the work is incremental on top of the existing stateful analytic model and profiling infrastructure, and can be developed in stages (analytic sweep first, then empirical validation, then visualization/reporting).
-
