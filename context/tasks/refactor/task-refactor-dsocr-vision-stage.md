@@ -151,11 +151,11 @@
 
 6) **Regression checks and verification**
    - Re-run all DeepSeek-OCR analytic verification scripts:
-     - `extern/modelmeter/models/deepseek_ocr/scripts/run_verify_core.py`
-     - `extern/modelmeter/models/deepseek_ocr/scripts/run_verify_vision.py`
-     - `extern/modelmeter/models/deepseek_ocr/scripts/run_verify_decoder.py`
-     - `extern/modelmeter/models/deepseek_ocr/scripts/run_verify_llama.py`
-     - `extern/modelmeter/models/deepseek_ocr/scripts/run_verify_prefill_decode.py`
+     - `extern/modelmeter/models/deepseek_ocr/scripts/verify/run_verify_core.py`
+     - `extern/modelmeter/models/deepseek_ocr/scripts/verify/run_verify_vision.py`
+     - `extern/modelmeter/models/deepseek_ocr/scripts/verify/run_verify_decoder.py`
+     - `extern/modelmeter/models/deepseek_ocr/scripts/verify/run_verify_llama.py`
+     - `extern/modelmeter/models/deepseek_ocr/scripts/verify/run_verify_prefill_decode.py`
    - Ensure that:
      - The new `"vision"` operation mode does **not** change layer-level formulas; only root aggregation changes.
      - `run_verify_prefill_decode.py` uses the updated stage semantics where needed (for example, decode should no longer implicitly include vision cost).

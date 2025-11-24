@@ -65,7 +65,7 @@
 
 3) **How do we verify analytic prefill/decode FLOP counts against the real model (like `.verify_by_impl()`)?**
    - We will add a dedicated verification path, analogous to the per-layer `.verify_by_impl()` helpers, but targeted at whole‑stage prefill/decode FLOPs:
-     - A new script (e.g., `models/deepseek_ocr/scripts/run_verify_prefill_decode.py`) will:
+     - A new script (e.g., `models/deepseek_ocr/scripts/verify/run_verify_prefill_decode.py`) will:
        - Instantiate the reference DeepSeek‑OCR model from its HF or local implementation (using `from_pretrained` or direct import from `models/deepseek-ocr/modeling_deepseekocr.py`), **without modifying its source files**.
        - Use `torch.utils.flop_counter.FlopCounterMode` to measure:
          - A **prefill** forward pass at context length `S_prefill` (image + prompt).
@@ -148,7 +148,7 @@
 1) Baseline audit and call-site mapping
    - Enumerate where `DeepseekV2DecoderLayer` and `LlamaFlashAttention2` are instantiated:
      - Analytic layers/tests: `extern/modelmeter/models/deepseek_ocr/layers/**.py`
-     - Verify scripts: `extern/modelmeter/models/deepseek_ocr/scripts/run_verify_*.py`
+     - Verify scripts: `extern/modelmeter/models/deepseek_ocr/scripts/verify/run_verify_*.py`
      - External consumers: `src/llm_perf_opt/runners/dsocr_analyzer.py`, `tests/unit/deepseek_ocr/test_analytic_layers_scaling.py`.
    - Document the current expectations around `seq_len` in these call sites (e.g., always “full context length”, or “1 for per-token decode”).
 

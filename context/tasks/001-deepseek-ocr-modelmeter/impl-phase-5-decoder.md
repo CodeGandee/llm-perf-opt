@@ -122,14 +122,14 @@ EOF
 
 Track which decoder analytic layers have been numerically verified against a reference implementation (either the
 vendor modules in `models/deepseek-ocr/modeling_deepseekv2.py` or the simplified reference blocks in
-`extern/modelmeter/models/deepseek_ocr/scripts/run_verify_decoder.py`):
+`extern/modelmeter/models/deepseek_ocr/scripts/verify/run_verify_decoder.py`):
 
-- [x] `DeepseekV2MLP` – verified via `run_verify_decoder.py` (analytic FLOPs within tolerance of reference MLP).
-- [x] `MoEGate` – verified via `run_verify_decoder.py` (analytic FLOPs within tolerance of reference gate).
-- [x] `DeepseekV2MoE` – verified via `run_verify_decoder.py` after fixing shared-expert modeling.
+- [x] `DeepseekV2MLP` – verified via `scripts/verify/run_verify_decoder.py` (analytic FLOPs within tolerance of reference MLP).
+- [x] `MoEGate` – verified via `scripts/verify/run_verify_decoder.py` (analytic FLOPs within tolerance of reference gate).
+- [x] `DeepseekV2MoE` – verified via `scripts/verify/run_verify_decoder.py` after fixing shared-expert modeling.
 - [x] `DeepseekV2RMSNorm` – treated as verified for now; FLOPs are known from analytic formulas but PyTorch's FLOP counter does not attribute them.
-- [x] `DeepseekV2DecoderLayer` (dense) – verified via `run_verify_decoder.py` (attention + dense MLP within tolerance).
-- [x] `DeepseekV2DecoderLayer` (MoE) – verified via `run_verify_decoder.py` after fixing shared-expert modeling.
+- [x] `DeepseekV2DecoderLayer` (dense) – verified via `scripts/verify/run_verify_decoder.py` (attention + dense MLP within tolerance).
+- [x] `DeepseekV2DecoderLayer` (MoE) – verified via `scripts/verify/run_verify_decoder.py` after fixing shared-expert modeling.
 
 ## Known Issues
 
@@ -141,7 +141,7 @@ reference implementations.
 - **Symptom**: In isolation, PyTorch's FLOP counter reports `0` FLOPs for the reference RMSNorm implementation, even
   though both the vendor code and the analytic model clearly perform non-zero work (`~3 * B * S * hidden_size` FLOPs).
 - **Reference implementation used for verification**:
-  - File: `extern/modelmeter/models/deepseek_ocr/scripts/run_verify_decoder.py`
+  - File: `extern/modelmeter/models/deepseek_ocr/scripts/verify/run_verify_decoder.py`
   - `RefDeepseekV2RMSNorm` mirrors `modeling_deepseekv2.DeepseekV2RMSNorm`:
     - casts to fp32,
     - computes variance as `hidden_states.pow(2).mean(-1, keepdim=True)`,
@@ -207,7 +207,7 @@ reference implementations.
       `verify_by_impl` helper.
 
 - Added a decoder verification script:
-  - `extern/modelmeter/models/deepseek_ocr/scripts/run_verify_decoder.py`:
+  - `extern/modelmeter/models/deepseek_ocr/scripts/verify/run_verify_decoder.py`:
     - Defines small PyTorch reference modules (`RefDeepseekV2MLP`, `RefMoEGate`,
       `RefDeepseekV2MoE`, `RefDeepseekV2RMSNorm`, `RefDeepseekV2DecoderLayer`)
       mirroring the DeepSeek-V2 design.
@@ -232,7 +232,7 @@ reference implementations.
 
 - **Analytic vs reference FLOP verification**:
   - From the project root, run:
-    - `pixi run -e rtx5090 python -m extern.modelmeter.models.deepseek_ocr.scripts.run_verify_decoder --device cuda:0 --accept-rel-diff 0.1`
+    - `pixi run -e rtx5090 python -m extern.modelmeter.models.deepseek_ocr.scripts.verify.run_verify_decoder --device cuda:0 --accept-rel-diff 0.1`
   - Inspect the summary:
     - `DeepseekV2MLP`, `MoEGate`, and `DeepseekV2DecoderLayer_dense` should pass
       within tolerance.
