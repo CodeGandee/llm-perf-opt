@@ -227,6 +227,31 @@
   - Workload parameters (sequence length, views, tokens).
   - FLOP accounting policy (how to treat FlashAttention2 and other fused kernels).
 
+## Implementation Summary (Current Status)
+
+- **CLIP depth alignment**
+  - `extern/modelmeter/models/deepseek_ocr/configs/vision/deepseek_ocr_base.yaml` now configures `vision.notp_transformer.blocks` with 24 `NoTPTransformerBlock` entries, matching the vendor CLIP-L `vit_model_cfg.num_layers = 24`.
+
+- **Vision workload multiplier in analytic root**
+  - `DeepseekOCRModel` (`extern/modelmeter/models/deepseek_ocr/layers/core/deepseek_ocr_model.py`) gained:
+    - `self.m_vision_workload_multiplier: float = 1.0`.
+    - `set_vision_workload_multiplier(multiplier: float)` to control multi-view scaling (global view + crops).
+    - An extended `start_vision(..., vision_workload_multiplier: Optional[float] = None)` that can optionally override the multiplier.
+  - Aggregation methods now scale **vision-layer contributions** by `m_vision_workload_multiplier` in `"vision"` and `"prefill"` modes for:
+    - FLOPs: `forward_tensor_core_flops`, `forward_cuda_core_flops`, `backward_tensor_core_flops`, `backward_cuda_core_flops`.
+    - I/O: `forward_cal_io`, `backward_cal_io`.
+    - Activations/KV cache: `forward_memory_activation`, `backward_memory_activation`, `forward_memory_kvcache`.
+  - Parameter memory (`forward_memory_weight`, `backward_memory_weight`) remains unscaled.
+
+- **Shape-dependent multi-view wiring in verification scripts**
+  - `run_verify_end2end_vision.py`:
+    - `_measure_vision_flops_ref` now returns `(total_flops, context_len, w_crop, h_crop)` by decoding `images_spatial_crop` from `_build_end_to_end_inputs(...)`.
+    - `main()` computes `num_crops = w_crop * h_crop` when `crop_mode=1` and the grid is non-trivial, calls `analytic_model.set_vision_workload_multiplier(float(num_crops))`, then runs `start_vision(batch_size=cfg.runtime.batch_size)` to obtain analytic FLOPs.
+  - `run_verify_end2end.py`:
+    - `_measure_end_to_end_flops` now returns `(total_flops, context_len, decode_steps, w_crop, h_crop)` with the crop grid decoded from `images_spatial_crop`.
+    - `main()` uses the same shape-only logic to compute `num_crops` and applies `set_vision_workload_multiplier(float(num_crops))` on the analytic model before calling `_compute_analytic_total_tflops(...)`.
+  - In both scripts, the analytic model’s vision workload is now tied to the **same shape-dependent crop grid** (no content heuristics) used by vendor `dynamic_preprocess`.
+
 ## References
 
 - **Code and configs**
