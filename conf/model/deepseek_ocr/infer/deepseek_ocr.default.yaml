@@ -5,3 +5,4 @@ no_repeat_ngram_size: 20
 do_sample: false
 context_len_mode: auto   # one of: auto|max|fixed
 context_len_fixed: 1024  # used only when mode=fixed
+decoder_prompt: "<image>\n<|grounding|>Convert the document to markdown."

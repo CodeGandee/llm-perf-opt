@@ -184,7 +184,7 @@ For detailed per-kernel profiling:
 
 2. **Extract top kernels** from the Nsys CSV summary:
 ```bash
-python scripts/ncu/release/extract-top-kernels.py \
+pixi run python scripts/ncu/release/extract-top-kernels.py \
   tmp/profile-output/<run_id>/nsys/summary_cuda_gpu_kern_sum.csv \
   -o top-kernels.yaml --topk 30
 ```
@@ -192,14 +192,14 @@ python scripts/ncu/release/extract-top-kernels.py \
 3. **Profile specific kernels** using the generated YAML:
 ```bash
 # See scripts/ncu/release/README.md for detailed instructions
-python scripts/ncu/release/profile-from-yaml.py \
+pixi run python scripts/ncu/release/profile-from-yaml.py \
   --config top-kernels.yaml \
   --output-dir tmp/ncu-kernels/
 ```
 
 4. **Analyze kernel metrics**:
 ```bash
-python scripts/ncu/analysis/analyze_ncu_dir.py \
+pixi run python scripts/ncu/analysis/analyze_ncu_dir.py \
   tmp/ncu-kernels/ \
   --output-dir tmp/ncu-analysis/
 ```
@@ -237,26 +237,26 @@ Outputs:
 
 ```bash
 # Unit tests
-pytest tests/unit/
+pixi run pytest tests/unit/
 
 # Integration tests
-pytest tests/integration/
+pixi run pytest tests/integration/
 
 # Manual tests
-python tests/manual/<test>.py
+pixi run python tests/manual/<test>.py
 ```
 
 ### Code Quality
 
 ```bash
 # Lint with Ruff
-ruff check src/
+pixi run ruff check src/
 
 # Format with Ruff
-ruff format src/
+pixi run ruff format src/
 
 # Type check with mypy
-mypy src/
+pixi run mypy src/
 ```
 
 ### Documentation

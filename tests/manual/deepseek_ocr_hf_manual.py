@@ -23,6 +23,7 @@ from typing import cast
 
 import torch
 from transformers import AutoModel, AutoTokenizer  # type: ignore[import-untyped]
+from omegaconf import OmegaConf  # type: ignore[import-untyped]
 
 # Configuration via env vars
 MODEL_ID = os.environ.get("DSOCR_MODEL", str(Path("models/deepseek-ocr").resolve()))
@@ -94,8 +95,26 @@ try:
 except Exception as e:  # noqa: BLE001
     print(f"[warn] dtype/device move failed ({e}), using default precision/device")
 
-# Prompt (from models/deepseek-ocr README)
-PROMPT = "<image>\n<|grounding|>Convert the document to markdown. "
+def _find_repo_root(start: Path) -> Path:
+    """Return the repo root (dir containing ``pyproject.toml``), else ``start``."""
+
+    cur = start.resolve()
+    for _ in range(10):
+        if (cur / "pyproject.toml").is_file():
+            return cur
+        if cur.parent == cur:
+            break
+        cur = cur.parent
+    return start
+
+
+_ROOT = _find_repo_root(Path(__file__).parent)
+_INFER_CFG_PATH = _ROOT / "conf" / "model" / "deepseek_ocr" / "infer" / "deepseek_ocr.default.yaml"
+_INFER_CFG = OmegaConf.load(_INFER_CFG_PATH) if _INFER_CFG_PATH.is_file() else None
+
+_DEFAULT_PROMPT = "<image>\n<|grounding|>Convert the document to markdown. "
+# Prompt (from DeepSeek-OCR infer config, falling back to vendor README default)
+PROMPT = str(getattr(_INFER_CFG, "decoder_prompt", _DEFAULT_PROMPT)) if _INFER_CFG is not None else _DEFAULT_PROMPT
 
 # Iterate images; prefer custom .infer when available
 for img_path in images:

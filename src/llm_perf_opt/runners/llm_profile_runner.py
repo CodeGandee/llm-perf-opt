@@ -794,6 +794,15 @@ def main(cfg: DictConfig) -> None:  # pragma: no cover - CLI orchestrator
     precision = str(getattr(cfg.model, "dtype", "bf16"))
     peak = get_peak_tflops(device_name, precision)
 
+    # Decoder prompt (DeepSeek-OCR vendor default, configurable via infer.*)
+    infer_cfg = getattr(cfg, "infer", {})
+    decoder_prompt = str(
+        infer_cfg.get(
+            "decoder_prompt",
+            "<image>\n<|grounding|>Convert the document to markdown.",
+        ),
+    )
+
     # Optional warmup rounds (gate by pipeline.torch_profiler.enable)
     tp_cfg = getattr(getattr(cfg, "pipeline", {}), "torch_profiler", {})
     # Prefer `enable`; fallback to `enabled` for preset compatibility
@@ -814,7 +823,7 @@ def main(cfg: DictConfig) -> None:  # pragma: no cover - CLI orchestrator
             try:
                 _ = session.run_inference(
                     image_path=wimg,
-                    prompt="<image>\\n<|grounding|>Convert the document to markdown.",
+                    prompt=decoder_prompt,
                     max_new_tokens=8,
                     preprocess=dict(
                         enable=bool(getattr(cfg.model, "preprocess", {}).get("enable", True)),
@@ -850,7 +859,7 @@ def main(cfg: DictConfig) -> None:  # pragma: no cover - CLI orchestrator
                 logger.info("Profiling representative image: %s", rep_image)
                 _ = session.run_inference(
                     image_path=rep_image,
-                    prompt="<image>\n<|grounding|>Convert the document to markdown.",
+                    prompt=decoder_prompt,
                     max_new_tokens=rep_max_new,
                     preprocess=dict(
                         enable=bool(getattr(cfg.model, "preprocess", {}).get("enable", True)),

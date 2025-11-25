@@ -332,8 +332,14 @@ def run_stage_dataset(
     rng = random.Random(int(seed)) if seed not in (None, "null") else random.Random()
 
     # infer settings
-    max_new_tokens = _require_int_max_new_tokens(getattr(getattr(cfg, "infer", {}), "max_new_tokens", 64))
     _infer_cfg = getattr(cfg, "infer", {})
+    max_new_tokens = _require_int_max_new_tokens(_infer_cfg.get("max_new_tokens", 64))
+    decoder_prompt = str(
+        _infer_cfg.get(
+            "decoder_prompt",
+            "<image>\n<|grounding|>Convert the document to markdown.",
+        ),
+    )
     _infer_kwargs = dict(
         temperature=float(_infer_cfg.get("temperature", 0.0)),
         no_repeat_ngram_size=int(_infer_cfg.get("no_repeat_ngram_size", 0)),
@@ -367,7 +373,7 @@ def run_stage_dataset(
             with hooks.context_provider():
                 res = session.run_inference(
                     image_path=str(img),
-                    prompt="<image>\n<|grounding|>Convert the document to markdown.",
+                    prompt=decoder_prompt,
                     max_new_tokens=max_new_tokens,
                     return_text=save_preds,
                     preprocess=dict(

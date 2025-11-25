@@ -130,10 +130,13 @@ if torch.cuda.is_available():
 
 operator_records: list[dict[str, Any]] = []
 try:
+    decoder_prompt = str(
+        getattr(getattr(cfg, "infer", {}), "decoder_prompt", "<image>\n<|grounding|>Convert the document to markdown."),
+    )
     with profile(activities=activities) as prof:  # type: ignore[call-arg]
         _ = session.run_inference(
             image_path=str(images[0]),
-            prompt="<image>\n<|grounding|>Convert the document to markdown.",
+            prompt=decoder_prompt,
             max_new_tokens=int(getattr(cfg, "infer", {}).get("max_new_tokens", 64)),
         )
     operator_records = _collect_operator_records(prof)
@@ -148,7 +151,7 @@ for i in range(int(cfg.repeats)):
     img = images[i % len(images)]
     res = session.run_inference(
         image_path=str(img),
-        prompt="<image>\n<|grounding|>Convert the document to markdown.",
+        prompt=decoder_prompt,
         max_new_tokens=max_new_tokens,
     )
     runs.append(

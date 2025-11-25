@@ -3,3 +3,4 @@ temperature: 0.0
 max_new_tokens: 256
 no_repeat_ngram_size: 0
 do_sample: false
+decoder_prompt: "<image>\n<|grounding|>Convert the document to markdown."
