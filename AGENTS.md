@@ -25,6 +25,7 @@ This document is a concise contributor guide for llm-perf-opt. Follow it for any
 - Use type hints; keep functions small and single‑purpose
 - Naming: modules/functions snake_case; Classes CamelCase; constants UPPER_CASE
 - Run `ruff` (PEP8 + rules in pyproject) and `mypy` before pushing
+- For docs and markdown in this repo, DO NOT hard break long lines; keep each logical sentence or item on a single physical line and let tools handle wrapping
 
 ## Testing Guidelines
 - Framework: pytest. Place fast, deterministic tests in tests/unit/
