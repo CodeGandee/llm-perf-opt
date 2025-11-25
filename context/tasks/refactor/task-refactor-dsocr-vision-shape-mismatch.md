@@ -261,7 +261,23 @@ analytic_model: DeepseekOCRModel = instantiate(cfg.model)
 analytic_model.start_vision(batch_size=int(cfg.runtime.batch_size))
 ```
 
-### 4. Update end-to-end verifier to reuse the same workload
+### 4. Keep BaseLayer-derived stats consistent with inference
+
+**Objective:** Ensure all `BaseLayer`-derived metrics (not just FLOPs) reflect the new global + crops structure.
+
+- For each analytic vision layer (`ImageEncoderViT`, `VitModel`, `MlpProjector` and any new `*_crops` variants):
+  - Re-check `forward_cal_io`, `backward_cal_io`, `forward_memory_weight`, `forward_memory_activation`, and related methods so they:
+    - Account for **both** global and crop branches with their correct batch sizes and spatial/token shapes.
+    - Scale contributions by `num_crops` where the vendor actually runs per-crop work (e.g., SAM passes at 640, CLIP/projector passes per crop).
+  - When adding the composite `vision_global` and `vision_crops` stacks, verify that `_CompositeLayer` aggregation still matches “run global once + run crops `num_crops` times” semantics for:
+    - FLOPs (`forward_tensor_core_flops` / `forward_cuda_core_flops`)
+    - I/O (`forward_cal_io`)
+    - Memory (`forward_memory_weight`, `forward_memory_activation`, `forward_memory_kvcache`)
+- Add a small debug mode (or extend existing debug scripts) to print these stats per branch so we can sanity-check that:
+  - Increasing `w_crop * h_crop` increases both FLOPs and non-FLOP stats in line with vendor behavior.
+  - Removing crops (crop_mode = 0 or 1×1 grid) reduces the workload back to the global-only case.
+
+### 5. Update end-to-end verifier to reuse the same workload
 
 **Objective:** Ensure `_compute_analytic_total_tflops` uses the same shape-accurate vision workload as the vision-only verifier.
 
@@ -270,7 +286,7 @@ analytic_model.start_vision(batch_size=int(cfg.runtime.batch_size))
   - Remove any residual assumptions that vision FLOPs are `batch_size * “single-view cost”`; they should now be the sum over global + crops.
   - Keep the FlashAttention toggle logic (`_set_ignore_torch_unsupported_flop_count(True)`) as-is for decoder alignment.
 
-### 5. Re-run verification and adjust as needed
+### 6. Re-run verification and adjust as needed
 
 - Use:
   - `tmp/vision-flops-debug/run_vision_shape_debug.py`
@@ -333,4 +349,3 @@ analytic_model.start_vision(batch_size=int(cfg.runtime.batch_size))
 - **3rd-party libraries (Context7 IDs)**
   - PyTorch: `/pytorch/pytorch`
   - Hugging Face Transformers: `/huggingface/transformers`
-
