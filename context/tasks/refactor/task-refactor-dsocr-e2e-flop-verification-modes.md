@@ -1,6 +1,20 @@
 Refactor Plan: DeepSeek-OCR End-to-End FLOP Verification Modes
 ================================================================
 
+TODO
+----
+
+- [ ] Add a shared helper to build the vendor DeepSeek-OCR model with eager attention only and replace direct `_build_reference_ocr_model(...)` calls in verification and sweep scripts.
+- [ ] Introduce an `AnalyticFlopMode` enum (or equivalent type) to represent analytic FLOP modes (eager vs flash) in a single shared location.
+- [ ] Refactor analytic FLOP computation helpers in verification scripts to accept an `AnalyticFlopMode` and wire attention implementation + `_set_ignore_torch_unsupported_flop_count(False)` accordingly.
+- [ ] Update `run_verify_prefill_decode.py` to compute and print vendor eager FLOPs, analytic eager (full) FLOPs, and analytic flash (full) FLOPs for both prefill and decode.
+- [ ] Update `run_verify_end2end_prefill_decode.py` to compute and print vendor eager FLOPs, analytic eager (full) FLOPs, and analytic flash (full) FLOPs for both prefill and decode on real OCR workloads.
+- [ ] Update `run_verify_end2end.py` to use the new eager vendor helper and to compute end-to-end analytic eager and analytic flash FLOPs with explicit mode selection.
+- [ ] Extend end-to-end sweep scripts (`sweep-e2e-crops.py`, `sweep-e2e-vision-prefill.py`, `sweep-e2e-decode.py`) to record both `analytic_eager_tflops` and `analytic_flash_tflops` per stage while keeping `analytic_tflops` as a backward-compatible alias.
+- [ ] Update sweep plotting helpers so that curves are labeled as `analytic (eager, full)`, `analytic (flash, full)`, and `vendor (eager, torch)` and include both analytic curves where available.
+- [ ] Ensure `_set_ignore_torch_unsupported_flop_count(False)` is used consistently for analytic FLOP modes in verification and sweep paths, and that vendor paths always use eager attention.
+- [ ] Refresh `scripts/README.md` and any referenced docs to describe the new vendor/analytic FLOP modes and how to interpret eager vs flash curves.
+
 What to Refactor
 ----------------
 
