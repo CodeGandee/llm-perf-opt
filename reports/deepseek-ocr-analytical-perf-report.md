@@ -157,13 +157,7 @@ DeepSeek-OCR vision+prefill FLOPs vs image token length (analytic and vendor cur
 
 ![DeepSeek-OCR Vision+Prefill FLOPs vs image token length.](sweep/20251127-132944/e2e_vision_prefill/e2e_vision_prefill.svg)
 
-The StageCost structure from `modelmeter.models.common.stage_cost` summarizes per-stage analytic costs for these plots; its fields are:
-- `StageCost.flops_tflops`: total forward-pass FLOPs for the stage, expressed in teraFLOPs (including Tensor Core and CUDA core contributions when modeled).
-- `StageCost.io_tb`: activation I/O volume in terabits, aggregating reads and writes between on-chip memory and HBM for that stage.
-- `StageCost.arithmetic_intensity`: FLOPs per bit of activation I/O (`flops_tflops` divided by `io_tb`), indicating how compute-bound versus bandwidth-bound the stage is.
-- `StageCost.activations_gb`: peak activation memory footprint in gigabytes for the stage under the given batch size and sequence length.
-- `StageCost.kv_gb`: KV-cache memory footprint in gigabytes attributable to the stage (typically decoder attention blocks), driven by context length and decode length.
-For DeepSeek-OCR-3B in this configuration, the total parameter footprint is approximately 2.17 GB and is constant across crop grids, so we report it once here rather than as a separate StageCost curve.
+These plots use the `StageCost` structure from `modelmeter.models.common.stage_cost` for per-stage analytic costs; see the appendix for field definitions and interpretation.
 
 StageCost.flops_tflops vs image token length, broken down by logical stages (vision, decoder, and LM head) to show how each component contributes to total prefill FLOPs as crop density increases.
 
@@ -248,3 +242,13 @@ The following table enumerates a subset of those points, showing for each crop g
 |28|2x14|3093|33.605|33.605|
 |28|4x7|3113|33.676|33.676|
 |29|1x29|3183|34.748|34.748|
+
+## Appendix: StageCost field definitions
+
+The `StageCost` structure from `modelmeter.models.common.stage_cost` summarizes per-stage analytic costs for the vision, decoder, and vision+prefill plots in this report; its fields are:
+- `StageCost.flops_tflops`: total forward-pass FLOPs for the stage, expressed in teraFLOPs (including Tensor Core and CUDA core contributions when modeled).
+- `StageCost.io_tb`: activation I/O volume in terabits, aggregating reads and writes between on-chip memory and HBM for that stage.
+- `StageCost.arithmetic_intensity`: FLOPs per bit of activation I/O (`flops_tflops` divided by `io_tb`), indicating how compute-bound versus bandwidth-bound the stage is.
+- `StageCost.activations_gb`: peak activation memory footprint in gigabytes for the stage under the given batch size and sequence length.
+- `StageCost.kv_gb`: KV-cache memory footprint in gigabytes attributable to the stage (typically decoder attention blocks), driven by context length and decode length.
+For DeepSeek-OCR-3B in the configuration used for these sweeps, the total parameter footprint is approximately 2.17 GB and is constant across crop grids, so we report it once here rather than as a separate StageCost curve.
