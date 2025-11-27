@@ -56,6 +56,28 @@ Why Refactor
 
 Without a clean, config-level separation of analytic normal vs flash modes in the vision pipeline—and sweeps that exercise those modes explicitly—downstream tools (sweeps, responsive reporting, documentation) cannot correctly quantify the impact of FlashAttention in the vision stack.
 
+TODO
+----
+
+- [ ] Add explicit normal and flash NoTP attention variants (including blocks, transformers, and ViT wrappers) in `extern/modelmeter/models/deepseek_ocr/configs/vision/deepseek_ocr_base.yaml`, keeping `vision` as a backward-compatible alias.
+- [ ] Expose `vision_layer_normal` and `vision_layer_flash` (plus a default `vision_layer` alias) in `extern/modelmeter/models/deepseek_ocr/configs/model/deepseek_ocr_root.default.yaml`, and ensure `DeepseekOCRModel.from_layers` can accept any extra Hydra parameters without failing.
+- [ ] Refactor `extern/modelmeter/models/deepseek_ocr/scripts/sweep/sweep-vision-crops.py` to build separate analytic configs for normal and flash attention by selecting `vision.vision_normal` and `vision.vision_flash` composites instead of mutating `vision.notp_attention.use_flash_attention`.
+- [ ] Refactor `extern/modelmeter/models/deepseek_ocr/scripts/sweep/sweep-e2e-vision-prefill.py` to follow the same pattern so StageCost prefill sweeps exercise distinct analytic normal vs flash vision stacks.
+- [ ] Update vision shape overrides in `extern/modelmeter/models/deepseek_ocr/layers/core/vision_shape_config.py` so both normal and flash NoTP variants receive consistent `batch_size` and `seq_len` settings for global and crop branches.
+- [ ] Add a small regression test that builds analytic `vision_normal` and `vision_flash` models for a representative workload and asserts that `flops_tflops` match while `io_tb` or `activations_gb` differ.
+- [ ] Sanity-check that decoder and SAM attention paths keep their existing flash-attention wiring and remain consistent with the new vision normal/flash analytic variants.
+
+Implementation Summary
+----------------------
+
+- Implemented explicit `notp_attention_normal` / `notp_attention_flash` variants and corresponding `notp_block_*`, `notp_transformer_*`, `vit_model_*`, and composite `vision_*` stacks in `extern/modelmeter/models/deepseek_ocr/configs/vision/deepseek_ocr_base.yaml`, keeping `vision` and `vision_nocrop` as backward-compatible aliases that default to flash attention.
+- Exposed `vision_layer_normal`, `vision_layer_flash`, `vision_layer_nocrop_normal`, and `vision_layer_nocrop_flash` (plus `vision_layer` and `vision_layer_nocrop` aliases) in `extern/modelmeter/models/deepseek_ocr/configs/model/deepseek_ocr_root.default.yaml` so Hydra callers can select normal vs flash analytic vision stacks explicitly.
+- Updated `DeepseekOCRModel.from_layers` in `extern/modelmeter/models/deepseek_ocr/layers/core/deepseek_ocr_model.py` to accept and ignore extra keyword arguments, making it resilient to future Hydra config extensions around vision-layer selection.
+- Refactored `extern/modelmeter/models/deepseek_ocr/layers/core/vision_shape_config.py` so `apply_vision_overrides_for_workload` configures both normal and flash NoTP variants (global and crops) with consistent `batch_size` and `seq_len`, and keeps `vit_model` / `vit_model_crops` aliases bound to the flash variants for backwards compatibility.
+- Updated `extern/modelmeter/models/deepseek_ocr/scripts/sweep/sweep-vision-crops.py` to select `model.vision_layer` as `vision.vision_normal` vs `vision.vision_flash` instead of mutating `vision.notp_attention.use_flash_attention` in-place, ensuring the full vision stack is switched between normal and flash modes coherently.
+- Extended `extern/modelmeter/models/deepseek_ocr/scripts/verify/analytic_modes.py` so `build_analytic_model_for_mode` binds `model.vision_layer` to either `vision_layer_normal` or `vision_layer_flash` when present, aligning vision and decoder attention modes for prefill sweeps such as `sweep-e2e-vision-prefill.py`.
+- Added regression tests in `tests/unit/deepseek_ocr/test_vision_flash_attention_variants.py` that confirm `NoTPAttention` flash vs normal variants share the same FLOPs but differ in I/O and activation memory, and that analytic `vision_normal` vs `vision_flash` composites yield identical `flops_tflops` but lower `io_tb` and `activations_gb` for the flash-attention path.
+
 How to Refactor
 ---------------
 
