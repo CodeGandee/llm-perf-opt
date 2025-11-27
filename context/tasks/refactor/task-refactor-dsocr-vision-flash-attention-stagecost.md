@@ -26,18 +26,35 @@ The goal is to ensure that:
 Why Refactor
 ------------
 
-- Today, the analytic CLIP attention layer (`NoTPAttention`) supports a `use_flash_attention` flag and has been updated to model flash vs non-flash activation I/O differently, but:
-  - In `sweep-vision-crops.py`, the two analytic curves `vision` and `vision_flash` still produce identical StageCost values (including FLOPs, I/O, and memory), which means the flash/non-flash wiring is not actually taking effect at the composite-model level.
-  - As a result, `stagecost_arithmetic_intensity.svg` and related plots show overlapping curves for analytic normal vs flash attention, making it impossible to reason about the benefit of FlashAttention in the vision stack.
-- This mismatch introduces confusion:
-  - Decoder sweeps already show a clear difference in StageCost between normal and flash attention.
-  - Vision sweeps **claim** to distinguish flash vs non-flash paths (via `vision` vs `vision_flash`), but the numeric results do not reflect any difference.
-- For responsive and capacity planning analyses, we specifically care about:
-  - How FlashAttention affects **activation memory and I/O** in the vision stack.
-  - The breakdown of Tensor Core vs CUDA-core FLOPs.
-  - The end-to-end impact on TTFT and overall GPU throughput requirements.
+- **Observed issue (current state)**
+  - In the vision sweeps, especially `sweep-vision-crops.py`, the analytic StageCost entries for the two purported vision modes:
+    - `vision` (normal attention) and
+    - `vision_flash` (flash attention)
+    are **numerically identical** for every point in the sweep:
+    - `flops_tflops`, `io_tb`, `activations_gb`, `flops_tensor_tflops`, and `flops_cuda_tflops` all match bit-for-bit.
+  - As a result:
+    - `stagecost_arithmetic_intensity.svg` and other StageCost plots show overlapping curves for analytic normal vs flash attention.
+    - The FLOP-split figures (`vision_flops_split_*`) show a single effective analytic curve, even though they are labeled as flash-attention-only.
+  - This happens despite the fact that:
+    - The per-layer analytic vision attention implementations (`Attention` and `NoTPAttention`) do branch on `use_flash_attention` and, in isolation, produce different `io_tb` / `activations_gb` for flash vs non-flash settings.
+    - Decoder sweeps already show clear StageCost differences between normal and flash attention for the decoder stack.
 
-Without a clean separation of analytic normal vs flash modes in the vision pipeline, all downstream tools (sweeps, responsive reporting, documentation) are working from misleading or degenerate data.
+- **Root cause (analytic wiring vs layer math)**
+  - The analytic layers are capable of modeling flash-specific behavior, but the way Hydra configs and composites are wired means:
+    - Both `vision` and `vision_flash` composites used in sweeps are effectively bound to the *same* underlying CLIP NoTP transformer configuration (same `use_flash_attention`), or the override is applied to a config path that is not actually used by the instantiated composite.
+    - The sweep scripts attempt to toggle `use_flash_attention` by mutating `cfg_crops.vision.notp_attention.use_flash_attention`, but this does not change the effective `use_flash_attention` of the layers that contribute to the StageCost for the composite.
+  - In practice, this yields two analytic models with identical StageCost behavior under different labels, rather than truly distinct normal vs flash attention modes.
+
+- **Why we need to fix this**
+  - We rely on the analytic model, not the vendor model, to answer “what-if” questions about:
+    - How FlashAttention changes **activation memory and I/O** in the vision stack.
+    - How Tensor Core vs CUDA-core FLOPs break down in the vision pipeline.
+    - How much TFLOPs/s and bandwidth are required to hit given TTFT targets under different attention implementations.
+  - If normal and flash analytic modes are not actually distinct at the pipeline level:
+    - Vision sweeps and responsive reports are effectively calibrated to a single configuration, even though plots and JSON schemas imply otherwise.
+    - Capacity planning and optimization discussions around vision FlashAttention are based on degenerate or misleading data.
+
+Without a clean, config-level separation of analytic normal vs flash modes in the vision pipeline—and sweeps that exercise those modes explicitly—downstream tools (sweeps, responsive reporting, documentation) cannot correctly quantify the impact of FlashAttention in the vision stack.
 
 How to Refactor
 ---------------
@@ -255,4 +272,3 @@ References
     - Context7 library id: `/pytorch/pytorch`
   - FlashAttention reference implementation:
     - Context7 library id: `/dao-ailab/flash-attention`
-
