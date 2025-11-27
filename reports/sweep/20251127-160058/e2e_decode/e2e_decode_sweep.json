@@ -1,0 +1,2233 @@
+{
+  "description": "DeepSeek-OCR analytic decode FLOP sweep over candidate crop grids, with optional vendor FLOP measurements for vendor-aligned grids and analytic extrapolations for larger crop counts.",
+  "model_id": "deepseek-ocr-3b",
+  "min_image_tokens": 483,
+  "max_image_tokens": 3183,
+  "num_points": 53,
+  "global_image_tokens": 273,
+  "batch_size": 1,
+  "decode_steps": 100,
+  "points": [
+    {
+      "image_tokens_total": 483,
+      "image_tokens_crops": 210,
+      "global_image_tokens": 273,
+      "height_crop_num": 1,
+      "width_crop_num": 2,
+      "image_width": 1280,
+      "image_height": 640,
+      "batch_size": 1,
+      "context_len": 493,
+      "decode_steps": 100,
+      "analytic_only": false,
+      "decode": {
+        "analytic_tflops": 0.11845841920000001,
+        "analytic_eager_tflops": 0.11845841920000001,
+        "analytic_flash_tflops": 0.11845841920000001,
+        "vendor_tflops": 0.1181584896
+      },
+      "decode_stagecost": {
+        "decode_eager": {
+          "flops_tflops": 0.11845841920000001,
+          "flops_tensor_tflops": 0.118414336,
+          "flops_cuda_tflops": 4.4083199999999903e-05,
+          "io_tb": 0.0011460096,
+          "arithmetic_intensity": 103.3659920475361,
+          "weights_gb": 0.6873130798339844,
+          "activations_gb": 0.0013276487588882446,
+          "kv_gb": 0.03387451171875
+        },
+        "decode_flash": {
+          "flops_tflops": 0.11845841920000001,
+          "flops_tensor_tflops": 0.118414336,
+          "flops_cuda_tflops": 4.4083199999999903e-05,
+          "io_tb": 0.0009376895999999984,
+          "arithmetic_intensity": 126.33009814761752,
+          "weights_gb": 0.6873130798339844,
+          "activations_gb": 0.10254348814487457,
+          "kv_gb": 0.03387451171875
+        },
+        "decode_vendor": {
+          "flops_tflops": 0.1181584896,
+          "kv_gb": 0.033931732177734375
+        }
+      }
+    },
+    {
+      "image_tokens_total": 583,
+      "image_tokens_crops": 310,
+      "global_image_tokens": 273,
+      "height_crop_num": 1,
+      "width_crop_num": 3,
+      "image_width": 1920,
+      "image_height": 640,
+      "batch_size": 1,
+      "context_len": 593,
+      "decode_steps": 100,
+      "analytic_only": false,
+      "decode": {
+        "analytic_tflops": 0.11907281920000001,
+        "analytic_eager_tflops": 0.11907281920000001,
+        "analytic_flash_tflops": 0.11907281920000001,
+        "vendor_tflops": 0.1187728896
+      },
+      "decode_stagecost": {
+        "decode_eager": {
+          "flops_tflops": 0.11907281920000001,
+          "flops_tensor_tflops": 0.11902873600000001,
+          "flops_cuda_tflops": 4.4083199999999903e-05,
+          "io_tb": 0.0011844096,
+          "arithmetic_intensity": 100.53348030951456,
+          "weights_gb": 0.6873130798339844,
+          "activations_gb": 0.0013723522424697876,
+          "kv_gb": 0.0395965576171875
+        },
+        "decode_flash": {
+          "flops_tflops": 0.11907281920000001,
+          "flops_tensor_tflops": 0.11902873600000001,
+          "flops_cuda_tflops": 4.4083199999999903e-05,
+          "io_tb": 0.0009376895999999984,
+          "arithmetic_intensity": 126.9853256344106,
+          "weights_gb": 0.6873130798339844,
+          "activations_gb": 0.11970962584018707,
+          "kv_gb": 0.0395965576171875
+        },
+        "decode_vendor": {
+          "flops_tflops": 0.1187728896,
+          "kv_gb": 0.039653778076171875
+        }
+      }
+    },
+    {
+      "image_tokens_total": 683,
+      "image_tokens_crops": 410,
+      "global_image_tokens": 273,
+      "height_crop_num": 1,
+      "width_crop_num": 4,
+      "image_width": 2560,
+      "image_height": 640,
+      "batch_size": 1,
+      "context_len": 693,
+      "decode_steps": 100,
+      "analytic_only": false,
+      "decode": {
+        "analytic_tflops": 0.11968721920000001,
+        "analytic_eager_tflops": 0.11968721920000001,
+        "analytic_flash_tflops": 0.11968721920000001,
+        "vendor_tflops": 0.1193872896
+      },
+      "decode_stagecost": {
+        "decode_eager": {
+          "flops_tflops": 0.11968721920000001,
+          "flops_tensor_tflops": 0.11964313600000001,
+          "flops_cuda_tflops": 4.4083199999999903e-05,
+          "io_tb": 0.0012228096,
+          "arithmetic_intensity": 97.87886781392623,
+          "weights_gb": 0.6873130798339844,
+          "activations_gb": 0.0014170557260513306,
+          "kv_gb": 0.045318603515625
+        },
+        "decode_flash": {
+          "flops_tflops": 0.11968721920000001,
+          "flops_tensor_tflops": 0.11964313600000001,
+          "flops_cuda_tflops": 4.4083199999999903e-05,
+          "io_tb": 0.0009376895999999984,
+          "arithmetic_intensity": 127.64055312120367,
+          "weights_gb": 0.6873130798339844,
+          "activations_gb": 0.13687576353549957,
+          "kv_gb": 0.045318603515625
+        },
+        "decode_vendor": {
+          "flops_tflops": 0.1193872896,
+          "kv_gb": 0.045375823974609375
+        }
+      }
+    },
+    {
+      "image_tokens_total": 693,
+      "image_tokens_crops": 420,
+      "global_image_tokens": 273,
+      "height_crop_num": 2,
+      "width_crop_num": 2,
+      "image_width": 1280,
+      "image_height": 1280,
+      "batch_size": 1,
+      "context_len": 703,
+      "decode_steps": 100,
+      "analytic_only": false,
+      "decode": {
+        "analytic_tflops": 0.1197486592,
+        "analytic_eager_tflops": 0.1197486592,
+        "analytic_flash_tflops": 0.1197486592,
+        "vendor_tflops": 0.1194487296
+      },
+      "decode_stagecost": {
+        "decode_eager": {
+          "flops_tflops": 0.1197486592,
+          "flops_tensor_tflops": 0.11970457600000003,
+          "flops_cuda_tflops": 4.4083199999999903e-05,
+          "io_tb": 0.0012266496,
+          "arithmetic_intensity": 97.62254779196928,
+          "weights_gb": 0.6873130798339844,
+          "activations_gb": 0.0014215260744094849,
+          "kv_gb": 0.04589080810546875
+        },
+        "decode_flash": {
+          "flops_tflops": 0.1197486592,
+          "flops_tensor_tflops": 0.11970457600000003,
+          "flops_cuda_tflops": 4.4083199999999903e-05,
+          "io_tb": 0.0009376895999999984,
+          "arithmetic_intensity": 127.70607586988295,
+          "weights_gb": 0.6873130798339844,
+          "activations_gb": 0.13859237730503082,
+          "kv_gb": 0.04589080810546875
+        },
+        "decode_vendor": {
+          "flops_tflops": 0.1194487296,
+          "kv_gb": 0.045948028564453125
+        }
+      }
+    },
+    {
+      "image_tokens_total": 783,
+      "image_tokens_crops": 510,
+      "global_image_tokens": 273,
+      "height_crop_num": 1,
+      "width_crop_num": 5,
+      "image_width": 3200,
+      "image_height": 640,
+      "batch_size": 1,
+      "context_len": 793,
+      "decode_steps": 100,
+      "analytic_only": false,
+      "decode": {
+        "analytic_tflops": 0.1203016192,
+        "analytic_eager_tflops": 0.1203016192,
+        "analytic_flash_tflops": 0.1203016192,
+        "vendor_tflops": 0.1200016896
+      },
+      "decode_stagecost": {
+        "decode_eager": {
+          "flops_tflops": 0.1203016192,
+          "flops_tensor_tflops": 0.120257536,
+          "flops_cuda_tflops": 4.4083199999999903e-05,
+          "io_tb": 0.0012612096000000003,
+          "arithmetic_intensity": 95.38590508667232,
+          "weights_gb": 0.6873130798339844,
+          "activations_gb": 0.0014617592096328735,
+          "kv_gb": 0.0510406494140625
+        },
+        "decode_flash": {
+          "flops_tflops": 0.1203016192,
+          "flops_tensor_tflops": 0.120257536,
+          "flops_cuda_tflops": 4.4083199999999903e-05,
+          "io_tb": 0.0009376895999999984,
+          "arithmetic_intensity": 128.29578060799673,
+          "weights_gb": 0.6873130798339844,
+          "activations_gb": 0.15404190123081207,
+          "kv_gb": 0.0510406494140625
+        },
+        "decode_vendor": {
+          "flops_tflops": 0.1200016896,
+          "kv_gb": 0.051097869873046875
+        }
+      }
+    },
+    {
+      "image_tokens_total": 883,
+      "image_tokens_crops": 610,
+      "global_image_tokens": 273,
+      "height_crop_num": 1,
+      "width_crop_num": 6,
+      "image_width": 3840,
+      "image_height": 640,
+      "batch_size": 1,
+      "context_len": 893,
+      "decode_steps": 100,
+      "analytic_only": false,
+      "decode": {
+        "analytic_tflops": 0.1209160192,
+        "analytic_eager_tflops": 0.1209160192,
+        "analytic_flash_tflops": 0.1209160192,
+        "vendor_tflops": 0.1206160896
+      },
+      "decode_stagecost": {
+        "decode_eager": {
+          "flops_tflops": 0.1209160192,
+          "flops_tensor_tflops": 0.120871936,
+          "flops_cuda_tflops": 4.4083199999999903e-05,
+          "io_tb": 0.0012996096,
+          "arithmetic_intensity": 93.04026316826223,
+          "weights_gb": 0.6873130798339844,
+          "activations_gb": 0.0015064626932144165,
+          "kv_gb": 0.0567626953125
+        },
+        "decode_flash": {
+          "flops_tflops": 0.1209160192,
+          "flops_tensor_tflops": 0.120871936,
+          "flops_cuda_tflops": 4.4083199999999903e-05,
+          "io_tb": 0.0009376895999999984,
+          "arithmetic_intensity": 128.9510080947898,
+          "weights_gb": 0.6873130798339844,
+          "activations_gb": 0.17120803892612457,
+          "kv_gb": 0.0567626953125
+        },
+        "decode_vendor": {
+          "flops_tflops": 0.1206160896,
+          "kv_gb": 0.056819915771484375
+        }
+      }
+    },
+    {
+      "image_tokens_total": 893,
+      "image_tokens_crops": 620,
+      "global_image_tokens": 273,
+      "height_crop_num": 2,
+      "width_crop_num": 3,
+      "image_width": 1920,
+      "image_height": 1280,
+      "batch_size": 1,
+      "context_len": 903,
+      "decode_steps": 100,
+      "analytic_only": false,
+      "decode": {
+        "analytic_tflops": 0.12097745919999998,
+        "analytic_eager_tflops": 0.12097745919999998,
+        "analytic_flash_tflops": 0.12097745919999998,
+        "vendor_tflops": 0.1206775296
+      },
+      "decode_stagecost": {
+        "decode_eager": {
+          "flops_tflops": 0.12097745919999998,
+          "flops_tensor_tflops": 0.120933376,
+          "flops_cuda_tflops": 4.4083199999999903e-05,
+          "io_tb": 0.0013034496000000001,
+          "arithmetic_intensity": 92.81330033781127,
+          "weights_gb": 0.6873130798339844,
+          "activations_gb": 0.0015109330415725708,
+          "kv_gb": 0.05733489990234375
+        },
+        "decode_flash": {
+          "flops_tflops": 0.12097745919999998,
+          "flops_tensor_tflops": 0.120933376,
+          "flops_cuda_tflops": 4.4083199999999903e-05,
+          "io_tb": 0.0009376895999999984,
+          "arithmetic_intensity": 129.0165308434691,
+          "weights_gb": 0.6873130798339844,
+          "activations_gb": 0.17292465269565582,
+          "kv_gb": 0.05733489990234375
+        },
+        "decode_vendor": {
+          "flops_tflops": 0.1206775296,
+          "kv_gb": 0.057392120361328125
+        }
+      }
+    },
+    {
+      "image_tokens_total": 983,
+      "image_tokens_crops": 710,
+      "global_image_tokens": 273,
+      "height_crop_num": 1,
+      "width_crop_num": 7,
+      "image_width": 4480,
+      "image_height": 640,
+      "batch_size": 1,
+      "context_len": 993,
+      "decode_steps": 100,
+      "analytic_only": false,
+      "decode": {
+        "analytic_tflops": 0.12153041920000003,
+        "analytic_eager_tflops": 0.12153041920000003,
+        "analytic_flash_tflops": 0.12153041920000003,
+        "vendor_tflops": 0.1212304896
+      },
+      "decode_stagecost": {
+        "decode_eager": {
+          "flops_tflops": 0.12153041920000003,
+          "flops_tensor_tflops": 0.121486336,
+          "flops_cuda_tflops": 4.4083199999999903e-05,
+          "io_tb": 0.0013380096000000002,
+          "arithmetic_intensity": 90.82925802625034,
+          "weights_gb": 0.6873130798339844,
+          "activations_gb": 0.0015511661767959595,
+          "kv_gb": 0.0624847412109375
+        },
+        "decode_flash": {
+          "flops_tflops": 0.12153041920000003,
+          "flops_tensor_tflops": 0.121486336,
+          "flops_cuda_tflops": 4.4083199999999903e-05,
+          "io_tb": 0.0009376895999999984,
+          "arithmetic_intensity": 129.6062355815829,
+          "weights_gb": 0.6873130798339844,
+          "activations_gb": 0.18837417662143707,
+          "kv_gb": 0.0624847412109375
+        },
+        "decode_vendor": {
+          "flops_tflops": 0.1212304896,
+          "kv_gb": 0.06254196166992188
+        }
+      }
+    },
+    {
+      "image_tokens_total": 1083,
+      "image_tokens_crops": 810,
+      "global_image_tokens": 273,
+      "height_crop_num": 1,
+      "width_crop_num": 8,
+      "image_width": 5120,
+      "image_height": 640,
+      "batch_size": 1,
+      "context_len": 1093,
+      "decode_steps": 100,
+      "analytic_only": false,
+      "decode": {
+        "analytic_tflops": 0.1221448192,
+        "analytic_eager_tflops": 0.1221448192,
+        "analytic_flash_tflops": 0.1221448192,
+        "vendor_tflops": 0.1218448896
+      },
+      "decode_stagecost": {
+        "decode_eager": {
+          "flops_tflops": 0.1221448192,
+          "flops_tensor_tflops": 0.12210073600000002,
+          "flops_cuda_tflops": 4.4083199999999903e-05,
+          "io_tb": 0.0013764095999999997,
+          "arithmetic_intensity": 88.74162109883572,
+          "weights_gb": 0.6873130798339844,
+          "activations_gb": 0.0015958696603775024,
+          "kv_gb": 0.068206787109375
+        },
+        "decode_flash": {
+          "flops_tflops": 0.1221448192,
+          "flops_tensor_tflops": 0.12210073600000002,
+          "flops_cuda_tflops": 4.4083199999999903e-05,
+          "io_tb": 0.0009376895999999984,
+          "arithmetic_intensity": 130.26146306837595,
+          "weights_gb": 0.6873130798339844,
+          "activations_gb": 0.20554031431674957,
+          "kv_gb": 0.068206787109375
+        },
+        "decode_vendor": {
+          "flops_tflops": 0.1218448896,
+          "kv_gb": 0.06826400756835938
+        }
+      }
+    },
+    {
+      "image_tokens_total": 1093,
+      "image_tokens_crops": 820,
+      "global_image_tokens": 273,
+      "height_crop_num": 2,
+      "width_crop_num": 4,
+      "image_width": 2560,
+      "image_height": 1280,
+      "batch_size": 1,
+      "context_len": 1103,
+      "decode_steps": 100,
+      "analytic_only": false,
+      "decode": {
+        "analytic_tflops": 0.1222062592,
+        "analytic_eager_tflops": 0.1222062592,
+        "analytic_flash_tflops": 0.1222062592,
+        "vendor_tflops": 0.1219063296
+      },
+      "decode_stagecost": {
+        "decode_eager": {
+          "flops_tflops": 0.1222062592,
+          "flops_tensor_tflops": 0.122162176,
+          "flops_cuda_tflops": 4.4083199999999903e-05,
+          "io_tb": 0.0013802496,
+          "arithmetic_intensity": 88.53924623488389,
+          "weights_gb": 0.6873130798339844,
+          "activations_gb": 0.0016003400087356567,
+          "kv_gb": 0.06877899169921875
+        },
+        "decode_flash": {
+          "flops_tflops": 0.1222062592,
+          "flops_tensor_tflops": 0.122162176,
+          "flops_cuda_tflops": 4.4083199999999903e-05,
+          "io_tb": 0.0009376895999999984,
+          "arithmetic_intensity": 130.32698581705526,
+          "weights_gb": 0.6873130798339844,
+          "activations_gb": 0.20725692808628082,
+          "kv_gb": 0.06877899169921875
+        },
+        "decode_vendor": {
+          "flops_tflops": 0.1219063296,
+          "kv_gb": 0.06883621215820312
+        }
+      }
+    },
+    {
+      "image_tokens_total": 1183,
+      "image_tokens_crops": 910,
+      "global_image_tokens": 273,
+      "height_crop_num": 1,
+      "width_crop_num": 9,
+      "image_width": 5760,
+      "image_height": 640,
+      "batch_size": 1,
+      "context_len": 1193,
+      "decode_steps": 100,
+      "analytic_only": false,
+      "decode": {
+        "analytic_tflops": 0.1227592192,
+        "analytic_eager_tflops": 0.1227592192,
+        "analytic_flash_tflops": 0.1227592192,
+        "vendor_tflops": 0.1224592896
+      },
+      "decode_stagecost": {
+        "decode_eager": {
+          "flops_tflops": 0.1227592192,
+          "flops_tensor_tflops": 0.122715136,
+          "flops_cuda_tflops": 4.4083199999999903e-05,
+          "io_tb": 0.0014148095999999997,
+          "arithmetic_intensity": 86.76730720515329,
+          "weights_gb": 0.6873130798339844,
+          "activations_gb": 0.0016405731439590454,
+          "kv_gb": 0.0739288330078125
+        },
+        "decode_flash": {
+          "flops_tflops": 0.1227592192,
+          "flops_tensor_tflops": 0.122715136,
+          "flops_cuda_tflops": 4.4083199999999903e-05,
+          "io_tb": 0.0009376895999999984,
+          "arithmetic_intensity": 130.91669055516903,
+          "weights_gb": 0.6873130798339844,
+          "activations_gb": 0.22270645201206207,
+          "kv_gb": 0.0739288330078125
+        },
+        "decode_vendor": {
+          "flops_tflops": 0.1224592896,
+          "kv_gb": 0.07398605346679688
+        }
+      }
+    },
+    {
+      "image_tokens_total": 1203,
+      "image_tokens_crops": 930,
+      "global_image_tokens": 273,
+      "height_crop_num": 3,
+      "width_crop_num": 3,
+      "image_width": 1920,
+      "image_height": 1920,
+      "batch_size": 1,
+      "context_len": 1213,
+      "decode_steps": 100,
+      "analytic_only": false,
+      "decode": {
+        "analytic_tflops": 0.1228820992,
+        "analytic_eager_tflops": 0.1228820992,
+        "analytic_flash_tflops": 0.1228820992,
+        "vendor_tflops": 0.1225821696
+      },
+      "decode_stagecost": {
+        "decode_eager": {
+          "flops_tflops": 0.1228820992,
+          "flops_tensor_tflops": 0.12283801600000001,
+          "flops_cuda_tflops": 4.4083199999999903e-05,
+          "io_tb": 0.0014224895999999999,
+          "arithmetic_intensity": 86.38523557571177,
+          "weights_gb": 0.6873130798339844,
+          "activations_gb": 0.001649513840675354,
+          "kv_gb": 0.0750732421875
+        },
+        "decode_flash": {
+          "flops_tflops": 0.1228820992,
+          "flops_tensor_tflops": 0.12283801600000001,
+          "flops_cuda_tflops": 4.4083199999999903e-05,
+          "io_tb": 0.0009376895999999984,
+          "arithmetic_intensity": 131.04773605252763,
+          "weights_gb": 0.6873130798339844,
+          "activations_gb": 0.22613967955112457,
+          "kv_gb": 0.0750732421875
+        },
+        "decode_vendor": {
+          "flops_tflops": 0.1225821696,
+          "kv_gb": 0.07513046264648438
+        }
+      }
+    },
+    {
+      "image_tokens_total": 1283,
+      "image_tokens_crops": 1010,
+      "global_image_tokens": 273,
+      "height_crop_num": 1,
+      "width_crop_num": 10,
+      "image_width": 6400,
+      "image_height": 640,
+      "batch_size": 1,
+      "context_len": 1293,
+      "decode_steps": 100,
+      "analytic_only": true,
+      "decode": {
+        "analytic_tflops": 0.12337361919999999,
+        "analytic_eager_tflops": 0.12337361919999999,
+        "analytic_flash_tflops": 0.12337361919999999,
+        "vendor_tflops": null
+      },
+      "decode_stagecost": {
+        "decode_eager": {
+          "flops_tflops": 0.12337361919999999,
+          "flops_tensor_tflops": 0.12332953599999999,
+          "flops_cuda_tflops": 4.4083199999999903e-05,
+          "io_tb": 0.0014532095999999998,
+          "arithmetic_intensity": 84.89733291054505,
+          "weights_gb": 0.6873130798339844,
+          "activations_gb": 0.0016852766275405884,
+          "kv_gb": 0.07965087890625
+        },
+        "decode_flash": {
+          "flops_tflops": 0.12337361919999999,
+          "flops_tensor_tflops": 0.12332953599999999,
+          "flops_cuda_tflops": 4.4083199999999903e-05,
+          "io_tb": 0.0009376895999999984,
+          "arithmetic_intensity": 131.57191804196208,
+          "weights_gb": 0.6873130798339844,
+          "activations_gb": 0.23987258970737457,
+          "kv_gb": 0.07965087890625
+        }
+      }
+    },
+    {
+      "image_tokens_total": 1293,
+      "image_tokens_crops": 1020,
+      "global_image_tokens": 273,
+      "height_crop_num": 2,
+      "width_crop_num": 5,
+      "image_width": 3200,
+      "image_height": 1280,
+      "batch_size": 1,
+      "context_len": 1303,
+      "decode_steps": 100,
+      "analytic_only": true,
+      "decode": {
+        "analytic_tflops": 0.12343505920000002,
+        "analytic_eager_tflops": 0.12343505920000002,
+        "analytic_flash_tflops": 0.12343505920000002,
+        "vendor_tflops": null
+      },
+      "decode_stagecost": {
+        "decode_eager": {
+          "flops_tflops": 0.12343505920000002,
+          "flops_tensor_tflops": 0.12339097599999999,
+          "flops_cuda_tflops": 4.4083199999999903e-05,
+          "io_tb": 0.0014570495999999997,
+          "arithmetic_intensity": 84.7157565535175,
+          "weights_gb": 0.6873130798339844,
+          "activations_gb": 0.0016897469758987427,
+          "kv_gb": 0.08022308349609375
+        },
+        "decode_flash": {
+          "flops_tflops": 0.12343505920000002,
+          "flops_tensor_tflops": 0.12339097599999999,
+          "flops_cuda_tflops": 4.4083199999999903e-05,
+          "io_tb": 0.0009376895999999984,
+          "arithmetic_intensity": 131.63744079064142,
+          "weights_gb": 0.6873130798339844,
+          "activations_gb": 0.24158920347690582,
+          "kv_gb": 0.08022308349609375
+        }
+      }
+    },
+    {
+      "image_tokens_total": 1383,
+      "image_tokens_crops": 1110,
+      "global_image_tokens": 273,
+      "height_crop_num": 1,
+      "width_crop_num": 11,
+      "image_width": 7040,
+      "image_height": 640,
+      "batch_size": 1,
+      "context_len": 1393,
+      "decode_steps": 100,
+      "analytic_only": true,
+      "decode": {
+        "analytic_tflops": 0.1239880192,
+        "analytic_eager_tflops": 0.1239880192,
+        "analytic_flash_tflops": 0.1239880192,
+        "vendor_tflops": null
+      },
+      "decode_stagecost": {
+        "decode_eager": {
+          "flops_tflops": 0.1239880192,
+          "flops_tensor_tflops": 0.123943936,
+          "flops_cuda_tflops": 4.4083199999999903e-05,
+          "io_tb": 0.0014916095999999998,
+          "arithmetic_intensity": 83.12363985857962,
+          "weights_gb": 0.6873130798339844,
+          "activations_gb": 0.0017299801111221313,
+          "kv_gb": 0.0853729248046875
+        },
+        "decode_flash": {
+          "flops_tflops": 0.1239880192,
+          "flops_tensor_tflops": 0.123943936,
+          "flops_cuda_tflops": 4.4083199999999903e-05,
+          "io_tb": 0.0009376895999999984,
+          "arithmetic_intensity": 132.22714552875516,
+          "weights_gb": 0.6873130798339844,
+          "activations_gb": 0.2570387274026871,
+          "kv_gb": 0.0853729248046875
+        }
+      }
+    },
+    {
+      "image_tokens_total": 1483,
+      "image_tokens_crops": 1210,
+      "global_image_tokens": 273,
+      "height_crop_num": 1,
+      "width_crop_num": 12,
+      "image_width": 7680,
+      "image_height": 640,
+      "batch_size": 1,
+      "context_len": 1493,
+      "decode_steps": 100,
+      "analytic_only": true,
+      "decode": {
+        "analytic_tflops": 0.1246024192,
+        "analytic_eager_tflops": 0.1246024192,
+        "analytic_flash_tflops": 0.1246024192,
+        "vendor_tflops": null
+      },
+      "decode_stagecost": {
+        "decode_eager": {
+          "flops_tflops": 0.1246024192,
+          "flops_tensor_tflops": 0.12455833600000002,
+          "flops_cuda_tflops": 4.4083199999999903e-05,
+          "io_tb": 0.0015300095999999997,
+          "arithmetic_intensity": 81.43897868353245,
+          "weights_gb": 0.6873130798339844,
+          "activations_gb": 0.0017746835947036743,
+          "kv_gb": 0.091094970703125
+        },
+        "decode_flash": {
+          "flops_tflops": 0.1246024192,
+          "flops_tensor_tflops": 0.12455833600000002,
+          "flops_cuda_tflops": 4.4083199999999903e-05,
+          "io_tb": 0.0009376895999999984,
+          "arithmetic_intensity": 132.88237301554824,
+          "weights_gb": 0.6873130798339844,
+          "activations_gb": 0.2742048650979996,
+          "kv_gb": 0.091094970703125
+        }
+      }
+    },
+    {
+      "image_tokens_total": 1493,
+      "image_tokens_crops": 1220,
+      "global_image_tokens": 273,
+      "height_crop_num": 2,
+      "width_crop_num": 6,
+      "image_width": 3840,
+      "image_height": 1280,
+      "batch_size": 1,
+      "context_len": 1503,
+      "decode_steps": 100,
+      "analytic_only": true,
+      "decode": {
+        "analytic_tflops": 0.12466385919999999,
+        "analytic_eager_tflops": 0.12466385919999999,
+        "analytic_flash_tflops": 0.12466385919999999,
+        "vendor_tflops": null
+      },
+      "decode_stagecost": {
+        "decode_eager": {
+          "flops_tflops": 0.12466385919999999,
+          "flops_tensor_tflops": 0.12461977600000002,
+          "flops_cuda_tflops": 4.4083199999999903e-05,
+          "io_tb": 0.0015338495999999997,
+          "arithmetic_intensity": 81.2751518792977,
+          "weights_gb": 0.6873130798339844,
+          "activations_gb": 0.0017791539430618286,
+          "kv_gb": 0.09166717529296875
+        },
+        "decode_flash": {
+          "flops_tflops": 0.12466385919999999,
+          "flops_tensor_tflops": 0.12461977600000002,
+          "flops_cuda_tflops": 4.4083199999999903e-05,
+          "io_tb": 0.0009376895999999984,
+          "arithmetic_intensity": 132.94789576422752,
+          "weights_gb": 0.6873130798339844,
+          "activations_gb": 0.2759214788675308,
+          "kv_gb": 0.09166717529296875
+        }
+      }
+    },
+    {
+      "image_tokens_total": 1503,
+      "image_tokens_crops": 1230,
+      "global_image_tokens": 273,
+      "height_crop_num": 3,
+      "width_crop_num": 4,
+      "image_width": 2560,
+      "image_height": 1920,
+      "batch_size": 1,
+      "context_len": 1513,
+      "decode_steps": 100,
+      "analytic_only": true,
+      "decode": {
+        "analytic_tflops": 0.12472529919999999,
+        "analytic_eager_tflops": 0.12472529919999999,
+        "analytic_flash_tflops": 0.12472529919999999,
+        "vendor_tflops": null
+      },
+      "decode_stagecost": {
+        "decode_eager": {
+          "flops_tflops": 0.12472529919999999,
+          "flops_tensor_tflops": 0.12468121600000001,
+          "flops_cuda_tflops": 4.4083199999999903e-05,
+          "io_tb": 0.0015376895999999998,
+          "arithmetic_intensity": 81.11214330902673,
+          "weights_gb": 0.6873130798339844,
+          "activations_gb": 0.001783624291419983,
+          "kv_gb": 0.0922393798828125
+        },
+        "decode_flash": {
+          "flops_tflops": 0.12472529919999999,
+          "flops_tensor_tflops": 0.12468121600000001,
+          "flops_cuda_tflops": 4.4083199999999903e-05,
+          "io_tb": 0.0009376895999999984,
+          "arithmetic_intensity": 133.01341851290684,
+          "weights_gb": 0.6873130798339844,
+          "activations_gb": 0.2776380926370621,
+          "kv_gb": 0.0922393798828125
+        }
+      }
+    },
+    {
+      "image_tokens_total": 1583,
+      "image_tokens_crops": 1310,
+      "global_image_tokens": 273,
+      "height_crop_num": 1,
+      "width_crop_num": 13,
+      "image_width": 8320,
+      "image_height": 640,
+      "batch_size": 1,
+      "context_len": 1593,
+      "decode_steps": 100,
+      "analytic_only": true,
+      "decode": {
+        "analytic_tflops": 0.1252168192,
+        "analytic_eager_tflops": 0.1252168192,
+        "analytic_flash_tflops": 0.1252168192,
+        "vendor_tflops": null
+      },
+      "decode_stagecost": {
+        "decode_eager": {
+          "flops_tflops": 0.1252168192,
+          "flops_tensor_tflops": 0.12517273599999998,
+          "flops_cuda_tflops": 4.4083199999999903e-05,
+          "io_tb": 0.0015684096,
+          "arithmetic_intensity": 79.83680997616949,
+          "weights_gb": 0.6873130798339844,
+          "activations_gb": 0.0018193870782852173,
+          "kv_gb": 0.0968170166015625
+        },
+        "decode_flash": {
+          "flops_tflops": 0.1252168192,
+          "flops_tensor_tflops": 0.12517273599999998,
+          "flops_cuda_tflops": 4.4083199999999903e-05,
+          "io_tb": 0.0009376895999999984,
+          "arithmetic_intensity": 133.5376005023413,
+          "weights_gb": 0.6873130798339844,
+          "activations_gb": 0.2913710027933121,
+          "kv_gb": 0.0968170166015625
+        }
+      }
+    },
+    {
+      "image_tokens_total": 1683,
+      "image_tokens_crops": 1410,
+      "global_image_tokens": 273,
+      "height_crop_num": 1,
+      "width_crop_num": 14,
+      "image_width": 8960,
+      "image_height": 640,
+      "batch_size": 1,
+      "context_len": 1693,
+      "decode_steps": 100,
+      "analytic_only": true,
+      "decode": {
+        "analytic_tflops": 0.12583121919999998,
+        "analytic_eager_tflops": 0.12583121919999998,
+        "analytic_flash_tflops": 0.12583121919999998,
+        "vendor_tflops": null
+      },
+      "decode_stagecost": {
+        "decode_eager": {
+          "flops_tflops": 0.12583121919999998,
+          "flops_tensor_tflops": 0.125787136,
+          "flops_cuda_tflops": 4.4083199999999903e-05,
+          "io_tb": 0.0016068095999999998,
+          "arithmetic_intensity": 78.31121945002072,
+          "weights_gb": 0.6873130798339844,
+          "activations_gb": 0.0018640905618667603,
+          "kv_gb": 0.1025390625
+        },
+        "decode_flash": {
+          "flops_tflops": 0.12583121919999998,
+          "flops_tensor_tflops": 0.125787136,
+          "flops_cuda_tflops": 4.4083199999999903e-05,
+          "io_tb": 0.0009376895999999984,
+          "arithmetic_intensity": 134.19282798913437,
+          "weights_gb": 0.6873130798339844,
+          "activations_gb": 0.3085371404886246,
+          "kv_gb": 0.1025390625
+        }
+      }
+    },
+    {
+      "image_tokens_total": 1693,
+      "image_tokens_crops": 1420,
+      "global_image_tokens": 273,
+      "height_crop_num": 2,
+      "width_crop_num": 7,
+      "image_width": 4480,
+      "image_height": 1280,
+      "batch_size": 1,
+      "context_len": 1703,
+      "decode_steps": 100,
+      "analytic_only": true,
+      "decode": {
+        "analytic_tflops": 0.1258926592,
+        "analytic_eager_tflops": 0.1258926592,
+        "analytic_flash_tflops": 0.1258926592,
+        "vendor_tflops": null
+      },
+      "decode_stagecost": {
+        "decode_eager": {
+          "flops_tflops": 0.1258926592,
+          "flops_tensor_tflops": 0.125848576,
+          "flops_cuda_tflops": 4.4083199999999903e-05,
+          "io_tb": 0.0016106496,
+          "arithmetic_intensity": 78.16266132621273,
+          "weights_gb": 0.6873130798339844,
+          "activations_gb": 0.0018685609102249146,
+          "kv_gb": 0.10311126708984375
+        },
+        "decode_flash": {
+          "flops_tflops": 0.1258926592,
+          "flops_tensor_tflops": 0.125848576,
+          "flops_cuda_tflops": 4.4083199999999903e-05,
+          "io_tb": 0.0009376895999999984,
+          "arithmetic_intensity": 134.25835073781369,
+          "weights_gb": 0.6873130798339844,
+          "activations_gb": 0.3102537542581558,
+          "kv_gb": 0.10311126708984375
+        }
+      }
+    },
+    {
+      "image_tokens_total": 1783,
+      "image_tokens_crops": 1510,
+      "global_image_tokens": 273,
+      "height_crop_num": 1,
+      "width_crop_num": 15,
+      "image_width": 9600,
+      "image_height": 640,
+      "batch_size": 1,
+      "context_len": 1793,
+      "decode_steps": 100,
+      "analytic_only": true,
+      "decode": {
+        "analytic_tflops": 0.12644561920000003,
+        "analytic_eager_tflops": 0.12644561920000003,
+        "analytic_flash_tflops": 0.12644561920000003,
+        "vendor_tflops": null
+      },
+      "decode_stagecost": {
+        "decode_eager": {
+          "flops_tflops": 0.12644561920000003,
+          "flops_tensor_tflops": 0.12640153599999998,
+          "flops_cuda_tflops": 4.4083199999999903e-05,
+          "io_tb": 0.0016452096000000001,
+          "arithmetic_intensity": 76.85684498801857,
+          "weights_gb": 0.6873130798339844,
+          "activations_gb": 0.0019087940454483032,
+          "kv_gb": 0.1082611083984375
+        },
+        "decode_flash": {
+          "flops_tflops": 0.12644561920000003,
+          "flops_tensor_tflops": 0.12640153599999998,
+          "flops_cuda_tflops": 4.4083199999999903e-05,
+          "io_tb": 0.0009376895999999984,
+          "arithmetic_intensity": 134.84805547592748,
+          "weights_gb": 0.6873130798339844,
+          "activations_gb": 0.3257032781839371,
+          "kv_gb": 0.1082611083984375
+        }
+      }
+    },
+    {
+      "image_tokens_total": 1803,
+      "image_tokens_crops": 1530,
+      "global_image_tokens": 273,
+      "height_crop_num": 3,
+      "width_crop_num": 5,
+      "image_width": 3200,
+      "image_height": 1920,
+      "batch_size": 1,
+      "context_len": 1813,
+      "decode_steps": 100,
+      "analytic_only": true,
+      "decode": {
+        "analytic_tflops": 0.12656849920000002,
+        "analytic_eager_tflops": 0.12656849920000002,
+        "analytic_flash_tflops": 0.12656849920000002,
+        "vendor_tflops": null
+      },
+      "decode_stagecost": {
+        "decode_eager": {
+          "flops_tflops": 0.12656849920000002,
+          "flops_tensor_tflops": 0.126524416,
+          "flops_cuda_tflops": 4.4083199999999903e-05,
+          "io_tb": 0.0016528895999999998,
+          "arithmetic_intensity": 76.57407923675001,
+          "weights_gb": 0.6873130798339844,
+          "activations_gb": 0.0019177347421646118,
+          "kv_gb": 0.109405517578125
+        },
+        "decode_flash": {
+          "flops_tflops": 0.12656849920000002,
+          "flops_tensor_tflops": 0.126524416,
+          "flops_cuda_tflops": 4.4083199999999903e-05,
+          "io_tb": 0.0009376895999999984,
+          "arithmetic_intensity": 134.97910097328608,
+          "weights_gb": 0.6873130798339844,
+          "activations_gb": 0.3291365057229996,
+          "kv_gb": 0.109405517578125
+        }
+      }
+    },
+    {
+      "image_tokens_total": 1883,
+      "image_tokens_crops": 1610,
+      "global_image_tokens": 273,
+      "height_crop_num": 1,
+      "width_crop_num": 16,
+      "image_width": 10240,
+      "image_height": 640,
+      "batch_size": 1,
+      "context_len": 1893,
+      "decode_steps": 100,
+      "analytic_only": true,
+      "decode": {
+        "analytic_tflops": 0.1270600192,
+        "analytic_eager_tflops": 0.1270600192,
+        "analytic_flash_tflops": 0.1270600192,
+        "vendor_tflops": null
+      },
+      "decode_stagecost": {
+        "decode_eager": {
+          "flops_tflops": 0.1270600192,
+          "flops_tensor_tflops": 0.12701593600000002,
+          "flops_cuda_tflops": 4.4083199999999903e-05,
+          "io_tb": 0.0016836095999999997,
+          "arithmetic_intensity": 75.46881367271844,
+          "weights_gb": 0.6873130798339844,
+          "activations_gb": 0.001953497529029846,
+          "kv_gb": 0.113983154296875
+        },
+        "decode_flash": {
+          "flops_tflops": 0.1270600192,
+          "flops_tensor_tflops": 0.12701593600000002,
+          "flops_cuda_tflops": 4.4083199999999903e-05,
+          "io_tb": 0.0009376895999999984,
+          "arithmetic_intensity": 135.50328296272053,
+          "weights_gb": 0.6873130798339844,
+          "activations_gb": 0.3428694158792496,
+          "kv_gb": 0.113983154296875
+        }
+      }
+    },
+    {
+      "image_tokens_total": 1893,
+      "image_tokens_crops": 1620,
+      "global_image_tokens": 273,
+      "height_crop_num": 2,
+      "width_crop_num": 8,
+      "image_width": 5120,
+      "image_height": 1280,
+      "batch_size": 1,
+      "context_len": 1903,
+      "decode_steps": 100,
+      "analytic_only": true,
+      "decode": {
+        "analytic_tflops": 0.12712145919999998,
+        "analytic_eager_tflops": 0.12712145919999998,
+        "analytic_flash_tflops": 0.12712145919999998,
+        "vendor_tflops": null
+      },
+      "decode_stagecost": {
+        "decode_eager": {
+          "flops_tflops": 0.12712145919999998,
+          "flops_tensor_tflops": 0.127077376,
+          "flops_cuda_tflops": 4.4083199999999903e-05,
+          "io_tb": 0.0016874496000000001,
+          "arithmetic_intensity": 75.33348504156804,
+          "weights_gb": 0.6873130798339844,
+          "activations_gb": 0.0019579678773880005,
+          "kv_gb": 0.11455535888671875
+        },
+        "decode_flash": {
+          "flops_tflops": 0.12712145919999998,
+          "flops_tensor_tflops": 0.127077376,
+          "flops_cuda_tflops": 4.4083199999999903e-05,
+          "io_tb": 0.0009376895999999984,
+          "arithmetic_intensity": 135.56880571139982,
+          "weights_gb": 0.6873130798339844,
+          "activations_gb": 0.3445860296487808,
+          "kv_gb": 0.11455535888671875
+        }
+      }
+    },
+    {
+      "image_tokens_total": 1913,
+      "image_tokens_crops": 1640,
+      "global_image_tokens": 273,
+      "height_crop_num": 4,
+      "width_crop_num": 4,
+      "image_width": 2560,
+      "image_height": 2560,
+      "batch_size": 1,
+      "context_len": 1923,
+      "decode_steps": 100,
+      "analytic_only": true,
+      "decode": {
+        "analytic_tflops": 0.1272443392,
+        "analytic_eager_tflops": 0.1272443392,
+        "analytic_flash_tflops": 0.1272443392,
+        "vendor_tflops": null
+      },
+      "decode_stagecost": {
+        "decode_eager": {
+          "flops_tflops": 0.1272443392,
+          "flops_tensor_tflops": 0.127200256,
+          "flops_cuda_tflops": 4.4083199999999903e-05,
+          "io_tb": 0.0016951295999999999,
+          "arithmetic_intensity": 75.06466714993356,
+          "weights_gb": 0.6873130798339844,
+          "activations_gb": 0.001966908574104309,
+          "kv_gb": 0.11569976806640625
+        },
+        "decode_flash": {
+          "flops_tflops": 0.1272443392,
+          "flops_tensor_tflops": 0.127200256,
+          "flops_cuda_tflops": 4.4083199999999903e-05,
+          "io_tb": 0.0009376895999999984,
+          "arithmetic_intensity": 135.69985120875845,
+          "weights_gb": 0.6873130798339844,
+          "activations_gb": 0.3480192571878433,
+          "kv_gb": 0.11569976806640625
+        }
+      }
+    },
+    {
+      "image_tokens_total": 1983,
+      "image_tokens_crops": 1710,
+      "global_image_tokens": 273,
+      "height_crop_num": 1,
+      "width_crop_num": 17,
+      "image_width": 10880,
+      "image_height": 640,
+      "batch_size": 1,
+      "context_len": 1993,
+      "decode_steps": 100,
+      "analytic_only": true,
+      "decode": {
+        "analytic_tflops": 0.1276744192,
+        "analytic_eager_tflops": 0.1276744192,
+        "analytic_flash_tflops": 0.1276744192,
+        "vendor_tflops": null
+      },
+      "decode_stagecost": {
+        "decode_eager": {
+          "flops_tflops": 0.1276744192,
+          "flops_tensor_tflops": 0.12763033600000004,
+          "flops_cuda_tflops": 4.4083199999999903e-05,
+          "io_tb": 0.0017220096,
+          "arithmetic_intensity": 74.14268724169715,
+          "weights_gb": 0.6873130798339844,
+          "activations_gb": 0.001998201012611389,
+          "kv_gb": 0.1197052001953125
+        },
+        "decode_flash": {
+          "flops_tflops": 0.1276744192,
+          "flops_tensor_tflops": 0.12763033600000004,
+          "flops_cuda_tflops": 4.4083199999999903e-05,
+          "io_tb": 0.0009376895999999984,
+          "arithmetic_intensity": 136.15851044951359,
+          "weights_gb": 0.6873130798339844,
+          "activations_gb": 0.3600355535745621,
+          "kv_gb": 0.1197052001953125
+        }
+      }
+    },
+    {
+      "image_tokens_total": 2083,
+      "image_tokens_crops": 1810,
+      "global_image_tokens": 273,
+      "height_crop_num": 1,
+      "width_crop_num": 18,
+      "image_width": 11520,
+      "image_height": 640,
+      "batch_size": 1,
+      "context_len": 2093,
+      "decode_steps": 100,
+      "analytic_only": true,
+      "decode": {
+        "analytic_tflops": 0.12828881920000001,
+        "analytic_eager_tflops": 0.12828881920000001,
+        "analytic_flash_tflops": 0.12828881920000001,
+        "vendor_tflops": null
+      },
+      "decode_stagecost": {
+        "decode_eager": {
+          "flops_tflops": 0.12828881920000001,
+          "flops_tensor_tflops": 0.12824473599999997,
+          "flops_cuda_tflops": 4.4083199999999903e-05,
+          "io_tb": 0.0017604095999999997,
+          "arithmetic_intensity": 72.87441468167411,
+          "weights_gb": 0.6873130798339844,
+          "activations_gb": 0.002042904496192932,
+          "kv_gb": 0.12542724609375
+        },
+        "decode_flash": {
+          "flops_tflops": 0.12828881920000001,
+          "flops_tensor_tflops": 0.12824473599999997,
+          "flops_cuda_tflops": 4.4083199999999903e-05,
+          "io_tb": 0.0009376895999999984,
+          "arithmetic_intensity": 136.8137379363067,
+          "weights_gb": 0.6873130798339844,
+          "activations_gb": 0.3772016912698746,
+          "kv_gb": 0.12542724609375
+        }
+      }
+    },
+    {
+      "image_tokens_total": 2093,
+      "image_tokens_crops": 1820,
+      "global_image_tokens": 273,
+      "height_crop_num": 2,
+      "width_crop_num": 9,
+      "image_width": 5760,
+      "image_height": 1280,
+      "batch_size": 1,
+      "context_len": 2103,
+      "decode_steps": 100,
+      "analytic_only": true,
+      "decode": {
+        "analytic_tflops": 0.12835025919999998,
+        "analytic_eager_tflops": 0.12835025919999998,
+        "analytic_flash_tflops": 0.12835025919999998,
+        "vendor_tflops": null
+      },
+      "decode_stagecost": {
+        "decode_eager": {
+          "flops_tflops": 0.12835025919999998,
+          "flops_tensor_tflops": 0.128306176,
+          "flops_cuda_tflops": 4.4083199999999903e-05,
+          "io_tb": 0.0017642495999999998,
+          "arithmetic_intensity": 72.75062394799465,
+          "weights_gb": 0.6873130798339844,
+          "activations_gb": 0.0020473748445510864,
+          "kv_gb": 0.12599945068359375
+        },
+        "decode_flash": {
+          "flops_tflops": 0.12835025919999998,
+          "flops_tensor_tflops": 0.128306176,
+          "flops_cuda_tflops": 4.4083199999999903e-05,
+          "io_tb": 0.0009376895999999984,
+          "arithmetic_intensity": 136.87926068498595,
+          "weights_gb": 0.6873130798339844,
+          "activations_gb": 0.3789183050394058,
+          "kv_gb": 0.12599945068359375
+        }
+      }
+    },
+    {
+      "image_tokens_total": 2103,
+      "image_tokens_crops": 1830,
+      "global_image_tokens": 273,
+      "height_crop_num": 3,
+      "width_crop_num": 6,
+      "image_width": 3840,
+      "image_height": 1920,
+      "batch_size": 1,
+      "context_len": 2113,
+      "decode_steps": 100,
+      "analytic_only": true,
+      "decode": {
+        "analytic_tflops": 0.1284116992,
+        "analytic_eager_tflops": 0.1284116992,
+        "analytic_flash_tflops": 0.1284116992,
+        "vendor_tflops": null
+      },
+      "decode_stagecost": {
+        "decode_eager": {
+          "flops_tflops": 0.1284116992,
+          "flops_tensor_tflops": 0.128367616,
+          "flops_cuda_tflops": 4.4083199999999903e-05,
+          "io_tb": 0.0017680895999999998,
+          "arithmetic_intensity": 72.62737092056874,
+          "weights_gb": 0.6873130798339844,
+          "activations_gb": 0.0020518451929092407,
+          "kv_gb": 0.1265716552734375
+        },
+        "decode_flash": {
+          "flops_tflops": 0.1284116992,
+          "flops_tensor_tflops": 0.128367616,
+          "flops_cuda_tflops": 4.4083199999999903e-05,
+          "io_tb": 0.0009376895999999984,
+          "arithmetic_intensity": 136.9447834336653,
+          "weights_gb": 0.6873130798339844,
+          "activations_gb": 0.3806349188089371,
+          "kv_gb": 0.1265716552734375
+        }
+      }
+    },
+    {
+      "image_tokens_total": 2183,
+      "image_tokens_crops": 1910,
+      "global_image_tokens": 273,
+      "height_crop_num": 1,
+      "width_crop_num": 19,
+      "image_width": 12160,
+      "image_height": 640,
+      "batch_size": 1,
+      "context_len": 2193,
+      "decode_steps": 100,
+      "analytic_only": true,
+      "decode": {
+        "analytic_tflops": 0.12890321919999997,
+        "analytic_eager_tflops": 0.12890321919999997,
+        "analytic_flash_tflops": 0.12890321919999997,
+        "vendor_tflops": null
+      },
+      "decode_stagecost": {
+        "decode_eager": {
+          "flops_tflops": 0.12890321919999997,
+          "flops_tensor_tflops": 0.128859136,
+          "flops_cuda_tflops": 4.4083199999999903e-05,
+          "io_tb": 0.0017988096000000004,
+          "arithmetic_intensity": 71.6602908946005,
+          "weights_gb": 0.6873130798339844,
+          "activations_gb": 0.002087607979774475,
+          "kv_gb": 0.1311492919921875
+        },
+        "decode_flash": {
+          "flops_tflops": 0.12890321919999997,
+          "flops_tensor_tflops": 0.128859136,
+          "flops_cuda_tflops": 4.4083199999999903e-05,
+          "io_tb": 0.0009376895999999984,
+          "arithmetic_intensity": 137.46896542309972,
+          "weights_gb": 0.6873130798339844,
+          "activations_gb": 0.3943678289651871,
+          "kv_gb": 0.1311492919921875
+        }
+      }
+    },
+    {
+      "image_tokens_total": 2283,
+      "image_tokens_crops": 2010,
+      "global_image_tokens": 273,
+      "height_crop_num": 1,
+      "width_crop_num": 20,
+      "image_width": 12800,
+      "image_height": 640,
+      "batch_size": 1,
+      "context_len": 2293,
+      "decode_steps": 100,
+      "analytic_only": true,
+      "decode": {
+        "analytic_tflops": 0.12951761920000002,
+        "analytic_eager_tflops": 0.12951761920000002,
+        "analytic_flash_tflops": 0.12951761920000002,
+        "vendor_tflops": null
+      },
+      "decode_stagecost": {
+        "decode_eager": {
+          "flops_tflops": 0.12951761920000002,
+          "flops_tensor_tflops": 0.129473536,
+          "flops_cuda_tflops": 4.4083199999999903e-05,
+          "io_tb": 0.0018372095999999996,
+          "arithmetic_intensity": 70.49692054733441,
+          "weights_gb": 0.6873130798339844,
+          "activations_gb": 0.002132311463356018,
+          "kv_gb": 0.136871337890625
+        },
+        "decode_flash": {
+          "flops_tflops": 0.12951761920000002,
+          "flops_tensor_tflops": 0.129473536,
+          "flops_cuda_tflops": 4.4083199999999903e-05,
+          "io_tb": 0.0009376895999999984,
+          "arithmetic_intensity": 138.12419290989283,
+          "weights_gb": 0.6873130798339844,
+          "activations_gb": 0.4115339666604996,
+          "kv_gb": 0.136871337890625
+        }
+      }
+    },
+    {
+      "image_tokens_total": 2293,
+      "image_tokens_crops": 2020,
+      "global_image_tokens": 273,
+      "height_crop_num": 2,
+      "width_crop_num": 10,
+      "image_width": 6400,
+      "image_height": 1280,
+      "batch_size": 1,
+      "context_len": 2303,
+      "decode_steps": 100,
+      "analytic_only": true,
+      "decode": {
+        "analytic_tflops": 0.12957905919999999,
+        "analytic_eager_tflops": 0.12957905919999999,
+        "analytic_flash_tflops": 0.12957905919999999,
+        "vendor_tflops": null
+      },
+      "decode_stagecost": {
+        "decode_eager": {
+          "flops_tflops": 0.12957905919999999,
+          "flops_tensor_tflops": 0.12953497600000002,
+          "flops_cuda_tflops": 4.4083199999999903e-05,
+          "io_tb": 0.0018410495999999995,
+          "arithmetic_intensity": 70.38325268368654,
+          "weights_gb": 0.6873130798339844,
+          "activations_gb": 0.0021367818117141724,
+          "kv_gb": 0.13744354248046875
+        },
+        "decode_flash": {
+          "flops_tflops": 0.12957905919999999,
+          "flops_tensor_tflops": 0.12953497600000002,
+          "flops_cuda_tflops": 4.4083199999999903e-05,
+          "io_tb": 0.0009376895999999984,
+          "arithmetic_intensity": 138.1897156585721,
+          "weights_gb": 0.6873130798339844,
+          "activations_gb": 0.4132505804300308,
+          "kv_gb": 0.13744354248046875
+        }
+      }
+    },
+    {
+      "image_tokens_total": 2313,
+      "image_tokens_crops": 2040,
+      "global_image_tokens": 273,
+      "height_crop_num": 4,
+      "width_crop_num": 5,
+      "image_width": 3200,
+      "image_height": 2560,
+      "batch_size": 1,
+      "context_len": 2323,
+      "decode_steps": 100,
+      "analytic_only": true,
+      "decode": {
+        "analytic_tflops": 0.1297019392,
+        "analytic_eager_tflops": 0.1297019392,
+        "analytic_flash_tflops": 0.1297019392,
+        "vendor_tflops": null
+      },
+      "decode_stagecost": {
+        "decode_eager": {
+          "flops_tflops": 0.1297019392,
+          "flops_tensor_tflops": 0.12965785600000002,
+          "flops_cuda_tflops": 4.4083199999999903e-05,
+          "io_tb": 0.0018487295999999995,
+          "arithmetic_intensity": 70.15733355489091,
+          "weights_gb": 0.6873130798339844,
+          "activations_gb": 0.002145722508430481,
+          "kv_gb": 0.13858795166015625
+        },
+        "decode_flash": {
+          "flops_tflops": 0.1297019392,
+          "flops_tensor_tflops": 0.12965785600000002,
+          "flops_cuda_tflops": 4.4083199999999903e-05,
+          "io_tb": 0.0009376895999999984,
+          "arithmetic_intensity": 138.32076115593074,
+          "weights_gb": 0.6873130798339844,
+          "activations_gb": 0.4166838079690933,
+          "kv_gb": 0.13858795166015625
+        }
+      }
+    },
+    {
+      "image_tokens_total": 2383,
+      "image_tokens_crops": 2110,
+      "global_image_tokens": 273,
+      "height_crop_num": 1,
+      "width_crop_num": 21,
+      "image_width": 13440,
+      "image_height": 640,
+      "batch_size": 1,
+      "context_len": 2393,
+      "decode_steps": 100,
+      "analytic_only": true,
+      "decode": {
+        "analytic_tflops": 0.13013201919999998,
+        "analytic_eager_tflops": 0.13013201919999998,
+        "analytic_flash_tflops": 0.13013201919999998,
+        "vendor_tflops": null
+      },
+      "decode_stagecost": {
+        "decode_eager": {
+          "flops_tflops": 0.13013201919999998,
+          "flops_tensor_tflops": 0.13008793600000002,
+          "flops_cuda_tflops": 4.4083199999999903e-05,
+          "io_tb": 0.0018756096,
+          "arithmetic_intensity": 69.3811863620233,
+          "weights_gb": 0.6873130798339844,
+          "activations_gb": 0.002177014946937561,
+          "kv_gb": 0.1425933837890625
+        },
+        "decode_flash": {
+          "flops_tflops": 0.13013201919999998,
+          "flops_tensor_tflops": 0.13008793600000002,
+          "flops_cuda_tflops": 4.4083199999999903e-05,
+          "io_tb": 0.0009376895999999984,
+          "arithmetic_intensity": 138.77942039668585,
+          "weights_gb": 0.6873130798339844,
+          "activations_gb": 0.4287001043558121,
+          "kv_gb": 0.1425933837890625
+        }
+      }
+    },
+    {
+      "image_tokens_total": 2403,
+      "image_tokens_crops": 2130,
+      "global_image_tokens": 273,
+      "height_crop_num": 3,
+      "width_crop_num": 7,
+      "image_width": 4480,
+      "image_height": 1920,
+      "batch_size": 1,
+      "context_len": 2413,
+      "decode_steps": 100,
+      "analytic_only": true,
+      "decode": {
+        "analytic_tflops": 0.13025489919999997,
+        "analytic_eager_tflops": 0.13025489919999997,
+        "analytic_flash_tflops": 0.13025489919999997,
+        "vendor_tflops": null
+      },
+      "decode_stagecost": {
+        "decode_eager": {
+          "flops_tflops": 0.13025489919999997,
+          "flops_tensor_tflops": 0.13021081599999998,
+          "flops_cuda_tflops": 4.4083199999999903e-05,
+          "io_tb": 0.0018832896000000002,
+          "arithmetic_intensity": 69.16349944267729,
+          "weights_gb": 0.6873130798339844,
+          "activations_gb": 0.0021859556436538696,
+          "kv_gb": 0.14373779296875
+        },
+        "decode_flash": {
+          "flops_tflops": 0.13025489919999997,
+          "flops_tensor_tflops": 0.13021081599999998,
+          "flops_cuda_tflops": 4.4083199999999903e-05,
+          "io_tb": 0.0009376895999999984,
+          "arithmetic_intensity": 138.91046589404445,
+          "weights_gb": 0.6873130798339844,
+          "activations_gb": 0.4321333318948746,
+          "kv_gb": 0.14373779296875
+        }
+      }
+    },
+    {
+      "image_tokens_total": 2483,
+      "image_tokens_crops": 2210,
+      "global_image_tokens": 273,
+      "height_crop_num": 1,
+      "width_crop_num": 22,
+      "image_width": 14080,
+      "image_height": 640,
+      "batch_size": 1,
+      "context_len": 2493,
+      "decode_steps": 100,
+      "analytic_only": true,
+      "decode": {
+        "analytic_tflops": 0.13074641920000002,
+        "analytic_eager_tflops": 0.13074641920000002,
+        "analytic_flash_tflops": 0.13074641920000002,
+        "vendor_tflops": null
+      },
+      "decode_stagecost": {
+        "decode_eager": {
+          "flops_tflops": 0.13074641920000002,
+          "flops_tensor_tflops": 0.13070233599999997,
+          "flops_cuda_tflops": 4.4083199999999903e-05,
+          "io_tb": 0.0019140096000000001,
+          "arithmetic_intensity": 68.31022122355081,
+          "weights_gb": 0.6873130798339844,
+          "activations_gb": 0.002221718430519104,
+          "kv_gb": 0.1483154296875
+        },
+        "decode_flash": {
+          "flops_tflops": 0.13074641920000002,
+          "flops_tensor_tflops": 0.13070233599999997,
+          "flops_cuda_tflops": 4.4083199999999903e-05,
+          "io_tb": 0.0009376895999999984,
+          "arithmetic_intensity": 139.434647883479,
+          "weights_gb": 0.6873130798339844,
+          "activations_gb": 0.4458662420511246,
+          "kv_gb": 0.1483154296875
+        }
+      }
+    },
+    {
+      "image_tokens_total": 2493,
+      "image_tokens_crops": 2220,
+      "global_image_tokens": 273,
+      "height_crop_num": 2,
+      "width_crop_num": 11,
+      "image_width": 7040,
+      "image_height": 1280,
+      "batch_size": 1,
+      "context_len": 2503,
+      "decode_steps": 100,
+      "analytic_only": true,
+      "decode": {
+        "analytic_tflops": 0.1308078592,
+        "analytic_eager_tflops": 0.1308078592,
+        "analytic_flash_tflops": 0.1308078592,
+        "vendor_tflops": null
+      },
+      "decode_stagecost": {
+        "decode_eager": {
+          "flops_tflops": 0.1308078592,
+          "flops_tensor_tflops": 0.13076377600000003,
+          "flops_cuda_tflops": 4.4083199999999903e-05,
+          "io_tb": 0.0019178495999999999,
+          "arithmetic_intensity": 68.20548347482513,
+          "weights_gb": 0.6873130798339844,
+          "activations_gb": 0.0022261887788772583,
+          "kv_gb": 0.14888763427734375
+        },
+        "decode_flash": {
+          "flops_tflops": 0.1308078592,
+          "flops_tensor_tflops": 0.13076377600000003,
+          "flops_cuda_tflops": 4.4083199999999903e-05,
+          "io_tb": 0.0009376895999999984,
+          "arithmetic_intensity": 139.50017063215824,
+          "weights_gb": 0.6873130798339844,
+          "activations_gb": 0.4475828558206558,
+          "kv_gb": 0.14888763427734375
+        }
+      }
+    },
+    {
+      "image_tokens_total": 2583,
+      "image_tokens_crops": 2310,
+      "global_image_tokens": 273,
+      "height_crop_num": 1,
+      "width_crop_num": 23,
+      "image_width": 14720,
+      "image_height": 640,
+      "batch_size": 1,
+      "context_len": 2593,
+      "decode_steps": 100,
+      "analytic_only": true,
+      "decode": {
+        "analytic_tflops": 0.1313608192,
+        "analytic_eager_tflops": 0.1313608192,
+        "analytic_flash_tflops": 0.1313608192,
+        "vendor_tflops": null
+      },
+      "decode_stagecost": {
+        "decode_eager": {
+          "flops_tflops": 0.1313608192,
+          "flops_tensor_tflops": 0.131316736,
+          "flops_cuda_tflops": 4.4083199999999903e-05,
+          "io_tb": 0.0019524096000000002,
+          "arithmetic_intensity": 67.28138357852778,
+          "weights_gb": 0.6873130798339844,
+          "activations_gb": 0.002266421914100647,
+          "kv_gb": 0.1540374755859375
+        },
+        "decode_flash": {
+          "flops_tflops": 0.1313608192,
+          "flops_tensor_tflops": 0.131316736,
+          "flops_cuda_tflops": 4.4083199999999903e-05,
+          "io_tb": 0.0009376895999999984,
+          "arithmetic_intensity": 140.08987537027204,
+          "weights_gb": 0.6873130798339844,
+          "activations_gb": 0.4630323797464371,
+          "kv_gb": 0.1540374755859375
+        }
+      }
+    },
+    {
+      "image_tokens_total": 2683,
+      "image_tokens_crops": 2410,
+      "global_image_tokens": 273,
+      "height_crop_num": 1,
+      "width_crop_num": 24,
+      "image_width": 15360,
+      "image_height": 640,
+      "batch_size": 1,
+      "context_len": 2693,
+      "decode_steps": 100,
+      "analytic_only": true,
+      "decode": {
+        "analytic_tflops": 0.1319752192,
+        "analytic_eager_tflops": 0.1319752192,
+        "analytic_flash_tflops": 0.1319752192,
+        "vendor_tflops": null
+      },
+      "decode_stagecost": {
+        "decode_eager": {
+          "flops_tflops": 0.1319752192,
+          "flops_tensor_tflops": 0.13193113599999998,
+          "flops_cuda_tflops": 4.4083199999999903e-05,
+          "io_tb": 0.0019908096,
+          "arithmetic_intensity": 66.29223568140318,
+          "weights_gb": 0.6873130798339844,
+          "activations_gb": 0.00231112539768219,
+          "kv_gb": 0.159759521484375
+        },
+        "decode_flash": {
+          "flops_tflops": 0.1319752192,
+          "flops_tensor_tflops": 0.13193113599999998,
+          "flops_cuda_tflops": 4.4083199999999903e-05,
+          "io_tb": 0.0009376895999999984,
+          "arithmetic_intensity": 140.7451028570651,
+          "weights_gb": 0.6873130798339844,
+          "activations_gb": 0.4801985174417496,
+          "kv_gb": 0.159759521484375
+        }
+      }
+    },
+    {
+      "image_tokens_total": 2693,
+      "image_tokens_crops": 2420,
+      "global_image_tokens": 273,
+      "height_crop_num": 2,
+      "width_crop_num": 12,
+      "image_width": 7680,
+      "image_height": 1280,
+      "batch_size": 1,
+      "context_len": 2703,
+      "decode_steps": 100,
+      "analytic_only": true,
+      "decode": {
+        "analytic_tflops": 0.1320366592,
+        "analytic_eager_tflops": 0.1320366592,
+        "analytic_flash_tflops": 0.1320366592,
+        "vendor_tflops": null
+      },
+      "decode_stagecost": {
+        "decode_eager": {
+          "flops_tflops": 0.1320366592,
+          "flops_tensor_tflops": 0.13199257600000003,
+          "flops_cuda_tflops": 4.4083199999999903e-05,
+          "io_tb": 0.0019946495999999996,
+          "arithmetic_intensity": 66.19541557574826,
+          "weights_gb": 0.6873130798339844,
+          "activations_gb": 0.0023155957460403442,
+          "kv_gb": 0.16033172607421875
+        },
+        "decode_flash": {
+          "flops_tflops": 0.1320366592,
+          "flops_tensor_tflops": 0.13199257600000003,
+          "flops_cuda_tflops": 4.4083199999999903e-05,
+          "io_tb": 0.0009376895999999984,
+          "arithmetic_intensity": 140.8106256057444,
+          "weights_gb": 0.6873130798339844,
+          "activations_gb": 0.4819151312112808,
+          "kv_gb": 0.16033172607421875
+        }
+      }
+    },
+    {
+      "image_tokens_total": 2703,
+      "image_tokens_crops": 2430,
+      "global_image_tokens": 273,
+      "height_crop_num": 3,
+      "width_crop_num": 8,
+      "image_width": 5120,
+      "image_height": 1920,
+      "batch_size": 1,
+      "context_len": 2713,
+      "decode_steps": 100,
+      "analytic_only": true,
+      "decode": {
+        "analytic_tflops": 0.13209809919999999,
+        "analytic_eager_tflops": 0.13209809919999999,
+        "analytic_flash_tflops": 0.13209809919999999,
+        "vendor_tflops": null
+      },
+      "decode_stagecost": {
+        "decode_eager": {
+          "flops_tflops": 0.13209809919999999,
+          "flops_tensor_tflops": 0.13205401600000002,
+          "flops_cuda_tflops": 4.4083199999999903e-05,
+          "io_tb": 0.0019984896000000006,
+          "arithmetic_intensity": 66.0989675402864,
+          "weights_gb": 0.6873130798339844,
+          "activations_gb": 0.0023200660943984985,
+          "kv_gb": 0.1609039306640625
+        },
+        "decode_flash": {
+          "flops_tflops": 0.13209809919999999,
+          "flops_tensor_tflops": 0.13205401600000002,
+          "flops_cuda_tflops": 4.4083199999999903e-05,
+          "io_tb": 0.0009376895999999984,
+          "arithmetic_intensity": 140.8761483544237,
+          "weights_gb": 0.6873130798339844,
+          "activations_gb": 0.4836317449808121,
+          "kv_gb": 0.1609039306640625
+        }
+      }
+    },
+    {
+      "image_tokens_total": 2713,
+      "image_tokens_crops": 2440,
+      "global_image_tokens": 273,
+      "height_crop_num": 4,
+      "width_crop_num": 6,
+      "image_width": 3840,
+      "image_height": 2560,
+      "batch_size": 1,
+      "context_len": 2723,
+      "decode_steps": 100,
+      "analytic_only": true,
+      "decode": {
+        "analytic_tflops": 0.13215953919999998,
+        "analytic_eager_tflops": 0.13215953919999998,
+        "analytic_flash_tflops": 0.13215953919999998,
+        "vendor_tflops": null
+      },
+      "decode_stagecost": {
+        "decode_eager": {
+          "flops_tflops": 0.13215953919999998,
+          "flops_tensor_tflops": 0.132115456,
+          "flops_cuda_tflops": 4.4083199999999903e-05,
+          "io_tb": 0.0020023296,
+          "arithmetic_intensity": 66.00288943438682,
+          "weights_gb": 0.6873130798339844,
+          "activations_gb": 0.002324536442756653,
+          "kv_gb": 0.16147613525390625
+        },
+        "decode_flash": {
+          "flops_tflops": 0.13215953919999998,
+          "flops_tensor_tflops": 0.132115456,
+          "flops_cuda_tflops": 4.4083199999999903e-05,
+          "io_tb": 0.0009376895999999984,
+          "arithmetic_intensity": 140.941671103103,
+          "weights_gb": 0.6873130798339844,
+          "activations_gb": 0.4853483587503433,
+          "kv_gb": 0.16147613525390625
+        }
+      }
+    },
+    {
+      "image_tokens_total": 2783,
+      "image_tokens_crops": 2510,
+      "global_image_tokens": 273,
+      "height_crop_num": 1,
+      "width_crop_num": 25,
+      "image_width": 16000,
+      "image_height": 640,
+      "batch_size": 1,
+      "context_len": 2793,
+      "decode_steps": 100,
+      "analytic_only": true,
+      "decode": {
+        "analytic_tflops": 0.13258961919999998,
+        "analytic_eager_tflops": 0.13258961919999998,
+        "analytic_flash_tflops": 0.13258961919999998,
+        "vendor_tflops": null
+      },
+      "decode_stagecost": {
+        "decode_eager": {
+          "flops_tflops": 0.13258961919999998,
+          "flops_tensor_tflops": 0.132545536,
+          "flops_cuda_tflops": 4.4083199999999903e-05,
+          "io_tb": 0.0020292096000000008,
+          "arithmetic_intensity": 65.34052431054926,
+          "weights_gb": 0.6873130798339844,
+          "activations_gb": 0.002355828881263733,
+          "kv_gb": 0.1654815673828125
+        },
+        "decode_flash": {
+          "flops_tflops": 0.13258961919999998,
+          "flops_tensor_tflops": 0.132545536,
+          "flops_cuda_tflops": 4.4083199999999903e-05,
+          "io_tb": 0.0009376895999999984,
+          "arithmetic_intensity": 141.40033034385814,
+          "weights_gb": 0.6873130798339844,
+          "activations_gb": 0.4973646551370621,
+          "kv_gb": 0.1654815673828125
+        }
+      }
+    },
+    {
+      "image_tokens_total": 2823,
+      "image_tokens_crops": 2550,
+      "global_image_tokens": 273,
+      "height_crop_num": 5,
+      "width_crop_num": 5,
+      "image_width": 3200,
+      "image_height": 3200,
+      "batch_size": 1,
+      "context_len": 2833,
+      "decode_steps": 100,
+      "analytic_only": true,
+      "decode": {
+        "analytic_tflops": 0.1328353792,
+        "analytic_eager_tflops": 0.1328353792,
+        "analytic_flash_tflops": 0.1328353792,
+        "vendor_tflops": null
+      },
+      "decode_stagecost": {
+        "decode_eager": {
+          "flops_tflops": 0.1328353792,
+          "flops_tensor_tflops": 0.132791296,
+          "flops_cuda_tflops": 4.4083199999999903e-05,
+          "io_tb": 0.0020445696000000006,
+          "arithmetic_intensity": 64.96984949790897,
+          "weights_gb": 0.6873130798339844,
+          "activations_gb": 0.00237371027469635,
+          "kv_gb": 0.1677703857421875
+        },
+        "decode_flash": {
+          "flops_tflops": 0.1328353792,
+          "flops_tensor_tflops": 0.132791296,
+          "flops_cuda_tflops": 4.4083199999999903e-05,
+          "io_tb": 0.0009376895999999984,
+          "arithmetic_intensity": 141.6624213385754,
+          "weights_gb": 0.6873130798339844,
+          "activations_gb": 0.5042311102151871,
+          "kv_gb": 0.1677703857421875
+        }
+      }
+    },
+    {
+      "image_tokens_total": 2883,
+      "image_tokens_crops": 2610,
+      "global_image_tokens": 273,
+      "height_crop_num": 1,
+      "width_crop_num": 26,
+      "image_width": 16640,
+      "image_height": 640,
+      "batch_size": 1,
+      "context_len": 2893,
+      "decode_steps": 100,
+      "analytic_only": true,
+      "decode": {
+        "analytic_tflops": 0.13320401919999997,
+        "analytic_eager_tflops": 0.13320401919999997,
+        "analytic_flash_tflops": 0.13320401919999997,
+        "vendor_tflops": null
+      },
+      "decode_stagecost": {
+        "decode_eager": {
+          "flops_tflops": 0.13320401919999997,
+          "flops_tensor_tflops": 0.13315993599999998,
+          "flops_cuda_tflops": 4.4083199999999903e-05,
+          "io_tb": 0.002067609600000001,
+          "arithmetic_intensity": 64.42416363321195,
+          "weights_gb": 0.6873130798339844,
+          "activations_gb": 0.002400532364845276,
+          "kv_gb": 0.17120361328125
+        },
+        "decode_flash": {
+          "flops_tflops": 0.13320401919999997,
+          "flops_tensor_tflops": 0.13315993599999998,
+          "flops_cuda_tflops": 4.4083199999999903e-05,
+          "io_tb": 0.0009376895999999984,
+          "arithmetic_intensity": 142.0555578306512,
+          "weights_gb": 0.6873130798339844,
+          "activations_gb": 0.5145307928323746,
+          "kv_gb": 0.17120361328125
+        }
+      }
+    },
+    {
+      "image_tokens_total": 2893,
+      "image_tokens_crops": 2620,
+      "global_image_tokens": 273,
+      "height_crop_num": 2,
+      "width_crop_num": 13,
+      "image_width": 8320,
+      "image_height": 1280,
+      "batch_size": 1,
+      "context_len": 2903,
+      "decode_steps": 100,
+      "analytic_only": true,
+      "decode": {
+        "analytic_tflops": 0.1332654592,
+        "analytic_eager_tflops": 0.1332654592,
+        "analytic_flash_tflops": 0.1332654592,
+        "vendor_tflops": null
+      },
+      "decode_stagecost": {
+        "decode_eager": {
+          "flops_tflops": 0.1332654592,
+          "flops_tensor_tflops": 0.133221376,
+          "flops_cuda_tflops": 4.4083199999999903e-05,
+          "io_tb": 0.0020714496,
+          "arithmetic_intensity": 64.33439616392307,
+          "weights_gb": 0.6873130798339844,
+          "activations_gb": 0.00240500271320343,
+          "kv_gb": 0.17177581787109375
+        },
+        "decode_flash": {
+          "flops_tflops": 0.1332654592,
+          "flops_tensor_tflops": 0.133221376,
+          "flops_cuda_tflops": 4.4083199999999903e-05,
+          "io_tb": 0.0009376895999999984,
+          "arithmetic_intensity": 142.12108057933054,
+          "weights_gb": 0.6873130798339844,
+          "activations_gb": 0.5162474066019058,
+          "kv_gb": 0.17177581787109375
+        }
+      }
+    },
+    {
+      "image_tokens_total": 2983,
+      "image_tokens_crops": 2710,
+      "global_image_tokens": 273,
+      "height_crop_num": 1,
+      "width_crop_num": 27,
+      "image_width": 17280,
+      "image_height": 640,
+      "batch_size": 1,
+      "context_len": 2993,
+      "decode_steps": 100,
+      "analytic_only": true,
+      "decode": {
+        "analytic_tflops": 0.13381841919999998,
+        "analytic_eager_tflops": 0.13381841919999998,
+        "analytic_flash_tflops": 0.13381841919999998,
+        "vendor_tflops": null
+      },
+      "decode_stagecost": {
+        "decode_eager": {
+          "flops_tflops": 0.13381841919999998,
+          "flops_tensor_tflops": 0.133774336,
+          "flops_cuda_tflops": 4.4083199999999903e-05,
+          "io_tb": 0.0021060096,
+          "arithmetic_intensity": 63.54121994505627,
+          "weights_gb": 0.6873130798339844,
+          "activations_gb": 0.002445235848426819,
+          "kv_gb": 0.1769256591796875
+        },
+        "decode_flash": {
+          "flops_tflops": 0.13381841919999998,
+          "flops_tensor_tflops": 0.133774336,
+          "flops_cuda_tflops": 4.4083199999999903e-05,
+          "io_tb": 0.0009376895999999984,
+          "arithmetic_intensity": 142.7107853174443,
+          "weights_gb": 0.6873130798339844,
+          "activations_gb": 0.5316969305276871,
+          "kv_gb": 0.1769256591796875
+        }
+      }
+    },
+    {
+      "image_tokens_total": 3003,
+      "image_tokens_crops": 2730,
+      "global_image_tokens": 273,
+      "height_crop_num": 3,
+      "width_crop_num": 9,
+      "image_width": 5760,
+      "image_height": 1920,
+      "batch_size": 1,
+      "context_len": 3013,
+      "decode_steps": 100,
+      "analytic_only": true,
+      "decode": {
+        "analytic_tflops": 0.1339412992,
+        "analytic_eager_tflops": 0.1339412992,
+        "analytic_flash_tflops": 0.1339412992,
+        "vendor_tflops": null
+      },
+      "decode_stagecost": {
+        "decode_eager": {
+          "flops_tflops": 0.1339412992,
+          "flops_tensor_tflops": 0.133897216,
+          "flops_cuda_tflops": 4.4083199999999903e-05,
+          "io_tb": 0.0021136896,
+          "arithmetic_intensity": 63.36848097279752,
+          "weights_gb": 0.6873130798339844,
+          "activations_gb": 0.0024541765451431274,
+          "kv_gb": 0.178070068359375
+        },
+        "decode_flash": {
+          "flops_tflops": 0.1339412992,
+          "flops_tensor_tflops": 0.133897216,
+          "flops_cuda_tflops": 4.4083199999999903e-05,
+          "io_tb": 0.0009376895999999984,
+          "arithmetic_intensity": 142.84183081480293,
+          "weights_gb": 0.6873130798339844,
+          "activations_gb": 0.5351301580667496,
+          "kv_gb": 0.178070068359375
+        }
+      }
+    },
+    {
+      "image_tokens_total": 3083,
+      "image_tokens_crops": 2810,
+      "global_image_tokens": 273,
+      "height_crop_num": 1,
+      "width_crop_num": 28,
+      "image_width": 17920,
+      "image_height": 640,
+      "batch_size": 1,
+      "context_len": 3093,
+      "decode_steps": 100,
+      "analytic_only": true,
+      "decode": {
+        "analytic_tflops": 0.1344328192,
+        "analytic_eager_tflops": 0.1344328192,
+        "analytic_flash_tflops": 0.1344328192,
+        "vendor_tflops": null
+      },
+      "decode_stagecost": {
+        "decode_eager": {
+          "flops_tflops": 0.1344328192,
+          "flops_tensor_tflops": 0.13438873599999998,
+          "flops_cuda_tflops": 4.4083199999999903e-05,
+          "io_tb": 0.0021444096000000005,
+          "arithmetic_intensity": 62.68989804932787,
+          "weights_gb": 0.6873130798339844,
+          "activations_gb": 0.002489939332008362,
+          "kv_gb": 0.182647705078125
+        },
+        "decode_flash": {
+          "flops_tflops": 0.1344328192,
+          "flops_tensor_tflops": 0.13438873599999998,
+          "flops_cuda_tflops": 4.4083199999999903e-05,
+          "io_tb": 0.0009376895999999984,
+          "arithmetic_intensity": 143.36601280423739,
+          "weights_gb": 0.6873130798339844,
+          "activations_gb": 0.5488630682229996,
+          "kv_gb": 0.182647705078125
+        }
+      }
+    },
+    {
+      "image_tokens_total": 3093,
+      "image_tokens_crops": 2820,
+      "global_image_tokens": 273,
+      "height_crop_num": 2,
+      "width_crop_num": 14,
+      "image_width": 8960,
+      "image_height": 1280,
+      "batch_size": 1,
+      "context_len": 3103,
+      "decode_steps": 100,
+      "analytic_only": true,
+      "decode": {
+        "analytic_tflops": 0.1344942592,
+        "analytic_eager_tflops": 0.1344942592,
+        "analytic_flash_tflops": 0.1344942592,
+        "vendor_tflops": null
+      },
+      "decode_stagecost": {
+        "decode_eager": {
+          "flops_tflops": 0.1344942592,
+          "flops_tensor_tflops": 0.134450176,
+          "flops_cuda_tflops": 4.4083199999999903e-05,
+          "io_tb": 0.0021482496,
+          "arithmetic_intensity": 62.606439773106445,
+          "weights_gb": 0.6873130798339844,
+          "activations_gb": 0.002494409680366516,
+          "kv_gb": 0.18321990966796875
+        },
+        "decode_flash": {
+          "flops_tflops": 0.1344942592,
+          "flops_tensor_tflops": 0.134450176,
+          "flops_cuda_tflops": 4.4083199999999903e-05,
+          "io_tb": 0.0009376895999999984,
+          "arithmetic_intensity": 143.4315355529167,
+          "weights_gb": 0.6873130798339844,
+          "activations_gb": 0.5505796819925308,
+          "kv_gb": 0.18321990966796875
+        }
+      }
+    },
+    {
+      "image_tokens_total": 3113,
+      "image_tokens_crops": 2840,
+      "global_image_tokens": 273,
+      "height_crop_num": 4,
+      "width_crop_num": 7,
+      "image_width": 4480,
+      "image_height": 2560,
+      "batch_size": 1,
+      "context_len": 3123,
+      "decode_steps": 100,
+      "analytic_only": true,
+      "decode": {
+        "analytic_tflops": 0.13461713919999999,
+        "analytic_eager_tflops": 0.13461713919999999,
+        "analytic_flash_tflops": 0.13461713919999999,
+        "vendor_tflops": null
+      },
+      "decode_stagecost": {
+        "decode_eager": {
+          "flops_tflops": 0.13461713919999999,
+          "flops_tensor_tflops": 0.13457305600000002,
+          "flops_cuda_tflops": 4.4083199999999903e-05,
+          "io_tb": 0.0021559296,
+          "arithmetic_intensity": 62.44041512301699,
+          "weights_gb": 0.6873130798339844,
+          "activations_gb": 0.0025033503770828247,
+          "kv_gb": 0.18436431884765625
+        },
+        "decode_flash": {
+          "flops_tflops": 0.13461713919999999,
+          "flops_tensor_tflops": 0.13457305600000002,
+          "flops_cuda_tflops": 4.4083199999999903e-05,
+          "io_tb": 0.0009376895999999984,
+          "arithmetic_intensity": 143.5625810502753,
+          "weights_gb": 0.6873130798339844,
+          "activations_gb": 0.5540129095315933,
+          "kv_gb": 0.18436431884765625
+        }
+      }
+    },
+    {
+      "image_tokens_total": 3183,
+      "image_tokens_crops": 2910,
+      "global_image_tokens": 273,
+      "height_crop_num": 1,
+      "width_crop_num": 29,
+      "image_width": 18560,
+      "image_height": 640,
+      "batch_size": 1,
+      "context_len": 3193,
+      "decode_steps": 100,
+      "analytic_only": true,
+      "decode": {
+        "analytic_tflops": 0.13504721919999998,
+        "analytic_eager_tflops": 0.13504721919999998,
+        "analytic_flash_tflops": 0.13504721919999998,
+        "vendor_tflops": null
+      },
+      "decode_stagecost": {
+        "decode_eager": {
+          "flops_tflops": 0.13504721919999998,
+          "flops_tensor_tflops": 0.135003136,
+          "flops_cuda_tflops": 4.4083199999999903e-05,
+          "io_tb": 0.0021828096,
+          "arithmetic_intensity": 61.86852907372222,
+          "weights_gb": 0.6873130798339844,
+          "activations_gb": 0.002534642815589905,
+          "kv_gb": 0.1883697509765625
+        },
+        "decode_flash": {
+          "flops_tflops": 0.13504721919999998,
+          "flops_tensor_tflops": 0.135003136,
+          "flops_cuda_tflops": 4.4083199999999903e-05,
+          "io_tb": 0.0009376895999999984,
+          "arithmetic_intensity": 144.02124029103044,
+          "weights_gb": 0.6873130798339844,
+          "activations_gb": 0.5660292059183121,
+          "kv_gb": 0.1883697509765625
+        }
+      }
+    }
+  ]
+}

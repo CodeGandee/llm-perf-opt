@@ -1,7 +1,7 @@
 {
   "description": "Required TFLOPs/s as a function of image token length to satisfy a given time-to-first-token (TTFT) requirement for the vision+prefill stage, derived from e2e_vision_prefill_sweep.json.",
   "model_id": "deepseek-ocr-3b",
-  "input_sweep_path": "/workspace/code/llm-perf-opt/reports/sweep/20251127-132944/e2e_vision_prefill/e2e_vision_prefill_sweep.json",
+  "input_sweep_path": "/workspace/code/llm-perf-opt/tmp/sweep/20251127-160058/e2e_vision_prefill/e2e_vision_prefill_sweep.json",
   "ttft_seconds": 1.0,
   "num_points": 53,
   "points": [
@@ -15,7 +15,7 @@
       "image_height": 640,
       "batch_size": 1,
       "context_len": 493,
-      "decode_steps": 64,
+      "decode_steps": 100,
       "analytic_only": false,
       "prefill": {
         "analytic_tflops": 2.496869662208002,
@@ -45,7 +45,8 @@
           "kv_gb": 0.028209686279296875
         },
         "prefill_vendor": {
-          "flops_tflops": 2.49725842176
+          "flops_tflops": 2.49725842176,
+          "kv_gb": 0.028209686279296875
         }
       },
       "required_tflops_per_s": {
@@ -64,7 +65,7 @@
       "image_height": 640,
       "batch_size": 1,
       "context_len": 593,
-      "decode_steps": 64,
+      "decode_steps": 100,
       "analytic_only": false,
       "prefill": {
         "analytic_tflops": 3.0097141498879982,
@@ -94,7 +95,8 @@
           "kv_gb": 0.033931732177734375
         },
         "prefill_vendor": {
-          "flops_tflops": 3.006899869184
+          "flops_tflops": 3.006899869184,
+          "kv_gb": 0.033931732177734375
         }
       },
       "required_tflops_per_s": {
@@ -113,7 +115,7 @@
       "image_height": 640,
       "batch_size": 1,
       "context_len": 693,
-      "decode_steps": 64,
+      "decode_steps": 100,
       "analytic_only": false,
       "prefill": {
         "analytic_tflops": 3.5254934215680027,
@@ -143,7 +145,8 @@
           "kv_gb": 0.039653778076171875
         },
         "prefill_vendor": {
-          "flops_tflops": 3.517770116608
+          "flops_tflops": 3.517770116608,
+          "kv_gb": 0.039653778076171875
         }
       },
       "required_tflops_per_s": {
@@ -162,7 +165,7 @@
       "image_height": 1280,
       "batch_size": 1,
       "context_len": 703,
-      "decode_steps": 64,
+      "decode_steps": 100,
       "analytic_only": false,
       "prefill": {
         "analytic_tflops": 3.538204850688,
@@ -192,7 +195,8 @@
           "kv_gb": 0.040225982666015625
         },
         "prefill_vendor": {
-          "flops_tflops": 3.530109741568
+          "flops_tflops": 3.530109741568,
+          "kv_gb": 0.040225982666015625
         }
       },
       "required_tflops_per_s": {
@@ -211,7 +215,7 @@
       "image_height": 640,
       "batch_size": 1,
       "context_len": 793,
-      "decode_steps": 64,
+      "decode_steps": 100,
       "analytic_only": false,
       "prefill": {
         "analytic_tflops": 4.0442074772479994,
@@ -241,7 +245,8 @@
           "kv_gb": 0.045375823974609375
         },
         "prefill_vendor": {
-          "flops_tflops": 4.029869164032
+          "flops_tflops": 4.029869164032,
+          "kv_gb": 0.045375823974609375
         }
       },
       "required_tflops_per_s": {
@@ -260,7 +265,7 @@
       "image_height": 640,
       "batch_size": 1,
       "context_len": 893,
-      "decode_steps": 64,
+      "decode_steps": 100,
       "analytic_only": false,
       "prefill": {
         "analytic_tflops": 4.565856316927999,
@@ -290,7 +295,8 @@
           "kv_gb": 0.051097869873046875
         },
         "prefill_vendor": {
-          "flops_tflops": 4.543197011456
+          "flops_tflops": 4.543197011456,
+          "kv_gb": 0.051097869873046875
         }
       },
       "required_tflops_per_s": {
@@ -309,7 +315,7 @@
       "image_height": 1280,
       "batch_size": 1,
       "context_len": 903,
-      "decode_steps": 64,
+      "decode_steps": 100,
       "analytic_only": false,
       "prefill": {
         "analytic_tflops": 4.5789841044480015,
@@ -339,7 +345,8 @@
           "kv_gb": 0.051670074462890625
         },
         "prefill_vendor": {
-          "flops_tflops": 4.555782396416
+          "flops_tflops": 4.555782396416,
+          "kv_gb": 0.051670074462890625
         }
       },
       "required_tflops_per_s": {
@@ -358,7 +365,7 @@
       "image_height": 640,
       "batch_size": 1,
       "context_len": 993,
-      "decode_steps": 64,
+      "decode_steps": 100,
       "analytic_only": false,
       "prefill": {
         "analytic_tflops": 5.090439940608002,
@@ -388,7 +395,8 @@
           "kv_gb": 0.056819915771484375
         },
         "prefill_vendor": {
-          "flops_tflops": 5.05775365888
+          "flops_tflops": 5.05775365888,
+          "kv_gb": 0.056819915771484375
         }
       },
       "required_tflops_per_s": {
@@ -407,7 +415,7 @@
       "image_height": 640,
       "batch_size": 1,
       "context_len": 1093,
-      "decode_steps": 64,
+      "decode_steps": 100,
       "analytic_only": false,
       "prefill": {
         "analytic_tflops": 5.617958348287996,
@@ -437,7 +445,8 @@
           "kv_gb": 0.06254196166992188
         },
         "prefill_vendor": {
-          "flops_tflops": 5.573539106304
+          "flops_tflops": 5.573539106304,
+          "kv_gb": 0.06254196166992188
         }
       },
       "required_tflops_per_s": {
@@ -456,7 +465,7 @@
       "image_height": 1280,
       "batch_size": 1,
       "context_len": 1103,
-      "decode_steps": 64,
+      "decode_steps": 100,
       "analytic_only": false,
       "prefill": {
         "analytic_tflops": 5.631502494208001,
@@ -486,7 +495,8 @@
           "kv_gb": 0.06311416625976562
         },
         "prefill_vendor": {
-          "flops_tflops": 5.586370251264
+          "flops_tflops": 5.586370251264,
+          "kv_gb": 0.06311416625976562
         }
       },
       "required_tflops_per_s": {
@@ -505,7 +515,7 @@
       "image_height": 640,
       "batch_size": 1,
       "context_len": 1193,
-      "decode_steps": 64,
+      "decode_steps": 100,
       "analytic_only": false,
       "prefill": {
         "analytic_tflops": 6.1484115399679995,
@@ -535,7 +545,8 @@
           "kv_gb": 0.06826400756835938
         },
         "prefill_vendor": {
-          "flops_tflops": 6.090553353728
+          "flops_tflops": 6.090553353728,
+          "kv_gb": 0.06826400756835938
         }
       },
       "required_tflops_per_s": {
@@ -554,7 +565,7 @@
       "image_height": 1920,
       "batch_size": 1,
       "context_len": 1213,
-      "decode_steps": 64,
+      "decode_steps": 100,
       "analytic_only": false,
       "prefill": {
         "analytic_tflops": 6.175928478208003,
@@ -584,7 +595,8 @@
           "kv_gb": 0.06940841674804688
         },
         "prefill_vendor": {
-          "flops_tflops": 6.116473691648
+          "flops_tflops": 6.116473691648,
+          "kv_gb": 0.06940841674804688
         }
       },
       "required_tflops_per_s": {
@@ -603,7 +615,7 @@
       "image_height": 640,
       "batch_size": 1,
       "context_len": 1293,
-      "decode_steps": 64,
+      "decode_steps": 100,
       "analytic_only": true,
       "prefill": {
         "analytic_tflops": 6.681799515647998,
@@ -649,7 +661,7 @@
       "image_height": 1280,
       "batch_size": 1,
       "context_len": 1303,
-      "decode_steps": 64,
+      "decode_steps": 100,
       "analytic_only": true,
       "prefill": {
         "analytic_tflops": 6.695760019968002,
@@ -695,7 +707,7 @@
       "image_height": 640,
       "batch_size": 1,
       "context_len": 1393,
-      "decode_steps": 64,
+      "decode_steps": 100,
       "analytic_only": true,
       "prefill": {
         "analytic_tflops": 7.218122275328,
@@ -741,7 +753,7 @@
       "image_height": 640,
       "batch_size": 1,
       "context_len": 1493,
-      "decode_steps": 64,
+      "decode_steps": 100,
       "analytic_only": true,
       "prefill": {
         "analytic_tflops": 7.757379819008005,
@@ -787,7 +799,7 @@
       "image_height": 1280,
       "batch_size": 1,
       "context_len": 1503,
-      "decode_steps": 64,
+      "decode_steps": 100,
       "analytic_only": true,
       "prefill": {
         "analytic_tflops": 7.771756681727996,
@@ -833,7 +845,7 @@
       "image_height": 1920,
       "batch_size": 1,
       "context_len": 1513,
-      "decode_steps": 64,
+      "decode_steps": 100,
       "analytic_only": true,
       "prefill": {
         "analytic_tflops": 7.786145832448002,
@@ -879,7 +891,7 @@
       "image_height": 640,
       "batch_size": 1,
       "context_len": 1593,
-      "decode_steps": 64,
+      "decode_steps": 100,
       "analytic_only": true,
       "prefill": {
         "analytic_tflops": 8.299572146688002,
@@ -925,7 +937,7 @@
       "image_height": 640,
       "batch_size": 1,
       "context_len": 1693,
-      "decode_steps": 64,
+      "decode_steps": 100,
       "analytic_only": true,
       "prefill": {
         "analytic_tflops": 8.844699258368,
@@ -971,7 +983,7 @@
       "image_height": 1280,
       "batch_size": 1,
       "context_len": 1703,
-      "decode_steps": 64,
+      "decode_steps": 100,
       "analytic_only": true,
       "prefill": {
         "analytic_tflops": 8.859492479487999,
@@ -1017,7 +1029,7 @@
       "image_height": 640,
       "batch_size": 1,
       "context_len": 1793,
-      "decode_steps": 64,
+      "decode_steps": 100,
       "analytic_only": true,
       "prefill": {
         "analytic_tflops": 9.392761154048,
@@ -1063,7 +1075,7 @@
       "image_height": 1920,
       "batch_size": 1,
       "context_len": 1813,
-      "decode_steps": 64,
+      "decode_steps": 100,
       "analytic_only": true,
       "prefill": {
         "analytic_tflops": 9.422776242688002,
@@ -1109,7 +1121,7 @@
       "image_height": 640,
       "batch_size": 1,
       "context_len": 1893,
-      "decode_steps": 64,
+      "decode_steps": 100,
       "analytic_only": true,
       "prefill": {
         "analytic_tflops": 9.943757833727995,
@@ -1155,7 +1167,7 @@
       "image_height": 1280,
       "batch_size": 1,
       "context_len": 1903,
-      "decode_steps": 64,
+      "decode_steps": 100,
       "analytic_only": true,
       "prefill": {
         "analytic_tflops": 9.958967413247997,
@@ -1201,7 +1213,7 @@
       "image_height": 2560,
       "batch_size": 1,
       "context_len": 1923,
-      "decode_steps": 64,
+      "decode_steps": 100,
       "analytic_only": true,
       "prefill": {
         "analytic_tflops": 9.989423436287995,
@@ -1247,7 +1259,7 @@
       "image_height": 640,
       "batch_size": 1,
       "context_len": 1993,
-      "decode_steps": 64,
+      "decode_steps": 100,
       "analytic_only": true,
       "prefill": {
         "analytic_tflops": 10.497689297407993,
@@ -1293,7 +1305,7 @@
       "image_height": 640,
       "batch_size": 1,
       "context_len": 2093,
-      "decode_steps": 64,
+      "decode_steps": 100,
       "analytic_only": true,
       "prefill": {
         "analytic_tflops": 11.054555545088006,
@@ -1339,7 +1351,7 @@
       "image_height": 1280,
       "batch_size": 1,
       "context_len": 2103,
-      "decode_steps": 64,
+      "decode_steps": 100,
       "analytic_only": true,
       "prefill": {
         "analytic_tflops": 11.070181483008005,
@@ -1385,7 +1397,7 @@
       "image_height": 1920,
       "batch_size": 1,
       "context_len": 2113,
-      "decode_steps": 64,
+      "decode_steps": 100,
       "analytic_only": true,
       "prefill": {
         "analytic_tflops": 11.085819708927994,
@@ -1431,7 +1443,7 @@
       "image_height": 640,
       "batch_size": 1,
       "context_len": 2193,
-      "decode_steps": 64,
+      "decode_steps": 100,
       "analytic_only": true,
       "prefill": {
         "analytic_tflops": 11.614356576767992,
@@ -1477,7 +1489,7 @@
       "image_height": 640,
       "batch_size": 1,
       "context_len": 2293,
-      "decode_steps": 64,
+      "decode_steps": 100,
       "analytic_only": true,
       "prefill": {
         "analytic_tflops": 12.177092392447992,
@@ -1523,7 +1535,7 @@
       "image_height": 1280,
       "batch_size": 1,
       "context_len": 2303,
-      "decode_steps": 64,
+      "decode_steps": 100,
       "analytic_only": true,
       "prefill": {
         "analytic_tflops": 12.193134688768009,
@@ -1569,7 +1581,7 @@
       "image_height": 2560,
       "batch_size": 1,
       "context_len": 2323,
-      "decode_steps": 64,
+      "decode_steps": 100,
       "analytic_only": true,
       "prefill": {
         "analytic_tflops": 12.225256145408004,
@@ -1615,7 +1627,7 @@
       "image_height": 640,
       "batch_size": 1,
       "context_len": 2393,
-      "decode_steps": 64,
+      "decode_steps": 100,
       "analytic_only": true,
       "prefill": {
         "analytic_tflops": 12.742762992128004,
@@ -1661,7 +1673,7 @@
       "image_height": 1920,
       "batch_size": 1,
       "context_len": 2413,
-      "decode_steps": 64,
+      "decode_steps": 100,
       "analytic_only": true,
       "prefill": {
         "analytic_tflops": 12.77527623116799,
@@ -1707,7 +1719,7 @@
       "image_height": 640,
       "batch_size": 1,
       "context_len": 2493,
-      "decode_steps": 64,
+      "decode_steps": 100,
       "analytic_only": true,
       "prefill": {
         "analytic_tflops": 13.311368375807989,
@@ -1753,7 +1765,7 @@
       "image_height": 1280,
       "batch_size": 1,
       "context_len": 2503,
-      "decode_steps": 64,
+      "decode_steps": 100,
       "analytic_only": true,
       "prefill": {
         "analytic_tflops": 13.327827030528006,
@@ -1799,7 +1811,7 @@
       "image_height": 640,
       "batch_size": 1,
       "context_len": 2593,
-      "decode_steps": 64,
+      "decode_steps": 100,
       "analytic_only": true,
       "prefill": {
         "analytic_tflops": 13.882908543487991,
@@ -1845,7 +1857,7 @@
       "image_height": 640,
       "batch_size": 1,
       "context_len": 2693,
-      "decode_steps": 64,
+      "decode_steps": 100,
       "analytic_only": true,
       "prefill": {
         "analytic_tflops": 14.457383495168004,
@@ -1891,7 +1903,7 @@
       "image_height": 1280,
       "batch_size": 1,
       "context_len": 2703,
-      "decode_steps": 64,
+      "decode_steps": 100,
       "analytic_only": true,
       "prefill": {
         "analytic_tflops": 14.474258508287997,
@@ -1937,7 +1949,7 @@
       "image_height": 1920,
       "batch_size": 1,
       "context_len": 2713,
-      "decode_steps": 64,
+      "decode_steps": 100,
       "analytic_only": true,
       "prefill": {
         "analytic_tflops": 14.491145809408007,
@@ -1983,7 +1995,7 @@
       "image_height": 2560,
       "batch_size": 1,
       "context_len": 2723,
-      "decode_steps": 64,
+      "decode_steps": 100,
       "analytic_only": true,
       "prefill": {
         "analytic_tflops": 14.508045398528006,
@@ -2029,7 +2041,7 @@
       "image_height": 640,
       "batch_size": 1,
       "context_len": 2793,
-      "decode_steps": 64,
+      "decode_steps": 100,
       "analytic_only": true,
       "prefill": {
         "analytic_tflops": 15.034793230848008,
@@ -2075,7 +2087,7 @@
       "image_height": 3200,
       "batch_size": 1,
       "context_len": 2833,
-      "decode_steps": 64,
+      "decode_steps": 100,
       "analytic_only": true,
       "prefill": {
         "analytic_tflops": 15.103199728128006,
@@ -2121,7 +2133,7 @@
       "image_height": 640,
       "batch_size": 1,
       "context_len": 2893,
-      "decode_steps": 64,
+      "decode_steps": 100,
       "analytic_only": true,
       "prefill": {
         "analytic_tflops": 15.615137750528007,
@@ -2167,7 +2179,7 @@
       "image_height": 1280,
       "batch_size": 1,
       "context_len": 2903,
-      "decode_steps": 64,
+      "decode_steps": 100,
       "analytic_only": true,
       "prefill": {
         "analytic_tflops": 15.632429122047999,
@@ -2213,7 +2225,7 @@
       "image_height": 640,
       "batch_size": 1,
       "context_len": 2993,
-      "decode_steps": 64,
+      "decode_steps": 100,
       "analytic_only": true,
       "prefill": {
         "analytic_tflops": 16.198417054208,
@@ -2259,7 +2271,7 @@
       "image_height": 1920,
       "batch_size": 1,
       "context_len": 3013,
-      "decode_steps": 64,
+      "decode_steps": 100,
       "analytic_only": true,
       "prefill": {
         "analytic_tflops": 16.233428443647995,
@@ -2305,7 +2317,7 @@
       "image_height": 640,
       "batch_size": 1,
       "context_len": 3093,
-      "decode_steps": 64,
+      "decode_steps": 100,
       "analytic_only": true,
       "prefill": {
         "analytic_tflops": 16.784631141888003,
@@ -2351,7 +2363,7 @@
       "image_height": 1280,
       "batch_size": 1,
       "context_len": 3103,
-      "decode_steps": 64,
+      "decode_steps": 100,
       "analytic_only": true,
       "prefill": {
         "analytic_tflops": 16.80233887180799,
@@ -2397,7 +2409,7 @@
       "image_height": 2560,
       "batch_size": 1,
       "context_len": 3123,
-      "decode_steps": 64,
+      "decode_steps": 100,
       "analytic_only": true,
       "prefill": {
         "analytic_tflops": 16.837791195647995,
@@ -2443,7 +2455,7 @@
       "image_height": 640,
       "batch_size": 1,
       "context_len": 3193,
-      "decode_steps": 64,
+      "decode_steps": 100,
       "analytic_only": true,
       "prefill": {
         "analytic_tflops": 17.373780013568002,

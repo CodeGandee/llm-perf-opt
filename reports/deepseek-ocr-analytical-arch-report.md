@@ -4,7 +4,46 @@ This document describes the analytic architecture and operator-level decompositi
 
 The analytic model is configured via Hydra using `extern/modelmeter/models/deepseek_ocr/configs/deepseek_ocr.yaml`, which composes: - `hf: deepseek_ocr_3b` for architecture metadata (hidden size, number of layers, heads, MoE layout, etc.) - `runtime: analytic_defaults` for sequence lengths, batch size, and general analysis parameters - `vision: deepseek_ocr_base` for the SAM + CLIP + projector vision tower - `decoder: deepseek_ocr_base` for DeepSeek-V2 decoder blocks - `head: deepseek_ocr_lm_head` for the LM head projection - `model: deepseek_ocr_root.default` (or `deepseek_ocr_root.default.no_crop`) for the root `DeepseekOCRModel` analytic factory
 
-At a high level, the analytic topology follows the vendor DeepSeek-OCR architecture: - Vision branch - Input image (global padded view and optional dynamic crops) is processed by a SAM-B style encoder (`ImageEncoderViT`) to produce dense visual features. - A CLIP-like vision transformer (`VitModel` built from `NoTPTransformerBlock` and `Attention` / `NoTPAttention` / `MLPBlock` / `NoTPFeedForward`) consumes SAM features and produces a sequence of semantic visual tokens. - `MlpProjector` reduces and projects the concatenated SAM + CLIP tokens into the decoder embedding space, yielding a sequence of visual tokens compatible with the text decoder. - Decoder branch - A stack of `num_hidden_layers` `DeepseekV2DecoderLayer` blocks implements the text decoder, combining LLaMA-style attention (FlashAttention2 + RoPE), DeepSeek-V2 MLP or MoE experts, and RMSNorm. - The decoder operates in two phases: a prefill phase over the full context (visual tokens + prompt tokens) and a decode phase that runs one token at a time and updates a KV cache. - Head - The LM head `deepseek_ocr_lm_head` projects decoder hidden states to vocabulary logits.
+At a high level, the analytic topology follows the vendor DeepSeek-OCR architecture:
+- Vision branch
+  - Input image (global padded view and optional dynamic crops) is processed by a SAM-B style encoder (`ImageEncoderViT`) to produce dense visual features.
+  - A CLIP-like vision transformer (`VitModel` built from `NoTPTransformerBlock` and `Attention` / `NoTPAttention` / `MLPBlock` / `NoTPFeedForward`) consumes SAM features and produces a sequence of semantic visual tokens.
+  - `MlpProjector` reduces and projects the concatenated SAM + CLIP tokens into the decoder embedding space, yielding a sequence of visual tokens compatible with the text decoder.
+- Decoder branch
+  - A stack of `num_hidden_layers` `DeepseekV2DecoderLayer` blocks implements the text decoder, combining LLaMA-style attention (FlashAttention2 + RoPE), DeepSeek-V2 MLP or MoE experts, and RMSNorm.
+  - The decoder operates in two phases: a prefill phase over the full context (visual tokens + prompt tokens) and a decode phase that runs one token at a time and updates a KV cache.
+- Head
+  - The LM head `deepseek_ocr_lm_head` projects decoder hidden states to vocabulary logits.
+
+```mermaid
+flowchart LR
+    subgraph Vision["Vision tower"]
+        IMG["Input image<br/>(global view + crops)"]
+        SAM["ImageEncoderViT<br/>(SAM-B encoder)"]
+        CLIP["VitModel<br/>(CLIP-like transformer)"]
+        PROJ["MlpProjector<br/>(vision→decoder tokens)"]
+
+        IMG --> SAM --> CLIP --> PROJ
+    end
+
+    subgraph Text["Text prompt"]
+        PROMPT["Prompt tokens"]
+    end
+
+    subgraph Decoder["DeepSeek-V2 decoder"]
+        PREFILL["Prefill phase<br/>(multi-layer DeepseekV2DecoderLayer<br/>+ FlashAttention2 + RoPE)"]
+        DECODE["Decode phase<br/>(per-token decode + KV cache)"]
+    end
+
+    subgraph Head["LM head"]
+        LM["deepseek_ocr_lm_head<br/>(logits projection)"]
+    end
+
+    PROJ -->|visual tokens| PREFILL
+    PROMPT -->|prompt tokens| PREFILL
+    PREFILL -->|context + KV cache| DECODE
+    DECODE --> LM
+```
 
 The remainder of this document summarizes the analytic layer types and their per-op FLOP/IO breakdowns.
 

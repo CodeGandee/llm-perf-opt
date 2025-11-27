@@ -1,8 +1,11 @@
 {
-  "description": "Required TFLOPs/s as a function of image token length to satisfy a given time-to-first-token (TTFT) requirement for the vision+prefill stage, derived from e2e_vision_prefill_sweep.json.",
+  "description": [
+    "Analytic KV-cache memory (GB) as a function of image token length and crop grid for a fixed decode horizon, derived from e2e_vision_prefill_sweep.json and e2e_decode_sweep.json."
+  ],
   "model_id": "deepseek-ocr-3b",
-  "input_sweep_path": "/workspace/code/llm-perf-opt/reports/sweep/20251127-132944/e2e_vision_prefill/e2e_vision_prefill_sweep.json",
-  "ttft_seconds": 1.0,
+  "input_prefill_sweep_path": "/workspace/code/llm-perf-opt/tmp/sweep/20251127-160058/e2e_vision_prefill/e2e_vision_prefill_sweep.json",
+  "input_decode_sweep_path": "/workspace/code/llm-perf-opt/tmp/sweep/20251127-160058/e2e_decode/e2e_decode_sweep.json",
+  "decode_steps": 100,
   "num_points": 53,
   "points": [
     {
@@ -15,7 +18,7 @@
       "image_height": 640,
       "batch_size": 1,
       "context_len": 493,
-      "decode_steps": 64,
+      "decode_steps": 100,
       "analytic_only": false,
       "prefill": {
         "analytic_tflops": 2.496869662208002,
@@ -45,13 +48,18 @@
           "kv_gb": 0.028209686279296875
         },
         "prefill_vendor": {
-          "flops_tflops": 2.49725842176
+          "flops_tflops": 2.49725842176,
+          "kv_gb": 0.028209686279296875
         }
       },
-      "required_tflops_per_s": {
-        "analytic_normal_attention_full": 2.496869662208002,
-        "analytic_flash_attention_full": 2.496869662208002,
-        "vendor_normal_attention_torch_visible": 2.49725842176
+      "kvcache_gb": {
+        "analytic_normal_attention_full_prefill": 0.028209686279296875,
+        "analytic_flash_attention_full_prefill": 0.028209686279296875,
+        "analytic_normal_attention_full_decode": 0.03387451171875,
+        "analytic_flash_attention_full_decode": 0.03387451171875,
+        "analytic_normal_attention_full_total": 0.062084197998046875,
+        "analytic_flash_attention_full_total": 0.062084197998046875,
+        "vendor_total": 0.06214141845703125
       }
     },
     {
@@ -64,7 +72,7 @@
       "image_height": 640,
       "batch_size": 1,
       "context_len": 593,
-      "decode_steps": 64,
+      "decode_steps": 100,
       "analytic_only": false,
       "prefill": {
         "analytic_tflops": 3.0097141498879982,
@@ -94,13 +102,18 @@
           "kv_gb": 0.033931732177734375
         },
         "prefill_vendor": {
-          "flops_tflops": 3.006899869184
+          "flops_tflops": 3.006899869184,
+          "kv_gb": 0.033931732177734375
         }
       },
-      "required_tflops_per_s": {
-        "analytic_normal_attention_full": 3.0097141498879982,
-        "analytic_flash_attention_full": 3.0097141498879982,
-        "vendor_normal_attention_torch_visible": 3.006899869184
+      "kvcache_gb": {
+        "analytic_normal_attention_full_prefill": 0.033931732177734375,
+        "analytic_flash_attention_full_prefill": 0.033931732177734375,
+        "analytic_normal_attention_full_decode": 0.0395965576171875,
+        "analytic_flash_attention_full_decode": 0.0395965576171875,
+        "analytic_normal_attention_full_total": 0.07352828979492188,
+        "analytic_flash_attention_full_total": 0.07352828979492188,
+        "vendor_total": 0.07358551025390625
       }
     },
     {
@@ -113,7 +126,7 @@
       "image_height": 640,
       "batch_size": 1,
       "context_len": 693,
-      "decode_steps": 64,
+      "decode_steps": 100,
       "analytic_only": false,
       "prefill": {
         "analytic_tflops": 3.5254934215680027,
@@ -143,13 +156,18 @@
           "kv_gb": 0.039653778076171875
         },
         "prefill_vendor": {
-          "flops_tflops": 3.517770116608
+          "flops_tflops": 3.517770116608,
+          "kv_gb": 0.039653778076171875
         }
       },
-      "required_tflops_per_s": {
-        "analytic_normal_attention_full": 3.5254934215680027,
-        "analytic_flash_attention_full": 3.5254934215680027,
-        "vendor_normal_attention_torch_visible": 3.517770116608
+      "kvcache_gb": {
+        "analytic_normal_attention_full_prefill": 0.039653778076171875,
+        "analytic_flash_attention_full_prefill": 0.039653778076171875,
+        "analytic_normal_attention_full_decode": 0.045318603515625,
+        "analytic_flash_attention_full_decode": 0.045318603515625,
+        "analytic_normal_attention_full_total": 0.08497238159179688,
+        "analytic_flash_attention_full_total": 0.08497238159179688,
+        "vendor_total": 0.08502960205078125
       }
     },
     {
@@ -162,7 +180,7 @@
       "image_height": 1280,
       "batch_size": 1,
       "context_len": 703,
-      "decode_steps": 64,
+      "decode_steps": 100,
       "analytic_only": false,
       "prefill": {
         "analytic_tflops": 3.538204850688,
@@ -192,13 +210,18 @@
           "kv_gb": 0.040225982666015625
         },
         "prefill_vendor": {
-          "flops_tflops": 3.530109741568
+          "flops_tflops": 3.530109741568,
+          "kv_gb": 0.040225982666015625
         }
       },
-      "required_tflops_per_s": {
-        "analytic_normal_attention_full": 3.538204850688,
-        "analytic_flash_attention_full": 3.538204850688,
-        "vendor_normal_attention_torch_visible": 3.530109741568
+      "kvcache_gb": {
+        "analytic_normal_attention_full_prefill": 0.040225982666015625,
+        "analytic_flash_attention_full_prefill": 0.040225982666015625,
+        "analytic_normal_attention_full_decode": 0.04589080810546875,
+        "analytic_flash_attention_full_decode": 0.04589080810546875,
+        "analytic_normal_attention_full_total": 0.08611679077148438,
+        "analytic_flash_attention_full_total": 0.08611679077148438,
+        "vendor_total": 0.08617401123046875
       }
     },
     {
@@ -211,7 +234,7 @@
       "image_height": 640,
       "batch_size": 1,
       "context_len": 793,
-      "decode_steps": 64,
+      "decode_steps": 100,
       "analytic_only": false,
       "prefill": {
         "analytic_tflops": 4.0442074772479994,
@@ -241,13 +264,18 @@
           "kv_gb": 0.045375823974609375
         },
         "prefill_vendor": {
-          "flops_tflops": 4.029869164032
+          "flops_tflops": 4.029869164032,
+          "kv_gb": 0.045375823974609375
         }
       },
-      "required_tflops_per_s": {
-        "analytic_normal_attention_full": 4.0442074772479994,
-        "analytic_flash_attention_full": 4.0442074772479994,
-        "vendor_normal_attention_torch_visible": 4.029869164032
+      "kvcache_gb": {
+        "analytic_normal_attention_full_prefill": 0.045375823974609375,
+        "analytic_flash_attention_full_prefill": 0.045375823974609375,
+        "analytic_normal_attention_full_decode": 0.0510406494140625,
+        "analytic_flash_attention_full_decode": 0.0510406494140625,
+        "analytic_normal_attention_full_total": 0.09641647338867188,
+        "analytic_flash_attention_full_total": 0.09641647338867188,
+        "vendor_total": 0.09647369384765625
       }
     },
     {
@@ -260,7 +288,7 @@
       "image_height": 640,
       "batch_size": 1,
       "context_len": 893,
-      "decode_steps": 64,
+      "decode_steps": 100,
       "analytic_only": false,
       "prefill": {
         "analytic_tflops": 4.565856316927999,
@@ -290,13 +318,18 @@
           "kv_gb": 0.051097869873046875
         },
         "prefill_vendor": {
-          "flops_tflops": 4.543197011456
+          "flops_tflops": 4.543197011456,
+          "kv_gb": 0.051097869873046875
         }
       },
-      "required_tflops_per_s": {
-        "analytic_normal_attention_full": 4.565856316927999,
-        "analytic_flash_attention_full": 4.565856316927999,
-        "vendor_normal_attention_torch_visible": 4.543197011456
+      "kvcache_gb": {
+        "analytic_normal_attention_full_prefill": 0.051097869873046875,
+        "analytic_flash_attention_full_prefill": 0.051097869873046875,
+        "analytic_normal_attention_full_decode": 0.0567626953125,
+        "analytic_flash_attention_full_decode": 0.0567626953125,
+        "analytic_normal_attention_full_total": 0.10786056518554688,
+        "analytic_flash_attention_full_total": 0.10786056518554688,
+        "vendor_total": 0.10791778564453125
       }
     },
     {
@@ -309,7 +342,7 @@
       "image_height": 1280,
       "batch_size": 1,
       "context_len": 903,
-      "decode_steps": 64,
+      "decode_steps": 100,
       "analytic_only": false,
       "prefill": {
         "analytic_tflops": 4.5789841044480015,
@@ -339,13 +372,18 @@
           "kv_gb": 0.051670074462890625
         },
         "prefill_vendor": {
-          "flops_tflops": 4.555782396416
+          "flops_tflops": 4.555782396416,
+          "kv_gb": 0.051670074462890625
         }
       },
-      "required_tflops_per_s": {
-        "analytic_normal_attention_full": 4.5789841044480015,
-        "analytic_flash_attention_full": 4.5789841044480015,
-        "vendor_normal_attention_torch_visible": 4.555782396416
+      "kvcache_gb": {
+        "analytic_normal_attention_full_prefill": 0.051670074462890625,
+        "analytic_flash_attention_full_prefill": 0.051670074462890625,
+        "analytic_normal_attention_full_decode": 0.05733489990234375,
+        "analytic_flash_attention_full_decode": 0.05733489990234375,
+        "analytic_normal_attention_full_total": 0.10900497436523438,
+        "analytic_flash_attention_full_total": 0.10900497436523438,
+        "vendor_total": 0.10906219482421875
       }
     },
     {
@@ -358,7 +396,7 @@
       "image_height": 640,
       "batch_size": 1,
       "context_len": 993,
-      "decode_steps": 64,
+      "decode_steps": 100,
       "analytic_only": false,
       "prefill": {
         "analytic_tflops": 5.090439940608002,
@@ -388,13 +426,18 @@
           "kv_gb": 0.056819915771484375
         },
         "prefill_vendor": {
-          "flops_tflops": 5.05775365888
+          "flops_tflops": 5.05775365888,
+          "kv_gb": 0.056819915771484375
         }
       },
-      "required_tflops_per_s": {
-        "analytic_normal_attention_full": 5.090439940608002,
-        "analytic_flash_attention_full": 5.090439940608002,
-        "vendor_normal_attention_torch_visible": 5.05775365888
+      "kvcache_gb": {
+        "analytic_normal_attention_full_prefill": 0.056819915771484375,
+        "analytic_flash_attention_full_prefill": 0.056819915771484375,
+        "analytic_normal_attention_full_decode": 0.0624847412109375,
+        "analytic_flash_attention_full_decode": 0.0624847412109375,
+        "analytic_normal_attention_full_total": 0.11930465698242188,
+        "analytic_flash_attention_full_total": 0.11930465698242188,
+        "vendor_total": 0.11936187744140625
       }
     },
     {
@@ -407,7 +450,7 @@
       "image_height": 640,
       "batch_size": 1,
       "context_len": 1093,
-      "decode_steps": 64,
+      "decode_steps": 100,
       "analytic_only": false,
       "prefill": {
         "analytic_tflops": 5.617958348287996,
@@ -437,13 +480,18 @@
           "kv_gb": 0.06254196166992188
         },
         "prefill_vendor": {
-          "flops_tflops": 5.573539106304
+          "flops_tflops": 5.573539106304,
+          "kv_gb": 0.06254196166992188
         }
       },
-      "required_tflops_per_s": {
-        "analytic_normal_attention_full": 5.617958348287996,
-        "analytic_flash_attention_full": 5.617958348287996,
-        "vendor_normal_attention_torch_visible": 5.573539106304
+      "kvcache_gb": {
+        "analytic_normal_attention_full_prefill": 0.06254196166992188,
+        "analytic_flash_attention_full_prefill": 0.06254196166992188,
+        "analytic_normal_attention_full_decode": 0.068206787109375,
+        "analytic_flash_attention_full_decode": 0.068206787109375,
+        "analytic_normal_attention_full_total": 0.13074874877929688,
+        "analytic_flash_attention_full_total": 0.13074874877929688,
+        "vendor_total": 0.13080596923828125
       }
     },
     {
@@ -456,7 +504,7 @@
       "image_height": 1280,
       "batch_size": 1,
       "context_len": 1103,
-      "decode_steps": 64,
+      "decode_steps": 100,
       "analytic_only": false,
       "prefill": {
         "analytic_tflops": 5.631502494208001,
@@ -486,13 +534,18 @@
           "kv_gb": 0.06311416625976562
         },
         "prefill_vendor": {
-          "flops_tflops": 5.586370251264
+          "flops_tflops": 5.586370251264,
+          "kv_gb": 0.06311416625976562
         }
       },
-      "required_tflops_per_s": {
-        "analytic_normal_attention_full": 5.631502494208001,
-        "analytic_flash_attention_full": 5.631502494208001,
-        "vendor_normal_attention_torch_visible": 5.586370251264
+      "kvcache_gb": {
+        "analytic_normal_attention_full_prefill": 0.06311416625976562,
+        "analytic_flash_attention_full_prefill": 0.06311416625976562,
+        "analytic_normal_attention_full_decode": 0.06877899169921875,
+        "analytic_flash_attention_full_decode": 0.06877899169921875,
+        "analytic_normal_attention_full_total": 0.13189315795898438,
+        "analytic_flash_attention_full_total": 0.13189315795898438,
+        "vendor_total": 0.13195037841796875
       }
     },
     {
@@ -505,7 +558,7 @@
       "image_height": 640,
       "batch_size": 1,
       "context_len": 1193,
-      "decode_steps": 64,
+      "decode_steps": 100,
       "analytic_only": false,
       "prefill": {
         "analytic_tflops": 6.1484115399679995,
@@ -535,13 +588,18 @@
           "kv_gb": 0.06826400756835938
         },
         "prefill_vendor": {
-          "flops_tflops": 6.090553353728
+          "flops_tflops": 6.090553353728,
+          "kv_gb": 0.06826400756835938
         }
       },
-      "required_tflops_per_s": {
-        "analytic_normal_attention_full": 6.1484115399679995,
-        "analytic_flash_attention_full": 6.1484115399679995,
-        "vendor_normal_attention_torch_visible": 6.090553353728
+      "kvcache_gb": {
+        "analytic_normal_attention_full_prefill": 0.06826400756835938,
+        "analytic_flash_attention_full_prefill": 0.06826400756835938,
+        "analytic_normal_attention_full_decode": 0.0739288330078125,
+        "analytic_flash_attention_full_decode": 0.0739288330078125,
+        "analytic_normal_attention_full_total": 0.14219284057617188,
+        "analytic_flash_attention_full_total": 0.14219284057617188,
+        "vendor_total": 0.14225006103515625
       }
     },
     {
@@ -554,7 +612,7 @@
       "image_height": 1920,
       "batch_size": 1,
       "context_len": 1213,
-      "decode_steps": 64,
+      "decode_steps": 100,
       "analytic_only": false,
       "prefill": {
         "analytic_tflops": 6.175928478208003,
@@ -584,13 +642,18 @@
           "kv_gb": 0.06940841674804688
         },
         "prefill_vendor": {
-          "flops_tflops": 6.116473691648
+          "flops_tflops": 6.116473691648,
+          "kv_gb": 0.06940841674804688
         }
       },
-      "required_tflops_per_s": {
-        "analytic_normal_attention_full": 6.175928478208003,
-        "analytic_flash_attention_full": 6.175928478208003,
-        "vendor_normal_attention_torch_visible": 6.116473691648
+      "kvcache_gb": {
+        "analytic_normal_attention_full_prefill": 0.06940841674804688,
+        "analytic_flash_attention_full_prefill": 0.06940841674804688,
+        "analytic_normal_attention_full_decode": 0.0750732421875,
+        "analytic_flash_attention_full_decode": 0.0750732421875,
+        "analytic_normal_attention_full_total": 0.14448165893554688,
+        "analytic_flash_attention_full_total": 0.14448165893554688,
+        "vendor_total": 0.14453887939453125
       }
     },
     {
@@ -603,7 +666,7 @@
       "image_height": 640,
       "batch_size": 1,
       "context_len": 1293,
-      "decode_steps": 64,
+      "decode_steps": 100,
       "analytic_only": true,
       "prefill": {
         "analytic_tflops": 6.681799515647998,
@@ -633,10 +696,14 @@
           "kv_gb": 0.07398605346679688
         }
       },
-      "required_tflops_per_s": {
-        "analytic_normal_attention_full": 6.681799515647998,
-        "analytic_flash_attention_full": 6.681799515647998,
-        "vendor_normal_attention_torch_visible": null
+      "kvcache_gb": {
+        "analytic_normal_attention_full_prefill": 0.07398605346679688,
+        "analytic_flash_attention_full_prefill": 0.07398605346679688,
+        "analytic_normal_attention_full_decode": 0.07965087890625,
+        "analytic_flash_attention_full_decode": 0.07965087890625,
+        "analytic_normal_attention_full_total": 0.15363693237304688,
+        "analytic_flash_attention_full_total": 0.15363693237304688,
+        "vendor_total": null
       }
     },
     {
@@ -649,7 +716,7 @@
       "image_height": 1280,
       "batch_size": 1,
       "context_len": 1303,
-      "decode_steps": 64,
+      "decode_steps": 100,
       "analytic_only": true,
       "prefill": {
         "analytic_tflops": 6.695760019968002,
@@ -679,10 +746,14 @@
           "kv_gb": 0.07455825805664062
         }
       },
-      "required_tflops_per_s": {
-        "analytic_normal_attention_full": 6.695760019968002,
-        "analytic_flash_attention_full": 6.695760019968002,
-        "vendor_normal_attention_torch_visible": null
+      "kvcache_gb": {
+        "analytic_normal_attention_full_prefill": 0.07455825805664062,
+        "analytic_flash_attention_full_prefill": 0.07455825805664062,
+        "analytic_normal_attention_full_decode": 0.08022308349609375,
+        "analytic_flash_attention_full_decode": 0.08022308349609375,
+        "analytic_normal_attention_full_total": 0.15478134155273438,
+        "analytic_flash_attention_full_total": 0.15478134155273438,
+        "vendor_total": null
       }
     },
     {
@@ -695,7 +766,7 @@
       "image_height": 640,
       "batch_size": 1,
       "context_len": 1393,
-      "decode_steps": 64,
+      "decode_steps": 100,
       "analytic_only": true,
       "prefill": {
         "analytic_tflops": 7.218122275328,
@@ -725,10 +796,14 @@
           "kv_gb": 0.07970809936523438
         }
       },
-      "required_tflops_per_s": {
-        "analytic_normal_attention_full": 7.218122275328,
-        "analytic_flash_attention_full": 7.218122275328,
-        "vendor_normal_attention_torch_visible": null
+      "kvcache_gb": {
+        "analytic_normal_attention_full_prefill": 0.07970809936523438,
+        "analytic_flash_attention_full_prefill": 0.07970809936523438,
+        "analytic_normal_attention_full_decode": 0.0853729248046875,
+        "analytic_flash_attention_full_decode": 0.0853729248046875,
+        "analytic_normal_attention_full_total": 0.16508102416992188,
+        "analytic_flash_attention_full_total": 0.16508102416992188,
+        "vendor_total": null
       }
     },
     {
@@ -741,7 +816,7 @@
       "image_height": 640,
       "batch_size": 1,
       "context_len": 1493,
-      "decode_steps": 64,
+      "decode_steps": 100,
       "analytic_only": true,
       "prefill": {
         "analytic_tflops": 7.757379819008005,
@@ -771,10 +846,14 @@
           "kv_gb": 0.08543014526367188
         }
       },
-      "required_tflops_per_s": {
-        "analytic_normal_attention_full": 7.757379819008005,
-        "analytic_flash_attention_full": 7.757379819008005,
-        "vendor_normal_attention_torch_visible": null
+      "kvcache_gb": {
+        "analytic_normal_attention_full_prefill": 0.08543014526367188,
+        "analytic_flash_attention_full_prefill": 0.08543014526367188,
+        "analytic_normal_attention_full_decode": 0.091094970703125,
+        "analytic_flash_attention_full_decode": 0.091094970703125,
+        "analytic_normal_attention_full_total": 0.17652511596679688,
+        "analytic_flash_attention_full_total": 0.17652511596679688,
+        "vendor_total": null
       }
     },
     {
@@ -787,7 +866,7 @@
       "image_height": 1280,
       "batch_size": 1,
       "context_len": 1503,
-      "decode_steps": 64,
+      "decode_steps": 100,
       "analytic_only": true,
       "prefill": {
         "analytic_tflops": 7.771756681727996,
@@ -817,10 +896,14 @@
           "kv_gb": 0.08600234985351562
         }
       },
-      "required_tflops_per_s": {
-        "analytic_normal_attention_full": 7.771756681727996,
-        "analytic_flash_attention_full": 7.771756681727996,
-        "vendor_normal_attention_torch_visible": null
+      "kvcache_gb": {
+        "analytic_normal_attention_full_prefill": 0.08600234985351562,
+        "analytic_flash_attention_full_prefill": 0.08600234985351562,
+        "analytic_normal_attention_full_decode": 0.09166717529296875,
+        "analytic_flash_attention_full_decode": 0.09166717529296875,
+        "analytic_normal_attention_full_total": 0.17766952514648438,
+        "analytic_flash_attention_full_total": 0.17766952514648438,
+        "vendor_total": null
       }
     },
     {
@@ -833,7 +916,7 @@
       "image_height": 1920,
       "batch_size": 1,
       "context_len": 1513,
-      "decode_steps": 64,
+      "decode_steps": 100,
       "analytic_only": true,
       "prefill": {
         "analytic_tflops": 7.786145832448002,
@@ -863,10 +946,14 @@
           "kv_gb": 0.08657455444335938
         }
       },
-      "required_tflops_per_s": {
-        "analytic_normal_attention_full": 7.786145832448002,
-        "analytic_flash_attention_full": 7.786145832448002,
-        "vendor_normal_attention_torch_visible": null
+      "kvcache_gb": {
+        "analytic_normal_attention_full_prefill": 0.08657455444335938,
+        "analytic_flash_attention_full_prefill": 0.08657455444335938,
+        "analytic_normal_attention_full_decode": 0.0922393798828125,
+        "analytic_flash_attention_full_decode": 0.0922393798828125,
+        "analytic_normal_attention_full_total": 0.17881393432617188,
+        "analytic_flash_attention_full_total": 0.17881393432617188,
+        "vendor_total": null
       }
     },
     {
@@ -879,7 +966,7 @@
       "image_height": 640,
       "batch_size": 1,
       "context_len": 1593,
-      "decode_steps": 64,
+      "decode_steps": 100,
       "analytic_only": true,
       "prefill": {
         "analytic_tflops": 8.299572146688002,
@@ -909,10 +996,14 @@
           "kv_gb": 0.09115219116210938
         }
       },
-      "required_tflops_per_s": {
-        "analytic_normal_attention_full": 8.299572146688002,
-        "analytic_flash_attention_full": 8.299572146688002,
-        "vendor_normal_attention_torch_visible": null
+      "kvcache_gb": {
+        "analytic_normal_attention_full_prefill": 0.09115219116210938,
+        "analytic_flash_attention_full_prefill": 0.09115219116210938,
+        "analytic_normal_attention_full_decode": 0.0968170166015625,
+        "analytic_flash_attention_full_decode": 0.0968170166015625,
+        "analytic_normal_attention_full_total": 0.18796920776367188,
+        "analytic_flash_attention_full_total": 0.18796920776367188,
+        "vendor_total": null
       }
     },
     {
@@ -925,7 +1016,7 @@
       "image_height": 640,
       "batch_size": 1,
       "context_len": 1693,
-      "decode_steps": 64,
+      "decode_steps": 100,
       "analytic_only": true,
       "prefill": {
         "analytic_tflops": 8.844699258368,
@@ -955,10 +1046,14 @@
           "kv_gb": 0.09687423706054688
         }
       },
-      "required_tflops_per_s": {
-        "analytic_normal_attention_full": 8.844699258368,
-        "analytic_flash_attention_full": 8.844699258368,
-        "vendor_normal_attention_torch_visible": null
+      "kvcache_gb": {
+        "analytic_normal_attention_full_prefill": 0.09687423706054688,
+        "analytic_flash_attention_full_prefill": 0.09687423706054688,
+        "analytic_normal_attention_full_decode": 0.1025390625,
+        "analytic_flash_attention_full_decode": 0.1025390625,
+        "analytic_normal_attention_full_total": 0.19941329956054688,
+        "analytic_flash_attention_full_total": 0.19941329956054688,
+        "vendor_total": null
       }
     },
     {
@@ -971,7 +1066,7 @@
       "image_height": 1280,
       "batch_size": 1,
       "context_len": 1703,
-      "decode_steps": 64,
+      "decode_steps": 100,
       "analytic_only": true,
       "prefill": {
         "analytic_tflops": 8.859492479487999,
@@ -1001,10 +1096,14 @@
           "kv_gb": 0.09744644165039062
         }
       },
-      "required_tflops_per_s": {
-        "analytic_normal_attention_full": 8.859492479487999,
-        "analytic_flash_attention_full": 8.859492479487999,
-        "vendor_normal_attention_torch_visible": null
+      "kvcache_gb": {
+        "analytic_normal_attention_full_prefill": 0.09744644165039062,
+        "analytic_flash_attention_full_prefill": 0.09744644165039062,
+        "analytic_normal_attention_full_decode": 0.10311126708984375,
+        "analytic_flash_attention_full_decode": 0.10311126708984375,
+        "analytic_normal_attention_full_total": 0.20055770874023438,
+        "analytic_flash_attention_full_total": 0.20055770874023438,
+        "vendor_total": null
       }
     },
     {
@@ -1017,7 +1116,7 @@
       "image_height": 640,
       "batch_size": 1,
       "context_len": 1793,
-      "decode_steps": 64,
+      "decode_steps": 100,
       "analytic_only": true,
       "prefill": {
         "analytic_tflops": 9.392761154048,
@@ -1047,10 +1146,14 @@
           "kv_gb": 0.10259628295898438
         }
       },
-      "required_tflops_per_s": {
-        "analytic_normal_attention_full": 9.392761154048,
-        "analytic_flash_attention_full": 9.392761154048,
-        "vendor_normal_attention_torch_visible": null
+      "kvcache_gb": {
+        "analytic_normal_attention_full_prefill": 0.10259628295898438,
+        "analytic_flash_attention_full_prefill": 0.10259628295898438,
+        "analytic_normal_attention_full_decode": 0.1082611083984375,
+        "analytic_flash_attention_full_decode": 0.1082611083984375,
+        "analytic_normal_attention_full_total": 0.21085739135742188,
+        "analytic_flash_attention_full_total": 0.21085739135742188,
+        "vendor_total": null
       }
     },
     {
@@ -1063,7 +1166,7 @@
       "image_height": 1920,
       "batch_size": 1,
       "context_len": 1813,
-      "decode_steps": 64,
+      "decode_steps": 100,
       "analytic_only": true,
       "prefill": {
         "analytic_tflops": 9.422776242688002,
@@ -1093,10 +1196,14 @@
           "kv_gb": 0.10374069213867188
         }
       },
-      "required_tflops_per_s": {
-        "analytic_normal_attention_full": 9.422776242688002,
-        "analytic_flash_attention_full": 9.422776242688002,
-        "vendor_normal_attention_torch_visible": null
+      "kvcache_gb": {
+        "analytic_normal_attention_full_prefill": 0.10374069213867188,
+        "analytic_flash_attention_full_prefill": 0.10374069213867188,
+        "analytic_normal_attention_full_decode": 0.109405517578125,
+        "analytic_flash_attention_full_decode": 0.109405517578125,
+        "analytic_normal_attention_full_total": 0.21314620971679688,
+        "analytic_flash_attention_full_total": 0.21314620971679688,
+        "vendor_total": null
       }
     },
     {
@@ -1109,7 +1216,7 @@
       "image_height": 640,
       "batch_size": 1,
       "context_len": 1893,
-      "decode_steps": 64,
+      "decode_steps": 100,
       "analytic_only": true,
       "prefill": {
         "analytic_tflops": 9.943757833727995,
@@ -1139,10 +1246,14 @@
           "kv_gb": 0.10831832885742188
         }
       },
-      "required_tflops_per_s": {
-        "analytic_normal_attention_full": 9.943757833727995,
-        "analytic_flash_attention_full": 9.943757833727995,
-        "vendor_normal_attention_torch_visible": null
+      "kvcache_gb": {
+        "analytic_normal_attention_full_prefill": 0.10831832885742188,
+        "analytic_flash_attention_full_prefill": 0.10831832885742188,
+        "analytic_normal_attention_full_decode": 0.113983154296875,
+        "analytic_flash_attention_full_decode": 0.113983154296875,
+        "analytic_normal_attention_full_total": 0.22230148315429688,
+        "analytic_flash_attention_full_total": 0.22230148315429688,
+        "vendor_total": null
       }
     },
     {
@@ -1155,7 +1266,7 @@
       "image_height": 1280,
       "batch_size": 1,
       "context_len": 1903,
-      "decode_steps": 64,
+      "decode_steps": 100,
       "analytic_only": true,
       "prefill": {
         "analytic_tflops": 9.958967413247997,
@@ -1185,10 +1296,14 @@
           "kv_gb": 0.10889053344726562
         }
       },
-      "required_tflops_per_s": {
-        "analytic_normal_attention_full": 9.958967413247997,
-        "analytic_flash_attention_full": 9.958967413247997,
-        "vendor_normal_attention_torch_visible": null
+      "kvcache_gb": {
+        "analytic_normal_attention_full_prefill": 0.10889053344726562,
+        "analytic_flash_attention_full_prefill": 0.10889053344726562,
+        "analytic_normal_attention_full_decode": 0.11455535888671875,
+        "analytic_flash_attention_full_decode": 0.11455535888671875,
+        "analytic_normal_attention_full_total": 0.22344589233398438,
+        "analytic_flash_attention_full_total": 0.22344589233398438,
+        "vendor_total": null
       }
     },
     {
@@ -1201,7 +1316,7 @@
       "image_height": 2560,
       "batch_size": 1,
       "context_len": 1923,
-      "decode_steps": 64,
+      "decode_steps": 100,
       "analytic_only": true,
       "prefill": {
         "analytic_tflops": 9.989423436287995,
@@ -1231,10 +1346,14 @@
           "kv_gb": 0.11003494262695312
         }
       },
-      "required_tflops_per_s": {
-        "analytic_normal_attention_full": 9.989423436287995,
-        "analytic_flash_attention_full": 9.989423436287995,
-        "vendor_normal_attention_torch_visible": null
+      "kvcache_gb": {
+        "analytic_normal_attention_full_prefill": 0.11003494262695312,
+        "analytic_flash_attention_full_prefill": 0.11003494262695312,
+        "analytic_normal_attention_full_decode": 0.11569976806640625,
+        "analytic_flash_attention_full_decode": 0.11569976806640625,
+        "analytic_normal_attention_full_total": 0.22573471069335938,
+        "analytic_flash_attention_full_total": 0.22573471069335938,
+        "vendor_total": null
       }
     },
     {
@@ -1247,7 +1366,7 @@
       "image_height": 640,
       "batch_size": 1,
       "context_len": 1993,
-      "decode_steps": 64,
+      "decode_steps": 100,
       "analytic_only": true,
       "prefill": {
         "analytic_tflops": 10.497689297407993,
@@ -1277,10 +1396,14 @@
           "kv_gb": 0.11404037475585938
         }
       },
-      "required_tflops_per_s": {
-        "analytic_normal_attention_full": 10.497689297407993,
-        "analytic_flash_attention_full": 10.497689297407993,
-        "vendor_normal_attention_torch_visible": null
+      "kvcache_gb": {
+        "analytic_normal_attention_full_prefill": 0.11404037475585938,
+        "analytic_flash_attention_full_prefill": 0.11404037475585938,
+        "analytic_normal_attention_full_decode": 0.1197052001953125,
+        "analytic_flash_attention_full_decode": 0.1197052001953125,
+        "analytic_normal_attention_full_total": 0.23374557495117188,
+        "analytic_flash_attention_full_total": 0.23374557495117188,
+        "vendor_total": null
       }
     },
     {
@@ -1293,7 +1416,7 @@
       "image_height": 640,
       "batch_size": 1,
       "context_len": 2093,
-      "decode_steps": 64,
+      "decode_steps": 100,
       "analytic_only": true,
       "prefill": {
         "analytic_tflops": 11.054555545088006,
@@ -1323,10 +1446,14 @@
           "kv_gb": 0.11976242065429688
         }
       },
-      "required_tflops_per_s": {
-        "analytic_normal_attention_full": 11.054555545088006,
-        "analytic_flash_attention_full": 11.054555545088006,
-        "vendor_normal_attention_torch_visible": null
+      "kvcache_gb": {
+        "analytic_normal_attention_full_prefill": 0.11976242065429688,
+        "analytic_flash_attention_full_prefill": 0.11976242065429688,
+        "analytic_normal_attention_full_decode": 0.12542724609375,
+        "analytic_flash_attention_full_decode": 0.12542724609375,
+        "analytic_normal_attention_full_total": 0.24518966674804688,
+        "analytic_flash_attention_full_total": 0.24518966674804688,
+        "vendor_total": null
       }
     },
     {
@@ -1339,7 +1466,7 @@
       "image_height": 1280,
       "batch_size": 1,
       "context_len": 2103,
-      "decode_steps": 64,
+      "decode_steps": 100,
       "analytic_only": true,
       "prefill": {
         "analytic_tflops": 11.070181483008005,
@@ -1369,10 +1496,14 @@
           "kv_gb": 0.12033462524414062
         }
       },
-      "required_tflops_per_s": {
-        "analytic_normal_attention_full": 11.070181483008005,
-        "analytic_flash_attention_full": 11.070181483008005,
-        "vendor_normal_attention_torch_visible": null
+      "kvcache_gb": {
+        "analytic_normal_attention_full_prefill": 0.12033462524414062,
+        "analytic_flash_attention_full_prefill": 0.12033462524414062,
+        "analytic_normal_attention_full_decode": 0.12599945068359375,
+        "analytic_flash_attention_full_decode": 0.12599945068359375,
+        "analytic_normal_attention_full_total": 0.24633407592773438,
+        "analytic_flash_attention_full_total": 0.24633407592773438,
+        "vendor_total": null
       }
     },
     {
@@ -1385,7 +1516,7 @@
       "image_height": 1920,
       "batch_size": 1,
       "context_len": 2113,
-      "decode_steps": 64,
+      "decode_steps": 100,
       "analytic_only": true,
       "prefill": {
         "analytic_tflops": 11.085819708927994,
@@ -1415,10 +1546,14 @@
           "kv_gb": 0.12090682983398438
         }
       },
-      "required_tflops_per_s": {
-        "analytic_normal_attention_full": 11.085819708927994,
-        "analytic_flash_attention_full": 11.085819708927994,
-        "vendor_normal_attention_torch_visible": null
+      "kvcache_gb": {
+        "analytic_normal_attention_full_prefill": 0.12090682983398438,
+        "analytic_flash_attention_full_prefill": 0.12090682983398438,
+        "analytic_normal_attention_full_decode": 0.1265716552734375,
+        "analytic_flash_attention_full_decode": 0.1265716552734375,
+        "analytic_normal_attention_full_total": 0.24747848510742188,
+        "analytic_flash_attention_full_total": 0.24747848510742188,
+        "vendor_total": null
       }
     },
     {
@@ -1431,7 +1566,7 @@
       "image_height": 640,
       "batch_size": 1,
       "context_len": 2193,
-      "decode_steps": 64,
+      "decode_steps": 100,
       "analytic_only": true,
       "prefill": {
         "analytic_tflops": 11.614356576767992,
@@ -1461,10 +1596,14 @@
           "kv_gb": 0.12548446655273438
         }
       },
-      "required_tflops_per_s": {
-        "analytic_normal_attention_full": 11.614356576767992,
-        "analytic_flash_attention_full": 11.614356576767992,
-        "vendor_normal_attention_torch_visible": null
+      "kvcache_gb": {
+        "analytic_normal_attention_full_prefill": 0.12548446655273438,
+        "analytic_flash_attention_full_prefill": 0.12548446655273438,
+        "analytic_normal_attention_full_decode": 0.1311492919921875,
+        "analytic_flash_attention_full_decode": 0.1311492919921875,
+        "analytic_normal_attention_full_total": 0.2566337585449219,
+        "analytic_flash_attention_full_total": 0.2566337585449219,
+        "vendor_total": null
       }
     },
     {
@@ -1477,7 +1616,7 @@
       "image_height": 640,
       "batch_size": 1,
       "context_len": 2293,
-      "decode_steps": 64,
+      "decode_steps": 100,
       "analytic_only": true,
       "prefill": {
         "analytic_tflops": 12.177092392447992,
@@ -1507,10 +1646,14 @@
           "kv_gb": 0.13120651245117188
         }
       },
-      "required_tflops_per_s": {
-        "analytic_normal_attention_full": 12.177092392447992,
-        "analytic_flash_attention_full": 12.177092392447992,
-        "vendor_normal_attention_torch_visible": null
+      "kvcache_gb": {
+        "analytic_normal_attention_full_prefill": 0.13120651245117188,
+        "analytic_flash_attention_full_prefill": 0.13120651245117188,
+        "analytic_normal_attention_full_decode": 0.136871337890625,
+        "analytic_flash_attention_full_decode": 0.136871337890625,
+        "analytic_normal_attention_full_total": 0.2680778503417969,
+        "analytic_flash_attention_full_total": 0.2680778503417969,
+        "vendor_total": null
       }
     },
     {
@@ -1523,7 +1666,7 @@
       "image_height": 1280,
       "batch_size": 1,
       "context_len": 2303,
-      "decode_steps": 64,
+      "decode_steps": 100,
       "analytic_only": true,
       "prefill": {
         "analytic_tflops": 12.193134688768009,
@@ -1553,10 +1696,14 @@
           "kv_gb": 0.13177871704101562
         }
       },
-      "required_tflops_per_s": {
-        "analytic_normal_attention_full": 12.193134688768009,
-        "analytic_flash_attention_full": 12.193134688768009,
-        "vendor_normal_attention_torch_visible": null
+      "kvcache_gb": {
+        "analytic_normal_attention_full_prefill": 0.13177871704101562,
+        "analytic_flash_attention_full_prefill": 0.13177871704101562,
+        "analytic_normal_attention_full_decode": 0.13744354248046875,
+        "analytic_flash_attention_full_decode": 0.13744354248046875,
+        "analytic_normal_attention_full_total": 0.2692222595214844,
+        "analytic_flash_attention_full_total": 0.2692222595214844,
+        "vendor_total": null
       }
     },
     {
@@ -1569,7 +1716,7 @@
       "image_height": 2560,
       "batch_size": 1,
       "context_len": 2323,
-      "decode_steps": 64,
+      "decode_steps": 100,
       "analytic_only": true,
       "prefill": {
         "analytic_tflops": 12.225256145408004,
@@ -1599,10 +1746,14 @@
           "kv_gb": 0.13292312622070312
         }
       },
-      "required_tflops_per_s": {
-        "analytic_normal_attention_full": 12.225256145408004,
-        "analytic_flash_attention_full": 12.225256145408004,
-        "vendor_normal_attention_torch_visible": null
+      "kvcache_gb": {
+        "analytic_normal_attention_full_prefill": 0.13292312622070312,
+        "analytic_flash_attention_full_prefill": 0.13292312622070312,
+        "analytic_normal_attention_full_decode": 0.13858795166015625,
+        "analytic_flash_attention_full_decode": 0.13858795166015625,
+        "analytic_normal_attention_full_total": 0.2715110778808594,
+        "analytic_flash_attention_full_total": 0.2715110778808594,
+        "vendor_total": null
       }
     },
     {
@@ -1615,7 +1766,7 @@
       "image_height": 640,
       "batch_size": 1,
       "context_len": 2393,
-      "decode_steps": 64,
+      "decode_steps": 100,
       "analytic_only": true,
       "prefill": {
         "analytic_tflops": 12.742762992128004,
@@ -1645,10 +1796,14 @@
           "kv_gb": 0.13692855834960938
         }
       },
-      "required_tflops_per_s": {
-        "analytic_normal_attention_full": 12.742762992128004,
-        "analytic_flash_attention_full": 12.742762992128004,
-        "vendor_normal_attention_torch_visible": null
+      "kvcache_gb": {
+        "analytic_normal_attention_full_prefill": 0.13692855834960938,
+        "analytic_flash_attention_full_prefill": 0.13692855834960938,
+        "analytic_normal_attention_full_decode": 0.1425933837890625,
+        "analytic_flash_attention_full_decode": 0.1425933837890625,
+        "analytic_normal_attention_full_total": 0.2795219421386719,
+        "analytic_flash_attention_full_total": 0.2795219421386719,
+        "vendor_total": null
       }
     },
     {
@@ -1661,7 +1816,7 @@
       "image_height": 1920,
       "batch_size": 1,
       "context_len": 2413,
-      "decode_steps": 64,
+      "decode_steps": 100,
       "analytic_only": true,
       "prefill": {
         "analytic_tflops": 12.77527623116799,
@@ -1691,10 +1846,14 @@
           "kv_gb": 0.13807296752929688
         }
       },
-      "required_tflops_per_s": {
-        "analytic_normal_attention_full": 12.77527623116799,
-        "analytic_flash_attention_full": 12.77527623116799,
-        "vendor_normal_attention_torch_visible": null
+      "kvcache_gb": {
+        "analytic_normal_attention_full_prefill": 0.13807296752929688,
+        "analytic_flash_attention_full_prefill": 0.13807296752929688,
+        "analytic_normal_attention_full_decode": 0.14373779296875,
+        "analytic_flash_attention_full_decode": 0.14373779296875,
+        "analytic_normal_attention_full_total": 0.2818107604980469,
+        "analytic_flash_attention_full_total": 0.2818107604980469,
+        "vendor_total": null
       }
     },
     {
@@ -1707,7 +1866,7 @@
       "image_height": 640,
       "batch_size": 1,
       "context_len": 2493,
-      "decode_steps": 64,
+      "decode_steps": 100,
       "analytic_only": true,
       "prefill": {
         "analytic_tflops": 13.311368375807989,
@@ -1737,10 +1896,14 @@
           "kv_gb": 0.14265060424804688
         }
       },
-      "required_tflops_per_s": {
-        "analytic_normal_attention_full": 13.311368375807989,
-        "analytic_flash_attention_full": 13.311368375807989,
-        "vendor_normal_attention_torch_visible": null
+      "kvcache_gb": {
+        "analytic_normal_attention_full_prefill": 0.14265060424804688,
+        "analytic_flash_attention_full_prefill": 0.14265060424804688,
+        "analytic_normal_attention_full_decode": 0.1483154296875,
+        "analytic_flash_attention_full_decode": 0.1483154296875,
+        "analytic_normal_attention_full_total": 0.2909660339355469,
+        "analytic_flash_attention_full_total": 0.2909660339355469,
+        "vendor_total": null
       }
     },
     {
@@ -1753,7 +1916,7 @@
       "image_height": 1280,
       "batch_size": 1,
       "context_len": 2503,
-      "decode_steps": 64,
+      "decode_steps": 100,
       "analytic_only": true,
       "prefill": {
         "analytic_tflops": 13.327827030528006,
@@ -1783,10 +1946,14 @@
           "kv_gb": 0.14322280883789062
         }
       },
-      "required_tflops_per_s": {
-        "analytic_normal_attention_full": 13.327827030528006,
-        "analytic_flash_attention_full": 13.327827030528006,
-        "vendor_normal_attention_torch_visible": null
+      "kvcache_gb": {
+        "analytic_normal_attention_full_prefill": 0.14322280883789062,
+        "analytic_flash_attention_full_prefill": 0.14322280883789062,
+        "analytic_normal_attention_full_decode": 0.14888763427734375,
+        "analytic_flash_attention_full_decode": 0.14888763427734375,
+        "analytic_normal_attention_full_total": 0.2921104431152344,
+        "analytic_flash_attention_full_total": 0.2921104431152344,
+        "vendor_total": null
       }
     },
     {
@@ -1799,7 +1966,7 @@
       "image_height": 640,
       "batch_size": 1,
       "context_len": 2593,
-      "decode_steps": 64,
+      "decode_steps": 100,
       "analytic_only": true,
       "prefill": {
         "analytic_tflops": 13.882908543487991,
@@ -1829,10 +1996,14 @@
           "kv_gb": 0.14837265014648438
         }
       },
-      "required_tflops_per_s": {
-        "analytic_normal_attention_full": 13.882908543487991,
-        "analytic_flash_attention_full": 13.882908543487991,
-        "vendor_normal_attention_torch_visible": null
+      "kvcache_gb": {
+        "analytic_normal_attention_full_prefill": 0.14837265014648438,
+        "analytic_flash_attention_full_prefill": 0.14837265014648438,
+        "analytic_normal_attention_full_decode": 0.1540374755859375,
+        "analytic_flash_attention_full_decode": 0.1540374755859375,
+        "analytic_normal_attention_full_total": 0.3024101257324219,
+        "analytic_flash_attention_full_total": 0.3024101257324219,
+        "vendor_total": null
       }
     },
     {
@@ -1845,7 +2016,7 @@
       "image_height": 640,
       "batch_size": 1,
       "context_len": 2693,
-      "decode_steps": 64,
+      "decode_steps": 100,
       "analytic_only": true,
       "prefill": {
         "analytic_tflops": 14.457383495168004,
@@ -1875,10 +2046,14 @@
           "kv_gb": 0.15409469604492188
         }
       },
-      "required_tflops_per_s": {
-        "analytic_normal_attention_full": 14.457383495168004,
-        "analytic_flash_attention_full": 14.457383495168004,
-        "vendor_normal_attention_torch_visible": null
+      "kvcache_gb": {
+        "analytic_normal_attention_full_prefill": 0.15409469604492188,
+        "analytic_flash_attention_full_prefill": 0.15409469604492188,
+        "analytic_normal_attention_full_decode": 0.159759521484375,
+        "analytic_flash_attention_full_decode": 0.159759521484375,
+        "analytic_normal_attention_full_total": 0.3138542175292969,
+        "analytic_flash_attention_full_total": 0.3138542175292969,
+        "vendor_total": null
       }
     },
     {
@@ -1891,7 +2066,7 @@
       "image_height": 1280,
       "batch_size": 1,
       "context_len": 2703,
-      "decode_steps": 64,
+      "decode_steps": 100,
       "analytic_only": true,
       "prefill": {
         "analytic_tflops": 14.474258508287997,
@@ -1921,10 +2096,14 @@
           "kv_gb": 0.15466690063476562
         }
       },
-      "required_tflops_per_s": {
-        "analytic_normal_attention_full": 14.474258508287997,
-        "analytic_flash_attention_full": 14.474258508287997,
-        "vendor_normal_attention_torch_visible": null
+      "kvcache_gb": {
+        "analytic_normal_attention_full_prefill": 0.15466690063476562,
+        "analytic_flash_attention_full_prefill": 0.15466690063476562,
+        "analytic_normal_attention_full_decode": 0.16033172607421875,
+        "analytic_flash_attention_full_decode": 0.16033172607421875,
+        "analytic_normal_attention_full_total": 0.3149986267089844,
+        "analytic_flash_attention_full_total": 0.3149986267089844,
+        "vendor_total": null
       }
     },
     {
@@ -1937,7 +2116,7 @@
       "image_height": 1920,
       "batch_size": 1,
       "context_len": 2713,
-      "decode_steps": 64,
+      "decode_steps": 100,
       "analytic_only": true,
       "prefill": {
         "analytic_tflops": 14.491145809408007,
@@ -1967,10 +2146,14 @@
           "kv_gb": 0.15523910522460938
         }
       },
-      "required_tflops_per_s": {
-        "analytic_normal_attention_full": 14.491145809408007,
-        "analytic_flash_attention_full": 14.491145809408007,
-        "vendor_normal_attention_torch_visible": null
+      "kvcache_gb": {
+        "analytic_normal_attention_full_prefill": 0.15523910522460938,
+        "analytic_flash_attention_full_prefill": 0.15523910522460938,
+        "analytic_normal_attention_full_decode": 0.1609039306640625,
+        "analytic_flash_attention_full_decode": 0.1609039306640625,
+        "analytic_normal_attention_full_total": 0.3161430358886719,
+        "analytic_flash_attention_full_total": 0.3161430358886719,
+        "vendor_total": null
       }
     },
     {
@@ -1983,7 +2166,7 @@
       "image_height": 2560,
       "batch_size": 1,
       "context_len": 2723,
-      "decode_steps": 64,
+      "decode_steps": 100,
       "analytic_only": true,
       "prefill": {
         "analytic_tflops": 14.508045398528006,
@@ -2013,10 +2196,14 @@
           "kv_gb": 0.15581130981445312
         }
       },
-      "required_tflops_per_s": {
-        "analytic_normal_attention_full": 14.508045398528006,
-        "analytic_flash_attention_full": 14.508045398528006,
-        "vendor_normal_attention_torch_visible": null
+      "kvcache_gb": {
+        "analytic_normal_attention_full_prefill": 0.15581130981445312,
+        "analytic_flash_attention_full_prefill": 0.15581130981445312,
+        "analytic_normal_attention_full_decode": 0.16147613525390625,
+        "analytic_flash_attention_full_decode": 0.16147613525390625,
+        "analytic_normal_attention_full_total": 0.3172874450683594,
+        "analytic_flash_attention_full_total": 0.3172874450683594,
+        "vendor_total": null
       }
     },
     {
@@ -2029,7 +2216,7 @@
       "image_height": 640,
       "batch_size": 1,
       "context_len": 2793,
-      "decode_steps": 64,
+      "decode_steps": 100,
       "analytic_only": true,
       "prefill": {
         "analytic_tflops": 15.034793230848008,
@@ -2059,10 +2246,14 @@
           "kv_gb": 0.15981674194335938
         }
       },
-      "required_tflops_per_s": {
-        "analytic_normal_attention_full": 15.034793230848008,
-        "analytic_flash_attention_full": 15.034793230848008,
-        "vendor_normal_attention_torch_visible": null
+      "kvcache_gb": {
+        "analytic_normal_attention_full_prefill": 0.15981674194335938,
+        "analytic_flash_attention_full_prefill": 0.15981674194335938,
+        "analytic_normal_attention_full_decode": 0.1654815673828125,
+        "analytic_flash_attention_full_decode": 0.1654815673828125,
+        "analytic_normal_attention_full_total": 0.3252983093261719,
+        "analytic_flash_attention_full_total": 0.3252983093261719,
+        "vendor_total": null
       }
     },
     {
@@ -2075,7 +2266,7 @@
       "image_height": 3200,
       "batch_size": 1,
       "context_len": 2833,
-      "decode_steps": 64,
+      "decode_steps": 100,
       "analytic_only": true,
       "prefill": {
         "analytic_tflops": 15.103199728128006,
@@ -2105,10 +2296,14 @@
           "kv_gb": 0.16210556030273438
         }
       },
-      "required_tflops_per_s": {
-        "analytic_normal_attention_full": 15.103199728128006,
-        "analytic_flash_attention_full": 15.103199728128006,
-        "vendor_normal_attention_torch_visible": null
+      "kvcache_gb": {
+        "analytic_normal_attention_full_prefill": 0.16210556030273438,
+        "analytic_flash_attention_full_prefill": 0.16210556030273438,
+        "analytic_normal_attention_full_decode": 0.1677703857421875,
+        "analytic_flash_attention_full_decode": 0.1677703857421875,
+        "analytic_normal_attention_full_total": 0.3298759460449219,
+        "analytic_flash_attention_full_total": 0.3298759460449219,
+        "vendor_total": null
       }
     },
     {
@@ -2121,7 +2316,7 @@
       "image_height": 640,
       "batch_size": 1,
       "context_len": 2893,
-      "decode_steps": 64,
+      "decode_steps": 100,
       "analytic_only": true,
       "prefill": {
         "analytic_tflops": 15.615137750528007,
@@ -2151,10 +2346,14 @@
           "kv_gb": 0.16553878784179688
         }
       },
-      "required_tflops_per_s": {
-        "analytic_normal_attention_full": 15.615137750528007,
-        "analytic_flash_attention_full": 15.615137750528007,
-        "vendor_normal_attention_torch_visible": null
+      "kvcache_gb": {
+        "analytic_normal_attention_full_prefill": 0.16553878784179688,
+        "analytic_flash_attention_full_prefill": 0.16553878784179688,
+        "analytic_normal_attention_full_decode": 0.17120361328125,
+        "analytic_flash_attention_full_decode": 0.17120361328125,
+        "analytic_normal_attention_full_total": 0.3367424011230469,
+        "analytic_flash_attention_full_total": 0.3367424011230469,
+        "vendor_total": null
       }
     },
     {
@@ -2167,7 +2366,7 @@
       "image_height": 1280,
       "batch_size": 1,
       "context_len": 2903,
-      "decode_steps": 64,
+      "decode_steps": 100,
       "analytic_only": true,
       "prefill": {
         "analytic_tflops": 15.632429122047999,
@@ -2197,10 +2396,14 @@
           "kv_gb": 0.16611099243164062
         }
       },
-      "required_tflops_per_s": {
-        "analytic_normal_attention_full": 15.632429122047999,
-        "analytic_flash_attention_full": 15.632429122047999,
-        "vendor_normal_attention_torch_visible": null
+      "kvcache_gb": {
+        "analytic_normal_attention_full_prefill": 0.16611099243164062,
+        "analytic_flash_attention_full_prefill": 0.16611099243164062,
+        "analytic_normal_attention_full_decode": 0.17177581787109375,
+        "analytic_flash_attention_full_decode": 0.17177581787109375,
+        "analytic_normal_attention_full_total": 0.3378868103027344,
+        "analytic_flash_attention_full_total": 0.3378868103027344,
+        "vendor_total": null
       }
     },
     {
@@ -2213,7 +2416,7 @@
       "image_height": 640,
       "batch_size": 1,
       "context_len": 2993,
-      "decode_steps": 64,
+      "decode_steps": 100,
       "analytic_only": true,
       "prefill": {
         "analytic_tflops": 16.198417054208,
@@ -2243,10 +2446,14 @@
           "kv_gb": 0.17126083374023438
         }
       },
-      "required_tflops_per_s": {
-        "analytic_normal_attention_full": 16.198417054208,
-        "analytic_flash_attention_full": 16.198417054208,
-        "vendor_normal_attention_torch_visible": null
+      "kvcache_gb": {
+        "analytic_normal_attention_full_prefill": 0.17126083374023438,
+        "analytic_flash_attention_full_prefill": 0.17126083374023438,
+        "analytic_normal_attention_full_decode": 0.1769256591796875,
+        "analytic_flash_attention_full_decode": 0.1769256591796875,
+        "analytic_normal_attention_full_total": 0.3481864929199219,
+        "analytic_flash_attention_full_total": 0.3481864929199219,
+        "vendor_total": null
       }
     },
     {
@@ -2259,7 +2466,7 @@
       "image_height": 1920,
       "batch_size": 1,
       "context_len": 3013,
-      "decode_steps": 64,
+      "decode_steps": 100,
       "analytic_only": true,
       "prefill": {
         "analytic_tflops": 16.233428443647995,
@@ -2289,10 +2496,14 @@
           "kv_gb": 0.17240524291992188
         }
       },
-      "required_tflops_per_s": {
-        "analytic_normal_attention_full": 16.233428443647995,
-        "analytic_flash_attention_full": 16.233428443647995,
-        "vendor_normal_attention_torch_visible": null
+      "kvcache_gb": {
+        "analytic_normal_attention_full_prefill": 0.17240524291992188,
+        "analytic_flash_attention_full_prefill": 0.17240524291992188,
+        "analytic_normal_attention_full_decode": 0.178070068359375,
+        "analytic_flash_attention_full_decode": 0.178070068359375,
+        "analytic_normal_attention_full_total": 0.3504753112792969,
+        "analytic_flash_attention_full_total": 0.3504753112792969,
+        "vendor_total": null
       }
     },
     {
@@ -2305,7 +2516,7 @@
       "image_height": 640,
       "batch_size": 1,
       "context_len": 3093,
-      "decode_steps": 64,
+      "decode_steps": 100,
       "analytic_only": true,
       "prefill": {
         "analytic_tflops": 16.784631141888003,
@@ -2335,10 +2546,14 @@
           "kv_gb": 0.17698287963867188
         }
       },
-      "required_tflops_per_s": {
-        "analytic_normal_attention_full": 16.784631141888003,
-        "analytic_flash_attention_full": 16.784631141888003,
-        "vendor_normal_attention_torch_visible": null
+      "kvcache_gb": {
+        "analytic_normal_attention_full_prefill": 0.17698287963867188,
+        "analytic_flash_attention_full_prefill": 0.17698287963867188,
+        "analytic_normal_attention_full_decode": 0.182647705078125,
+        "analytic_flash_attention_full_decode": 0.182647705078125,
+        "analytic_normal_attention_full_total": 0.3596305847167969,
+        "analytic_flash_attention_full_total": 0.3596305847167969,
+        "vendor_total": null
       }
     },
     {
@@ -2351,7 +2566,7 @@
       "image_height": 1280,
       "batch_size": 1,
       "context_len": 3103,
-      "decode_steps": 64,
+      "decode_steps": 100,
       "analytic_only": true,
       "prefill": {
         "analytic_tflops": 16.80233887180799,
@@ -2381,10 +2596,14 @@
           "kv_gb": 0.17755508422851562
         }
       },
-      "required_tflops_per_s": {
-        "analytic_normal_attention_full": 16.80233887180799,
-        "analytic_flash_attention_full": 16.80233887180799,
-        "vendor_normal_attention_torch_visible": null
+      "kvcache_gb": {
+        "analytic_normal_attention_full_prefill": 0.17755508422851562,
+        "analytic_flash_attention_full_prefill": 0.17755508422851562,
+        "analytic_normal_attention_full_decode": 0.18321990966796875,
+        "analytic_flash_attention_full_decode": 0.18321990966796875,
+        "analytic_normal_attention_full_total": 0.3607749938964844,
+        "analytic_flash_attention_full_total": 0.3607749938964844,
+        "vendor_total": null
       }
     },
     {
@@ -2397,7 +2616,7 @@
       "image_height": 2560,
       "batch_size": 1,
       "context_len": 3123,
-      "decode_steps": 64,
+      "decode_steps": 100,
       "analytic_only": true,
       "prefill": {
         "analytic_tflops": 16.837791195647995,
@@ -2427,10 +2646,14 @@
           "kv_gb": 0.17869949340820312
         }
       },
-      "required_tflops_per_s": {
-        "analytic_normal_attention_full": 16.837791195647995,
-        "analytic_flash_attention_full": 16.837791195647995,
-        "vendor_normal_attention_torch_visible": null
+      "kvcache_gb": {
+        "analytic_normal_attention_full_prefill": 0.17869949340820312,
+        "analytic_flash_attention_full_prefill": 0.17869949340820312,
+        "analytic_normal_attention_full_decode": 0.18436431884765625,
+        "analytic_flash_attention_full_decode": 0.18436431884765625,
+        "analytic_normal_attention_full_total": 0.3630638122558594,
+        "analytic_flash_attention_full_total": 0.3630638122558594,
+        "vendor_total": null
       }
     },
     {
@@ -2443,7 +2666,7 @@
       "image_height": 640,
       "batch_size": 1,
       "context_len": 3193,
-      "decode_steps": 64,
+      "decode_steps": 100,
       "analytic_only": true,
       "prefill": {
         "analytic_tflops": 17.373780013568002,
@@ -2473,11 +2696,19 @@
           "kv_gb": 0.18270492553710938
         }
       },
-      "required_tflops_per_s": {
-        "analytic_normal_attention_full": 17.373780013568002,
-        "analytic_flash_attention_full": 17.373780013568002,
-        "vendor_normal_attention_torch_visible": null
+      "kvcache_gb": {
+        "analytic_normal_attention_full_prefill": 0.18270492553710938,
+        "analytic_flash_attention_full_prefill": 0.18270492553710938,
+        "analytic_normal_attention_full_decode": 0.1883697509765625,
+        "analytic_flash_attention_full_decode": 0.1883697509765625,
+        "analytic_normal_attention_full_total": 0.3710746765136719,
+        "analytic_flash_attention_full_total": 0.3710746765136719,
+        "vendor_total": null
       }
     }
-  ]
+  ],
+  "min_image_tokens": 483,
+  "max_image_tokens": 3183,
+  "global_image_tokens": 273,
+  "batch_size": 1
 }
