@@ -1,0 +1,2016 @@
+{
+  "description": "DeepSeek-OCR analytic vision-stage cost sweep over candidate crop grids derived from a real input image, with optional vendor FLOP measurements for the same workloads.",
+  "model_id": "deepseek-ocr-3b",
+  "min_image_tokens": 483,
+  "max_image_tokens": 3183,
+  "num_points": 53,
+  "global_image_tokens": 273,
+  "batch_size": 1,
+  "decode_steps": 0,
+  "points": [
+    {
+      "image_tokens_total": 483,
+      "image_tokens_crops": 210,
+      "global_image_tokens": 273,
+      "height_crop_num": 1,
+      "width_crop_num": 2,
+      "image_size": 1280,
+      "image_width": 1280,
+      "image_height": 640,
+      "scale": 1.25,
+      "patch_size": 16,
+      "grid_size_width": 80,
+      "grid_size_height": 40,
+      "num_patches": 3200,
+      "batch_size": 1,
+      "context_len_prefill": 0,
+      "decode_steps": 0,
+      "stage_costs": {
+        "vision": {
+          "flops_tflops": 1.914369006592,
+          "io_tb": 0.015090384895999998,
+          "arithmetic_intensity": 126.8601841361542,
+          "weights_gb": 1.4876136779785156,
+          "activations_gb": 1.8549423217773438,
+          "kv_gb": 0.0
+        },
+        "vision_flash": {
+          "flops_tflops": 1.914369006592,
+          "io_tb": 0.015090384895999998,
+          "arithmetic_intensity": 126.8601841361542,
+          "weights_gb": 1.4876136779785156,
+          "activations_gb": 1.8549423217773438,
+          "kv_gb": 0.0
+        },
+        "vision_vendor": {
+          "flops_tflops": 1.916266708992,
+          "io_tb": 0.0,
+          "arithmetic_intensity": 0.0,
+          "weights_gb": 0.0,
+          "activations_gb": 0.0,
+          "kv_gb": 0.0
+        }
+      }
+    },
+    {
+      "image_tokens_total": 583,
+      "image_tokens_crops": 310,
+      "global_image_tokens": 273,
+      "height_crop_num": 1,
+      "width_crop_num": 3,
+      "image_size": 1920,
+      "image_width": 1920,
+      "image_height": 640,
+      "scale": 1.875,
+      "patch_size": 16,
+      "grid_size_width": 120,
+      "grid_size_height": 40,
+      "num_patches": 4800,
+      "batch_size": 1,
+      "context_len_prefill": 0,
+      "decode_steps": 0,
+      "stage_costs": {
+        "vision": {
+          "flops_tflops": 2.305415811072,
+          "io_tb": 0.01838026752,
+          "arithmetic_intensity": 125.42884963798396,
+          "weights_gb": 1.4876136779785156,
+          "activations_gb": 2.2585039138793945,
+          "kv_gb": 0.0
+        },
+        "vision_flash": {
+          "flops_tflops": 2.305415811072,
+          "io_tb": 0.01838026752,
+          "arithmetic_intensity": 125.42884963798396,
+          "weights_gb": 1.4876136779785156,
+          "activations_gb": 2.2585039138793945,
+          "kv_gb": 0.0
+        },
+        "vision_vendor": {
+          "flops_tflops": 2.304416546816,
+          "io_tb": 0.0,
+          "arithmetic_intensity": 0.0,
+          "weights_gb": 0.0,
+          "activations_gb": 0.0,
+          "kv_gb": 0.0
+        }
+      }
+    },
+    {
+      "image_tokens_total": 683,
+      "image_tokens_crops": 410,
+      "global_image_tokens": 273,
+      "height_crop_num": 1,
+      "width_crop_num": 4,
+      "image_size": 2560,
+      "image_width": 2560,
+      "image_height": 640,
+      "scale": 2.5,
+      "patch_size": 16,
+      "grid_size_width": 160,
+      "grid_size_height": 40,
+      "num_patches": 6400,
+      "batch_size": 1,
+      "context_len_prefill": 0,
+      "decode_steps": 0,
+      "stage_costs": {
+        "vision": {
+          "flops_tflops": 2.6981685995520004,
+          "io_tb": 0.021680799743999994,
+          "arithmetic_intensity": 124.44968042743437,
+          "weights_gb": 1.4876136779785156,
+          "activations_gb": 2.6633052825927734,
+          "kv_gb": 0.0
+        },
+        "vision_flash": {
+          "flops_tflops": 2.6981685995520004,
+          "io_tb": 0.021680799743999994,
+          "arithmetic_intensity": 124.44968042743437,
+          "weights_gb": 1.4876136779785156,
+          "activations_gb": 2.6633052825927734,
+          "kv_gb": 0.0
+        },
+        "vision_vendor": {
+          "flops_tflops": 2.69256638464,
+          "io_tb": 0.0,
+          "arithmetic_intensity": 0.0,
+          "weights_gb": 0.0,
+          "activations_gb": 0.0,
+          "kv_gb": 0.0
+        }
+      }
+    },
+    {
+      "image_tokens_total": 693,
+      "image_tokens_crops": 420,
+      "global_image_tokens": 273,
+      "height_crop_num": 2,
+      "width_crop_num": 2,
+      "image_size": 1280,
+      "image_width": 1280,
+      "image_height": 1280,
+      "scale": 1.25,
+      "patch_size": 16,
+      "grid_size_width": 80,
+      "grid_size_height": 80,
+      "num_patches": 6400,
+      "batch_size": 1,
+      "context_len_prefill": 0,
+      "decode_steps": 0,
+      "stage_costs": {
+        "vision": {
+          "flops_tflops": 2.698509796352,
+          "io_tb": 0.021682929663999997,
+          "arithmetic_intensity": 124.45319143530291,
+          "weights_gb": 1.4876136779785156,
+          "activations_gb": 2.663553237915039,
+          "kv_gb": 0.0
+        },
+        "vision_flash": {
+          "flops_tflops": 2.698509796352,
+          "io_tb": 0.021682929663999997,
+          "arithmetic_intensity": 124.45319143530291,
+          "weights_gb": 1.4876136779785156,
+          "activations_gb": 2.663553237915039,
+          "kv_gb": 0.0
+        },
+        "vision_vendor": {
+          "flops_tflops": 2.69256638464,
+          "io_tb": 0.0,
+          "arithmetic_intensity": 0.0,
+          "weights_gb": 0.0,
+          "activations_gb": 0.0,
+          "kv_gb": 0.0
+        }
+      }
+    },
+    {
+      "image_tokens_total": 783,
+      "image_tokens_crops": 510,
+      "global_image_tokens": 273,
+      "height_crop_num": 1,
+      "width_crop_num": 5,
+      "image_size": 3200,
+      "image_width": 3200,
+      "image_height": 640,
+      "scale": 3.125,
+      "patch_size": 16,
+      "grid_size_width": 200,
+      "grid_size_height": 40,
+      "num_patches": 8000,
+      "batch_size": 1,
+      "context_len_prefill": 0,
+      "decode_steps": 0,
+      "stage_costs": {
+        "vision": {
+          "flops_tflops": 3.0926273720319997,
+          "io_tb": 0.024991981567999998,
+          "arithmetic_intensity": 123.74478444685766,
+          "weights_gb": 1.4876136779785156,
+          "activations_gb": 3.0693464279174805,
+          "kv_gb": 0.0
+        },
+        "vision_flash": {
+          "flops_tflops": 3.0926273720319997,
+          "io_tb": 0.024991981567999998,
+          "arithmetic_intensity": 123.74478444685766,
+          "weights_gb": 1.4876136779785156,
+          "activations_gb": 3.0693464279174805,
+          "kv_gb": 0.0
+        },
+        "vision_vendor": {
+          "flops_tflops": 3.080716222464,
+          "io_tb": 0.0,
+          "arithmetic_intensity": 0.0,
+          "weights_gb": 0.0,
+          "activations_gb": 0.0,
+          "kv_gb": 0.0
+        }
+      }
+    },
+    {
+      "image_tokens_total": 883,
+      "image_tokens_crops": 610,
+      "global_image_tokens": 273,
+      "height_crop_num": 1,
+      "width_crop_num": 6,
+      "image_size": 3840,
+      "image_width": 3840,
+      "image_height": 640,
+      "scale": 3.75,
+      "patch_size": 16,
+      "grid_size_width": 240,
+      "grid_size_height": 40,
+      "num_patches": 9600,
+      "batch_size": 1,
+      "context_len_prefill": 0,
+      "decode_steps": 0,
+      "stage_costs": {
+        "vision": {
+          "flops_tflops": 3.4887921285120007,
+          "io_tb": 0.028313812992000004,
+          "arithmetic_intensity": 123.21873177228903,
+          "weights_gb": 1.4876136779785156,
+          "activations_gb": 3.4766273498535156,
+          "kv_gb": 0.0
+        },
+        "vision_flash": {
+          "flops_tflops": 3.4887921285120007,
+          "io_tb": 0.028313812992000004,
+          "arithmetic_intensity": 123.21873177228903,
+          "weights_gb": 1.4876136779785156,
+          "activations_gb": 3.4766273498535156,
+          "kv_gb": 0.0
+        },
+        "vision_vendor": {
+          "flops_tflops": 3.468866060288,
+          "io_tb": 0.0,
+          "arithmetic_intensity": 0.0,
+          "weights_gb": 0.0,
+          "activations_gb": 0.0,
+          "kv_gb": 0.0
+        }
+      }
+    },
+    {
+      "image_tokens_total": 893,
+      "image_tokens_crops": 620,
+      "global_image_tokens": 273,
+      "height_crop_num": 2,
+      "width_crop_num": 3,
+      "image_size": 1920,
+      "image_width": 1920,
+      "image_height": 1280,
+      "scale": 1.875,
+      "patch_size": 16,
+      "grid_size_width": 120,
+      "grid_size_height": 80,
+      "num_patches": 9600,
+      "batch_size": 1,
+      "context_len_prefill": 0,
+      "decode_steps": 0,
+      "stage_costs": {
+        "vision": {
+          "flops_tflops": 3.4893039237120007,
+          "io_tb": 0.028317007872000005,
+          "arithmetic_intensity": 123.22290333373256,
+          "weights_gb": 1.4876136779785156,
+          "activations_gb": 3.476999282836914,
+          "kv_gb": 0.0
+        },
+        "vision_flash": {
+          "flops_tflops": 3.4893039237120007,
+          "io_tb": 0.028317007872000005,
+          "arithmetic_intensity": 123.22290333373256,
+          "weights_gb": 1.4876136779785156,
+          "activations_gb": 3.476999282836914,
+          "kv_gb": 0.0
+        },
+        "vision_vendor": {
+          "flops_tflops": 3.468866060288,
+          "io_tb": 0.0,
+          "arithmetic_intensity": 0.0,
+          "weights_gb": 0.0,
+          "activations_gb": 0.0,
+          "kv_gb": 0.0
+        }
+      }
+    },
+    {
+      "image_tokens_total": 983,
+      "image_tokens_crops": 710,
+      "global_image_tokens": 273,
+      "height_crop_num": 1,
+      "width_crop_num": 7,
+      "image_size": 4480,
+      "image_width": 4480,
+      "image_height": 640,
+      "scale": 4.375,
+      "patch_size": 16,
+      "grid_size_width": 280,
+      "grid_size_height": 40,
+      "num_patches": 11200,
+      "batch_size": 1,
+      "context_len_prefill": 0,
+      "decode_steps": 0,
+      "stage_costs": {
+        "vision": {
+          "flops_tflops": 3.886662868991999,
+          "io_tb": 0.031646294016,
+          "arithmetic_intensity": 122.81573529674431,
+          "weights_gb": 1.4876136779785156,
+          "activations_gb": 3.885148048400879,
+          "kv_gb": 0.0
+        },
+        "vision_flash": {
+          "flops_tflops": 3.886662868991999,
+          "io_tb": 0.031646294016,
+          "arithmetic_intensity": 122.81573529674431,
+          "weights_gb": 1.4876136779785156,
+          "activations_gb": 3.885148048400879,
+          "kv_gb": 0.0
+        },
+        "vision_vendor": {
+          "flops_tflops": 3.857015898112,
+          "io_tb": 0.0,
+          "arithmetic_intensity": 0.0,
+          "weights_gb": 0.0,
+          "activations_gb": 0.0,
+          "kv_gb": 0.0
+        }
+      }
+    },
+    {
+      "image_tokens_total": 1083,
+      "image_tokens_crops": 810,
+      "global_image_tokens": 273,
+      "height_crop_num": 1,
+      "width_crop_num": 8,
+      "image_size": 5120,
+      "image_width": 5120,
+      "image_height": 640,
+      "scale": 5.0,
+      "patch_size": 16,
+      "grid_size_width": 320,
+      "grid_size_height": 40,
+      "num_patches": 12800,
+      "batch_size": 1,
+      "context_len_prefill": 0,
+      "decode_steps": 0,
+      "stage_costs": {
+        "vision": {
+          "flops_tflops": 4.286239593472,
+          "io_tb": 0.03498942463999999,
+          "arithmetic_intensity": 122.50100244780707,
+          "weights_gb": 1.4876136779785156,
+          "activations_gb": 4.29490852355957,
+          "kv_gb": 0.0
+        },
+        "vision_flash": {
+          "flops_tflops": 4.286239593472,
+          "io_tb": 0.03498942463999999,
+          "arithmetic_intensity": 122.50100244780707,
+          "weights_gb": 1.4876136779785156,
+          "activations_gb": 4.29490852355957,
+          "kv_gb": 0.0
+        },
+        "vision_vendor": {
+          "flops_tflops": 4.245165735936,
+          "io_tb": 0.0,
+          "arithmetic_intensity": 0.0,
+          "weights_gb": 0.0,
+          "activations_gb": 0.0,
+          "kv_gb": 0.0
+        }
+      }
+    },
+    {
+      "image_tokens_total": 1093,
+      "image_tokens_crops": 820,
+      "global_image_tokens": 273,
+      "height_crop_num": 2,
+      "width_crop_num": 4,
+      "image_size": 2560,
+      "image_width": 2560,
+      "image_height": 1280,
+      "scale": 2.5,
+      "patch_size": 16,
+      "grid_size_width": 160,
+      "grid_size_height": 80,
+      "num_patches": 12800,
+      "batch_size": 1,
+      "context_len_prefill": 0,
+      "decode_steps": 0,
+      "stage_costs": {
+        "vision": {
+          "flops_tflops": 4.286921987072001,
+          "io_tb": 0.03499368447999999,
+          "arithmetic_intensity": 122.50559067371468,
+          "weights_gb": 1.4876136779785156,
+          "activations_gb": 4.295404434204102,
+          "kv_gb": 0.0
+        },
+        "vision_flash": {
+          "flops_tflops": 4.286921987072001,
+          "io_tb": 0.03499368447999999,
+          "arithmetic_intensity": 122.50559067371468,
+          "weights_gb": 1.4876136779785156,
+          "activations_gb": 4.295404434204102,
+          "kv_gb": 0.0
+        },
+        "vision_vendor": {
+          "flops_tflops": 4.245165735936,
+          "io_tb": 0.0,
+          "arithmetic_intensity": 0.0,
+          "weights_gb": 0.0,
+          "activations_gb": 0.0,
+          "kv_gb": 0.0
+        }
+      }
+    },
+    {
+      "image_tokens_total": 1183,
+      "image_tokens_crops": 910,
+      "global_image_tokens": 273,
+      "height_crop_num": 1,
+      "width_crop_num": 9,
+      "image_size": 5760,
+      "image_width": 5760,
+      "image_height": 640,
+      "scale": 5.625,
+      "patch_size": 16,
+      "grid_size_width": 360,
+      "grid_size_height": 40,
+      "num_patches": 14400,
+      "batch_size": 1,
+      "context_len_prefill": 0,
+      "decode_steps": 0,
+      "stage_costs": {
+        "vision": {
+          "flops_tflops": 4.687522301951999,
+          "io_tb": 0.038343204863999995,
+          "arithmetic_intensity": 122.25170844686123,
+          "weights_gb": 1.4876136779785156,
+          "activations_gb": 4.70590877532959,
+          "kv_gb": 0.0
+        },
+        "vision_flash": {
+          "flops_tflops": 4.687522301951999,
+          "io_tb": 0.038343204863999995,
+          "arithmetic_intensity": 122.25170844686123,
+          "weights_gb": 1.4876136779785156,
+          "activations_gb": 4.70590877532959,
+          "kv_gb": 0.0
+        },
+        "vision_vendor": {
+          "flops_tflops": 4.63331557376,
+          "io_tb": 0.0,
+          "arithmetic_intensity": 0.0,
+          "weights_gb": 0.0,
+          "activations_gb": 0.0,
+          "kv_gb": 0.0
+        }
+      }
+    },
+    {
+      "image_tokens_total": 1203,
+      "image_tokens_crops": 930,
+      "global_image_tokens": 273,
+      "height_crop_num": 3,
+      "width_crop_num": 3,
+      "image_size": 1920,
+      "image_width": 1920,
+      "image_height": 1920,
+      "scale": 1.875,
+      "patch_size": 16,
+      "grid_size_width": 120,
+      "grid_size_height": 120,
+      "num_patches": 14400,
+      "batch_size": 1,
+      "context_len_prefill": 0,
+      "decode_steps": 0,
+      "stage_costs": {
+        "vision": {
+          "flops_tflops": 4.689057687551999,
+          "io_tb": 0.038352789504,
+          "arithmetic_intensity": 122.26119007752891,
+          "weights_gb": 1.4876136779785156,
+          "activations_gb": 4.707024574279785,
+          "kv_gb": 0.0
+        },
+        "vision_flash": {
+          "flops_tflops": 4.689057687551999,
+          "io_tb": 0.038352789504,
+          "arithmetic_intensity": 122.26119007752891,
+          "weights_gb": 1.4876136779785156,
+          "activations_gb": 4.707024574279785,
+          "kv_gb": 0.0
+        },
+        "vision_vendor": {
+          "flops_tflops": 4.63331557376,
+          "io_tb": 0.0,
+          "arithmetic_intensity": 0.0,
+          "weights_gb": 0.0,
+          "activations_gb": 0.0,
+          "kv_gb": 0.0
+        }
+      }
+    },
+    {
+      "image_tokens_total": 1283,
+      "image_tokens_crops": 1010,
+      "global_image_tokens": 273,
+      "height_crop_num": 1,
+      "width_crop_num": 10,
+      "image_size": 6400,
+      "image_width": 6400,
+      "image_height": 640,
+      "scale": 6.25,
+      "patch_size": 16,
+      "grid_size_width": 400,
+      "grid_size_height": 40,
+      "num_patches": 16000,
+      "batch_size": 1,
+      "context_len_prefill": 0,
+      "decode_steps": 0,
+      "stage_costs": {
+        "vision": {
+          "flops_tflops": 5.090510994432,
+          "io_tb": 0.04170763468799999,
+          "arithmetic_intensity": 122.05225811802337,
+          "weights_gb": 1.4876136779785156,
+          "activations_gb": 5.1181488037109375,
+          "kv_gb": 0.0
+        },
+        "vision_flash": {
+          "flops_tflops": 5.090510994432,
+          "io_tb": 0.04170763468799999,
+          "arithmetic_intensity": 122.05225811802337,
+          "weights_gb": 1.4876136779785156,
+          "activations_gb": 5.1181488037109375,
+          "kv_gb": 0.0
+        }
+      }
+    },
+    {
+      "image_tokens_total": 1293,
+      "image_tokens_crops": 1020,
+      "global_image_tokens": 273,
+      "height_crop_num": 2,
+      "width_crop_num": 5,
+      "image_size": 3200,
+      "image_width": 3200,
+      "image_height": 1280,
+      "scale": 3.125,
+      "patch_size": 16,
+      "grid_size_width": 200,
+      "grid_size_height": 80,
+      "num_patches": 16000,
+      "batch_size": 1,
+      "context_len_prefill": 0,
+      "decode_steps": 0,
+      "stage_costs": {
+        "vision": {
+          "flops_tflops": 5.091363986432,
+          "io_tb": 0.04171295948799999,
+          "arithmetic_intensity": 122.05712682401946,
+          "weights_gb": 1.4876136779785156,
+          "activations_gb": 5.118768692016602,
+          "kv_gb": 0.0
+        },
+        "vision_flash": {
+          "flops_tflops": 5.091363986432,
+          "io_tb": 0.04171295948799999,
+          "arithmetic_intensity": 122.05712682401946,
+          "weights_gb": 1.4876136779785156,
+          "activations_gb": 5.118768692016602,
+          "kv_gb": 0.0
+        }
+      }
+    },
+    {
+      "image_tokens_total": 1383,
+      "image_tokens_crops": 1110,
+      "global_image_tokens": 273,
+      "height_crop_num": 1,
+      "width_crop_num": 11,
+      "image_size": 7040,
+      "image_width": 7040,
+      "image_height": 640,
+      "scale": 6.875,
+      "patch_size": 16,
+      "grid_size_width": 440,
+      "grid_size_height": 40,
+      "num_patches": 17600,
+      "batch_size": 1,
+      "context_len_prefill": 0,
+      "decode_steps": 0,
+      "stage_costs": {
+        "vision": {
+          "flops_tflops": 5.495205670911999,
+          "io_tb": 0.045082714112,
+          "arithmetic_intensity": 121.89163361505112,
+          "weights_gb": 1.4876136779785156,
+          "activations_gb": 5.531628608703613,
+          "kv_gb": 0.0
+        },
+        "vision_flash": {
+          "flops_tflops": 5.495205670911999,
+          "io_tb": 0.045082714112,
+          "arithmetic_intensity": 121.89163361505112,
+          "weights_gb": 1.4876136779785156,
+          "activations_gb": 5.531628608703613,
+          "kv_gb": 0.0
+        }
+      }
+    },
+    {
+      "image_tokens_total": 1483,
+      "image_tokens_crops": 1210,
+      "global_image_tokens": 273,
+      "height_crop_num": 1,
+      "width_crop_num": 12,
+      "image_size": 7680,
+      "image_width": 7680,
+      "image_height": 640,
+      "scale": 7.5,
+      "patch_size": 16,
+      "grid_size_width": 480,
+      "grid_size_height": 40,
+      "num_patches": 19200,
+      "batch_size": 1,
+      "context_len_prefill": 0,
+      "decode_steps": 0,
+      "stage_costs": {
+        "vision": {
+          "flops_tflops": 5.901606331392001,
+          "io_tb": 0.048468443136,
+          "arithmetic_intensity": 121.76182995670796,
+          "weights_gb": 1.4876136779785156,
+          "activations_gb": 5.946348190307617,
+          "kv_gb": 0.0
+        },
+        "vision_flash": {
+          "flops_tflops": 5.901606331392001,
+          "io_tb": 0.048468443136,
+          "arithmetic_intensity": 121.76182995670796,
+          "weights_gb": 1.4876136779785156,
+          "activations_gb": 5.946348190307617,
+          "kv_gb": 0.0
+        }
+      }
+    },
+    {
+      "image_tokens_total": 1493,
+      "image_tokens_crops": 1220,
+      "global_image_tokens": 273,
+      "height_crop_num": 2,
+      "width_crop_num": 6,
+      "image_size": 3840,
+      "image_width": 3840,
+      "image_height": 1280,
+      "scale": 3.75,
+      "patch_size": 16,
+      "grid_size_width": 240,
+      "grid_size_height": 80,
+      "num_patches": 19200,
+      "batch_size": 1,
+      "context_len_prefill": 0,
+      "decode_steps": 0,
+      "stage_costs": {
+        "vision": {
+          "flops_tflops": 5.902629921792,
+          "io_tb": 0.048474832896000006,
+          "arithmetic_intensity": 121.76689570969242,
+          "weights_gb": 1.4876136779785156,
+          "activations_gb": 5.947092056274414,
+          "kv_gb": 0.0
+        },
+        "vision_flash": {
+          "flops_tflops": 5.902629921792,
+          "io_tb": 0.048474832896000006,
+          "arithmetic_intensity": 121.76689570969242,
+          "weights_gb": 1.4876136779785156,
+          "activations_gb": 5.947092056274414,
+          "kv_gb": 0.0
+        }
+      }
+    },
+    {
+      "image_tokens_total": 1503,
+      "image_tokens_crops": 1230,
+      "global_image_tokens": 273,
+      "height_crop_num": 3,
+      "width_crop_num": 4,
+      "image_size": 2560,
+      "image_width": 2560,
+      "image_height": 1920,
+      "scale": 2.5,
+      "patch_size": 16,
+      "grid_size_width": 160,
+      "grid_size_height": 120,
+      "num_patches": 19200,
+      "batch_size": 1,
+      "context_len_prefill": 0,
+      "decode_steps": 0,
+      "stage_costs": {
+        "vision": {
+          "flops_tflops": 5.903653512192001,
+          "io_tb": 0.048481222656,
+          "arithmetic_intensity": 121.77196012735807,
+          "weights_gb": 1.4876136779785156,
+          "activations_gb": 5.947835922241211,
+          "kv_gb": 0.0
+        },
+        "vision_flash": {
+          "flops_tflops": 5.903653512192001,
+          "io_tb": 0.048481222656,
+          "arithmetic_intensity": 121.77196012735807,
+          "weights_gb": 1.4876136779785156,
+          "activations_gb": 5.947835922241211,
+          "kv_gb": 0.0
+        }
+      }
+    },
+    {
+      "image_tokens_total": 1583,
+      "image_tokens_crops": 1310,
+      "global_image_tokens": 273,
+      "height_crop_num": 1,
+      "width_crop_num": 13,
+      "image_size": 8320,
+      "image_width": 8320,
+      "image_height": 640,
+      "scale": 8.125,
+      "patch_size": 16,
+      "grid_size_width": 520,
+      "grid_size_height": 40,
+      "num_patches": 20800,
+      "batch_size": 1,
+      "context_len_prefill": 0,
+      "decode_steps": 0,
+      "stage_costs": {
+        "vision": {
+          "flops_tflops": 6.309712975871999,
+          "io_tb": 0.05186482176,
+          "arithmetic_intensity": 121.65689115966991,
+          "weights_gb": 1.4876136779785156,
+          "activations_gb": 6.362307548522949,
+          "kv_gb": 0.0
+        },
+        "vision_flash": {
+          "flops_tflops": 6.309712975871999,
+          "io_tb": 0.05186482176,
+          "arithmetic_intensity": 121.65689115966991,
+          "weights_gb": 1.4876136779785156,
+          "activations_gb": 6.362307548522949,
+          "kv_gb": 0.0
+        }
+      }
+    },
+    {
+      "image_tokens_total": 1683,
+      "image_tokens_crops": 1410,
+      "global_image_tokens": 273,
+      "height_crop_num": 1,
+      "width_crop_num": 14,
+      "image_size": 8960,
+      "image_width": 8960,
+      "image_height": 640,
+      "scale": 8.75,
+      "patch_size": 16,
+      "grid_size_width": 560,
+      "grid_size_height": 40,
+      "num_patches": 22400,
+      "batch_size": 1,
+      "context_len_prefill": 0,
+      "decode_steps": 0,
+      "stage_costs": {
+        "vision": {
+          "flops_tflops": 6.719525604351999,
+          "io_tb": 0.05527184998399999,
+          "arithmetic_intensity": 121.57229414787376,
+          "weights_gb": 1.4876136779785156,
+          "activations_gb": 6.779506683349609,
+          "kv_gb": 0.0
+        },
+        "vision_flash": {
+          "flops_tflops": 6.719525604351999,
+          "io_tb": 0.05527184998399999,
+          "arithmetic_intensity": 121.57229414787376,
+          "weights_gb": 1.4876136779785156,
+          "activations_gb": 6.779506683349609,
+          "kv_gb": 0.0
+        }
+      }
+    },
+    {
+      "image_tokens_total": 1693,
+      "image_tokens_crops": 1420,
+      "global_image_tokens": 273,
+      "height_crop_num": 2,
+      "width_crop_num": 7,
+      "image_size": 4480,
+      "image_width": 4480,
+      "image_height": 1280,
+      "scale": 4.375,
+      "patch_size": 16,
+      "grid_size_width": 280,
+      "grid_size_height": 80,
+      "num_patches": 22400,
+      "batch_size": 1,
+      "context_len_prefill": 0,
+      "decode_steps": 0,
+      "stage_costs": {
+        "vision": {
+          "flops_tflops": 6.720719793151999,
+          "io_tb": 0.05527930470399999,
+          "arithmetic_intensity": 121.5775022703151,
+          "weights_gb": 1.4876136779785156,
+          "activations_gb": 6.780374526977539,
+          "kv_gb": 0.0
+        },
+        "vision_flash": {
+          "flops_tflops": 6.720719793151999,
+          "io_tb": 0.05527930470399999,
+          "arithmetic_intensity": 121.5775022703151,
+          "weights_gb": 1.4876136779785156,
+          "activations_gb": 6.780374526977539,
+          "kv_gb": 0.0
+        }
+      }
+    },
+    {
+      "image_tokens_total": 1783,
+      "image_tokens_crops": 1510,
+      "global_image_tokens": 273,
+      "height_crop_num": 1,
+      "width_crop_num": 15,
+      "image_size": 9600,
+      "image_width": 9600,
+      "image_height": 640,
+      "scale": 9.375,
+      "patch_size": 16,
+      "grid_size_width": 600,
+      "grid_size_height": 40,
+      "num_patches": 24000,
+      "batch_size": 1,
+      "context_len_prefill": 0,
+      "decode_steps": 0,
+      "stage_costs": {
+        "vision": {
+          "flops_tflops": 7.131044216832,
+          "io_tb": 0.058689527808000005,
+          "arithmetic_intensity": 121.50454234630871,
+          "weights_gb": 1.4876136779785156,
+          "activations_gb": 7.197945594787598,
+          "kv_gb": 0.0
+        },
+        "vision_flash": {
+          "flops_tflops": 7.131044216832,
+          "io_tb": 0.058689527808000005,
+          "arithmetic_intensity": 121.50454234630871,
+          "weights_gb": 1.4876136779785156,
+          "activations_gb": 7.197945594787598,
+          "kv_gb": 0.0
+        }
+      }
+    },
+    {
+      "image_tokens_total": 1803,
+      "image_tokens_crops": 1530,
+      "global_image_tokens": 273,
+      "height_crop_num": 3,
+      "width_crop_num": 5,
+      "image_size": 3200,
+      "image_width": 3200,
+      "image_height": 1920,
+      "scale": 3.125,
+      "patch_size": 16,
+      "grid_size_width": 200,
+      "grid_size_height": 120,
+      "num_patches": 24000,
+      "batch_size": 1,
+      "context_len_prefill": 0,
+      "decode_steps": 0,
+      "stage_costs": {
+        "vision": {
+          "flops_tflops": 7.133603192832,
+          "io_tb": 0.058705502208000006,
+          "arithmetic_intensity": 121.51506970431605,
+          "weights_gb": 1.4876136779785156,
+          "activations_gb": 7.19980525970459,
+          "kv_gb": 0.0
+        },
+        "vision_flash": {
+          "flops_tflops": 7.133603192832,
+          "io_tb": 0.058705502208000006,
+          "arithmetic_intensity": 121.51506970431605,
+          "weights_gb": 1.4876136779785156,
+          "activations_gb": 7.19980525970459,
+          "kv_gb": 0.0
+        }
+      }
+    },
+    {
+      "image_tokens_total": 1883,
+      "image_tokens_crops": 1610,
+      "global_image_tokens": 273,
+      "height_crop_num": 1,
+      "width_crop_num": 16,
+      "image_size": 10240,
+      "image_width": 10240,
+      "image_height": 640,
+      "scale": 10.0,
+      "patch_size": 16,
+      "grid_size_width": 640,
+      "grid_size_height": 40,
+      "num_patches": 25600,
+      "batch_size": 1,
+      "context_len_prefill": 0,
+      "decode_steps": 0,
+      "stage_costs": {
+        "vision": {
+          "flops_tflops": 7.544268813312001,
+          "io_tb": 0.062117855231999974,
+          "arithmetic_intensity": 121.45089016894413,
+          "weights_gb": 1.4876136779785156,
+          "activations_gb": 7.617624282836914,
+          "kv_gb": 0.0
+        },
+        "vision_flash": {
+          "flops_tflops": 7.544268813312001,
+          "io_tb": 0.062117855231999974,
+          "arithmetic_intensity": 121.45089016894413,
+          "weights_gb": 1.4876136779785156,
+          "activations_gb": 7.617624282836914,
+          "kv_gb": 0.0
+        }
+      }
+    },
+    {
+      "image_tokens_total": 1893,
+      "image_tokens_crops": 1620,
+      "global_image_tokens": 273,
+      "height_crop_num": 2,
+      "width_crop_num": 8,
+      "image_size": 5120,
+      "image_width": 5120,
+      "image_height": 1280,
+      "scale": 5.0,
+      "patch_size": 16,
+      "grid_size_width": 320,
+      "grid_size_height": 80,
+      "num_patches": 25600,
+      "batch_size": 1,
+      "context_len_prefill": 0,
+      "decode_steps": 0,
+      "stage_costs": {
+        "vision": {
+          "flops_tflops": 7.545633600512001,
+          "io_tb": 0.062126374911999974,
+          "arithmetic_intensity": 121.45620296050026,
+          "weights_gb": 1.4876136779785156,
+          "activations_gb": 7.618616104125977,
+          "kv_gb": 0.0
+        },
+        "vision_flash": {
+          "flops_tflops": 7.545633600512001,
+          "io_tb": 0.062126374911999974,
+          "arithmetic_intensity": 121.45620296050026,
+          "weights_gb": 1.4876136779785156,
+          "activations_gb": 7.618616104125977,
+          "kv_gb": 0.0
+        }
+      }
+    },
+    {
+      "image_tokens_total": 1913,
+      "image_tokens_crops": 1640,
+      "global_image_tokens": 273,
+      "height_crop_num": 4,
+      "width_crop_num": 4,
+      "image_size": 2560,
+      "image_width": 2560,
+      "image_height": 2560,
+      "scale": 2.5,
+      "patch_size": 16,
+      "grid_size_width": 160,
+      "grid_size_height": 160,
+      "num_patches": 25600,
+      "batch_size": 1,
+      "context_len_prefill": 0,
+      "decode_steps": 0,
+      "stage_costs": {
+        "vision": {
+          "flops_tflops": 7.548363174912001,
+          "io_tb": 0.06214341427199998,
+          "arithmetic_intensity": 121.4668241734036,
+          "weights_gb": 1.4876136779785156,
+          "activations_gb": 7.620599746704102,
+          "kv_gb": 0.0
+        },
+        "vision_flash": {
+          "flops_tflops": 7.548363174912001,
+          "io_tb": 0.06214341427199998,
+          "arithmetic_intensity": 121.4668241734036,
+          "weights_gb": 1.4876136779785156,
+          "activations_gb": 7.620599746704102,
+          "kv_gb": 0.0
+        }
+      }
+    },
+    {
+      "image_tokens_total": 1983,
+      "image_tokens_crops": 1710,
+      "global_image_tokens": 273,
+      "height_crop_num": 1,
+      "width_crop_num": 17,
+      "image_size": 10880,
+      "image_width": 10880,
+      "image_height": 640,
+      "scale": 10.625,
+      "patch_size": 16,
+      "grid_size_width": 680,
+      "grid_size_height": 40,
+      "num_patches": 27200,
+      "batch_size": 1,
+      "context_len_prefill": 0,
+      "decode_steps": 0,
+      "stage_costs": {
+        "vision": {
+          "flops_tflops": 7.959199393791999,
+          "io_tb": 0.065556832256,
+          "arithmetic_intensity": 121.40915172214632,
+          "weights_gb": 1.4876136779785156,
+          "activations_gb": 8.038542747497559,
+          "kv_gb": 0.0
+        },
+        "vision_flash": {
+          "flops_tflops": 7.959199393791999,
+          "io_tb": 0.065556832256,
+          "arithmetic_intensity": 121.40915172214632,
+          "weights_gb": 1.4876136779785156,
+          "activations_gb": 8.038542747497559,
+          "kv_gb": 0.0
+        }
+      }
+    },
+    {
+      "image_tokens_total": 2083,
+      "image_tokens_crops": 1810,
+      "global_image_tokens": 273,
+      "height_crop_num": 1,
+      "width_crop_num": 18,
+      "image_size": 11520,
+      "image_width": 11520,
+      "image_height": 640,
+      "scale": 11.25,
+      "patch_size": 16,
+      "grid_size_width": 720,
+      "grid_size_height": 40,
+      "num_patches": 28800,
+      "batch_size": 1,
+      "context_len_prefill": 0,
+      "decode_steps": 0,
+      "stage_costs": {
+        "vision": {
+          "flops_tflops": 8.375835958271999,
+          "io_tb": 0.06900645888,
+          "arithmetic_intensity": 121.37756514701482,
+          "weights_gb": 1.4876136779785156,
+          "activations_gb": 8.460700988769531,
+          "kv_gb": 0.0
+        },
+        "vision_flash": {
+          "flops_tflops": 8.375835958271999,
+          "io_tb": 0.06900645888,
+          "arithmetic_intensity": 121.37756514701482,
+          "weights_gb": 1.4876136779785156,
+          "activations_gb": 8.460700988769531,
+          "kv_gb": 0.0
+        }
+      }
+    },
+    {
+      "image_tokens_total": 2093,
+      "image_tokens_crops": 1820,
+      "global_image_tokens": 273,
+      "height_crop_num": 2,
+      "width_crop_num": 9,
+      "image_size": 5760,
+      "image_width": 5760,
+      "image_height": 1280,
+      "scale": 5.625,
+      "patch_size": 16,
+      "grid_size_width": 360,
+      "grid_size_height": 80,
+      "num_patches": 28800,
+      "batch_size": 1,
+      "context_len_prefill": 0,
+      "decode_steps": 0,
+      "stage_costs": {
+        "vision": {
+          "flops_tflops": 8.377371343872,
+          "io_tb": 0.06901604352,
+          "arithmetic_intensity": 121.38295556517001,
+          "weights_gb": 1.4876136779785156,
+          "activations_gb": 8.461816787719727,
+          "kv_gb": 0.0
+        },
+        "vision_flash": {
+          "flops_tflops": 8.377371343872,
+          "io_tb": 0.06901604352,
+          "arithmetic_intensity": 121.38295556517001,
+          "weights_gb": 1.4876136779785156,
+          "activations_gb": 8.461816787719727,
+          "kv_gb": 0.0
+        }
+      }
+    },
+    {
+      "image_tokens_total": 2103,
+      "image_tokens_crops": 1830,
+      "global_image_tokens": 273,
+      "height_crop_num": 3,
+      "width_crop_num": 6,
+      "image_size": 3840,
+      "image_width": 3840,
+      "image_height": 1920,
+      "scale": 3.75,
+      "patch_size": 16,
+      "grid_size_width": 240,
+      "grid_size_height": 120,
+      "num_patches": 28800,
+      "batch_size": 1,
+      "context_len_prefill": 0,
+      "decode_steps": 0,
+      "stage_costs": {
+        "vision": {
+          "flops_tflops": 8.378906729471998,
+          "io_tb": 0.06902562815999999,
+          "arithmetic_intensity": 121.38834448633867,
+          "weights_gb": 1.4876136779785156,
+          "activations_gb": 8.462932586669922,
+          "kv_gb": 0.0
+        },
+        "vision_flash": {
+          "flops_tflops": 8.378906729471998,
+          "io_tb": 0.06902562815999999,
+          "arithmetic_intensity": 121.38834448633867,
+          "weights_gb": 1.4876136779785156,
+          "activations_gb": 8.462932586669922,
+          "kv_gb": 0.0
+        }
+      }
+    },
+    {
+      "image_tokens_total": 2183,
+      "image_tokens_crops": 1910,
+      "global_image_tokens": 273,
+      "height_crop_num": 1,
+      "width_crop_num": 19,
+      "image_size": 12160,
+      "image_width": 12160,
+      "image_height": 640,
+      "scale": 11.875,
+      "patch_size": 16,
+      "grid_size_width": 760,
+      "grid_size_height": 40,
+      "num_patches": 30400,
+      "batch_size": 1,
+      "context_len_prefill": 0,
+      "decode_steps": 0,
+      "stage_costs": {
+        "vision": {
+          "flops_tflops": 8.794178506752,
+          "io_tb": 0.07246673510400002,
+          "arithmetic_intensity": 121.35469459374856,
+          "weights_gb": 1.4876136779785156,
+          "activations_gb": 8.884099006652832,
+          "kv_gb": 0.0
+        },
+        "vision_flash": {
+          "flops_tflops": 8.794178506752,
+          "io_tb": 0.07246673510400002,
+          "arithmetic_intensity": 121.35469459374856,
+          "weights_gb": 1.4876136779785156,
+          "activations_gb": 8.884099006652832,
+          "kv_gb": 0.0
+        }
+      }
+    },
+    {
+      "image_tokens_total": 2283,
+      "image_tokens_crops": 2010,
+      "global_image_tokens": 273,
+      "height_crop_num": 1,
+      "width_crop_num": 20,
+      "image_size": 12800,
+      "image_width": 12800,
+      "image_height": 640,
+      "scale": 12.5,
+      "patch_size": 16,
+      "grid_size_width": 800,
+      "grid_size_height": 40,
+      "num_patches": 32000,
+      "batch_size": 1,
+      "context_len_prefill": 0,
+      "decode_steps": 0,
+      "stage_costs": {
+        "vision": {
+          "flops_tflops": 9.214227039231998,
+          "io_tb": 0.07593766092799999,
+          "arithmetic_intensity": 121.33935818708498,
+          "weights_gb": 1.4876136779785156,
+          "activations_gb": 9.308736801147461,
+          "kv_gb": 0.0
+        },
+        "vision_flash": {
+          "flops_tflops": 9.214227039231998,
+          "io_tb": 0.07593766092799999,
+          "arithmetic_intensity": 121.33935818708498,
+          "weights_gb": 1.4876136779785156,
+          "activations_gb": 9.308736801147461,
+          "kv_gb": 0.0
+        }
+      }
+    },
+    {
+      "image_tokens_total": 2293,
+      "image_tokens_crops": 2020,
+      "global_image_tokens": 273,
+      "height_crop_num": 2,
+      "width_crop_num": 10,
+      "image_size": 6400,
+      "image_width": 6400,
+      "image_height": 1280,
+      "scale": 6.25,
+      "patch_size": 16,
+      "grid_size_width": 400,
+      "grid_size_height": 80,
+      "num_patches": 32000,
+      "batch_size": 1,
+      "context_len_prefill": 0,
+      "decode_steps": 0,
+      "stage_costs": {
+        "vision": {
+          "flops_tflops": 9.215933023232,
+          "io_tb": 0.07594831052799998,
+          "arithmetic_intensity": 121.3448062130934,
+          "weights_gb": 1.4876136779785156,
+          "activations_gb": 9.309976577758789,
+          "kv_gb": 0.0
+        },
+        "vision_flash": {
+          "flops_tflops": 9.215933023232,
+          "io_tb": 0.07594831052799998,
+          "arithmetic_intensity": 121.3448062130934,
+          "weights_gb": 1.4876136779785156,
+          "activations_gb": 9.309976577758789,
+          "kv_gb": 0.0
+        }
+      }
+    },
+    {
+      "image_tokens_total": 2313,
+      "image_tokens_crops": 2040,
+      "global_image_tokens": 273,
+      "height_crop_num": 4,
+      "width_crop_num": 5,
+      "image_size": 3200,
+      "image_width": 3200,
+      "image_height": 2560,
+      "scale": 3.125,
+      "patch_size": 16,
+      "grid_size_width": 200,
+      "grid_size_height": 160,
+      "num_patches": 32000,
+      "batch_size": 1,
+      "context_len_prefill": 0,
+      "decode_steps": 0,
+      "stage_costs": {
+        "vision": {
+          "flops_tflops": 9.219344991232,
+          "io_tb": 0.07596960972799999,
+          "arithmetic_intensity": 121.35569768280699,
+          "weights_gb": 1.4876136779785156,
+          "activations_gb": 9.312456130981445,
+          "kv_gb": 0.0
+        },
+        "vision_flash": {
+          "flops_tflops": 9.219344991232,
+          "io_tb": 0.07596960972799999,
+          "arithmetic_intensity": 121.35569768280699,
+          "weights_gb": 1.4876136779785156,
+          "activations_gb": 9.312456130981445,
+          "kv_gb": 0.0
+        }
+      }
+    },
+    {
+      "image_tokens_total": 2383,
+      "image_tokens_crops": 2110,
+      "global_image_tokens": 273,
+      "height_crop_num": 1,
+      "width_crop_num": 21,
+      "image_size": 13440,
+      "image_width": 13440,
+      "image_height": 640,
+      "scale": 13.125,
+      "patch_size": 16,
+      "grid_size_width": 840,
+      "grid_size_height": 40,
+      "num_patches": 33600,
+      "batch_size": 1,
+      "context_len_prefill": 0,
+      "decode_steps": 0,
+      "stage_costs": {
+        "vision": {
+          "flops_tflops": 9.635981555712,
+          "io_tb": 0.079419236352,
+          "arithmetic_intensity": 121.33057428308221,
+          "weights_gb": 1.4876136779785156,
+          "activations_gb": 9.734614372253418,
+          "kv_gb": 0.0
+        },
+        "vision_flash": {
+          "flops_tflops": 9.635981555712,
+          "io_tb": 0.079419236352,
+          "arithmetic_intensity": 121.33057428308221,
+          "weights_gb": 1.4876136779785156,
+          "activations_gb": 9.734614372253418,
+          "kv_gb": 0.0
+        }
+      }
+    },
+    {
+      "image_tokens_total": 2403,
+      "image_tokens_crops": 2130,
+      "global_image_tokens": 273,
+      "height_crop_num": 3,
+      "width_crop_num": 7,
+      "image_size": 4480,
+      "image_width": 4480,
+      "image_height": 1920,
+      "scale": 4.375,
+      "patch_size": 16,
+      "grid_size_width": 280,
+      "grid_size_height": 120,
+      "num_patches": 33600,
+      "batch_size": 1,
+      "context_len_prefill": 0,
+      "decode_steps": 0,
+      "stage_costs": {
+        "vision": {
+          "flops_tflops": 9.639564122111999,
+          "io_tb": 0.079441600512,
+          "arithmetic_intensity": 121.34151452117207,
+          "weights_gb": 1.4876136779785156,
+          "activations_gb": 9.737217903137207,
+          "kv_gb": 0.0
+        },
+        "vision_flash": {
+          "flops_tflops": 9.639564122111999,
+          "io_tb": 0.079441600512,
+          "arithmetic_intensity": 121.34151452117207,
+          "weights_gb": 1.4876136779785156,
+          "activations_gb": 9.737217903137207,
+          "kv_gb": 0.0
+        }
+      }
+    },
+    {
+      "image_tokens_total": 2483,
+      "image_tokens_crops": 2210,
+      "global_image_tokens": 273,
+      "height_crop_num": 1,
+      "width_crop_num": 22,
+      "image_size": 14080,
+      "image_width": 14080,
+      "image_height": 640,
+      "scale": 13.75,
+      "patch_size": 16,
+      "grid_size_width": 880,
+      "grid_size_height": 40,
+      "num_patches": 35200,
+      "batch_size": 1,
+      "context_len_prefill": 0,
+      "decode_steps": 0,
+      "stage_costs": {
+        "vision": {
+          "flops_tflops": 10.059442056191997,
+          "io_tb": 0.08291146137600001,
+          "arithmetic_intensity": 121.32752081853735,
+          "weights_gb": 1.4876136779785156,
+          "activations_gb": 10.161731719970703,
+          "kv_gb": 0.0
+        },
+        "vision_flash": {
+          "flops_tflops": 10.059442056191997,
+          "io_tb": 0.08291146137600001,
+          "arithmetic_intensity": 121.32752081853735,
+          "weights_gb": 1.4876136779785156,
+          "activations_gb": 10.161731719970703,
+          "kv_gb": 0.0
+        }
+      }
+    },
+    {
+      "image_tokens_total": 2493,
+      "image_tokens_crops": 2220,
+      "global_image_tokens": 273,
+      "height_crop_num": 2,
+      "width_crop_num": 11,
+      "image_size": 7040,
+      "image_width": 7040,
+      "image_height": 1280,
+      "scale": 6.875,
+      "patch_size": 16,
+      "grid_size_width": 440,
+      "grid_size_height": 80,
+      "num_patches": 35200,
+      "batch_size": 1,
+      "context_len_prefill": 0,
+      "decode_steps": 0,
+      "stage_costs": {
+        "vision": {
+          "flops_tflops": 10.061318638591997,
+          "io_tb": 0.08292317593600002,
+          "arithmetic_intensity": 121.33301124835484,
+          "weights_gb": 1.4876136779785156,
+          "activations_gb": 10.163095474243164,
+          "kv_gb": 0.0
+        },
+        "vision_flash": {
+          "flops_tflops": 10.061318638591997,
+          "io_tb": 0.08292317593600002,
+          "arithmetic_intensity": 121.33301124835484,
+          "weights_gb": 1.4876136779785156,
+          "activations_gb": 10.163095474243164,
+          "kv_gb": 0.0
+        }
+      }
+    },
+    {
+      "image_tokens_total": 2583,
+      "image_tokens_crops": 2310,
+      "global_image_tokens": 273,
+      "height_crop_num": 1,
+      "width_crop_num": 23,
+      "image_size": 14720,
+      "image_width": 14720,
+      "image_height": 640,
+      "scale": 14.375,
+      "patch_size": 16,
+      "grid_size_width": 920,
+      "grid_size_height": 40,
+      "num_patches": 36800,
+      "batch_size": 1,
+      "context_len_prefill": 0,
+      "decode_steps": 0,
+      "stage_costs": {
+        "vision": {
+          "flops_tflops": 10.484608540672001,
+          "io_tb": 0.08641433600000001,
+          "arithmetic_intensity": 121.32950417708469,
+          "weights_gb": 1.4876136779785156,
+          "activations_gb": 10.590088844299316,
+          "kv_gb": 0.0
+        },
+        "vision_flash": {
+          "flops_tflops": 10.484608540672001,
+          "io_tb": 0.08641433600000001,
+          "arithmetic_intensity": 121.32950417708469,
+          "weights_gb": 1.4876136779785156,
+          "activations_gb": 10.590088844299316,
+          "kv_gb": 0.0
+        }
+      }
+    },
+    {
+      "image_tokens_total": 2683,
+      "image_tokens_crops": 2410,
+      "global_image_tokens": 273,
+      "height_crop_num": 1,
+      "width_crop_num": 24,
+      "image_size": 15360,
+      "image_width": 15360,
+      "image_height": 640,
+      "scale": 15.0,
+      "patch_size": 16,
+      "grid_size_width": 960,
+      "grid_size_height": 40,
+      "num_patches": 38400,
+      "batch_size": 1,
+      "context_len_prefill": 0,
+      "decode_steps": 0,
+      "stage_costs": {
+        "vision": {
+          "flops_tflops": 10.911481009152002,
+          "io_tb": 0.08992786022400001,
+          "arithmetic_intensity": 121.33593507031915,
+          "weights_gb": 1.4876136779785156,
+          "activations_gb": 11.019685745239258,
+          "kv_gb": 0.0
+        },
+        "vision_flash": {
+          "flops_tflops": 10.911481009152002,
+          "io_tb": 0.08992786022400001,
+          "arithmetic_intensity": 121.33593507031915,
+          "weights_gb": 1.4876136779785156,
+          "activations_gb": 11.019685745239258,
+          "kv_gb": 0.0
+        }
+      }
+    },
+    {
+      "image_tokens_total": 2693,
+      "image_tokens_crops": 2420,
+      "global_image_tokens": 273,
+      "height_crop_num": 2,
+      "width_crop_num": 12,
+      "image_size": 7680,
+      "image_width": 7680,
+      "image_height": 1280,
+      "scale": 7.5,
+      "patch_size": 16,
+      "grid_size_width": 480,
+      "grid_size_height": 80,
+      "num_patches": 38400,
+      "batch_size": 1,
+      "context_len_prefill": 0,
+      "decode_steps": 0,
+      "stage_costs": {
+        "vision": {
+          "flops_tflops": 10.913528189952,
+          "io_tb": 0.08994063974400002,
+          "arithmetic_intensity": 121.34145610944519,
+          "weights_gb": 1.4876136779785156,
+          "activations_gb": 11.021173477172852,
+          "kv_gb": 0.0
+        },
+        "vision_flash": {
+          "flops_tflops": 10.913528189952,
+          "io_tb": 0.08994063974400002,
+          "arithmetic_intensity": 121.34145610944519,
+          "weights_gb": 1.4876136779785156,
+          "activations_gb": 11.021173477172852,
+          "kv_gb": 0.0
+        }
+      }
+    },
+    {
+      "image_tokens_total": 2703,
+      "image_tokens_crops": 2430,
+      "global_image_tokens": 273,
+      "height_crop_num": 3,
+      "width_crop_num": 8,
+      "image_size": 5120,
+      "image_width": 5120,
+      "image_height": 1920,
+      "scale": 5.0,
+      "patch_size": 16,
+      "grid_size_width": 320,
+      "grid_size_height": 120,
+      "num_patches": 38400,
+      "batch_size": 1,
+      "context_len_prefill": 0,
+      "decode_steps": 0,
+      "stage_costs": {
+        "vision": {
+          "flops_tflops": 10.915575370752002,
+          "io_tb": 0.08995341926400001,
+          "arithmetic_intensity": 121.34697557984316,
+          "weights_gb": 1.4876136779785156,
+          "activations_gb": 11.022661209106445,
+          "kv_gb": 0.0
+        },
+        "vision_flash": {
+          "flops_tflops": 10.915575370752002,
+          "io_tb": 0.08995341926400001,
+          "arithmetic_intensity": 121.34697557984316,
+          "weights_gb": 1.4876136779785156,
+          "activations_gb": 11.022661209106445,
+          "kv_gb": 0.0
+        }
+      }
+    },
+    {
+      "image_tokens_total": 2713,
+      "image_tokens_crops": 2440,
+      "global_image_tokens": 273,
+      "height_crop_num": 4,
+      "width_crop_num": 6,
+      "image_size": 3840,
+      "image_width": 3840,
+      "image_height": 2560,
+      "scale": 3.75,
+      "patch_size": 16,
+      "grid_size_width": 240,
+      "grid_size_height": 160,
+      "num_patches": 38400,
+      "batch_size": 1,
+      "context_len_prefill": 0,
+      "decode_steps": 0,
+      "stage_costs": {
+        "vision": {
+          "flops_tflops": 10.917622551552,
+          "io_tb": 0.08996619878400001,
+          "arithmetic_intensity": 121.35249348218143,
+          "weights_gb": 1.4876136779785156,
+          "activations_gb": 11.024148941040039,
+          "kv_gb": 0.0
+        },
+        "vision_flash": {
+          "flops_tflops": 10.917622551552,
+          "io_tb": 0.08996619878400001,
+          "arithmetic_intensity": 121.35249348218143,
+          "weights_gb": 1.4876136779785156,
+          "activations_gb": 11.024148941040039,
+          "kv_gb": 0.0
+        }
+      }
+    },
+    {
+      "image_tokens_total": 2783,
+      "image_tokens_crops": 2510,
+      "global_image_tokens": 273,
+      "height_crop_num": 1,
+      "width_crop_num": 25,
+      "image_size": 16000,
+      "image_width": 16000,
+      "image_height": 640,
+      "scale": 15.625,
+      "patch_size": 16,
+      "grid_size_width": 1000,
+      "grid_size_height": 40,
+      "num_patches": 40000,
+      "batch_size": 1,
+      "context_len_prefill": 0,
+      "decode_steps": 0,
+      "stage_costs": {
+        "vision": {
+          "flops_tflops": 11.340059461631999,
+          "io_tb": 0.093452034048,
+          "arithmetic_intensity": 121.34630965664563,
+          "weights_gb": 1.4876136779785156,
+          "activations_gb": 11.450522422790527,
+          "kv_gb": 0.0
+        },
+        "vision_flash": {
+          "flops_tflops": 11.340059461631999,
+          "io_tb": 0.093452034048,
+          "arithmetic_intensity": 121.34630965664563,
+          "weights_gb": 1.4876136779785156,
+          "activations_gb": 11.450522422790527,
+          "kv_gb": 0.0
+        }
+      }
+    },
+    {
+      "image_tokens_total": 2823,
+      "image_tokens_crops": 2550,
+      "global_image_tokens": 273,
+      "height_crop_num": 5,
+      "width_crop_num": 5,
+      "image_size": 3200,
+      "image_width": 3200,
+      "image_height": 3200,
+      "scale": 3.125,
+      "patch_size": 16,
+      "grid_size_width": 200,
+      "grid_size_height": 200,
+      "num_patches": 40000,
+      "batch_size": 1,
+      "context_len_prefill": 0,
+      "decode_steps": 0,
+      "stage_costs": {
+        "vision": {
+          "flops_tflops": 11.348589381632,
+          "io_tb": 0.093505282048,
+          "arithmetic_intensity": 121.36843109896523,
+          "weights_gb": 1.4876136779785156,
+          "activations_gb": 11.456721305847168,
+          "kv_gb": 0.0
+        },
+        "vision_flash": {
+          "flops_tflops": 11.348589381632,
+          "io_tb": 0.093505282048,
+          "arithmetic_intensity": 121.36843109896523,
+          "weights_gb": 1.4876136779785156,
+          "activations_gb": 11.456721305847168,
+          "kv_gb": 0.0
+        }
+      }
+    },
+    {
+      "image_tokens_total": 2883,
+      "image_tokens_crops": 2610,
+      "global_image_tokens": 273,
+      "height_crop_num": 1,
+      "width_crop_num": 26,
+      "image_size": 16640,
+      "image_width": 16640,
+      "image_height": 640,
+      "scale": 16.25,
+      "patch_size": 16,
+      "grid_size_width": 1040,
+      "grid_size_height": 40,
+      "num_patches": 41600,
+      "batch_size": 1,
+      "context_len_prefill": 0,
+      "decode_steps": 0,
+      "stage_costs": {
+        "vision": {
+          "flops_tflops": 11.770343898112001,
+          "io_tb": 0.09698685747199999,
+          "arithmetic_intensity": 121.36019461719427,
+          "weights_gb": 1.4876136779785156,
+          "activations_gb": 11.882598876953125,
+          "kv_gb": 0.0
+        },
+        "vision_flash": {
+          "flops_tflops": 11.770343898112001,
+          "io_tb": 0.09698685747199999,
+          "arithmetic_intensity": 121.36019461719427,
+          "weights_gb": 1.4876136779785156,
+          "activations_gb": 11.882598876953125,
+          "kv_gb": 0.0
+        }
+      }
+    },
+    {
+      "image_tokens_total": 2893,
+      "image_tokens_crops": 2620,
+      "global_image_tokens": 273,
+      "height_crop_num": 2,
+      "width_crop_num": 13,
+      "image_size": 8320,
+      "image_width": 8320,
+      "image_height": 1280,
+      "scale": 8.125,
+      "patch_size": 16,
+      "grid_size_width": 520,
+      "grid_size_height": 80,
+      "num_patches": 41600,
+      "batch_size": 1,
+      "context_len_prefill": 0,
+      "decode_steps": 0,
+      "stage_costs": {
+        "vision": {
+          "flops_tflops": 11.772561677312002,
+          "io_tb": 0.097000701952,
+          "arithmetic_intensity": 121.36573695247645,
+          "weights_gb": 1.4876136779785156,
+          "activations_gb": 11.884210586547852,
+          "kv_gb": 0.0
+        },
+        "vision_flash": {
+          "flops_tflops": 11.772561677312002,
+          "io_tb": 0.097000701952,
+          "arithmetic_intensity": 121.36573695247645,
+          "weights_gb": 1.4876136779785156,
+          "activations_gb": 11.884210586547852,
+          "kv_gb": 0.0
+        }
+      }
+    },
+    {
+      "image_tokens_total": 2983,
+      "image_tokens_crops": 2710,
+      "global_image_tokens": 273,
+      "height_crop_num": 1,
+      "width_crop_num": 27,
+      "image_size": 17280,
+      "image_width": 17280,
+      "image_height": 640,
+      "scale": 16.875,
+      "patch_size": 16,
+      "grid_size_width": 1080,
+      "grid_size_height": 40,
+      "num_patches": 43200,
+      "batch_size": 1,
+      "context_len_prefill": 0,
+      "decode_steps": 0,
+      "stage_costs": {
+        "vision": {
+          "flops_tflops": 12.202334318592,
+          "io_tb": 0.10053233049599998,
+          "arithmetic_intensity": 121.3772152539278,
+          "weights_gb": 1.4876136779785156,
+          "activations_gb": 12.31591510772705,
+          "kv_gb": 0.0
+        },
+        "vision_flash": {
+          "flops_tflops": 12.202334318592,
+          "io_tb": 0.10053233049599998,
+          "arithmetic_intensity": 121.3772152539278,
+          "weights_gb": 1.4876136779785156,
+          "activations_gb": 12.31591510772705,
+          "kv_gb": 0.0
+        }
+      }
+    },
+    {
+      "image_tokens_total": 3003,
+      "image_tokens_crops": 2730,
+      "global_image_tokens": 273,
+      "height_crop_num": 3,
+      "width_crop_num": 9,
+      "image_size": 5760,
+      "image_width": 5760,
+      "image_height": 1920,
+      "scale": 5.625,
+      "patch_size": 16,
+      "grid_size_width": 360,
+      "grid_size_height": 120,
+      "num_patches": 43200,
+      "batch_size": 1,
+      "context_len_prefill": 0,
+      "decode_steps": 0,
+      "stage_costs": {
+        "vision": {
+          "flops_tflops": 12.206940475392,
+          "io_tb": 0.10056108441599998,
+          "arithmetic_intensity": 121.3883138421068,
+          "weights_gb": 1.4876136779785156,
+          "activations_gb": 12.319262504577637,
+          "kv_gb": 0.0
+        },
+        "vision_flash": {
+          "flops_tflops": 12.206940475392,
+          "io_tb": 0.10056108441599998,
+          "arithmetic_intensity": 121.3883138421068,
+          "weights_gb": 1.4876136779785156,
+          "activations_gb": 12.319262504577637,
+          "kv_gb": 0.0
+        }
+      }
+    },
+    {
+      "image_tokens_total": 3083,
+      "image_tokens_crops": 2810,
+      "global_image_tokens": 273,
+      "height_crop_num": 1,
+      "width_crop_num": 28,
+      "image_size": 17920,
+      "image_width": 17920,
+      "image_height": 640,
+      "scale": 17.5,
+      "patch_size": 16,
+      "grid_size_width": 1120,
+      "grid_size_height": 40,
+      "num_patches": 44800,
+      "batch_size": 1,
+      "context_len_prefill": 0,
+      "decode_steps": 0,
+      "stage_costs": {
+        "vision": {
+          "flops_tflops": 12.636030723071999,
+          "io_tb": 0.10408845311999998,
+          "arithmetic_intensity": 121.39704591924674,
+          "weights_gb": 1.4876136779785156,
+          "activations_gb": 12.750471115112305,
+          "kv_gb": 0.0
+        },
+        "vision_flash": {
+          "flops_tflops": 12.636030723071999,
+          "io_tb": 0.10408845311999998,
+          "arithmetic_intensity": 121.39704591924674,
+          "weights_gb": 1.4876136779785156,
+          "activations_gb": 12.750471115112305,
+          "kv_gb": 0.0
+        }
+      }
+    },
+    {
+      "image_tokens_total": 3093,
+      "image_tokens_crops": 2820,
+      "global_image_tokens": 273,
+      "height_crop_num": 2,
+      "width_crop_num": 14,
+      "image_size": 8960,
+      "image_width": 8960,
+      "image_height": 1280,
+      "scale": 8.75,
+      "patch_size": 16,
+      "grid_size_width": 560,
+      "grid_size_height": 80,
+      "num_patches": 44800,
+      "batch_size": 1,
+      "context_len_prefill": 0,
+      "decode_steps": 0,
+      "stage_costs": {
+        "vision": {
+          "flops_tflops": 12.638419100671998,
+          "io_tb": 0.10410336255999998,
+          "arithmetic_intensity": 121.40260208586292,
+          "weights_gb": 1.4876136779785156,
+          "activations_gb": 12.752206802368164,
+          "kv_gb": 0.0
+        },
+        "vision_flash": {
+          "flops_tflops": 12.638419100671998,
+          "io_tb": 0.10410336255999998,
+          "arithmetic_intensity": 121.40260208586292,
+          "weights_gb": 1.4876136779785156,
+          "activations_gb": 12.752206802368164,
+          "kv_gb": 0.0
+        }
+      }
+    },
+    {
+      "image_tokens_total": 3113,
+      "image_tokens_crops": 2840,
+      "global_image_tokens": 273,
+      "height_crop_num": 4,
+      "width_crop_num": 7,
+      "image_size": 4480,
+      "image_width": 4480,
+      "image_height": 2560,
+      "scale": 4.375,
+      "patch_size": 16,
+      "grid_size_width": 280,
+      "grid_size_height": 160,
+      "num_patches": 44800,
+      "batch_size": 1,
+      "context_len_prefill": 0,
+      "decode_steps": 0,
+      "stage_costs": {
+        "vision": {
+          "flops_tflops": 12.643195855871998,
+          "io_tb": 0.10413318143999999,
+          "arithmetic_intensity": 121.41370964601539,
+          "weights_gb": 1.4876136779785156,
+          "activations_gb": 12.755678176879883,
+          "kv_gb": 0.0
+        },
+        "vision_flash": {
+          "flops_tflops": 12.643195855871998,
+          "io_tb": 0.10413318143999999,
+          "arithmetic_intensity": 121.41370964601539,
+          "weights_gb": 1.4876136779785156,
+          "activations_gb": 12.755678176879883,
+          "kv_gb": 0.0
+        }
+      }
+    },
+    {
+      "image_tokens_total": 3183,
+      "image_tokens_crops": 2910,
+      "global_image_tokens": 273,
+      "height_crop_num": 1,
+      "width_crop_num": 29,
+      "image_size": 18560,
+      "image_width": 18560,
+      "image_height": 640,
+      "scale": 18.125,
+      "patch_size": 16,
+      "grid_size_width": 1160,
+      "grid_size_height": 40,
+      "num_patches": 46400,
+      "batch_size": 1,
+      "context_len_prefill": 0,
+      "decode_steps": 0,
+      "stage_costs": {
+        "vision": {
+          "flops_tflops": 13.071433111552,
+          "io_tb": 0.10765522534399999,
+          "arithmetic_intensity": 121.41940226109534,
+          "weights_gb": 1.4876136779785156,
+          "activations_gb": 13.186266899108887,
+          "kv_gb": 0.0
+        },
+        "vision_flash": {
+          "flops_tflops": 13.071433111552,
+          "io_tb": 0.10765522534399999,
+          "arithmetic_intensity": 121.41940226109534,
+          "weights_gb": 1.4876136779785156,
+          "activations_gb": 13.186266899108887,
+          "kv_gb": 0.0
+        }
+      }
+    }
+  ]
+}

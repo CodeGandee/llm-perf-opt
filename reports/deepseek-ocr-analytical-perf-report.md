@@ -14,78 +14,59 @@ All experiments are expected to be run from the `llm-perf-opt` project root usin
 
 ## Per-Layer Sanity Check (Layer-wise Verification)
 
-This section reports how analytic FLOPs and IO compare to reference implementations at the layer level.
-The primary entrypoints are the `run_verify_<xxx>.py` scripts under `extern/modelmeter/models/deepseek_ocr/scripts/verify`.
+|Group|Analytic layer|Measured FLOPs (GFLOPs)|Theoretical FLOPs (GFLOPs)|Rel diff (%)|Status|
+| :---: | :---: | :---: | :---: | :---: | :---: |
+|vision|Attention|2.6071e+01|2.6098e+01|0.1010%|✓|
+|vision|MLPBlock|3.8655e+01|3.8705e+01|0.1302%|✓|
+|vision|PatchEmbed|4.8318e+00|4.8318e+00|0.0000%|✓|
+|vision|Block|1.1033e+02|1.0967e+02|0.5931%|✓|
+|vision|CLIPVisionEmbeddings_conv|3.0828e-01|3.0828e-01|0.0000%|✓|
+|vision|LayerNorm2d|0.0000e+00|5.2429e-03|0.0000%|✓|
+|vision|ImageEncoderViT|9.7691e+02|9.7323e+02|0.3766%|✓|
+|vision|NoTPAttention|2.4264e+00|2.4264e+00|0.0000%|✓|
+|vision|NoTPFeedForward|4.3117e+00|4.3170e+00|0.1221%|✓|
+|vision|NoTPTransformerBlock|6.7382e+00|6.7434e+00|0.0781%|✓|
+|vision|NoTPTransformer|1.3476e+01|1.3487e+01|0.0781%|✓|
+|vision|VitModel|1.3476e+01|1.3488e+01|0.0879%|✓|
+|vision|MlpProjector|4.9159e+00|4.9218e+00|0.1202%|✓|
+|decoder|DeepseekV2MLP|2.6927e+01|2.6941e+01|0.0521%|✓|
+|decoder|MoEGate|8.3886e-02|8.4083e-02|0.2344%|✓|
+|decoder|DeepseekV2MoE|2.8270e+01|2.8284e+01|0.0526%|✓|
+|decoder|DeepseekV2RMSNorm|0.0000e+00|1.9661e-03|0.0000%|✓|
+|decoder|DeepseekV2DecoderLayer_dense|3.4980e+01|3.4998e+01|0.0513%|✓|
+|decoder|DeepseekV2DecoderLayer_moe|3.6323e+01|3.6341e+01|0.0518%|✓|
+|llama|LlamaFlashAttention2|6.7110e+00|6.7109e+00|0.0010%|✓|
+|llama|LlamaRotaryEmbedding|6.5536e-05|6.5536e-05|0.0000%|✓|
 
-### Vision Layers
 
-This subsection covers per-layer verification for the DeepSeek-OCR vision stack (SAM encoder, CLIP/NoTP, projector).
-Typical entrypoint:
-- `python -m modelmeter.models.deepseek_ocr.scripts.verify.run_verify_vision`
 
-Expected content for this subsection:
-- Table of key vision layers (`PatchEmbed`, `ImageEncoderViT`, `VitModel`, `MlpProjector`, etc.) with:
-  - Analytic FLOPs vs measured FLOPs (or other FLOP counters).
-  - Relative differences and configured tolerances.
-- Notes on any known discrepancies or approximations (for example, ignored CUDA-core-only work, FlashAttention vs SDPA differences).
+The following table maps analytic layers to their reference implementation classes.
 
-### Decoder and LLaMA Layers
+|Group|Analytic layer|Impl class (fully qualified path)|
+| :---: | :---: | :---: |
+|vision|Attention|deepencoder.Attention|
+|vision|MLPBlock|deepencoder.MLPBlock|
+|vision|PatchEmbed|deepencoder.PatchEmbed|
+|vision|Block|deepencoder.Block|
+|vision|CLIPVisionEmbeddings_conv|deepencoder.CLIPVisionEmbeddings|
+|vision|LayerNorm2d|deepencoder.LayerNorm2d|
+|vision|ImageEncoderViT|deepencoder.ImageEncoderViT|
+|vision|NoTPAttention|deepencoder.NoTPAttention|
+|vision|NoTPFeedForward|deepencoder.NoTPFeedForward|
+|vision|NoTPTransformerBlock|deepencoder.NoTPTransformerBlock|
+|vision|NoTPTransformer|deepencoder.NoTPTransformer|
+|vision|VitModel|deepencoder.VitModel|
+|vision|MlpProjector|deepencoder.MlpProjector|
+|decoder|DeepseekV2MLP|modeling_deepseekv2.DeepseekV2MLP|
+|decoder|MoEGate|modeling_deepseekv2.MoEGate|
+|decoder|DeepseekV2MoE|modeling_deepseekv2.DeepseekV2MoE|
+|decoder|DeepseekV2RMSNorm|modeling_deepseekv2.DeepseekV2RMSNorm|
+|decoder|DeepseekV2DecoderLayer_dense|modeling_deepseekv2.DeepseekV2DecoderLayer|
+|decoder|DeepseekV2DecoderLayer_moe|modeling_deepseekv2.DeepseekV2DecoderLayer|
+|llama|LlamaFlashAttention2|transformers.models.llama.modeling_llama.LlamaFlashAttention2|
+|llama|LlamaRotaryEmbedding|transformers.models.llama.modeling_llama.LlamaRotaryEmbedding|
 
-This subsection covers per-layer verification for the DeepSeek-V2 decoder stack and LLaMA primitives.
-Typical entrypoints:
-- `python -m modelmeter.models.deepseek_ocr.scripts.verify.run_verify_decoder`
-- `python -m modelmeter.models.deepseek_ocr.scripts.verify.run_verify_llama`
-
-Expected content:
-- Tables or bullet summaries for:
-  - `DeepseekV2MLP`, `DeepseekV2MoE`, `MoEGate`, `DeepseekV2RMSNorm`, `DeepseekV2DecoderLayer`.
-  - `LlamaFlashAttention2`, `LlamaRotaryEmbedding` and any other LLaMA primitives.
-- Relative error ranges and whether they fall within configured tolerances for each operator family.
-
-### Core Aggregation and Prefill/Decode Consistency
-
-This subsection checks that analytic aggregation across layers is self-consistent and matches reference models at the decoder level.
-Typical entrypoints:
-- `python -m modelmeter.models.deepseek_ocr.scripts.verify.run_verify_core`
-- `python -m modelmeter.models.deepseek_ocr.scripts.verify.run_verify_prefill_decode`
-
-Expected content:
-- Verification that `DeepseekOCRModel` FLOPs equal the sum of its configured sublayers (vision + decoder + head) within floating-point precision.
-- Decoder-only prefill vs decode FLOP comparisons versus reference `DeepseekV2ForCausalLM` or similar, including any known decode-specific gaps.
-
-## End-to-End Analytical vs Vendor FLOPs
-
-This section reports end-to-end FLOP alignment between the analytic model and vendor implementation across realistic OCR workloads.
-It builds on the per-layer checks to validate the full pipeline under representative inputs.
-
-### Vision-Only Pipelines
-
-This subsection covers vision-only verification, both in no-crop (global view) and crop-mode (global + dynamic crops) scenarios.
-Typical entrypoints:
-- `python -m modelmeter.models.deepseek_ocr.scripts.verify.run_verify_end2end_vision_nocrop`
-- `python -m modelmeter.models.deepseek_ocr.scripts.verify.run_verify_end2end_vision`
-
-Expected content:
-- For each scenario:
-  - Analytic vision FLOPs vs vendor FLOPs for a canonical document image.
-  - Relative differences and comments on shape modeling (multi-view layout, token counts).
-- Discussion of any remaining vision-specific gaps and how they relate to shape modeling assumptions.
-
-### Full Model Prefill + Decode
-
-This subsection validates the full DeepSeek-OCR pipeline (vision + decoder + head) for realistic OCR workloads, including both prefill and bounded decode.
-Typical entrypoints:
-- `python -m modelmeter.models.deepseek_ocr.scripts.verify.run_verify_end2end_prefill_decode`
-- `python -m modelmeter.models.deepseek_ocr.scripts.verify.run_verify_end2end`
-
-Expected content:
-- Separate summaries for:
-  - Prefill-only FLOPs (vision + decoder + head) vs vendor reference.
-  - Decode-only FLOPs vs vendor reference (including any known decode mismatches).
-  - Total end-to-end FLOPs vs vendor `generate`.
-- Interpretation of how well the analytic model brackets vendor compute at the pipeline level and where deviations remain.
-
-## Model Scaling and Workload Sweeps
+## Cost vs. Sweep
 
 This section explores how analytic FLOPs, IO, and memory usage scale as model and input parameters change.
 It relies on sweep scripts under `extern/modelmeter/models/deepseek_ocr/scripts/sweep` and any associated helpers.
@@ -102,6 +83,24 @@ Expected content:
   - Crop-mode configurations (varying image size and crop grids).
 - Discussion of regimes where vision cost is dominated by SAM vs CLIP vs projector and how that relates to document layout.
 
+The following figures summarize the DeepSeek-OCR analytic vision-stage cost sweep over candidate crop grids captured under `reports/sweep/vision`, with the x-axis showing vision output tokens (global + crops) annotated by crop grid `[height]x[width]`.
+
+StageCost.flops_tflops vs image token length for the vision stage, comparing analytic normal-attention, analytic flash-attention, and vendor FLOPs for the same workloads.
+
+![DeepSeek-OCR Vision StageCost.flops_tflops vs image token length.](sweep/vision/stagecost_flops_tflops.svg)
+
+StageCost.io_tb vs image token length for the vision stage, highlighting how activation I/O traffic grows with higher-resolution inputs and denser crop grids.
+
+![DeepSeek-OCR Vision StageCost.io_tb vs image token length.](sweep/vision/stagecost_io_tb.svg)
+
+StageCost.arithmetic_intensity vs image token length for the vision stage, indicating how compute-to-memory ratios evolve across the resolution and crop-grid sweep.
+
+![DeepSeek-OCR Vision StageCost.arithmetic_intensity vs image token length.](sweep/vision/stagecost_arithmetic_intensity.svg)
+
+StageCost.activations_gb vs image token length for the vision stage, emphasizing how activation memory scales with input size and crop density, while KV-cache remains effectively zero for vision-only workloads.
+
+![DeepSeek-OCR Vision StageCost.activations_gb vs image token length.](sweep/vision/stagecost_activations_gb.svg)
+
 ### Sequence Length and Decoder Sweeps
 
 This subsection focuses on how decoder FLOPs and KV-cache memory scale with:
@@ -115,6 +114,32 @@ Expected content:
   - KV-cache memory vs `S_prefill + K`.
 - Identification of regimes where prefill dominates vs decode, and where KV memory becomes a primary constraint.
 
+The following figures summarize the DeepSeek-OCR decode sweep over candidate crop grids captured under `reports/sweep/e2e-decode/20251127-110250`, with a fixed text prompt and number of decode steps and the x-axis showing vision output tokens (global + crops) annotated by crop grid `[height]x[width]`.
+
+DeepSeek-OCR decode FLOPs vs image token length (analytic and vendor curves, aggregated over the configured number of decode steps).
+
+![DeepSeek-OCR Decode FLOPs vs image token length.](sweep/e2e-decode/20251127-110250/e2e_decode.svg)
+
+Decode StageCost.flops_tflops vs image token length, showing how total decode FLOPs for `K` steps grow with crop density for normal-attention analytic, flash-attention analytic, and vendor baselines.
+
+![DeepSeek-OCR Decode StageCost.flops_tflops vs image token length.](sweep/e2e-decode/20251127-110250/e2e_decode_stagecost_flops_tflops.svg)
+
+Decode StageCost.io_tb vs image token length, highlighting cumulative activation I/O traffic incurred during `K` decode steps and how it varies with the upstream vision workload.
+
+![DeepSeek-OCR Decode StageCost.io_tb vs image token length.](sweep/e2e-decode/20251127-110250/e2e_decode_stagecost_io_tb.svg)
+
+Decode StageCost.arithmetic_intensity vs image token length, indicating how compute-to-memory ratios for decode evolve as crop grids become denser and sequence lengths increase.
+
+![DeepSeek-OCR Decode StageCost.arithmetic_intensity vs image token length.](sweep/e2e-decode/20251127-110250/e2e_decode_stagecost_arithmetic_intensity.svg)
+
+Decode StageCost.activations_gb vs image token length, emphasizing the growth in decoder activation memory over `K` steps and showing where activation footprint becomes comparable to or larger than vision activations.
+
+![DeepSeek-OCR Decode StageCost.activations_gb vs image token length.](sweep/e2e-decode/20251127-110250/e2e_decode_stagecost_activations_gb.svg)
+
+Decode StageCost.kv_gb vs image token length, capturing how KV-cache memory scales with the combination of prefill context and `K` decode tokens across different crop configurations.
+
+![DeepSeek-OCR Decode StageCost.kv_gb vs image token length.](sweep/e2e-decode/20251127-110250/e2e_decode_stagecost_kv_gb.svg)
+
 ### Combined Workload Profiles
 
 This subsection looks at realistic workload profiles that combine image resolution, context length, and decode length (for example, different OCR workload IDs).
@@ -125,3 +150,101 @@ Expected content:
   - Prefill FLOPs.
   - Decode FLOPs (per token and total).
 - High-level comments on how these analytic workloads map to expected runtime and MFU when combined with hardware peak tables (referencing `docs/analyzer-mfu.md` rather than reproducing MFU analysis here).
+
+The following figures summarize the DeepSeek-OCR vision+prefill crop-grid sweep captured under `reports/sweep/e2e-vision-prefill/20251127-110250`, where the x-axis is vision output tokens (global + crops) and point labels denote the crop grid as `[height]x[width]`.
+
+DeepSeek-OCR vision+prefill FLOPs vs image token length (analytic and vendor curves, annotated by crop grid).
+
+![DeepSeek-OCR Vision+Prefill FLOPs vs image token length.](sweep/e2e-vision-prefill/20251127-110250/e2e_vision_prefill.svg)
+
+The StageCost structure from `modelmeter.models.common.stage_cost` summarizes per-stage analytic costs for these plots; its fields are:
+- `StageCost.flops_tflops`: total forward-pass FLOPs for the stage, expressed in teraFLOPs (including Tensor Core and CUDA core contributions when modeled).
+- `StageCost.io_tb`: activation I/O volume in terabits, aggregating reads and writes between on-chip memory and HBM for that stage.
+- `StageCost.arithmetic_intensity`: FLOPs per bit of activation I/O (`flops_tflops` divided by `io_tb`), indicating how compute-bound versus bandwidth-bound the stage is.
+- `StageCost.activations_gb`: peak activation memory footprint in gigabytes for the stage under the given batch size and sequence length.
+- `StageCost.kv_gb`: KV-cache memory footprint in gigabytes attributable to the stage (typically decoder attention blocks), driven by context length and decode length.
+For DeepSeek-OCR-3B in this configuration, the total parameter footprint is approximately 2.17 GB and is constant across crop grids, so we report it once here rather than as a separate StageCost curve.
+
+StageCost.flops_tflops vs image token length, broken down by logical stages (vision, decoder, and LM head) to show how each component contributes to total prefill FLOPs as crop density increases.
+
+![DeepSeek-OCR Vision+Prefill StageCost.flops_tflops vs image token length.](sweep/e2e-vision-prefill/20251127-110250/e2e_vision_prefill_stagecost_flops_tflops.svg)
+
+StageCost.io_tb vs image token length, highlighting how activation I/O traffic grows with crop grids and which stages dominate bandwidth requirements.
+
+![DeepSeek-OCR Vision+Prefill StageCost.io_tb vs image token length.](sweep/e2e-vision-prefill/20251127-110250/e2e_vision_prefill_stagecost_io_tb.svg)
+
+StageCost.arithmetic_intensity vs image token length, indicating how compute-to-memory ratios evolve for different crop configurations and which stages are more compute-bound versus bandwidth-bound.
+
+![DeepSeek-OCR Vision+Prefill StageCost.arithmetic_intensity vs image token length.](sweep/e2e-vision-prefill/20251127-110250/e2e_vision_prefill_stagecost_arithmetic_intensity.svg)
+
+StageCost.activations_gb vs image token length, emphasizing how activation memory grows super-linearly with larger crop grids and where vision activations begin to dominate the memory footprint.
+
+![DeepSeek-OCR Vision+Prefill StageCost.activations_gb vs image token length.](sweep/e2e-vision-prefill/20251127-110250/e2e_vision_prefill_stagecost_activations_gb.svg)
+
+StageCost.kv_gb vs image token length, capturing the KV-cache contribution from the decoder portion of the vision+prefill pipeline for the fixed prefill context used in this sweep.
+
+![DeepSeek-OCR Vision+Prefill StageCost.kv_gb vs image token length.](sweep/e2e-vision-prefill/20251127-110250/e2e_vision_prefill_stagecost_kv_gb.svg)
+
+## Objective-based Analysis
+
+To connect these analytic workloads to user-facing responsiveness, the following figure shows the required TFLOPs/s as a function of image token length to meet a fixed 50 ms time-to-first-token (TTFT) budget for the vision+prefill stage (TTFT = 0.05 s), with separate curves for analytic normal attention, analytic flash attention, and the vendor baseline.
+
+![Required TFLOPs/s for 50 ms TTFT vs image token length.](sweep/e2e-vision-prefill/20251127-110250/responsive_tflops_by_ttft.svg)
+
+The following table enumerates a subset of those points, showing for each crop grid the total vision output tokens and the compute throughput required to meet the 50 ms TTFT budget under analytic normal and flash attention.
+
+|Num crops|Crop grid (H×W)|Image tokens (global + crops)|Required TFLOPs/s (analytic normal attention, full)|Required TFLOPs/s (analytic flash attention, full)|
+| :---: | :---: | :---: | :---: | :---: |
+|2|1x2|483|49.937|49.937|
+|3|1x3|583|60.194|60.194|
+|4|1x4|683|70.510|70.510|
+|4|2x2|693|70.764|70.764|
+|5|1x5|783|80.884|80.884|
+|6|1x6|883|91.317|91.317|
+|6|2x3|893|91.580|91.580|
+|7|1x7|983|101.809|101.809|
+|8|1x8|1083|112.359|112.359|
+|8|2x4|1093|112.630|112.630|
+|9|1x9|1183|122.968|122.968|
+|9|3x3|1203|123.519|123.519|
+|10|1x10|1283|133.636|133.636|
+|10|2x5|1293|133.915|133.915|
+|11|1x11|1383|144.362|144.362|
+|12|1x12|1483|155.148|155.148|
+|12|2x6|1493|155.435|155.435|
+|12|3x4|1503|155.723|155.723|
+|13|1x13|1583|165.991|165.991|
+|14|1x14|1683|176.894|176.894|
+|14|2x7|1693|177.190|177.190|
+|15|1x15|1783|187.855|187.855|
+|15|3x5|1803|188.456|188.456|
+|16|1x16|1883|198.875|198.875|
+|16|2x8|1893|199.179|199.179|
+|16|4x4|1913|199.788|199.788|
+|17|1x17|1983|209.954|209.954|
+|18|1x18|2083|221.091|221.091|
+|18|2x9|2093|221.404|221.404|
+|18|3x6|2103|221.716|221.716|
+|19|1x19|2183|232.287|232.287|
+|20|1x20|2283|243.542|243.542|
+|20|2x10|2293|243.863|243.863|
+|20|4x5|2313|244.505|244.505|
+|21|1x21|2383|254.855|254.855|
+|21|3x7|2403|255.506|255.506|
+|22|1x22|2483|266.227|266.227|
+|22|2x11|2493|266.557|266.557|
+|23|1x23|2583|277.658|277.658|
+|24|1x24|2683|289.148|289.148|
+|24|2x12|2693|289.485|289.485|
+|24|3x8|2703|289.823|289.823|
+|24|4x6|2713|290.161|290.161|
+|25|1x25|2783|300.696|300.696|
+|25|5x5|2823|302.064|302.064|
+|26|1x26|2883|312.303|312.303|
+|26|2x13|2893|312.649|312.649|
+|27|1x27|2983|323.968|323.968|
+|27|3x9|3003|324.669|324.669|
+|28|1x28|3083|335.693|335.693|
+|28|2x14|3093|336.047|336.047|
+|28|4x7|3113|336.756|336.756|
+|29|1x29|3183|347.476|347.476|

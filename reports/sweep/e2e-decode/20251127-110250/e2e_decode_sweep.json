@@ -1,0 +1,2009 @@
+{
+  "description": "DeepSeek-OCR analytic decode FLOP sweep over candidate crop grids, with optional vendor FLOP measurements for vendor-aligned grids and analytic extrapolations for larger crop counts.",
+  "model_id": "deepseek-ocr-3b",
+  "min_image_tokens": 483,
+  "max_image_tokens": 3183,
+  "num_points": 53,
+  "global_image_tokens": 273,
+  "batch_size": 1,
+  "decode_steps": 64,
+  "points": [
+    {
+      "image_tokens_total": 483,
+      "image_tokens_crops": 210,
+      "global_image_tokens": 273,
+      "height_crop_num": 1,
+      "width_crop_num": 2,
+      "image_width": 1280,
+      "image_height": 640,
+      "batch_size": 1,
+      "context_len": 493,
+      "decode_steps": 64,
+      "analytic_only": false,
+      "decode": {
+        "analytic_tflops": 0.07574260940800001,
+        "analytic_eager_tflops": 0.07574260940800001,
+        "analytic_flash_tflops": 0.07574260940800001,
+        "vendor_tflops": 0.075550654464
+      },
+      "decode_stagecost": {
+        "decode_eager": {
+          "flops_tflops": 0.07574260940800001,
+          "io_tb": 0.0007290224640000001,
+          "arithmetic_intensity": 103.89612549442647,
+          "weights_gb": 0.6873130798339844,
+          "activations_gb": 0.0013115555047988892,
+          "kv_gb": 0.0318145751953125
+        },
+        "decode_flash": {
+          "flops_tflops": 0.07574260940800001,
+          "io_tb": 0.0006001213439999999,
+          "arithmetic_intensity": 126.21215719999458,
+          "weights_gb": 0.6873130798339844,
+          "activations_gb": 0.09636367857456207,
+          "kv_gb": 0.0318145751953125
+        },
+        "decode_vendor": {
+          "flops_tflops": 0.075550654464
+        }
+      }
+    },
+    {
+      "image_tokens_total": 583,
+      "image_tokens_crops": 310,
+      "global_image_tokens": 273,
+      "height_crop_num": 1,
+      "width_crop_num": 3,
+      "image_width": 1920,
+      "image_height": 640,
+      "batch_size": 1,
+      "context_len": 593,
+      "decode_steps": 64,
+      "analytic_only": false,
+      "decode": {
+        "analytic_tflops": 0.07613582540800001,
+        "analytic_eager_tflops": 0.07613582540800001,
+        "analytic_flash_tflops": 0.07613582540800001,
+        "vendor_tflops": 0.075943870464
+      },
+      "decode_stagecost": {
+        "decode_eager": {
+          "flops_tflops": 0.07613582540800001,
+          "io_tb": 0.000753598464,
+          "arithmetic_intensity": 101.02969823462912,
+          "weights_gb": 0.6873130798339844,
+          "activations_gb": 0.0013562589883804321,
+          "kv_gb": 0.03753662109375
+        },
+        "decode_flash": {
+          "flops_tflops": 0.07613582540800001,
+          "io_tb": 0.0006001213439999999,
+          "arithmetic_intensity": 126.86738468678764,
+          "weights_gb": 0.6873130798339844,
+          "activations_gb": 0.11352981626987457,
+          "kv_gb": 0.03753662109375
+        },
+        "decode_vendor": {
+          "flops_tflops": 0.075943870464
+        }
+      }
+    },
+    {
+      "image_tokens_total": 683,
+      "image_tokens_crops": 410,
+      "global_image_tokens": 273,
+      "height_crop_num": 1,
+      "width_crop_num": 4,
+      "image_width": 2560,
+      "image_height": 640,
+      "batch_size": 1,
+      "context_len": 693,
+      "decode_steps": 64,
+      "analytic_only": false,
+      "decode": {
+        "analytic_tflops": 0.07652904140800001,
+        "analytic_eager_tflops": 0.07652904140800001,
+        "analytic_flash_tflops": 0.07652904140800001,
+        "vendor_tflops": 0.076337086464
+      },
+      "decode_stagecost": {
+        "decode_eager": {
+          "flops_tflops": 0.07652904140800001,
+          "io_tb": 0.000778174464,
+          "arithmetic_intensity": 98.34432373252487,
+          "weights_gb": 0.6873130798339844,
+          "activations_gb": 0.001400962471961975,
+          "kv_gb": 0.0432586669921875
+        },
+        "decode_flash": {
+          "flops_tflops": 0.07652904140800001,
+          "io_tb": 0.0006001213439999999,
+          "arithmetic_intensity": 127.52261217358073,
+          "weights_gb": 0.6873130798339844,
+          "activations_gb": 0.13069595396518707,
+          "kv_gb": 0.0432586669921875
+        },
+        "decode_vendor": {
+          "flops_tflops": 0.076337086464
+        }
+      }
+    },
+    {
+      "image_tokens_total": 693,
+      "image_tokens_crops": 420,
+      "global_image_tokens": 273,
+      "height_crop_num": 2,
+      "width_crop_num": 2,
+      "image_width": 1280,
+      "image_height": 1280,
+      "batch_size": 1,
+      "context_len": 703,
+      "decode_steps": 64,
+      "analytic_only": false,
+      "decode": {
+        "analytic_tflops": 0.076568363008,
+        "analytic_eager_tflops": 0.076568363008,
+        "analytic_flash_tflops": 0.076568363008,
+        "vendor_tflops": 0.076376408064
+      },
+      "decode_stagecost": {
+        "decode_eager": {
+          "flops_tflops": 0.076568363008,
+          "io_tb": 0.0007806320640000001,
+          "arithmetic_intensity": 98.08508584141374,
+          "weights_gb": 0.6873130798339844,
+          "activations_gb": 0.0014054328203201294,
+          "kv_gb": 0.04383087158203125
+        },
+        "decode_flash": {
+          "flops_tflops": 0.076568363008,
+          "io_tb": 0.0006001213439999999,
+          "arithmetic_intensity": 127.58813492226001,
+          "weights_gb": 0.6873130798339844,
+          "activations_gb": 0.13241256773471832,
+          "kv_gb": 0.04383087158203125
+        },
+        "decode_vendor": {
+          "flops_tflops": 0.076376408064
+        }
+      }
+    },
+    {
+      "image_tokens_total": 783,
+      "image_tokens_crops": 510,
+      "global_image_tokens": 273,
+      "height_crop_num": 1,
+      "width_crop_num": 5,
+      "image_width": 3200,
+      "image_height": 640,
+      "batch_size": 1,
+      "context_len": 793,
+      "decode_steps": 64,
+      "analytic_only": false,
+      "decode": {
+        "analytic_tflops": 0.076922257408,
+        "analytic_eager_tflops": 0.076922257408,
+        "analytic_flash_tflops": 0.076922257408,
+        "vendor_tflops": 0.076730302464
+      },
+      "decode_stagecost": {
+        "decode_eager": {
+          "flops_tflops": 0.076922257408,
+          "io_tb": 0.0008027504640000002,
+          "arithmetic_intensity": 95.82337333659889,
+          "weights_gb": 0.6873130798339844,
+          "activations_gb": 0.001445665955543518,
+          "kv_gb": 0.048980712890625
+        },
+        "decode_flash": {
+          "flops_tflops": 0.076922257408,
+          "io_tb": 0.0006001213439999999,
+          "arithmetic_intensity": 128.17783966037376,
+          "weights_gb": 0.6873130798339844,
+          "activations_gb": 0.14786209166049957,
+          "kv_gb": 0.048980712890625
+        },
+        "decode_vendor": {
+          "flops_tflops": 0.076730302464
+        }
+      }
+    },
+    {
+      "image_tokens_total": 883,
+      "image_tokens_crops": 610,
+      "global_image_tokens": 273,
+      "height_crop_num": 1,
+      "width_crop_num": 6,
+      "image_width": 3840,
+      "image_height": 640,
+      "batch_size": 1,
+      "context_len": 893,
+      "decode_steps": 64,
+      "analytic_only": false,
+      "decode": {
+        "analytic_tflops": 0.07731547340799999,
+        "analytic_eager_tflops": 0.07731547340799999,
+        "analytic_flash_tflops": 0.07731547340799999,
+        "vendor_tflops": 0.077123518464
+      },
+      "decode_stagecost": {
+        "decode_eager": {
+          "flops_tflops": 0.07731547340799999,
+          "io_tb": 0.0008273264640000002,
+          "arithmetic_intensity": 93.45219423320655,
+          "weights_gb": 0.6873130798339844,
+          "activations_gb": 0.001490369439125061,
+          "kv_gb": 0.0547027587890625
+        },
+        "decode_flash": {
+          "flops_tflops": 0.07731547340799999,
+          "io_tb": 0.0006001213439999999,
+          "arithmetic_intensity": 128.83306714716682,
+          "weights_gb": 0.6873130798339844,
+          "activations_gb": 0.16502822935581207,
+          "kv_gb": 0.0547027587890625
+        },
+        "decode_vendor": {
+          "flops_tflops": 0.077123518464
+        }
+      }
+    },
+    {
+      "image_tokens_total": 893,
+      "image_tokens_crops": 620,
+      "global_image_tokens": 273,
+      "height_crop_num": 2,
+      "width_crop_num": 3,
+      "image_width": 1920,
+      "image_height": 1280,
+      "batch_size": 1,
+      "context_len": 903,
+      "decode_steps": 64,
+      "analytic_only": false,
+      "decode": {
+        "analytic_tflops": 0.077354795008,
+        "analytic_eager_tflops": 0.077354795008,
+        "analytic_flash_tflops": 0.077354795008,
+        "vendor_tflops": 0.077162840064
+      },
+      "decode_stagecost": {
+        "decode_eager": {
+          "flops_tflops": 0.077354795008,
+          "io_tb": 0.000829784064,
+          "arithmetic_intensity": 93.22280140583658,
+          "weights_gb": 0.6873130798339844,
+          "activations_gb": 0.0014948397874832153,
+          "kv_gb": 0.05527496337890625
+        },
+        "decode_flash": {
+          "flops_tflops": 0.077354795008,
+          "io_tb": 0.0006001213439999999,
+          "arithmetic_intensity": 128.89858989584613,
+          "weights_gb": 0.6873130798339844,
+          "activations_gb": 0.16674484312534332,
+          "kv_gb": 0.05527496337890625
+        },
+        "decode_vendor": {
+          "flops_tflops": 0.077162840064
+        }
+      }
+    },
+    {
+      "image_tokens_total": 983,
+      "image_tokens_crops": 710,
+      "global_image_tokens": 273,
+      "height_crop_num": 1,
+      "width_crop_num": 7,
+      "image_width": 4480,
+      "image_height": 640,
+      "batch_size": 1,
+      "context_len": 993,
+      "decode_steps": 64,
+      "analytic_only": false,
+      "decode": {
+        "analytic_tflops": 0.077708689408,
+        "analytic_eager_tflops": 0.077708689408,
+        "analytic_flash_tflops": 0.077708689408,
+        "vendor_tflops": 0.077516734464
+      },
+      "decode_stagecost": {
+        "decode_eager": {
+          "flops_tflops": 0.077708689408,
+          "io_tb": 0.000851902464,
+          "arithmetic_intensity": 91.21782444803448,
+          "weights_gb": 0.6873130798339844,
+          "activations_gb": 0.001535072922706604,
+          "kv_gb": 0.0604248046875
+        },
+        "decode_flash": {
+          "flops_tflops": 0.077708689408,
+          "io_tb": 0.0006001213439999999,
+          "arithmetic_intensity": 129.48829463395992,
+          "weights_gb": 0.6873130798339844,
+          "activations_gb": 0.18219436705112457,
+          "kv_gb": 0.0604248046875
+        },
+        "decode_vendor": {
+          "flops_tflops": 0.077516734464
+        }
+      }
+    },
+    {
+      "image_tokens_total": 1083,
+      "image_tokens_crops": 810,
+      "global_image_tokens": 273,
+      "height_crop_num": 1,
+      "width_crop_num": 8,
+      "image_width": 5120,
+      "image_height": 640,
+      "batch_size": 1,
+      "context_len": 1093,
+      "decode_steps": 64,
+      "analytic_only": false,
+      "decode": {
+        "analytic_tflops": 0.078101905408,
+        "analytic_eager_tflops": 0.078101905408,
+        "analytic_flash_tflops": 0.078101905408,
+        "vendor_tflops": 0.077909950464
+      },
+      "decode_stagecost": {
+        "decode_eager": {
+          "flops_tflops": 0.078101905408,
+          "io_tb": 0.0008764784640000001,
+          "arithmetic_intensity": 89.10875579482577,
+          "weights_gb": 0.6873130798339844,
+          "activations_gb": 0.001579776406288147,
+          "kv_gb": 0.0661468505859375
+        },
+        "decode_flash": {
+          "flops_tflops": 0.078101905408,
+          "io_tb": 0.0006001213439999999,
+          "arithmetic_intensity": 130.14352212075298,
+          "weights_gb": 0.6873130798339844,
+          "activations_gb": 0.19936050474643707,
+          "kv_gb": 0.0661468505859375
+        },
+        "decode_vendor": {
+          "flops_tflops": 0.077909950464
+        }
+      }
+    },
+    {
+      "image_tokens_total": 1093,
+      "image_tokens_crops": 820,
+      "global_image_tokens": 273,
+      "height_crop_num": 2,
+      "width_crop_num": 4,
+      "image_width": 2560,
+      "image_height": 1280,
+      "batch_size": 1,
+      "context_len": 1103,
+      "decode_steps": 64,
+      "analytic_only": false,
+      "decode": {
+        "analytic_tflops": 0.078141227008,
+        "analytic_eager_tflops": 0.078141227008,
+        "analytic_flash_tflops": 0.078141227008,
+        "vendor_tflops": 0.077949272064
+      },
+      "decode_stagecost": {
+        "decode_eager": {
+          "flops_tflops": 0.078141227008,
+          "io_tb": 0.0008789360639999998,
+          "arithmetic_intensity": 88.90433583118967,
+          "weights_gb": 0.6873130798339844,
+          "activations_gb": 0.0015842467546463013,
+          "kv_gb": 0.06671905517578125
+        },
+        "decode_flash": {
+          "flops_tflops": 0.078141227008,
+          "io_tb": 0.0006001213439999999,
+          "arithmetic_intensity": 130.2090448694323,
+          "weights_gb": 0.6873130798339844,
+          "activations_gb": 0.20107711851596832,
+          "kv_gb": 0.06671905517578125
+        },
+        "decode_vendor": {
+          "flops_tflops": 0.077949272064
+        }
+      }
+    },
+    {
+      "image_tokens_total": 1183,
+      "image_tokens_crops": 910,
+      "global_image_tokens": 273,
+      "height_crop_num": 1,
+      "width_crop_num": 9,
+      "image_width": 5760,
+      "image_height": 640,
+      "batch_size": 1,
+      "context_len": 1193,
+      "decode_steps": 64,
+      "analytic_only": false,
+      "decode": {
+        "analytic_tflops": 0.078495121408,
+        "analytic_eager_tflops": 0.078495121408,
+        "analytic_flash_tflops": 0.078495121408,
+        "vendor_tflops": 0.078303166464
+      },
+      "decode_stagecost": {
+        "decode_eager": {
+          "flops_tflops": 0.078495121408,
+          "io_tb": 0.0009010544639999998,
+          "arithmetic_intensity": 87.1147356171358,
+          "weights_gb": 0.6873130798339844,
+          "activations_gb": 0.00162447988986969,
+          "kv_gb": 0.071868896484375
+        },
+        "decode_flash": {
+          "flops_tflops": 0.078495121408,
+          "io_tb": 0.0006001213439999999,
+          "arithmetic_intensity": 130.79874960754606,
+          "weights_gb": 0.6873130798339844,
+          "activations_gb": 0.21652664244174957,
+          "kv_gb": 0.071868896484375
+        },
+        "decode_vendor": {
+          "flops_tflops": 0.078303166464
+        }
+      }
+    },
+    {
+      "image_tokens_total": 1203,
+      "image_tokens_crops": 930,
+      "global_image_tokens": 273,
+      "height_crop_num": 3,
+      "width_crop_num": 3,
+      "image_width": 1920,
+      "image_height": 1920,
+      "batch_size": 1,
+      "context_len": 1213,
+      "decode_steps": 64,
+      "analytic_only": false,
+      "decode": {
+        "analytic_tflops": 0.078573764608,
+        "analytic_eager_tflops": 0.078573764608,
+        "analytic_flash_tflops": 0.078573764608,
+        "vendor_tflops": 0.078381809664
+      },
+      "decode_stagecost": {
+        "decode_eager": {
+          "flops_tflops": 0.078573764608,
+          "io_tb": 0.0009059696639999998,
+          "arithmetic_intensity": 86.72891348379632,
+          "weights_gb": 0.6873130798339844,
+          "activations_gb": 0.0016334205865859985,
+          "kv_gb": 0.0730133056640625
+        },
+        "decode_flash": {
+          "flops_tflops": 0.078573764608,
+          "io_tb": 0.0006001213439999999,
+          "arithmetic_intensity": 130.92979510490466,
+          "weights_gb": 0.6873130798339844,
+          "activations_gb": 0.21995986998081207,
+          "kv_gb": 0.0730133056640625
+        },
+        "decode_vendor": {
+          "flops_tflops": 0.078381809664
+        }
+      }
+    },
+    {
+      "image_tokens_total": 1283,
+      "image_tokens_crops": 1010,
+      "global_image_tokens": 273,
+      "height_crop_num": 1,
+      "width_crop_num": 10,
+      "image_width": 6400,
+      "image_height": 640,
+      "batch_size": 1,
+      "context_len": 1293,
+      "decode_steps": 64,
+      "analytic_only": true,
+      "decode": {
+        "analytic_tflops": 0.07888833740799998,
+        "analytic_eager_tflops": 0.07888833740799998,
+        "analytic_flash_tflops": 0.07888833740799998,
+        "vendor_tflops": null
+      },
+      "decode_stagecost": {
+        "decode_eager": {
+          "flops_tflops": 0.07888833740799998,
+          "io_tb": 0.0009256304640000002,
+          "arithmetic_intensity": 85.22660011328232,
+          "weights_gb": 0.6873130798339844,
+          "activations_gb": 0.001669183373451233,
+          "kv_gb": 0.0775909423828125
+        },
+        "decode_flash": {
+          "flops_tflops": 0.07888833740799998,
+          "io_tb": 0.0006001213439999999,
+          "arithmetic_intensity": 131.45397709433908,
+          "weights_gb": 0.6873130798339844,
+          "activations_gb": 0.23369278013706207,
+          "kv_gb": 0.0775909423828125
+        }
+      }
+    },
+    {
+      "image_tokens_total": 1293,
+      "image_tokens_crops": 1020,
+      "global_image_tokens": 273,
+      "height_crop_num": 2,
+      "width_crop_num": 5,
+      "image_width": 3200,
+      "image_height": 1280,
+      "batch_size": 1,
+      "context_len": 1303,
+      "decode_steps": 64,
+      "analytic_only": true,
+      "decode": {
+        "analytic_tflops": 0.078927659008,
+        "analytic_eager_tflops": 0.078927659008,
+        "analytic_flash_tflops": 0.078927659008,
+        "vendor_tflops": null
+      },
+      "decode_stagecost": {
+        "decode_eager": {
+          "flops_tflops": 0.078927659008,
+          "io_tb": 0.0009280880639999998,
+          "arithmetic_intensity": 85.0432863750309,
+          "weights_gb": 0.6873130798339844,
+          "activations_gb": 0.0016736537218093872,
+          "kv_gb": 0.07816314697265625
+        },
+        "decode_flash": {
+          "flops_tflops": 0.078927659008,
+          "io_tb": 0.0006001213439999999,
+          "arithmetic_intensity": 131.51949984301842,
+          "weights_gb": 0.6873130798339844,
+          "activations_gb": 0.23540939390659332,
+          "kv_gb": 0.07816314697265625
+        }
+      }
+    },
+    {
+      "image_tokens_total": 1383,
+      "image_tokens_crops": 1110,
+      "global_image_tokens": 273,
+      "height_crop_num": 1,
+      "width_crop_num": 11,
+      "image_width": 7040,
+      "image_height": 640,
+      "batch_size": 1,
+      "context_len": 1393,
+      "decode_steps": 64,
+      "analytic_only": true,
+      "decode": {
+        "analytic_tflops": 0.079281553408,
+        "analytic_eager_tflops": 0.079281553408,
+        "analytic_flash_tflops": 0.079281553408,
+        "vendor_tflops": null
+      },
+      "decode_stagecost": {
+        "decode_eager": {
+          "flops_tflops": 0.079281553408,
+          "io_tb": 0.0009502064639999999,
+          "arithmetic_intensity": 83.4361335264501,
+          "weights_gb": 0.6873130798339844,
+          "activations_gb": 0.0017138868570327759,
+          "kv_gb": 0.08331298828125
+        },
+        "decode_flash": {
+          "flops_tflops": 0.079281553408,
+          "io_tb": 0.0006001213439999999,
+          "arithmetic_intensity": 132.1092045811322,
+          "weights_gb": 0.6873130798339844,
+          "activations_gb": 0.2508589178323746,
+          "kv_gb": 0.08331298828125
+        }
+      }
+    },
+    {
+      "image_tokens_total": 1483,
+      "image_tokens_crops": 1210,
+      "global_image_tokens": 273,
+      "height_crop_num": 1,
+      "width_crop_num": 12,
+      "image_width": 7680,
+      "image_height": 640,
+      "batch_size": 1,
+      "context_len": 1493,
+      "decode_steps": 64,
+      "analytic_only": true,
+      "decode": {
+        "analytic_tflops": 0.079674769408,
+        "analytic_eager_tflops": 0.079674769408,
+        "analytic_flash_tflops": 0.079674769408,
+        "vendor_tflops": null
+      },
+      "decode_stagecost": {
+        "decode_eager": {
+          "flops_tflops": 0.079674769408,
+          "io_tb": 0.000974782464,
+          "arithmetic_intensity": 81.73594863520238,
+          "weights_gb": 0.6873130798339844,
+          "activations_gb": 0.0017585903406143188,
+          "kv_gb": 0.0890350341796875
+        },
+        "decode_flash": {
+          "flops_tflops": 0.079674769408,
+          "io_tb": 0.0006001213439999999,
+          "arithmetic_intensity": 132.76443206792527,
+          "weights_gb": 0.6873130798339844,
+          "activations_gb": 0.2680250555276871,
+          "kv_gb": 0.0890350341796875
+        }
+      }
+    },
+    {
+      "image_tokens_total": 1493,
+      "image_tokens_crops": 1220,
+      "global_image_tokens": 273,
+      "height_crop_num": 2,
+      "width_crop_num": 6,
+      "image_width": 3840,
+      "image_height": 1280,
+      "batch_size": 1,
+      "context_len": 1503,
+      "decode_steps": 64,
+      "analytic_only": true,
+      "decode": {
+        "analytic_tflops": 0.07971409100799999,
+        "analytic_eager_tflops": 0.07971409100799999,
+        "analytic_flash_tflops": 0.07971409100799999,
+        "vendor_tflops": null
+      },
+      "decode_stagecost": {
+        "decode_eager": {
+          "flops_tflops": 0.07971409100799999,
+          "io_tb": 0.0009772400639999998,
+          "arithmetic_intensity": 81.57063340374879,
+          "weights_gb": 0.6873130798339844,
+          "activations_gb": 0.0017630606889724731,
+          "kv_gb": 0.08960723876953125
+        },
+        "decode_flash": {
+          "flops_tflops": 0.07971409100799999,
+          "io_tb": 0.0006001213439999999,
+          "arithmetic_intensity": 132.82995481660456,
+          "weights_gb": 0.6873130798339844,
+          "activations_gb": 0.2697416692972183,
+          "kv_gb": 0.08960723876953125
+        }
+      }
+    },
+    {
+      "image_tokens_total": 1503,
+      "image_tokens_crops": 1230,
+      "global_image_tokens": 273,
+      "height_crop_num": 3,
+      "width_crop_num": 4,
+      "image_width": 2560,
+      "image_height": 1920,
+      "batch_size": 1,
+      "context_len": 1513,
+      "decode_steps": 64,
+      "analytic_only": true,
+      "decode": {
+        "analytic_tflops": 0.079753412608,
+        "analytic_eager_tflops": 0.079753412608,
+        "analytic_flash_tflops": 0.079753412608,
+        "vendor_tflops": null
+      },
+      "decode_stagecost": {
+        "decode_eager": {
+          "flops_tflops": 0.079753412608,
+          "io_tb": 0.0009796976639999998,
+          "arithmetic_intensity": 81.40614756839923,
+          "weights_gb": 0.6873130798339844,
+          "activations_gb": 0.0017675310373306274,
+          "kv_gb": 0.090179443359375
+        },
+        "decode_flash": {
+          "flops_tflops": 0.079753412608,
+          "io_tb": 0.0006001213439999999,
+          "arithmetic_intensity": 132.89547756528387,
+          "weights_gb": 0.6873130798339844,
+          "activations_gb": 0.2714582830667496,
+          "kv_gb": 0.090179443359375
+        }
+      }
+    },
+    {
+      "image_tokens_total": 1583,
+      "image_tokens_crops": 1310,
+      "global_image_tokens": 273,
+      "height_crop_num": 1,
+      "width_crop_num": 13,
+      "image_width": 8320,
+      "image_height": 640,
+      "batch_size": 1,
+      "context_len": 1593,
+      "decode_steps": 64,
+      "analytic_only": true,
+      "decode": {
+        "analytic_tflops": 0.080067985408,
+        "analytic_eager_tflops": 0.080067985408,
+        "analytic_flash_tflops": 0.080067985408,
+        "vendor_tflops": null
+      },
+      "decode_stagecost": {
+        "decode_eager": {
+          "flops_tflops": 0.080067985408,
+          "io_tb": 0.000999358464,
+          "arithmetic_intensity": 80.1193848776969,
+          "weights_gb": 0.6873130798339844,
+          "activations_gb": 0.0018032938241958618,
+          "kv_gb": 0.094757080078125
+        },
+        "decode_flash": {
+          "flops_tflops": 0.080067985408,
+          "io_tb": 0.0006001213439999999,
+          "arithmetic_intensity": 133.41965955471835,
+          "weights_gb": 0.6873130798339844,
+          "activations_gb": 0.2851911932229996,
+          "kv_gb": 0.094757080078125
+        }
+      }
+    },
+    {
+      "image_tokens_total": 1683,
+      "image_tokens_crops": 1410,
+      "global_image_tokens": 273,
+      "height_crop_num": 1,
+      "width_crop_num": 14,
+      "image_width": 8960,
+      "image_height": 640,
+      "batch_size": 1,
+      "context_len": 1693,
+      "decode_steps": 64,
+      "analytic_only": true,
+      "decode": {
+        "analytic_tflops": 0.08046120140799999,
+        "analytic_eager_tflops": 0.08046120140799999,
+        "analytic_flash_tflops": 0.08046120140799999,
+        "vendor_tflops": null
+      },
+      "decode_stagecost": {
+        "decode_eager": {
+          "flops_tflops": 0.08046120140799999,
+          "io_tb": 0.0010239344639999999,
+          "arithmetic_intensity": 78.58042114695341,
+          "weights_gb": 0.6873130798339844,
+          "activations_gb": 0.0018479973077774048,
+          "kv_gb": 0.1004791259765625
+        },
+        "decode_flash": {
+          "flops_tflops": 0.08046120140799999,
+          "io_tb": 0.0006001213439999999,
+          "arithmetic_intensity": 134.0748870415114,
+          "weights_gb": 0.6873130798339844,
+          "activations_gb": 0.3023573309183121,
+          "kv_gb": 0.1004791259765625
+        }
+      }
+    },
+    {
+      "image_tokens_total": 1693,
+      "image_tokens_crops": 1420,
+      "global_image_tokens": 273,
+      "height_crop_num": 2,
+      "width_crop_num": 7,
+      "image_width": 4480,
+      "image_height": 1280,
+      "batch_size": 1,
+      "context_len": 1703,
+      "decode_steps": 64,
+      "analytic_only": true,
+      "decode": {
+        "analytic_tflops": 0.08050052300800001,
+        "analytic_eager_tflops": 0.08050052300800001,
+        "analytic_flash_tflops": 0.08050052300800001,
+        "vendor_tflops": null
+      },
+      "decode_stagecost": {
+        "decode_eager": {
+          "flops_tflops": 0.08050052300800001,
+          "io_tb": 0.001026392064,
+          "arithmetic_intensity": 78.4305781693963,
+          "weights_gb": 0.6873130798339844,
+          "activations_gb": 0.001852467656135559,
+          "kv_gb": 0.10105133056640625
+        },
+        "decode_flash": {
+          "flops_tflops": 0.08050052300800001,
+          "io_tb": 0.0006001213439999999,
+          "arithmetic_intensity": 134.14040979019072,
+          "weights_gb": 0.6873130798339844,
+          "activations_gb": 0.3040739446878433,
+          "kv_gb": 0.10105133056640625
+        }
+      }
+    },
+    {
+      "image_tokens_total": 1783,
+      "image_tokens_crops": 1510,
+      "global_image_tokens": 273,
+      "height_crop_num": 1,
+      "width_crop_num": 15,
+      "image_width": 9600,
+      "image_height": 640,
+      "batch_size": 1,
+      "context_len": 1793,
+      "decode_steps": 64,
+      "analytic_only": true,
+      "decode": {
+        "analytic_tflops": 0.08085441740799999,
+        "analytic_eager_tflops": 0.08085441740799999,
+        "analytic_flash_tflops": 0.08085441740799999,
+        "vendor_tflops": null
+      },
+      "decode_stagecost": {
+        "decode_eager": {
+          "flops_tflops": 0.08085441740799999,
+          "io_tb": 0.0010485104640000002,
+          "arithmetic_intensity": 77.1136008500531,
+          "weights_gb": 0.6873130798339844,
+          "activations_gb": 0.0018927007913589478,
+          "kv_gb": 0.106201171875
+        },
+        "decode_flash": {
+          "flops_tflops": 0.08085441740799999,
+          "io_tb": 0.0006001213439999999,
+          "arithmetic_intensity": 134.73011452830445,
+          "weights_gb": 0.6873130798339844,
+          "activations_gb": 0.3195234686136246,
+          "kv_gb": 0.106201171875
+        }
+      }
+    },
+    {
+      "image_tokens_total": 1803,
+      "image_tokens_crops": 1530,
+      "global_image_tokens": 273,
+      "height_crop_num": 3,
+      "width_crop_num": 5,
+      "image_width": 3200,
+      "image_height": 1920,
+      "batch_size": 1,
+      "context_len": 1813,
+      "decode_steps": 64,
+      "analytic_only": true,
+      "decode": {
+        "analytic_tflops": 0.080933060608,
+        "analytic_eager_tflops": 0.080933060608,
+        "analytic_flash_tflops": 0.080933060608,
+        "vendor_tflops": null
+      },
+      "decode_stagecost": {
+        "decode_eager": {
+          "flops_tflops": 0.080933060608,
+          "io_tb": 0.0010534256640000001,
+          "arithmetic_intensity": 76.82844967027496,
+          "weights_gb": 0.6873130798339844,
+          "activations_gb": 0.0019016414880752563,
+          "kv_gb": 0.1073455810546875
+        },
+        "decode_flash": {
+          "flops_tflops": 0.080933060608,
+          "io_tb": 0.0006001213439999999,
+          "arithmetic_intensity": 134.86116002566308,
+          "weights_gb": 0.6873130798339844,
+          "activations_gb": 0.3229566961526871,
+          "kv_gb": 0.1073455810546875
+        }
+      }
+    },
+    {
+      "image_tokens_total": 1883,
+      "image_tokens_crops": 1610,
+      "global_image_tokens": 273,
+      "height_crop_num": 1,
+      "width_crop_num": 16,
+      "image_width": 10240,
+      "image_height": 640,
+      "batch_size": 1,
+      "context_len": 1893,
+      "decode_steps": 64,
+      "analytic_only": true,
+      "decode": {
+        "analytic_tflops": 0.08124763340800001,
+        "analytic_eager_tflops": 0.08124763340800001,
+        "analytic_flash_tflops": 0.08124763340800001,
+        "vendor_tflops": null
+      },
+      "decode_stagecost": {
+        "decode_eager": {
+          "flops_tflops": 0.08124763340800001,
+          "io_tb": 0.0010730864639999999,
+          "arithmetic_intensity": 75.71396726517652,
+          "weights_gb": 0.6873130798339844,
+          "activations_gb": 0.0019374042749404907,
+          "kv_gb": 0.1119232177734375
+        },
+        "decode_flash": {
+          "flops_tflops": 0.08124763340800001,
+          "io_tb": 0.0006001213439999999,
+          "arithmetic_intensity": 135.38534201509756,
+          "weights_gb": 0.6873130798339844,
+          "activations_gb": 0.3366896063089371,
+          "kv_gb": 0.1119232177734375
+        }
+      }
+    },
+    {
+      "image_tokens_total": 1893,
+      "image_tokens_crops": 1620,
+      "global_image_tokens": 273,
+      "height_crop_num": 2,
+      "width_crop_num": 8,
+      "image_width": 5120,
+      "image_height": 1280,
+      "batch_size": 1,
+      "context_len": 1903,
+      "decode_steps": 64,
+      "analytic_only": true,
+      "decode": {
+        "analytic_tflops": 0.08128695500799998,
+        "analytic_eager_tflops": 0.08128695500799998,
+        "analytic_flash_tflops": 0.08128695500799998,
+        "vendor_tflops": null
+      },
+      "decode_stagecost": {
+        "decode_eager": {
+          "flops_tflops": 0.08128695500799998,
+          "io_tb": 0.001075544064,
+          "arithmetic_intensity": 75.57752185967155,
+          "weights_gb": 0.6873130798339844,
+          "activations_gb": 0.001941874623298645,
+          "kv_gb": 0.11249542236328125
+        },
+        "decode_flash": {
+          "flops_tflops": 0.08128695500799998,
+          "io_tb": 0.0006001213439999999,
+          "arithmetic_intensity": 135.45086476377682,
+          "weights_gb": 0.6873130798339844,
+          "activations_gb": 0.3384062200784683,
+          "kv_gb": 0.11249542236328125
+        }
+      }
+    },
+    {
+      "image_tokens_total": 1913,
+      "image_tokens_crops": 1640,
+      "global_image_tokens": 273,
+      "height_crop_num": 4,
+      "width_crop_num": 4,
+      "image_width": 2560,
+      "image_height": 2560,
+      "batch_size": 1,
+      "context_len": 1923,
+      "decode_steps": 64,
+      "analytic_only": true,
+      "decode": {
+        "analytic_tflops": 0.08136559820800002,
+        "analytic_eager_tflops": 0.08136559820800002,
+        "analytic_flash_tflops": 0.08136559820800002,
+        "vendor_tflops": null
+      },
+      "decode_stagecost": {
+        "decode_eager": {
+          "flops_tflops": 0.08136559820800002,
+          "io_tb": 0.001080459264,
+          "arithmetic_intensity": 75.30649319139904,
+          "weights_gb": 0.6873130798339844,
+          "activations_gb": 0.0019508153200149536,
+          "kv_gb": 0.11363983154296875
+        },
+        "decode_flash": {
+          "flops_tflops": 0.08136559820800002,
+          "io_tb": 0.0006001213439999999,
+          "arithmetic_intensity": 135.5819102611355,
+          "weights_gb": 0.6873130798339844,
+          "activations_gb": 0.3418394476175308,
+          "kv_gb": 0.11363983154296875
+        }
+      }
+    },
+    {
+      "image_tokens_total": 1983,
+      "image_tokens_crops": 1710,
+      "global_image_tokens": 273,
+      "height_crop_num": 1,
+      "width_crop_num": 17,
+      "image_width": 10880,
+      "image_height": 640,
+      "batch_size": 1,
+      "context_len": 1993,
+      "decode_steps": 64,
+      "analytic_only": true,
+      "decode": {
+        "analytic_tflops": 0.081640849408,
+        "analytic_eager_tflops": 0.081640849408,
+        "analytic_flash_tflops": 0.081640849408,
+        "vendor_tflops": null
+      },
+      "decode_stagecost": {
+        "decode_eager": {
+          "flops_tflops": 0.081640849408,
+          "io_tb": 0.0010976624640000002,
+          "arithmetic_intensity": 74.37700758254222,
+          "weights_gb": 0.6873130798339844,
+          "activations_gb": 0.0019821077585220337,
+          "kv_gb": 0.117645263671875
+        },
+        "decode_flash": {
+          "flops_tflops": 0.081640849408,
+          "io_tb": 0.0006001213439999999,
+          "arithmetic_intensity": 136.04056950189062,
+          "weights_gb": 0.6873130798339844,
+          "activations_gb": 0.3538557440042496,
+          "kv_gb": 0.117645263671875
+        }
+      }
+    },
+    {
+      "image_tokens_total": 2083,
+      "image_tokens_crops": 1810,
+      "global_image_tokens": 273,
+      "height_crop_num": 1,
+      "width_crop_num": 18,
+      "image_width": 11520,
+      "image_height": 640,
+      "batch_size": 1,
+      "context_len": 2093,
+      "decode_steps": 64,
+      "analytic_only": true,
+      "decode": {
+        "analytic_tflops": 0.08203406540799998,
+        "analytic_eager_tflops": 0.08203406540799998,
+        "analytic_flash_tflops": 0.08203406540799998,
+        "vendor_tflops": null
+      },
+      "decode_stagecost": {
+        "decode_eager": {
+          "flops_tflops": 0.08203406540799998,
+          "io_tb": 0.0011222384639999997,
+          "arithmetic_intensity": 73.0986042980612,
+          "weights_gb": 0.6873130798339844,
+          "activations_gb": 0.0020268112421035767,
+          "kv_gb": 0.1233673095703125
+        },
+        "decode_flash": {
+          "flops_tflops": 0.08203406540799998,
+          "io_tb": 0.0006001213439999999,
+          "arithmetic_intensity": 136.69579698868367,
+          "weights_gb": 0.6873130798339844,
+          "activations_gb": 0.3710218816995621,
+          "kv_gb": 0.1233673095703125
+        }
+      }
+    },
+    {
+      "image_tokens_total": 2093,
+      "image_tokens_crops": 1820,
+      "global_image_tokens": 273,
+      "height_crop_num": 2,
+      "width_crop_num": 9,
+      "image_width": 5760,
+      "image_height": 1280,
+      "batch_size": 1,
+      "context_len": 2103,
+      "decode_steps": 64,
+      "analytic_only": true,
+      "decode": {
+        "analytic_tflops": 0.08207338700799999,
+        "analytic_eager_tflops": 0.08207338700799999,
+        "analytic_flash_tflops": 0.08207338700799999,
+        "vendor_tflops": null
+      },
+      "decode_stagecost": {
+        "decode_eager": {
+          "flops_tflops": 0.08207338700799999,
+          "io_tb": 0.0011246960639999999,
+          "arithmetic_intensity": 72.97383678582874,
+          "weights_gb": 0.6873130798339844,
+          "activations_gb": 0.002031281590461731,
+          "kv_gb": 0.12393951416015625
+        },
+        "decode_flash": {
+          "flops_tflops": 0.08207338700799999,
+          "io_tb": 0.0006001213439999999,
+          "arithmetic_intensity": 136.76131973736298,
+          "weights_gb": 0.6873130798339844,
+          "activations_gb": 0.3727384954690933,
+          "kv_gb": 0.12393951416015625
+        }
+      }
+    },
+    {
+      "image_tokens_total": 2103,
+      "image_tokens_crops": 1830,
+      "global_image_tokens": 273,
+      "height_crop_num": 3,
+      "width_crop_num": 6,
+      "image_width": 3840,
+      "image_height": 1920,
+      "batch_size": 1,
+      "context_len": 2113,
+      "decode_steps": 64,
+      "analytic_only": true,
+      "decode": {
+        "analytic_tflops": 0.082112708608,
+        "analytic_eager_tflops": 0.082112708608,
+        "analytic_flash_tflops": 0.082112708608,
+        "vendor_tflops": null
+      },
+      "decode_stagecost": {
+        "decode_eager": {
+          "flops_tflops": 0.082112708608,
+          "io_tb": 0.0011271536639999996,
+          "arithmetic_intensity": 72.84961334961338,
+          "weights_gb": 0.6873130798339844,
+          "activations_gb": 0.0020357519388198853,
+          "kv_gb": 0.12451171875
+        },
+        "decode_flash": {
+          "flops_tflops": 0.082112708608,
+          "io_tb": 0.0006001213439999999,
+          "arithmetic_intensity": 136.82684248604232,
+          "weights_gb": 0.6873130798339844,
+          "activations_gb": 0.3744551092386246,
+          "kv_gb": 0.12451171875
+        }
+      }
+    },
+    {
+      "image_tokens_total": 2183,
+      "image_tokens_crops": 1910,
+      "global_image_tokens": 273,
+      "height_crop_num": 1,
+      "width_crop_num": 19,
+      "image_width": 12160,
+      "image_height": 640,
+      "batch_size": 1,
+      "context_len": 2193,
+      "decode_steps": 64,
+      "analytic_only": true,
+      "decode": {
+        "analytic_tflops": 0.082427281408,
+        "analytic_eager_tflops": 0.082427281408,
+        "analytic_flash_tflops": 0.082427281408,
+        "vendor_tflops": null
+      },
+      "decode_stagecost": {
+        "decode_eager": {
+          "flops_tflops": 0.082427281408,
+          "io_tb": 0.0011468144640000002,
+          "arithmetic_intensity": 71.87499285673465,
+          "weights_gb": 0.6873130798339844,
+          "activations_gb": 0.0020715147256851196,
+          "kv_gb": 0.12908935546875
+        },
+        "decode_flash": {
+          "flops_tflops": 0.082427281408,
+          "io_tb": 0.0006001213439999999,
+          "arithmetic_intensity": 137.35102447547675,
+          "weights_gb": 0.6873130798339844,
+          "activations_gb": 0.3881880193948746,
+          "kv_gb": 0.12908935546875
+        }
+      }
+    },
+    {
+      "image_tokens_total": 2283,
+      "image_tokens_crops": 2010,
+      "global_image_tokens": 273,
+      "height_crop_num": 1,
+      "width_crop_num": 20,
+      "image_width": 12800,
+      "image_height": 640,
+      "batch_size": 1,
+      "context_len": 2293,
+      "decode_steps": 64,
+      "analytic_only": true,
+      "decode": {
+        "analytic_tflops": 0.082820497408,
+        "analytic_eager_tflops": 0.082820497408,
+        "analytic_flash_tflops": 0.082820497408,
+        "vendor_tflops": null
+      },
+      "decode_stagecost": {
+        "decode_eager": {
+          "flops_tflops": 0.082820497408,
+          "io_tb": 0.0011713904639999997,
+          "arithmetic_intensity": 70.70272462795124,
+          "weights_gb": 0.6873130798339844,
+          "activations_gb": 0.0021162182092666626,
+          "kv_gb": 0.1348114013671875
+        },
+        "decode_flash": {
+          "flops_tflops": 0.082820497408,
+          "io_tb": 0.0006001213439999999,
+          "arithmetic_intensity": 138.00625196226983,
+          "weights_gb": 0.6873130798339844,
+          "activations_gb": 0.4053541570901871,
+          "kv_gb": 0.1348114013671875
+        }
+      }
+    },
+    {
+      "image_tokens_total": 2293,
+      "image_tokens_crops": 2020,
+      "global_image_tokens": 273,
+      "height_crop_num": 2,
+      "width_crop_num": 10,
+      "image_width": 6400,
+      "image_height": 1280,
+      "batch_size": 1,
+      "context_len": 2303,
+      "decode_steps": 64,
+      "analytic_only": true,
+      "decode": {
+        "analytic_tflops": 0.08285981900799998,
+        "analytic_eager_tflops": 0.08285981900799998,
+        "analytic_flash_tflops": 0.08285981900799998,
+        "vendor_tflops": null
+      },
+      "decode_stagecost": {
+        "decode_eager": {
+          "flops_tflops": 0.08285981900799998,
+          "io_tb": 0.0011738480639999999,
+          "arithmetic_intensity": 70.58819752672862,
+          "weights_gb": 0.6873130798339844,
+          "activations_gb": 0.002120688557624817,
+          "kv_gb": 0.13538360595703125
+        },
+        "decode_flash": {
+          "flops_tflops": 0.08285981900799998,
+          "io_tb": 0.0006001213439999999,
+          "arithmetic_intensity": 138.07177471094911,
+          "weights_gb": 0.6873130798339844,
+          "activations_gb": 0.4070707708597183,
+          "kv_gb": 0.13538360595703125
+        }
+      }
+    },
+    {
+      "image_tokens_total": 2313,
+      "image_tokens_crops": 2040,
+      "global_image_tokens": 273,
+      "height_crop_num": 4,
+      "width_crop_num": 5,
+      "image_width": 3200,
+      "image_height": 2560,
+      "batch_size": 1,
+      "context_len": 2323,
+      "decode_steps": 64,
+      "analytic_only": true,
+      "decode": {
+        "analytic_tflops": 0.082938462208,
+        "analytic_eager_tflops": 0.082938462208,
+        "analytic_flash_tflops": 0.082938462208,
+        "vendor_tflops": null
+      },
+      "decode_stagecost": {
+        "decode_eager": {
+          "flops_tflops": 0.082938462208,
+          "io_tb": 0.0011787632639999998,
+          "arithmetic_intensity": 70.36057598754623,
+          "weights_gb": 0.6873130798339844,
+          "activations_gb": 0.0021296292543411255,
+          "kv_gb": 0.13652801513671875
+        },
+        "decode_flash": {
+          "flops_tflops": 0.082938462208,
+          "io_tb": 0.0006001213439999999,
+          "arithmetic_intensity": 138.20282020830774,
+          "weights_gb": 0.6873130798339844,
+          "activations_gb": 0.4105039983987808,
+          "kv_gb": 0.13652801513671875
+        }
+      }
+    },
+    {
+      "image_tokens_total": 2383,
+      "image_tokens_crops": 2110,
+      "global_image_tokens": 273,
+      "height_crop_num": 1,
+      "width_crop_num": 21,
+      "image_width": 13440,
+      "image_height": 640,
+      "batch_size": 1,
+      "context_len": 2393,
+      "decode_steps": 64,
+      "analytic_only": true,
+      "decode": {
+        "analytic_tflops": 0.08321371340799999,
+        "analytic_eager_tflops": 0.08321371340799999,
+        "analytic_flash_tflops": 0.08321371340799999,
+        "vendor_tflops": null
+      },
+      "decode_stagecost": {
+        "decode_eager": {
+          "flops_tflops": 0.08321371340799999,
+          "io_tb": 0.001195966464,
+          "arithmetic_intensity": 69.57863444572304,
+          "weights_gb": 0.6873130798339844,
+          "activations_gb": 0.0021609216928482056,
+          "kv_gb": 0.140533447265625
+        },
+        "decode_flash": {
+          "flops_tflops": 0.08321371340799999,
+          "io_tb": 0.0006001213439999999,
+          "arithmetic_intensity": 138.66147944906288,
+          "weights_gb": 0.6873130798339844,
+          "activations_gb": 0.4225202947854996,
+          "kv_gb": 0.140533447265625
+        }
+      }
+    },
+    {
+      "image_tokens_total": 2403,
+      "image_tokens_crops": 2130,
+      "global_image_tokens": 273,
+      "height_crop_num": 3,
+      "width_crop_num": 7,
+      "image_width": 4480,
+      "image_height": 1920,
+      "batch_size": 1,
+      "context_len": 2413,
+      "decode_steps": 64,
+      "analytic_only": true,
+      "decode": {
+        "analytic_tflops": 0.083292356608,
+        "analytic_eager_tflops": 0.083292356608,
+        "analytic_flash_tflops": 0.083292356608,
+        "vendor_tflops": null
+      },
+      "decode_stagecost": {
+        "decode_eager": {
+          "flops_tflops": 0.083292356608,
+          "io_tb": 0.0012008816640000002,
+          "arithmetic_intensity": 69.35933748089936,
+          "weights_gb": 0.6873130798339844,
+          "activations_gb": 0.002169862389564514,
+          "kv_gb": 0.1416778564453125
+        },
+        "decode_flash": {
+          "flops_tflops": 0.083292356608,
+          "io_tb": 0.0006001213439999999,
+          "arithmetic_intensity": 138.7925249464215,
+          "weights_gb": 0.6873130798339844,
+          "activations_gb": 0.4259535223245621,
+          "kv_gb": 0.1416778564453125
+        }
+      }
+    },
+    {
+      "image_tokens_total": 2483,
+      "image_tokens_crops": 2210,
+      "global_image_tokens": 273,
+      "height_crop_num": 1,
+      "width_crop_num": 22,
+      "image_width": 14080,
+      "image_height": 640,
+      "batch_size": 1,
+      "context_len": 2493,
+      "decode_steps": 64,
+      "analytic_only": true,
+      "decode": {
+        "analytic_tflops": 0.083606929408,
+        "analytic_eager_tflops": 0.083606929408,
+        "analytic_flash_tflops": 0.083606929408,
+        "vendor_tflops": null
+      },
+      "decode_stagecost": {
+        "decode_eager": {
+          "flops_tflops": 0.083606929408,
+          "io_tb": 0.001220542464,
+          "arithmetic_intensity": 68.49981207044675,
+          "weights_gb": 0.6873130798339844,
+          "activations_gb": 0.0022056251764297485,
+          "kv_gb": 0.1462554931640625
+        },
+        "decode_flash": {
+          "flops_tflops": 0.083606929408,
+          "io_tb": 0.0006001213439999999,
+          "arithmetic_intensity": 139.316706935856,
+          "weights_gb": 0.6873130798339844,
+          "activations_gb": 0.4396864324808121,
+          "kv_gb": 0.1462554931640625
+        }
+      }
+    },
+    {
+      "image_tokens_total": 2493,
+      "image_tokens_crops": 2220,
+      "global_image_tokens": 273,
+      "height_crop_num": 2,
+      "width_crop_num": 11,
+      "image_width": 7040,
+      "image_height": 1280,
+      "batch_size": 1,
+      "context_len": 2503,
+      "decode_steps": 64,
+      "analytic_only": true,
+      "decode": {
+        "analytic_tflops": 0.083646251008,
+        "analytic_eager_tflops": 0.083646251008,
+        "analytic_flash_tflops": 0.083646251008,
+        "vendor_tflops": null
+      },
+      "decode_stagecost": {
+        "decode_eager": {
+          "flops_tflops": 0.083646251008,
+          "io_tb": 0.0012230000639999999,
+          "arithmetic_intensity": 68.39431449776278,
+          "weights_gb": 0.6873130798339844,
+          "activations_gb": 0.002210095524787903,
+          "kv_gb": 0.14682769775390625
+        },
+        "decode_flash": {
+          "flops_tflops": 0.083646251008,
+          "io_tb": 0.0006001213439999999,
+          "arithmetic_intensity": 139.38222968453528,
+          "weights_gb": 0.6873130798339844,
+          "activations_gb": 0.4414030462503433,
+          "kv_gb": 0.14682769775390625
+        }
+      }
+    },
+    {
+      "image_tokens_total": 2583,
+      "image_tokens_crops": 2310,
+      "global_image_tokens": 273,
+      "height_crop_num": 1,
+      "width_crop_num": 23,
+      "image_width": 14720,
+      "image_height": 640,
+      "batch_size": 1,
+      "context_len": 2593,
+      "decode_steps": 64,
+      "analytic_only": true,
+      "decode": {
+        "analytic_tflops": 0.084000145408,
+        "analytic_eager_tflops": 0.084000145408,
+        "analytic_flash_tflops": 0.084000145408,
+        "vendor_tflops": null
+      },
+      "decode_stagecost": {
+        "decode_eager": {
+          "flops_tflops": 0.084000145408,
+          "io_tb": 0.0012451184640000002,
+          "arithmetic_intensity": 67.46357703037,
+          "weights_gb": 0.6873130798339844,
+          "activations_gb": 0.0022503286600112915,
+          "kv_gb": 0.1519775390625
+        },
+        "decode_flash": {
+          "flops_tflops": 0.084000145408,
+          "io_tb": 0.0006001213439999999,
+          "arithmetic_intensity": 139.97193442264904,
+          "weights_gb": 0.6873130798339844,
+          "activations_gb": 0.4568525701761246,
+          "kv_gb": 0.1519775390625
+        }
+      }
+    },
+    {
+      "image_tokens_total": 2683,
+      "image_tokens_crops": 2410,
+      "global_image_tokens": 273,
+      "height_crop_num": 1,
+      "width_crop_num": 24,
+      "image_width": 15360,
+      "image_height": 640,
+      "batch_size": 1,
+      "context_len": 2693,
+      "decode_steps": 64,
+      "analytic_only": true,
+      "decode": {
+        "analytic_tflops": 0.08439336140799998,
+        "analytic_eager_tflops": 0.08439336140799998,
+        "analytic_flash_tflops": 0.08439336140799998,
+        "vendor_tflops": null
+      },
+      "decode_stagecost": {
+        "decode_eager": {
+          "flops_tflops": 0.08439336140799998,
+          "io_tb": 0.001269694464,
+          "arithmetic_intensity": 66.46745638484566,
+          "weights_gb": 0.6873130798339844,
+          "activations_gb": 0.0022950321435928345,
+          "kv_gb": 0.1576995849609375
+        },
+        "decode_flash": {
+          "flops_tflops": 0.08439336140799998,
+          "io_tb": 0.0006001213439999999,
+          "arithmetic_intensity": 140.6271619094421,
+          "weights_gb": 0.6873130798339844,
+          "activations_gb": 0.4740187078714371,
+          "kv_gb": 0.1576995849609375
+        }
+      }
+    },
+    {
+      "image_tokens_total": 2693,
+      "image_tokens_crops": 2420,
+      "global_image_tokens": 273,
+      "height_crop_num": 2,
+      "width_crop_num": 12,
+      "image_width": 7680,
+      "image_height": 1280,
+      "batch_size": 1,
+      "context_len": 2703,
+      "decode_steps": 64,
+      "analytic_only": true,
+      "decode": {
+        "analytic_tflops": 0.084432683008,
+        "analytic_eager_tflops": 0.084432683008,
+        "analytic_flash_tflops": 0.084432683008,
+        "vendor_tflops": null
+      },
+      "decode_stagecost": {
+        "decode_eager": {
+          "flops_tflops": 0.084432683008,
+          "io_tb": 0.0012721520639999999,
+          "arithmetic_intensity": 66.36996110553024,
+          "weights_gb": 0.6873130798339844,
+          "activations_gb": 0.0022995024919509888,
+          "kv_gb": 0.15827178955078125
+        },
+        "decode_flash": {
+          "flops_tflops": 0.084432683008,
+          "io_tb": 0.0006001213439999999,
+          "arithmetic_intensity": 140.6926846581214,
+          "weights_gb": 0.6873130798339844,
+          "activations_gb": 0.4757353216409683,
+          "kv_gb": 0.15827178955078125
+        }
+      }
+    },
+    {
+      "image_tokens_total": 2703,
+      "image_tokens_crops": 2430,
+      "global_image_tokens": 273,
+      "height_crop_num": 3,
+      "width_crop_num": 8,
+      "image_width": 5120,
+      "image_height": 1920,
+      "batch_size": 1,
+      "context_len": 2713,
+      "decode_steps": 64,
+      "analytic_only": true,
+      "decode": {
+        "analytic_tflops": 0.08447200460799999,
+        "analytic_eager_tflops": 0.08447200460799999,
+        "analytic_flash_tflops": 0.08447200460799999,
+        "vendor_tflops": null
+      },
+      "decode_stagecost": {
+        "decode_eager": {
+          "flops_tflops": 0.08447200460799999,
+          "io_tb": 0.0012746096640000003,
+          "arithmetic_intensity": 66.27284179135171,
+          "weights_gb": 0.6873130798339844,
+          "activations_gb": 0.002303972840309143,
+          "kv_gb": 0.158843994140625
+        },
+        "decode_flash": {
+          "flops_tflops": 0.08447200460799999,
+          "io_tb": 0.0006001213439999999,
+          "arithmetic_intensity": 140.75820740680072,
+          "weights_gb": 0.6873130798339844,
+          "activations_gb": 0.4774519354104996,
+          "kv_gb": 0.158843994140625
+        }
+      }
+    },
+    {
+      "image_tokens_total": 2713,
+      "image_tokens_crops": 2440,
+      "global_image_tokens": 273,
+      "height_crop_num": 4,
+      "width_crop_num": 6,
+      "image_width": 3840,
+      "image_height": 2560,
+      "batch_size": 1,
+      "context_len": 2723,
+      "decode_steps": 64,
+      "analytic_only": true,
+      "decode": {
+        "analytic_tflops": 0.08451132620799999,
+        "analytic_eager_tflops": 0.08451132620799999,
+        "analytic_flash_tflops": 0.08451132620799999,
+        "vendor_tflops": null
+      },
+      "decode_stagecost": {
+        "decode_eager": {
+          "flops_tflops": 0.08451132620799999,
+          "io_tb": 0.0012770672639999998,
+          "arithmetic_intensity": 66.1760962717779,
+          "weights_gb": 0.6873130798339844,
+          "activations_gb": 0.0023084431886672974,
+          "kv_gb": 0.15941619873046875
+        },
+        "decode_flash": {
+          "flops_tflops": 0.08451132620799999,
+          "io_tb": 0.0006001213439999999,
+          "arithmetic_intensity": 140.82373015548,
+          "weights_gb": 0.6873130798339844,
+          "activations_gb": 0.4791685491800308,
+          "kv_gb": 0.15941619873046875
+        }
+      }
+    },
+    {
+      "image_tokens_total": 2783,
+      "image_tokens_crops": 2510,
+      "global_image_tokens": 273,
+      "height_crop_num": 1,
+      "width_crop_num": 25,
+      "image_width": 16000,
+      "image_height": 640,
+      "batch_size": 1,
+      "context_len": 2793,
+      "decode_steps": 64,
+      "analytic_only": true,
+      "decode": {
+        "analytic_tflops": 0.08478657740799998,
+        "analytic_eager_tflops": 0.08478657740799998,
+        "analytic_flash_tflops": 0.08478657740799998,
+        "vendor_tflops": null
+      },
+      "decode_stagecost": {
+        "decode_eager": {
+          "flops_tflops": 0.08478657740799998,
+          "io_tb": 0.0012942704640000005,
+          "arithmetic_intensity": 65.50916502101369,
+          "weights_gb": 0.6873130798339844,
+          "activations_gb": 0.0023397356271743774,
+          "kv_gb": 0.163421630859375
+        },
+        "decode_flash": {
+          "flops_tflops": 0.08478657740799998,
+          "io_tb": 0.0006001213439999999,
+          "arithmetic_intensity": 141.28238939623515,
+          "weights_gb": 0.6873130798339844,
+          "activations_gb": 0.4911848455667496,
+          "kv_gb": 0.163421630859375
+        }
+      }
+    },
+    {
+      "image_tokens_total": 2823,
+      "image_tokens_crops": 2550,
+      "global_image_tokens": 273,
+      "height_crop_num": 5,
+      "width_crop_num": 5,
+      "image_width": 3200,
+      "image_height": 3200,
+      "batch_size": 1,
+      "context_len": 2833,
+      "decode_steps": 64,
+      "analytic_only": true,
+      "decode": {
+        "analytic_tflops": 0.084943863808,
+        "analytic_eager_tflops": 0.084943863808,
+        "analytic_flash_tflops": 0.084943863808,
+        "vendor_tflops": null
+      },
+      "decode_stagecost": {
+        "decode_eager": {
+          "flops_tflops": 0.084943863808,
+          "io_tb": 0.0013041008640000001,
+          "arithmetic_intensity": 65.13596160611085,
+          "weights_gb": 0.6873130798339844,
+          "activations_gb": 0.0023576170206069946,
+          "kv_gb": 0.16571044921875
+        },
+        "decode_flash": {
+          "flops_tflops": 0.084943863808,
+          "io_tb": 0.0006001213439999999,
+          "arithmetic_intensity": 141.5444803909524,
+          "weights_gb": 0.6873130798339844,
+          "activations_gb": 0.4980513006448746,
+          "kv_gb": 0.16571044921875
+        }
+      }
+    },
+    {
+      "image_tokens_total": 2883,
+      "image_tokens_crops": 2610,
+      "global_image_tokens": 273,
+      "height_crop_num": 1,
+      "width_crop_num": 26,
+      "image_width": 16640,
+      "image_height": 640,
+      "batch_size": 1,
+      "context_len": 2893,
+      "decode_steps": 64,
+      "analytic_only": true,
+      "decode": {
+        "analytic_tflops": 0.08517979340799997,
+        "analytic_eager_tflops": 0.08517979340799997,
+        "analytic_flash_tflops": 0.08517979340799997,
+        "vendor_tflops": null
+      },
+      "decode_stagecost": {
+        "decode_eager": {
+          "flops_tflops": 0.08517979340799997,
+          "io_tb": 0.0013188464640000004,
+          "arithmetic_intensity": 64.58658815344857,
+          "weights_gb": 0.6873130798339844,
+          "activations_gb": 0.0023844391107559204,
+          "kv_gb": 0.1691436767578125
+        },
+        "decode_flash": {
+          "flops_tflops": 0.08517979340799997,
+          "io_tb": 0.0006001213439999999,
+          "arithmetic_intensity": 141.9376168830282,
+          "weights_gb": 0.6873130798339844,
+          "activations_gb": 0.5083509832620621,
+          "kv_gb": 0.1691436767578125
+        }
+      }
+    },
+    {
+      "image_tokens_total": 2893,
+      "image_tokens_crops": 2620,
+      "global_image_tokens": 273,
+      "height_crop_num": 2,
+      "width_crop_num": 13,
+      "image_width": 8320,
+      "image_height": 1280,
+      "batch_size": 1,
+      "context_len": 2903,
+      "decode_steps": 64,
+      "analytic_only": true,
+      "decode": {
+        "analytic_tflops": 0.08521911500799999,
+        "analytic_eager_tflops": 0.08521911500799999,
+        "analytic_flash_tflops": 0.08521911500799999,
+        "vendor_tflops": null
+      },
+      "decode_stagecost": {
+        "decode_eager": {
+          "flops_tflops": 0.08521911500799999,
+          "io_tb": 0.001321304064,
+          "arithmetic_intensity": 64.49621803933238,
+          "weights_gb": 0.6873130798339844,
+          "activations_gb": 0.0023889094591140747,
+          "kv_gb": 0.16971588134765625
+        },
+        "decode_flash": {
+          "flops_tflops": 0.08521911500799999,
+          "io_tb": 0.0006001213439999999,
+          "arithmetic_intensity": 142.00313963170754,
+          "weights_gb": 0.6873130798339844,
+          "activations_gb": 0.5100675970315933,
+          "kv_gb": 0.16971588134765625
+        }
+      }
+    },
+    {
+      "image_tokens_total": 2983,
+      "image_tokens_crops": 2710,
+      "global_image_tokens": 273,
+      "height_crop_num": 1,
+      "width_crop_num": 27,
+      "image_width": 17280,
+      "image_height": 640,
+      "batch_size": 1,
+      "context_len": 2993,
+      "decode_steps": 64,
+      "analytic_only": true,
+      "decode": {
+        "analytic_tflops": 0.08557300940799999,
+        "analytic_eager_tflops": 0.08557300940799999,
+        "analytic_flash_tflops": 0.08557300940799999,
+        "vendor_tflops": null
+      },
+      "decode_stagecost": {
+        "decode_eager": {
+          "flops_tflops": 0.08557300940799999,
+          "io_tb": 0.0013434224640000002,
+          "arithmetic_intensity": 63.69776574467045,
+          "weights_gb": 0.6873130798339844,
+          "activations_gb": 0.0024291425943374634,
+          "kv_gb": 0.17486572265625
+        },
+        "decode_flash": {
+          "flops_tflops": 0.08557300940799999,
+          "io_tb": 0.0006001213439999999,
+          "arithmetic_intensity": 142.5928443698213,
+          "weights_gb": 0.6873130798339844,
+          "activations_gb": 0.5255171209573746,
+          "kv_gb": 0.17486572265625
+        }
+      }
+    },
+    {
+      "image_tokens_total": 3003,
+      "image_tokens_crops": 2730,
+      "global_image_tokens": 273,
+      "height_crop_num": 3,
+      "width_crop_num": 9,
+      "image_width": 5760,
+      "image_height": 1920,
+      "batch_size": 1,
+      "context_len": 3013,
+      "decode_steps": 64,
+      "analytic_only": true,
+      "decode": {
+        "analytic_tflops": 0.08565165260799999,
+        "analytic_eager_tflops": 0.08565165260799999,
+        "analytic_flash_tflops": 0.08565165260799999,
+        "vendor_tflops": null
+      },
+      "decode_stagecost": {
+        "decode_eager": {
+          "flops_tflops": 0.08565165260799999,
+          "io_tb": 0.001348337664,
+          "arithmetic_intensity": 63.52388937493924,
+          "weights_gb": 0.6873130798339844,
+          "activations_gb": 0.002438083291053772,
+          "kv_gb": 0.1760101318359375
+        },
+        "decode_flash": {
+          "flops_tflops": 0.08565165260799999,
+          "io_tb": 0.0006001213439999999,
+          "arithmetic_intensity": 142.72388986717993,
+          "weights_gb": 0.6873130798339844,
+          "activations_gb": 0.5289503484964371,
+          "kv_gb": 0.1760101318359375
+        }
+      }
+    },
+    {
+      "image_tokens_total": 3083,
+      "image_tokens_crops": 2810,
+      "global_image_tokens": 273,
+      "height_crop_num": 1,
+      "width_crop_num": 28,
+      "image_width": 17920,
+      "image_height": 640,
+      "batch_size": 1,
+      "context_len": 3093,
+      "decode_steps": 64,
+      "analytic_only": true,
+      "decode": {
+        "analytic_tflops": 0.08596622540799999,
+        "analytic_eager_tflops": 0.08596622540799999,
+        "analytic_flash_tflops": 0.08596622540799999,
+        "vendor_tflops": null
+      },
+      "decode_stagecost": {
+        "decode_eager": {
+          "flops_tflops": 0.08596622540799999,
+          "io_tb": 0.0013679984640000004,
+          "arithmetic_intensity": 62.84087860496309,
+          "weights_gb": 0.6873130798339844,
+          "activations_gb": 0.0024738460779190063,
+          "kv_gb": 0.1805877685546875
+        },
+        "decode_flash": {
+          "flops_tflops": 0.08596622540799999,
+          "io_tb": 0.0006001213439999999,
+          "arithmetic_intensity": 143.2480718566144,
+          "weights_gb": 0.6873130798339844,
+          "activations_gb": 0.5426832586526871,
+          "kv_gb": 0.1805877685546875
+        }
+      }
+    },
+    {
+      "image_tokens_total": 3093,
+      "image_tokens_crops": 2820,
+      "global_image_tokens": 273,
+      "height_crop_num": 2,
+      "width_crop_num": 14,
+      "image_width": 8960,
+      "image_height": 1280,
+      "batch_size": 1,
+      "context_len": 3103,
+      "decode_steps": 64,
+      "analytic_only": true,
+      "decode": {
+        "analytic_tflops": 0.08600554700799999,
+        "analytic_eager_tflops": 0.08600554700799999,
+        "analytic_flash_tflops": 0.08600554700799999,
+        "vendor_tflops": null
+      },
+      "decode_stagecost": {
+        "decode_eager": {
+          "flops_tflops": 0.08600554700799999,
+          "io_tb": 0.0013704560640000001,
+          "arithmetic_intensity": 62.75688018554383,
+          "weights_gb": 0.6873130798339844,
+          "activations_gb": 0.0024783164262771606,
+          "kv_gb": 0.18115997314453125
+        },
+        "decode_flash": {
+          "flops_tflops": 0.08600554700799999,
+          "io_tb": 0.0006001213439999999,
+          "arithmetic_intensity": 143.3135946052937,
+          "weights_gb": 0.6873130798339844,
+          "activations_gb": 0.5443998724222183,
+          "kv_gb": 0.18115997314453125
+        }
+      }
+    },
+    {
+      "image_tokens_total": 3113,
+      "image_tokens_crops": 2840,
+      "global_image_tokens": 273,
+      "height_crop_num": 4,
+      "width_crop_num": 7,
+      "image_width": 4480,
+      "image_height": 2560,
+      "batch_size": 1,
+      "context_len": 3123,
+      "decode_steps": 64,
+      "analytic_only": true,
+      "decode": {
+        "analytic_tflops": 0.086084190208,
+        "analytic_eager_tflops": 0.086084190208,
+        "analytic_flash_tflops": 0.086084190208,
+        "vendor_tflops": null
+      },
+      "decode_stagecost": {
+        "decode_eager": {
+          "flops_tflops": 0.086084190208,
+          "io_tb": 0.001375371264,
+          "arithmetic_intensity": 62.58978390870321,
+          "weights_gb": 0.6873130798339844,
+          "activations_gb": 0.0024872571229934692,
+          "kv_gb": 0.18230438232421875
+        },
+        "decode_flash": {
+          "flops_tflops": 0.086084190208,
+          "io_tb": 0.0006001213439999999,
+          "arithmetic_intensity": 143.44464010265233,
+          "weights_gb": 0.6873130798339844,
+          "activations_gb": 0.5478330999612808,
+          "kv_gb": 0.18230438232421875
+        }
+      }
+    },
+    {
+      "image_tokens_total": 3183,
+      "image_tokens_crops": 2910,
+      "global_image_tokens": 273,
+      "height_crop_num": 1,
+      "width_crop_num": 29,
+      "image_width": 18560,
+      "image_height": 640,
+      "batch_size": 1,
+      "context_len": 3193,
+      "decode_steps": 64,
+      "analytic_only": true,
+      "decode": {
+        "analytic_tflops": 0.08635944140799999,
+        "analytic_eager_tflops": 0.08635944140799999,
+        "analytic_flash_tflops": 0.08635944140799999,
+        "vendor_tflops": null
+      },
+      "decode_stagecost": {
+        "decode_eager": {
+          "flops_tflops": 0.08635944140799999,
+          "io_tb": 0.0013925744640000003,
+          "arithmetic_intensity": 62.01423596404535,
+          "weights_gb": 0.6873130798339844,
+          "activations_gb": 0.0025185495615005493,
+          "kv_gb": 0.186309814453125
+        },
+        "decode_flash": {
+          "flops_tflops": 0.08635944140799999,
+          "io_tb": 0.0006001213439999999,
+          "arithmetic_intensity": 143.90329934340747,
+          "weights_gb": 0.6873130798339844,
+          "activations_gb": 0.5598493963479996,
+          "kv_gb": 0.186309814453125
+        }
+      }
+    }
+  ]
+}
