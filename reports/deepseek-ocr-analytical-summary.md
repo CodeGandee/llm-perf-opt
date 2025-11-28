@@ -162,27 +162,46 @@ This part of the analysis explores how analytic FLOPs, I/O, and memory usage sca
 
 This subsection studies how vision compute changes with input resolution and crop configuration.
 
-The following figures summarize the DeepSeek-OCR analytic vision-stage cost sweep over candidate crop grids captured under `reports/sweep/20251127-160058/vision_crops`, with the x-axis showing vision output tokens (global + crops) annotated by crop grid `[height]x[width]`.
+The following figures summarize the DeepSeek-OCR analytic vision-stage cost sweep over candidate crop grids captured under `reports/sweep/20251128-152354/vision_crops`, with the x-axis showing vision output tokens (global + crops) annotated by crop grid `[height]x[width]`.
 
 Total vision-stage FLOPs (in TFLOPs) vs image token length, comparing analytic normal attention, analytic flash attention, and vendor FLOPs for the same workloads.
 
-![DeepSeek-OCR Vision total FLOPs vs image token length.](sweep/20251127-160058/vision_crops/stagecost_flops_tflops.svg)
+![DeepSeek-OCR Vision total FLOPs vs image token length.](sweep/20251128-152354/vision_crops/stagecost_flops_tflops.svg)
+
+Although the x-axis aggregates global and crop tokens, the vendor implementation processes each crop as a separate image (crops are stacked along the batch dimension with a fixed per-tile resolution and CLIP sequence length), so vision attention cost scales approximately as `O(num_crops · S_tile²)` with `S_tile` effectively constant across the sweep, which explains why the vision FLOP curves appear nearly linear in the number of crops (and thus `image_tokens_total`) instead of quadratic in that aggregated token count.
+
+The cropping and stacking logic is visible in `models/deepseek-ocr/modeling_deepseekocr.py:781-815, 897-900`:
+
+```python
+images_crop_raw, crop_ratio = dynamic_preprocess(image)
+# ...
+width_crop_num, height_crop_num = crop_ratio
+images_spatial_crop.append([width_crop_num, height_crop_num])
+if width_crop_num > 1 or height_crop_num > 1:
+    for i in range(len(images_crop_raw)):
+        images_crop_list.append(image_transform(images_crop_raw[i]).to(torch.bfloat16))
+# ...
+if images_crop_list:
+    images_crop = torch.stack(images_crop_list, dim=0)   # (num_crops, 3, 640, 640)
+else:
+    images_crop = torch.zeros((1, 3, base_size, base_size))
+```
 
 Activation I/O volume (terabits moved between on-chip memory and HBM) vs image token length for the vision stage, highlighting how traffic grows with higher-resolution inputs and denser crop grids.
 
-![DeepSeek-OCR Vision activation I/O vs image token length.](sweep/20251127-160058/vision_crops/stagecost_io_tb.svg)
+![DeepSeek-OCR Vision activation I/O vs image token length.](sweep/20251128-152354/vision_crops/stagecost_io_tb.svg)
 
 Arithmetic intensity (FLOPs per bit of activation I/O) vs image token length for the vision stage, indicating how compute-to-memory ratios evolve across the resolution and crop-grid sweep.
 
-![DeepSeek-OCR Vision arithmetic intensity vs image token length.](sweep/20251127-160058/vision_crops/stagecost_arithmetic_intensity.svg)
+![DeepSeek-OCR Vision arithmetic intensity vs image token length.](sweep/20251128-152354/vision_crops/stagecost_arithmetic_intensity.svg)
 
 Peak activation memory (GB) vs image token length for the vision stage, emphasizing how activation footprint scales with input size and crop density while KV-cache remains effectively zero for vision-only workloads.
 
-![DeepSeek-OCR Vision activation memory vs image token length.](sweep/20251127-160058/vision_crops/stagecost_activations_gb.svg)
+![DeepSeek-OCR Vision activation memory vs image token length.](sweep/20251128-152354/vision_crops/stagecost_activations_gb.svg)
 
 Tensor Core vs CUDA-core FLOPs (log-scale) vs image token length, showing how the vision workload splits between Tensor Core and CUDA-core kernels across crop grids.
 
-![DeepSeek-OCR Vision FLOPs split by kernel type (log-scale) vs image token length.](sweep/20251127-160058/vision_crops/vision_flops_split_log.svg)
+![DeepSeek-OCR Vision FLOPs split by kernel type (log-scale) vs image token length.](sweep/20251128-152354/vision_crops/vision_flops_split_log.svg)
 
 The table below summarizes the analytic vision FLOP split at each crop configuration.
 

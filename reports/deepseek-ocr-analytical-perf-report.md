@@ -77,27 +77,47 @@ This subsection studies how vision compute changes with input resolution and cro
 Typical entrypoint:
 - `python -m modelmeter.models.deepseek_ocr.scripts.sweep.sweep-vision-input-shape`
 
-The following figures summarize the DeepSeek-OCR analytic vision-stage cost sweep over candidate crop grids captured under `reports/sweep/20251127-160058/vision_crops`, with the x-axis showing vision output tokens (global + crops) annotated by crop grid `[height]x[width]`.
+The following figures summarize the DeepSeek-OCR analytic vision-stage cost sweep over candidate crop grids captured under `reports/sweep/20251128-152354/vision_crops`, with the x-axis showing vision output tokens (global + crops) annotated by crop grid `[height]x[width]`.
 
 Total vision-stage FLOPs (in TFLOPs) vs image token length, comparing analytic normal attention, analytic flash attention, and vendor FLOPs for the same workloads.
 
-![DeepSeek-OCR Vision total FLOPs vs image token length.](sweep/20251127-160058/vision_crops/stagecost_flops_tflops.svg)
+![DeepSeek-OCR Vision total FLOPs vs image token length.](sweep/20251128-152354/vision_crops/stagecost_flops_tflops.svg)
+
+Although FLOPs are plotted against an aggregated vision-token count, the underlying implementation processes the global view and each crop tile as separate images (crops are stacked in the batch dimension with a fixed per-tile resolution and CLIP sequence length), so the vision attention cost scales approximately as `O(num_crops · S_tile²)` with `S_tile` effectively constant across the sweep, which explains why the total vision-stage FLOPs appear nearly linear in the number of crops (and hence in `image_tokens_total`) rather than quadratic in that aggregated token count.
+
+For reference, the vendor preprocessing first crops the image into tiles and then stacks those tiles along the batch dimension before passing them into SAM and CLIP (see `models/deepseek-ocr/modeling_deepseekocr.py:781-815, 897-900`):
+
+```python
+images_crop_raw, crop_ratio = dynamic_preprocess(image)
+# ...
+width_crop_num, height_crop_num = crop_ratio
+images_spatial_crop.append([width_crop_num, height_crop_num])
+if width_crop_num > 1 or height_crop_num > 1:
+    # process the local views (crops)
+    for i in range(len(images_crop_raw)):
+        images_crop_list.append(image_transform(images_crop_raw[i]).to(torch.bfloat16))
+# ...
+if images_crop_list:
+    images_crop = torch.stack(images_crop_list, dim=0)   # (num_crops, 3, 640, 640)
+else:
+    images_crop = torch.zeros((1, 3, base_size, base_size))
+```
 
 Activation I/O volume (terabits moved between on-chip memory and HBM) vs image token length for the vision stage, highlighting how traffic grows with higher-resolution inputs and denser crop grids.
 
-![DeepSeek-OCR Vision activation I/O vs image token length.](sweep/20251127-160058/vision_crops/stagecost_io_tb.svg)
+![DeepSeek-OCR Vision activation I/O vs image token length.](sweep/20251128-152354/vision_crops/stagecost_io_tb.svg)
 
 Arithmetic intensity (FLOPs per bit of activation I/O) vs image token length for the vision stage, indicating how compute-to-memory ratios evolve across the resolution and crop-grid sweep.
 
-![DeepSeek-OCR Vision arithmetic intensity vs image token length.](sweep/20251127-160058/vision_crops/stagecost_arithmetic_intensity.svg)
+![DeepSeek-OCR Vision arithmetic intensity vs image token length.](sweep/20251128-152354/vision_crops/stagecost_arithmetic_intensity.svg)
 
 Peak activation memory (GB) vs image token length for the vision stage, emphasizing how activation footprint scales with input size and crop density while KV-cache remains effectively zero for vision-only workloads.
 
-![DeepSeek-OCR Vision activation memory vs image token length.](sweep/20251127-160058/vision_crops/stagecost_activations_gb.svg)
+![DeepSeek-OCR Vision activation memory vs image token length.](sweep/20251128-152354/vision_crops/stagecost_activations_gb.svg)
 
 Tensor Core vs CUDA-core FLOPs (log-scale) vs image token length, showing how much of the vision workload is served by Tensor Cores versus CUDA cores across the crop-grid sweep.
 
-![DeepSeek-OCR Vision FLOPs split by kernel type (log-scale) vs image token length.](sweep/20251127-160058/vision_crops/vision_flops_split_log.svg)
+![DeepSeek-OCR Vision FLOPs split by kernel type (log-scale) vs image token length.](sweep/20251128-152354/vision_crops/vision_flops_split_log.svg)
 
 The table below summarizes the underlying FLOP split for the analytic vision path at each crop configuration.
 
@@ -105,57 +125,51 @@ The table below summarizes the underlying FLOP split for the analytic vision pat
 | :---: | :---: | :---: | :---: | :---: | :---: |
 |2|1x2|483|1.913039e+00|1.329561e-03|1438.851:1.0|
 |3|1x3|583|2.303791e+00|1.624969e-03|1417.744:1.0|
-|4|1x4|683|2.696246e+00|1.922426e-03|1402.523:1.0|
 |4|2x2|693|2.696587e+00|1.922835e-03|1402.401:1.0|
 |5|1x5|783|3.090405e+00|2.221930e-03|1390.865:1.0|
-|6|1x6|883|3.486269e+00|2.523483e-03|1381.530:1.0|
 |6|2x3|893|3.486780e+00|2.524098e-03|1381.397:1.0|
 |7|1x7|983|3.883836e+00|2.827084e-03|1373.796:1.0|
-|8|1x8|1083|4.283107e+00|3.132732e-03|1367.211:1.0|
 |8|2x4|1093|4.283788e+00|3.133552e-03|1367.071:1.0|
-|9|1x9|1183|4.684082e+00|3.440429e-03|1361.482:1.0|
 |9|3x3|1203|4.685615e+00|3.442272e-03|1361.198:1.0|
-|10|1x10|1283|5.086761e+00|3.750174e-03|1356.407:1.0|
 |10|2x5|1293|5.087613e+00|3.751198e-03|1356.264:1.0|
-|11|1x11|1383|5.491144e+00|4.061966e-03|1351.844:1.0|
-|12|1x12|1483|5.897231e+00|4.375807e-03|1347.690:1.0|
-|12|2x6|1493|5.898253e+00|4.377036e-03|1347.545:1.0|
-|12|3x4|1503|5.899275e+00|4.378265e-03|1347.400:1.0|
-|13|1x13|1583|6.305021e+00|4.691696e-03|1343.868:1.0|
-|14|1x14|1683|6.714516e+00|5.009632e-03|1340.321:1.0|
-|14|2x7|1693|6.715709e+00|5.011066e-03|1340.176:1.0|
-|15|1x15|1783|7.125715e+00|5.329617e-03|1337.003:1.0|
-|15|3x5|1803|7.128271e+00|5.332689e-03|1336.712:1.0|
-|16|1x16|1883|7.538617e+00|5.651650e-03|1333.879:1.0|
-|16|2x8|1893|7.539980e+00|5.653288e-03|1333.734:1.0|
-|16|4x4|1913|7.542707e+00|5.656565e-03|1333.443:1.0|
-|17|1x17|1983|7.953224e+00|5.975730e-03|1330.921:1.0|
-|18|1x18|2083|8.369534e+00|6.301859e-03|1328.106:1.0|
-|18|2x9|2093|8.371068e+00|6.303702e-03|1327.961:1.0|
-|18|3x6|2103|8.372601e+00|6.305545e-03|1327.816:1.0|
-|19|1x19|2183|8.787548e+00|6.630035e-03|1325.415:1.0|
-|20|1x20|2283|9.207267e+00|6.960260e-03|1322.834:1.0|
-|20|2x10|2293|9.208971e+00|6.962308e-03|1322.689:1.0|
 |20|4x5|2313|9.212379e+00|6.966404e-03|1322.401:1.0|
-|21|1x21|2383|9.628689e+00|7.292533e-03|1320.349:1.0|
-|21|3x7|2403|9.632267e+00|7.296834e-03|1320.061:1.0|
-|22|1x22|2483|1.005182e+01|7.626853e-03|1317.950:1.0|
-|22|2x11|2493|1.005369e+01|7.629106e-03|1317.807:1.0|
-|23|1x23|2583|1.047665e+01|7.963222e-03|1315.629:1.0|
-|24|1x24|2683|1.090318e+01|8.301639e-03|1313.377:1.0|
-|24|2x12|2693|1.090522e+01|8.304096e-03|1313.234:1.0|
-|24|3x8|2703|1.090727e+01|8.306554e-03|1313.092:1.0|
-|24|4x6|2713|1.090931e+01|8.309011e-03|1312.950:1.0|
-|25|1x25|2783|1.133142e+01|8.642103e-03|1311.187:1.0|
-|25|5x5|2823|1.133994e+01|8.652343e-03|1310.620:1.0|
-|26|1x26|2883|1.176136e+01|8.984616e-03|1309.055:1.0|
-|26|2x13|2893|1.176357e+01|8.987278e-03|1308.914:1.0|
-|27|1x27|2983|1.219301e+01|9.329177e-03|1306.975:1.0|
-|27|3x9|3003|1.219761e+01|9.334706e-03|1306.694:1.0|
-|28|1x28|3083|1.262635e+01|9.675785e-03|1304.944:1.0|
-|28|2x14|3093|1.262874e+01|9.678652e-03|1304.804:1.0|
-|28|4x7|3113|1.263351e+01|9.684387e-03|1304.524:1.0|
-|29|1x29|3183|1.306141e+01|1.002444e-02|1302.956:1.0|
+|30|5x6|3323|1.350839e+01|1.038743e-02|1300.455:1.0|
+|40|5x8|4323|1.797309e+01|1.401122e-02|1282.764:1.0|
+|50|5x10|5323|2.260819e+01|1.783980e-02|1267.289:1.0|
+|60|6x10|6333|2.741879e+01|2.187933e-02|1253.182:1.0|
+|70|7x10|7343|3.240148e+01|2.612570e-02|1240.215:1.0|
+|80|8x10|8353|3.755628e+01|3.057892e-02|1228.175:1.0|
+|90|9x10|9363|4.288317e+01|3.523899e-02|1216.924:1.0|
+|100|10x10|10373|4.838216e+01|4.010591e-02|1206.360:1.0|
+|110|10x11|11373|5.404388e+01|4.516841e-02|1196.497:1.0|
+|120|10x12|12373|5.987599e+01|5.043572e-02|1187.174:1.0|
+|130|10x13|13373|6.587849e+01|5.590782e-02|1178.341:1.0|
+|140|10x14|14373|7.205139e+01|6.158472e-02|1169.956:1.0|
+|150|10x15|15373|7.839468e+01|6.746642e-02|1161.981:1.0|
+|160|10x16|16373|8.490836e+01|7.355293e-02|1154.385:1.0|
+|170|10x17|17373|9.159244e+01|7.984423e-02|1147.139:1.0|
+|181|1x181|18383|9.900294e+01|8.683440e-02|1140.135:1.0|
+|190|10x19|19373|1.054718e+02|9.304123e-02|1133.603:1.0|
+|200|10x20|20373|1.126670e+02|9.994694e-02|1127.269:1.0|
+|211|1x211|21383|1.206168e+02|1.075853e-01|1121.128:1.0|
+|220|11x20|22383|1.275875e+02|1.143953e-01|1115.321:1.0|
+|230|10x23|23373|1.352752e+02|1.218928e-01|1109.788:1.0|
+|241|1x241|24383|1.437643e+02|1.301794e-01|1104.355:1.0|
+|250|10x25|25373|1.511992e+02|1.375474e-01|1099.251:1.0|
+|260|13x20|26403|1.594833e+02|1.457618e-01|1094.136:1.0|
+|271|1x271|27383|1.684452e+02|1.546167e-01|1089.438:1.0|
+|281|1x281|28383|1.770130e+02|1.631721e-01|1084.824:1.0|
+|290|10x29|29373|1.850921e+02|1.713143e-01|1080.424:1.0|
+|300|15x20|30423|1.941191e+02|1.804216e-01|1075.919:1.0|
+|310|10x31|31373|2.030609e+02|1.894265e-01|1071.977:1.0|
+|321|3x107|32403|2.130428e+02|1.995073e-01|1067.845:1.0|
+|331|1x331|33383|2.224078e+02|2.090209e-01|1064.046:1.0|
+|340|17x20|34443|2.314947e+02|2.183745e-01|1060.082:1.0|
+|350|14x25|35413|2.411624e+02|2.282518e-01|1056.563:1.0|
+|360|18x20|36453|2.512101e+02|2.385859e-01|1052.913:1.0|
+|370|10x37|37373|2.610566e+02|2.486783e-01|1049.777:1.0|
+|381|3x127|38403|2.721274e+02|2.600678e-01|1046.371:1.0|
+|390|15x26|39423|2.819179e+02|2.702670e-01|1043.109:1.0|
 
 ### Sequence Length and Decoder Sweeps
 
@@ -164,35 +178,35 @@ This subsection focuses on how decoder FLOPs and KV-cache memory scale with:
 - Decode length (`K` tokens).
 - Batch size (`B`) and head configuration.
 
-The following figures summarize the DeepSeek-OCR decode sweep over candidate crop grids captured under `reports/sweep/20251127-160058/e2e_decode`, with a fixed text prompt and number of decode steps and the x-axis showing vision output tokens (global + crops) annotated by crop grid `[height]x[width]`.
+The following figures summarize the DeepSeek-OCR decode sweep over candidate crop grids captured under `reports/sweep/20251128-152354/e2e_decode`, with a fixed text prompt and number of decode steps and the x-axis showing vision output tokens (global + crops) annotated by crop grid `[height]x[width]`.
 
 DeepSeek-OCR decode FLOPs vs image token length (analytic and vendor curves, aggregated over a fixed `K = 100` decode steps for all points in the sweep).
 
-![DeepSeek-OCR Decode FLOPs vs image token length.](sweep/20251127-160058/e2e_decode/e2e_decode.svg)
+![DeepSeek-OCR Decode FLOPs vs image token length.](sweep/20251128-152354/e2e_decode/e2e_decode.svg)
 
 Total decode FLOPs (in TFLOPs) over `K = 100` decode steps vs image token length, showing how full-sequence decode compute (not per-token) grows with crop density for analytic normal attention, analytic flash attention, and vendor baselines.
 
-![DeepSeek-OCR Decode total FLOPs vs image token length.](sweep/20251127-160058/e2e_decode/e2e_decode_stagecost_flops_tflops.svg)
+![DeepSeek-OCR Decode total FLOPs vs image token length.](sweep/20251128-152354/e2e_decode/e2e_decode_stagecost_flops_tflops.svg)
 
 Decoder activation I/O volume (terabits) over `K = 100` decode steps vs image token length, highlighting how cumulative traffic over the full decode varies with the upstream vision workload.
 
-![DeepSeek-OCR Decode activation I/O vs image token length.](sweep/20251127-160058/e2e_decode/e2e_decode_stagecost_io_tb.svg)
+![DeepSeek-OCR Decode activation I/O vs image token length.](sweep/20251128-152354/e2e_decode/e2e_decode_stagecost_io_tb.svg)
 
 Decoder arithmetic intensity (FLOPs per bit of activation I/O) vs image token length, indicating how compute-to-memory ratios evolve as crop grids become denser and sequence lengths increase.
 
-![DeepSeek-OCR Decode arithmetic intensity vs image token length.](sweep/20251127-160058/e2e_decode/e2e_decode_stagecost_arithmetic_intensity.svg)
+![DeepSeek-OCR Decode arithmetic intensity vs image token length.](sweep/20251128-152354/e2e_decode/e2e_decode_stagecost_arithmetic_intensity.svg)
 
 Peak decoder activation memory (GB) over `K = 100` decode steps vs image token length, showing where activation footprint over the full decode becomes comparable to or larger than vision activations.
 
-![DeepSeek-OCR Decode activation memory vs image token length.](sweep/20251127-160058/e2e_decode/e2e_decode_stagecost_activations_gb.svg)
+![DeepSeek-OCR Decode activation memory vs image token length.](sweep/20251128-152354/e2e_decode/e2e_decode_stagecost_activations_gb.svg)
 
 Decoder KV-cache memory (GB) vs image token length, capturing how KV storage scales with the combination of prefill context and `K = 100` decode tokens across different crop configurations.
 
-![DeepSeek-OCR Decode KV-cache memory vs image token length.](sweep/20251127-160058/e2e_decode/e2e_decode_stagecost_kv_gb.svg)
+![DeepSeek-OCR Decode KV-cache memory vs image token length.](sweep/20251128-152354/e2e_decode/e2e_decode_stagecost_kv_gb.svg)
 
 Tensor Core vs CUDA-core FLOPs (log-scale) vs image token length for the decode stage, highlighting how attention and MLP kernels map onto Tensor Cores versus CUDA cores as sequence length and crop density increase.
 
-![DeepSeek-OCR Decode FLOPs split by kernel type (log-scale) vs image token length.](sweep/20251127-160058/e2e_decode/e2e_decode_flops_split_log.svg)
+![DeepSeek-OCR Decode FLOPs split by kernel type (log-scale) vs image token length.](sweep/20251128-152354/e2e_decode/e2e_decode_flops_split_log.svg)
 
 The table below summarizes the analytic decode FLOP split (`K = 100` decode steps) for each crop grid.
 
@@ -200,93 +214,87 @@ The table below summarizes the analytic decode FLOP split (`K = 100` decode step
 | :---: | :---: | :---: | :---: | :---: | :---: |
 |2|1x2|483|1.184143e-01|4.408320e-05|2686.156:1.0|
 |3|1x3|583|1.190287e-01|4.408320e-05|2700.093:1.0|
-|4|1x4|683|1.196431e-01|4.408320e-05|2714.030:1.0|
 |4|2x2|693|1.197046e-01|4.408320e-05|2715.424:1.0|
 |5|1x5|783|1.202575e-01|4.408320e-05|2727.967:1.0|
-|6|1x6|883|1.208719e-01|4.408320e-05|2741.905:1.0|
 |6|2x3|893|1.209334e-01|4.408320e-05|2743.298:1.0|
 |7|1x7|983|1.214863e-01|4.408320e-05|2755.842:1.0|
-|8|1x8|1083|1.221007e-01|4.408320e-05|2769.779:1.0|
 |8|2x4|1093|1.221622e-01|4.408320e-05|2771.173:1.0|
-|9|1x9|1183|1.227151e-01|4.408320e-05|2783.717:1.0|
 |9|3x3|1203|1.228380e-01|4.408320e-05|2786.504:1.0|
-|10|1x10|1283|1.233295e-01|4.408320e-05|2797.654:1.0|
 |10|2x5|1293|1.233910e-01|4.408320e-05|2799.048:1.0|
-|11|1x11|1383|1.239439e-01|4.408320e-05|2811.591:1.0|
-|12|1x12|1483|1.245583e-01|4.408320e-05|2825.528:1.0|
-|12|2x6|1493|1.246198e-01|4.408320e-05|2826.922:1.0|
-|12|3x4|1503|1.246812e-01|4.408320e-05|2828.316:1.0|
-|13|1x13|1583|1.251727e-01|4.408320e-05|2839.466:1.0|
-|14|1x14|1683|1.257871e-01|4.408320e-05|2853.403:1.0|
-|14|2x7|1693|1.258486e-01|4.408320e-05|2854.797:1.0|
-|15|1x15|1783|1.264015e-01|4.408320e-05|2867.340:1.0|
-|15|3x5|1803|1.265244e-01|4.408320e-05|2870.128:1.0|
-|16|1x16|1883|1.270159e-01|4.408320e-05|2881.278:1.0|
-|16|2x8|1893|1.270774e-01|4.408320e-05|2882.671:1.0|
-|16|4x4|1913|1.272003e-01|4.408320e-05|2885.459:1.0|
-|17|1x17|1983|1.276303e-01|4.408320e-05|2895.215:1.0|
-|18|1x18|2083|1.282447e-01|4.408320e-05|2909.152:1.0|
-|18|2x9|2093|1.283062e-01|4.408320e-05|2910.546:1.0|
-|18|3x6|2103|1.283676e-01|4.408320e-05|2911.940:1.0|
-|19|1x19|2183|1.288591e-01|4.408320e-05|2923.089:1.0|
-|20|1x20|2283|1.294735e-01|4.408320e-05|2937.027:1.0|
-|20|2x10|2293|1.295350e-01|4.408320e-05|2938.420:1.0|
 |20|4x5|2313|1.296579e-01|4.408320e-05|2941.208:1.0|
-|21|1x21|2383|1.300879e-01|4.408320e-05|2950.964:1.0|
-|21|3x7|2403|1.302108e-01|4.408320e-05|2953.751:1.0|
-|22|1x22|2483|1.307023e-01|4.408320e-05|2964.901:1.0|
-|22|2x11|2493|1.307638e-01|4.408320e-05|2966.295:1.0|
-|23|1x23|2583|1.313167e-01|4.408320e-05|2978.839:1.0|
-|24|1x24|2683|1.319311e-01|4.408320e-05|2992.776:1.0|
-|24|2x12|2693|1.319926e-01|4.408320e-05|2994.170:1.0|
-|24|3x8|2703|1.320540e-01|4.408320e-05|2995.563:1.0|
-|24|4x6|2713|1.321155e-01|4.408320e-05|2996.957:1.0|
-|25|1x25|2783|1.325455e-01|4.408320e-05|3006.713:1.0|
-|25|5x5|2823|1.327913e-01|4.408320e-05|3012.288:1.0|
-|26|1x26|2883|1.331599e-01|4.408320e-05|3020.650:1.0|
-|26|2x13|2893|1.332214e-01|4.408320e-05|3022.044:1.0|
-|27|1x27|2983|1.337743e-01|4.408320e-05|3034.588:1.0|
-|27|3x9|3003|1.338972e-01|4.408320e-05|3037.375:1.0|
-|28|1x28|3083|1.343887e-01|4.408320e-05|3048.525:1.0|
-|28|2x14|3093|1.344502e-01|4.408320e-05|3049.919:1.0|
-|28|4x7|3113|1.345731e-01|4.408320e-05|3052.706:1.0|
-|29|1x29|3183|1.350031e-01|4.408320e-05|3062.462:1.0|
+|30|5x6|3323|1.358633e-01|4.408320e-05|3081.974:1.0|
+|40|5x8|4323|1.420073e-01|4.408320e-05|3221.347:1.0|
+|50|5x10|5323|1.481513e-01|4.408320e-05|3360.720:1.0|
+|60|6x10|6333|1.543567e-01|4.408320e-05|3501.487:1.0|
+|70|7x10|7343|1.605622e-01|4.408320e-05|3642.253:1.0|
+|80|8x10|8353|1.667676e-01|4.408320e-05|3783.020:1.0|
+|90|9x10|9363|1.729731e-01|4.408320e-05|3923.786:1.0|
+|100|10x10|10373|1.791785e-01|4.408320e-05|4064.553:1.0|
+|110|10x11|11373|1.853225e-01|4.408320e-05|4203.926:1.0|
+|120|10x12|12373|1.914665e-01|4.408320e-05|4343.298:1.0|
+|130|10x13|13373|1.976105e-01|4.408320e-05|4482.671:1.0|
+|140|10x14|14373|2.037545e-01|4.408320e-05|4622.044:1.0|
+|150|10x15|15373|2.098985e-01|4.408320e-05|4761.417:1.0|
+|160|10x16|16373|2.160425e-01|4.408320e-05|4900.790:1.0|
+|170|10x17|17373|2.221865e-01|4.408320e-05|5040.163:1.0|
+|181|1x181|18383|2.283919e-01|4.408320e-05|5180.929:1.0|
+|190|10x19|19373|2.344745e-01|4.408320e-05|5318.908:1.0|
+|200|10x20|20373|2.406185e-01|4.408320e-05|5458.281:1.0|
+|211|1x211|21383|2.468239e-01|4.408320e-05|5599.048:1.0|
+|220|11x20|22383|2.529679e-01|4.408320e-05|5738.420:1.0|
+|230|10x23|23373|2.590505e-01|4.408320e-05|5876.400:1.0|
+|241|1x241|24383|2.652559e-01|4.408320e-05|6017.166:1.0|
+|250|10x25|25373|2.713385e-01|4.408320e-05|6155.145:1.0|
+|260|13x20|26403|2.776668e-01|4.408320e-05|6298.699:1.0|
+|271|1x271|27383|2.836879e-01|4.408320e-05|6435.285:1.0|
+|281|1x281|28383|2.898319e-01|4.408320e-05|6574.657:1.0|
+|290|10x29|29373|2.959145e-01|4.408320e-05|6712.636:1.0|
+|300|15x20|30423|3.023657e-01|4.408320e-05|6858.978:1.0|
+|310|10x31|31373|3.082025e-01|4.408320e-05|6991.382:1.0|
+|321|3x107|32403|3.145308e-01|4.408320e-05|7134.936:1.0|
+|331|1x331|33383|3.205519e-01|4.408320e-05|7271.521:1.0|
+|340|17x20|34443|3.270646e-01|4.408320e-05|7419.257:1.0|
+|350|14x25|35413|3.330243e-01|4.408320e-05|7554.448:1.0|
+|360|18x20|36453|3.394140e-01|4.408320e-05|7699.396:1.0|
+|370|10x37|37373|3.450665e-01|4.408320e-05|7827.619:1.0|
+|381|3x127|38403|3.513948e-01|4.408320e-05|7971.173:1.0|
+|390|15x26|39423|3.576617e-01|4.408320e-05|8113.333:1.0|
 
 ### Combined Workload Profiles
 
 This subsection looks at realistic workload profiles that combine image resolution, context length, and decode length (for example, different OCR workload IDs).
 
-The following figures summarize the DeepSeek-OCR vision+prefill crop-grid sweep captured under `reports/sweep/20251127-160058/e2e_vision_prefill`, where the x-axis is vision output tokens (global + crops) and point labels denote the crop grid as `[height]x[width]`.
+The following figures summarize the DeepSeek-OCR vision+prefill crop-grid sweep captured under `reports/sweep/20251128-152354/e2e_vision_prefill`, where the x-axis is vision output tokens (global + crops) and point labels denote the crop grid as `[height]x[width]`.
 
 DeepSeek-OCR vision+prefill FLOPs vs image token length (analytic and vendor curves, annotated by crop grid).
 
-![DeepSeek-OCR Vision+Prefill FLOPs vs image token length.](sweep/20251127-160058/e2e_vision_prefill/e2e_vision_prefill.svg)
+![DeepSeek-OCR Vision+Prefill FLOPs vs image token length.](sweep/20251128-152354/e2e_vision_prefill/e2e_vision_prefill.svg)
 
 These plots use the `StageCost` structure from `modelmeter.models.common.stage_cost` for per-stage analytic costs; see the appendix for field definitions and interpretation.
 
 Total prefill-stage FLOPs (in TFLOPs), broken down by logical components (vision, decoder, and LM head) vs image token length, showing how each component contributes to total prefill compute as crop density increases.
 
-![DeepSeek-OCR Vision+Prefill total FLOPs vs image token length.](sweep/20251127-160058/e2e_vision_prefill/e2e_vision_prefill_stagecost_flops_tflops.svg)
+![DeepSeek-OCR Vision+Prefill total FLOPs vs image token length.](sweep/20251128-152354/e2e_vision_prefill/e2e_vision_prefill_stagecost_flops_tflops.svg)
 
 Activation I/O volume (terabits) vs image token length, highlighting how traffic grows with crop grids and which stages dominate bandwidth requirements.
 
-![DeepSeek-OCR Vision+Prefill activation I/O vs image token length.](sweep/20251127-160058/e2e_vision_prefill/e2e_vision_prefill_stagecost_io_tb.svg)
+![DeepSeek-OCR Vision+Prefill activation I/O vs image token length.](sweep/20251128-152354/e2e_vision_prefill/e2e_vision_prefill_stagecost_io_tb.svg)
 
 Arithmetic intensity (FLOPs per bit of activation I/O) vs image token length, indicating how compute-to-memory ratios evolve for different crop configurations and which stages are more compute-bound versus bandwidth-bound.
 
-![DeepSeek-OCR Vision+Prefill arithmetic intensity vs image token length.](sweep/20251127-160058/e2e_vision_prefill/e2e_vision_prefill_stagecost_arithmetic_intensity.svg)
+![DeepSeek-OCR Vision+Prefill arithmetic intensity vs image token length.](sweep/20251128-152354/e2e_vision_prefill/e2e_vision_prefill_stagecost_arithmetic_intensity.svg)
 
 Peak activation memory (GB) vs image token length, emphasizing how activation footprint grows super-linearly with larger crop grids and where vision activations begin to dominate the memory footprint.
 
-![DeepSeek-OCR Vision+Prefill activation memory vs image token length.](sweep/20251127-160058/e2e_vision_prefill/e2e_vision_prefill_stagecost_activations_gb.svg)
+![DeepSeek-OCR Vision+Prefill activation memory vs image token length.](sweep/20251128-152354/e2e_vision_prefill/e2e_vision_prefill_stagecost_activations_gb.svg)
 
 KV-cache memory (GB) vs image token length, capturing the KV-cache contribution from the decoder portion of the vision+prefill pipeline for the fixed prefill context used in this sweep.
 
-![DeepSeek-OCR Vision+Prefill KV-cache memory vs image token length.](sweep/20251127-160058/e2e_vision_prefill/e2e_vision_prefill_stagecost_kv_gb.svg)
+![DeepSeek-OCR Vision+Prefill KV-cache memory vs image token length.](sweep/20251128-152354/e2e_vision_prefill/e2e_vision_prefill_stagecost_kv_gb.svg)
 
 Tensor Core vs CUDA-core FLOPs (log-scale) vs image token length for the combined vision+prefill stage, showing how the overall Tensor Core utilization evolves with larger and denser input crops.
 
-![DeepSeek-OCR Vision+Prefill FLOPs split by kernel type (log-scale) vs image token length.](sweep/20251127-160058/e2e_vision_prefill/e2e_vision_prefill_flops_split_log.svg)
+![DeepSeek-OCR Vision+Prefill FLOPs split by kernel type (log-scale) vs image token length.](sweep/20251128-152354/e2e_vision_prefill/e2e_vision_prefill_flops_split_log.svg)
 
 The table below summarizes the analytic vision+prefill FLOP split for each crop configuration.
 
@@ -294,57 +302,51 @@ The table below summarizes the analytic vision+prefill FLOP split for each crop 
 | :---: | :---: | :---: | :---: | :---: | :---: |
 |2|1x2|483|2.495323e+00|1.546891e-03|1613.122:1.0|
 |3|1x3|583|3.007828e+00|1.886383e-03|1594.495:1.0|
-|4|1x4|683|3.523265e+00|2.227922e-03|1581.413:1.0|
 |4|2x2|693|3.535972e+00|2.232740e-03|1583.692:1.0|
 |5|1x5|783|4.041636e+00|2.571510e-03|1571.697:1.0|
-|6|1x6|883|4.562939e+00|2.917146e-03|1564.179:1.0|
 |6|2x3|893|4.576062e+00|2.922169e-03|1565.981:1.0|
 |7|1x7|983|5.087175e+00|3.264830e-03|1558.175:1.0|
-|8|1x8|1083|5.614344e+00|3.614562e-03|1553.257:1.0|
 |8|2x4|1093|5.627883e+00|3.619789e-03|1554.754:1.0|
-|9|1x9|1183|6.144445e+00|3.966342e-03|1549.147:1.0|
 |9|3x3|1203|6.171951e+00|3.977001e-03|1551.911:1.0|
-|10|1x10|1283|6.677479e+00|4.320169e-03|1545.652:1.0|
 |10|2x5|1293|6.691434e+00|4.325602e-03|1546.937:1.0|
-|11|1x11|1383|7.213446e+00|4.676045e-03|1542.638:1.0|
-|12|1x12|1483|7.752346e+00|5.033969e-03|1540.007:1.0|
-|12|2x6|1493|7.766717e+00|5.039606e-03|1541.136:1.0|
-|12|3x4|1503|7.781101e+00|5.045243e-03|1542.265:1.0|
-|13|1x13|1583|8.294178e+00|5.393941e-03|1537.684:1.0|
-|14|1x14|1683|8.838943e+00|5.755961e-03|1535.616:1.0|
-|14|2x7|1693|8.853731e+00|5.761803e-03|1536.625:1.0|
-|15|1x15|1783|9.386641e+00|6.120029e-03|1533.758:1.0|
-|15|3x5|1803|9.416644e+00|6.131917e-03|1535.677:1.0|
-|16|1x16|1883|9.937272e+00|6.486145e-03|1532.077:1.0|
-|16|2x8|1893|9.952475e+00|6.492191e-03|1532.992:1.0|
-|16|4x4|1913|9.982919e+00|6.504285e-03|1534.822:1.0|
-|17|1x17|1983|1.049083e+01|6.854308e-03|1530.546:1.0|
-|18|1x18|2083|1.104733e+01|7.224520e-03|1529.144:1.0|
-|18|2x9|2093|1.106295e+01|7.230772e-03|1529.982:1.0|
-|18|3x6|2103|1.107858e+01|7.237023e-03|1530.820:1.0|
-|19|1x19|2183|1.160676e+01|7.596780e-03|1527.853:1.0|
-|20|1x20|2283|1.216912e+01|7.971088e-03|1526.658:1.0|
-|20|2x10|2293|1.218516e+01|7.977544e-03|1527.432:1.0|
 |20|4x5|2313|1.221727e+01|7.990457e-03|1528.982:1.0|
-|21|1x21|2383|1.273442e+01|8.347444e-03|1525.547:1.0|
-|21|3x7|2403|1.276692e+01|8.360561e-03|1527.041:1.0|
-|22|1x22|2483|1.330264e+01|8.725848e-03|1524.510:1.0|
-|22|2x11|2493|1.331909e+01|8.732509e-03|1525.231:1.0|
-|23|1x23|2583|1.387380e+01|9.106299e-03|1523.539:1.0|
-|24|1x24|2683|1.444789e+01|9.488799e-03|1522.626:1.0|
-|24|2x12|2693|1.446476e+01|9.495665e-03|1523.302:1.0|
-|24|3x8|2703|1.448164e+01|9.502531e-03|1523.977:1.0|
-|24|4x6|2713|1.449854e+01|9.509397e-03|1524.654:1.0|
-|25|1x25|2783|1.502492e+01|9.873347e-03|1521.766:1.0|
-|25|5x5|2823|1.509330e+01|9.901220e-03|1524.388:1.0|
-|26|1x26|2883|1.560488e+01|1.025994e-02|1520.952:1.0|
-|26|2x13|2893|1.562216e+01|1.026701e-02|1521.588:1.0|
-|27|1x27|2983|1.618777e+01|1.064859e-02|1520.180:1.0|
-|27|3x9|3003|1.622277e+01|1.066293e-02|1521.417:1.0|
-|28|1x28|3083|1.677359e+01|1.103928e-02|1519.446:1.0|
-|28|2x14|3093|1.679129e+01|1.104655e-02|1520.048:1.0|
-|28|4x7|3113|1.682673e+01|1.106111e-02|1521.252:1.0|
-|29|1x29|3183|1.736235e+01|1.143202e-02|1518.747:1.0|
+|30|5x6|3323|1.802658e+01|1.185673e-02|1520.367:1.0|
+|40|5x8|4323|2.411309e+01|1.592134e-02|1514.514:1.0|
+|50|5x10|5323|3.049288e+01|2.019076e-02|1510.239:1.0|
+|60|6x10|6333|3.719034e+01|2.467552e-02|1507.175:1.0|
+|70|7x10|7343|4.418526e+01|2.936714e-02|1504.582:1.0|
+|80|8x10|8353|5.147762e+01|3.426560e-02|1502.312:1.0|
+|90|9x10|9363|5.906743e+01|3.937091e-02|1500.281:1.0|
+|100|10x10|10373|6.695469e+01|4.468307e-02|1498.435:1.0|
+|110|10x11|11373|7.510452e+01|5.018640e-02|1496.511:1.0|
+|120|10x12|12373|8.354762e+01|5.589454e-02|1494.737:1.0|
+|130|10x13|13373|9.228400e+01|6.180747e-02|1493.088:1.0|
+|140|10x14|14373|1.013137e+02|6.792521e-02|1491.547:1.0|
+|150|10x15|15373|1.106366e+02|7.424774e-02|1490.100:1.0|
+|160|10x16|16373|1.202528e+02|8.077508e-02|1488.736:1.0|
+|170|10x17|17373|1.301623e+02|8.750721e-02|1487.446:1.0|
+|181|1x181|18383|1.409551e+02|9.494262e-02|1484.635:1.0|
+|190|10x19|19373|1.508610e+02|1.015859e-01|1485.059:1.0|
+|200|10x20|20373|1.616503e+02|1.089324e-01|1483.951:1.0|
+|211|1x211|21383|1.733548e+02|1.170160e-01|1481.462:1.0|
+|220|11x20|22383|1.841665e+02|1.242668e-01|1482.025:1.0|
+|230|10x23|23373|1.957778e+02|1.322008e-01|1480.912:1.0|
+|241|1x241|24383|2.083940e+02|1.409326e-01|1478.678:1.0|
+|250|10x25|25373|2.199959e+02|1.487371e-01|1479.092:1.0|
+|260|13x20|26403|2.327431e+02|1.574055e-01|1478.621:1.0|
+|271|1x271|27383|2.460726e+02|1.666924e-01|1476.207:1.0|
+|281|1x281|28383|2.592187e+02|1.756886e-01|1475.444:1.0|
+|290|10x29|29373|2.719513e+02|1.842672e-01|1475.853:1.0|
+|300|15x20|30423|2.860455e+02|1.938374e-01|1475.698:1.0|
+|310|10x31|31373|2.996886e+02|2.032611e-01|1474.402:1.0|
+|321|3x107|32403|3.148931e+02|2.137960e-01|1472.867:1.0|
+|331|1x331|33383|3.293482e+02|2.237416e-01|1472.002:1.0|
+|340|17x20|34443|3.440735e+02|2.335625e-01|1473.154:1.0|
+|350|14x25|35413|3.590219e+02|2.438674e-01|1472.201:1.0|
+|360|18x20|36453|3.748597e+02|2.546599e-01|1472.001:1.0|
+|370|10x37|37373|3.899392e+02|2.651579e-01|1470.592:1.0|
+|381|3x127|38403|4.069918e+02|2.770014e-01|1469.277:1.0|
+|390|15x26|39423|4.228347e+02|2.876503e-01|1469.961:1.0|
 
 ## Objective-based Analysis
 
@@ -357,7 +359,7 @@ This section connects the analytic workloads above to user-facing responsiveness
 For TTFT, we consider a fixed 1.0 s budget for the vision+prefill stage (TTFT = 1.0 s).
 The following figure shows the required TFLOPs/s as a function of image token length to meet this TTFT target, with separate curves for analytic normal attention, analytic flash attention, and the vendor baseline.
 
-![Required TFLOPs/s for 1.0 s TTFT vs image token length.](sweep/20251127-160058/e2e_vision_prefill/responsive_tflops_by_ttft.svg)
+![Required TFLOPs/s for 1.0 s TTFT vs image token length.](sweep/20251128-152354/e2e_vision_prefill/responsive_tflops_by_ttft.svg)
 
 The following table enumerates a subset of those points, showing for each crop grid the total vision output tokens and the compute throughput required to meet the 1.0 s TTFT budget under analytic flash attention.
 
@@ -365,64 +367,58 @@ The following table enumerates a subset of those points, showing for each crop g
 | :---: | :---: | :---: | :---: |
 |2|1x2|483|2.497|
 |3|1x3|583|3.010|
-|4|1x4|683|3.525|
 |4|2x2|693|3.538|
 |5|1x5|783|4.044|
-|6|1x6|883|4.566|
 |6|2x3|893|4.579|
 |7|1x7|983|5.090|
-|8|1x8|1083|5.618|
 |8|2x4|1093|5.632|
-|9|1x9|1183|6.148|
 |9|3x3|1203|6.176|
-|10|1x10|1283|6.682|
 |10|2x5|1293|6.696|
-|11|1x11|1383|7.218|
-|12|1x12|1483|7.757|
-|12|2x6|1493|7.772|
-|12|3x4|1503|7.786|
-|13|1x13|1583|8.300|
-|14|1x14|1683|8.845|
-|14|2x7|1693|8.859|
-|15|1x15|1783|9.393|
-|15|3x5|1803|9.423|
-|16|1x16|1883|9.944|
-|16|2x8|1893|9.959|
-|16|4x4|1913|9.989|
-|17|1x17|1983|10.498|
-|18|1x18|2083|11.055|
-|18|2x9|2093|11.070|
-|18|3x6|2103|11.086|
-|19|1x19|2183|11.614|
-|20|1x20|2283|12.177|
-|20|2x10|2293|12.193|
 |20|4x5|2313|12.225|
-|21|1x21|2383|12.743|
-|21|3x7|2403|12.775|
-|22|1x22|2483|13.311|
-|22|2x11|2493|13.328|
-|23|1x23|2583|13.883|
-|24|1x24|2683|14.457|
-|24|2x12|2693|14.474|
-|24|3x8|2703|14.491|
-|24|4x6|2713|14.508|
-|25|1x25|2783|15.035|
-|25|5x5|2823|15.103|
-|26|1x26|2883|15.615|
-|26|2x13|2893|15.632|
-|27|1x27|2983|16.198|
-|27|3x9|3003|16.233|
-|28|1x28|3083|16.785|
-|28|2x14|3093|16.802|
-|28|4x7|3113|16.838|
-|29|1x29|3183|17.374|
+|30|5x6|3323|18.038|
+|40|5x8|4323|24.129|
+|50|5x10|5323|30.513|
+|60|6x10|6333|37.215|
+|70|7x10|7343|44.215|
+|80|8x10|8353|51.512|
+|90|9x10|9363|59.107|
+|100|10x10|10373|66.999|
+|110|10x11|11373|75.155|
+|120|10x12|12373|83.604|
+|130|10x13|13373|92.346|
+|140|10x14|14373|101.382|
+|150|10x15|15373|110.711|
+|160|10x16|16373|120.334|
+|170|10x17|17373|130.250|
+|181|1x181|18383|141.050|
+|190|10x19|19373|150.963|
+|200|10x20|20373|161.759|
+|211|1x211|21383|173.472|
+|220|11x20|22383|184.291|
+|230|10x23|23373|195.910|
+|241|1x241|24383|208.535|
+|250|10x25|25373|220.145|
+|260|13x20|26403|232.901|
+|271|1x271|27383|246.239|
+|281|1x281|28383|259.394|
+|290|10x29|29373|272.136|
+|300|15x20|30423|286.239|
+|310|10x31|31373|299.892|
+|321|3x107|32403|315.107|
+|331|1x331|33383|329.572|
+|340|17x20|34443|344.307|
+|350|14x25|35413|359.266|
+|360|18x20|36453|375.114|
+|370|10x37|37373|390.204|
+|381|3x127|38403|407.269|
+|390|15x26|39423|423.122|
 
 ### Time-per-output-token (TPOT): decode
 
 To characterize steady-state streaming latency, we also analyze the compute throughput required to hit a target time-per-output-token (TPOT) for the decode stage.
 The decode sweep for these runs is configured with a 50 ms per-token budget (TPOT = 0.05 s), and the following figure shows the required TFLOPs/s as a function of image token length under that constraint.
 
-![Required TFLOPs/s for 50 ms TPOT vs image token length.](sweep/20251127-160058/e2e_decode/responsive_tflops_by_tpot.svg)
+![Required TFLOPs/s for 50 ms TPOT vs image token length.](sweep/20251128-152354/e2e_decode/responsive_tflops_by_tpot.svg)
 
 The table below summarizes, for each crop grid, the total vision output tokens, the number of decode steps `K`, and the compute throughput required to satisfy the 50 ms TPOT requirement using the analytic flash-attention path.
 
@@ -430,57 +426,51 @@ The table below summarizes, for each crop grid, the total vision output tokens, 
 | :---: | :---: | :---: | :---: | :---: |
 |2|1x2|483|100|0.024|
 |3|1x3|583|100|0.024|
-|4|1x4|683|100|0.024|
 |4|2x2|693|100|0.024|
 |5|1x5|783|100|0.024|
-|6|1x6|883|100|0.024|
 |6|2x3|893|100|0.024|
 |7|1x7|983|100|0.024|
-|8|1x8|1083|100|0.024|
 |8|2x4|1093|100|0.024|
-|9|1x9|1183|100|0.025|
 |9|3x3|1203|100|0.025|
-|10|1x10|1283|100|0.025|
 |10|2x5|1293|100|0.025|
-|11|1x11|1383|100|0.025|
-|12|1x12|1483|100|0.025|
-|12|2x6|1493|100|0.025|
-|12|3x4|1503|100|0.025|
-|13|1x13|1583|100|0.025|
-|14|1x14|1683|100|0.025|
-|14|2x7|1693|100|0.025|
-|15|1x15|1783|100|0.025|
-|15|3x5|1803|100|0.025|
-|16|1x16|1883|100|0.025|
-|16|2x8|1893|100|0.025|
-|16|4x4|1913|100|0.025|
-|17|1x17|1983|100|0.026|
-|18|1x18|2083|100|0.026|
-|18|2x9|2093|100|0.026|
-|18|3x6|2103|100|0.026|
-|19|1x19|2183|100|0.026|
-|20|1x20|2283|100|0.026|
-|20|2x10|2293|100|0.026|
 |20|4x5|2313|100|0.026|
-|21|1x21|2383|100|0.026|
-|21|3x7|2403|100|0.026|
-|22|1x22|2483|100|0.026|
-|22|2x11|2493|100|0.026|
-|23|1x23|2583|100|0.026|
-|24|1x24|2683|100|0.026|
-|24|2x12|2693|100|0.026|
-|24|3x8|2703|100|0.026|
-|24|4x6|2713|100|0.026|
-|25|1x25|2783|100|0.027|
-|25|5x5|2823|100|0.027|
-|26|1x26|2883|100|0.027|
-|26|2x13|2893|100|0.027|
-|27|1x27|2983|100|0.027|
-|27|3x9|3003|100|0.027|
-|28|1x28|3083|100|0.027|
-|28|2x14|3093|100|0.027|
-|28|4x7|3113|100|0.027|
-|29|1x29|3183|100|0.027|
+|30|5x6|3323|100|0.027|
+|40|5x8|4323|100|0.028|
+|50|5x10|5323|100|0.030|
+|60|6x10|6333|100|0.031|
+|70|7x10|7343|100|0.032|
+|80|8x10|8353|100|0.033|
+|90|9x10|9363|100|0.035|
+|100|10x10|10373|100|0.036|
+|110|10x11|11373|100|0.037|
+|120|10x12|12373|100|0.038|
+|130|10x13|13373|100|0.040|
+|140|10x14|14373|100|0.041|
+|150|10x15|15373|100|0.042|
+|160|10x16|16373|100|0.043|
+|170|10x17|17373|100|0.044|
+|181|1x181|18383|100|0.046|
+|190|10x19|19373|100|0.047|
+|200|10x20|20373|100|0.048|
+|211|1x211|21383|100|0.049|
+|220|11x20|22383|100|0.051|
+|230|10x23|23373|100|0.052|
+|241|1x241|24383|100|0.053|
+|250|10x25|25373|100|0.054|
+|260|13x20|26403|100|0.056|
+|271|1x271|27383|100|0.057|
+|281|1x281|28383|100|0.058|
+|290|10x29|29373|100|0.059|
+|300|15x20|30423|100|0.060|
+|310|10x31|31373|100|0.062|
+|321|3x107|32403|100|0.063|
+|331|1x331|33383|100|0.064|
+|340|17x20|34443|100|0.065|
+|350|14x25|35413|100|0.067|
+|360|18x20|36453|100|0.068|
+|370|10x37|37373|100|0.069|
+|381|3x127|38403|100|0.070|
+|390|15x26|39423|100|0.072|
 
 ## Appendix: StageCost field definitions
 

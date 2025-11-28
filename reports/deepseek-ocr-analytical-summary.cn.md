@@ -158,27 +158,46 @@ flowchart LR
 
 这一小节探讨视觉计算随输入分辨率与裁剪配置变化的情况。
 
-下列图表汇总了 DeepSeek-OCR 在不同候选裁剪网格上的视觉阶段解析成本 sweep，产出保存在 `reports/sweep/20251127-160058/vision_crops` 中，横轴为视觉输出 token 数（全局视角 + 各裁剪），图中点的标注为裁剪网格 `[height]x[width]`。
+下列图表汇总了 DeepSeek-OCR 在不同候选裁剪网格上的视觉阶段解析成本 sweep，产出保存在 `reports/sweep/20251128-152354/vision_crops` 中，横轴为视觉输出 token 数（全局视角 + 各裁剪），图中点的标注为裁剪网格 `[height]x[width]`。
 
 视觉阶段总 FLOPs（以 TFLOPs 计）随图像 token 长度变化，对比解析普通注意力、解析 flash 注意力以及厂商 FLOPs 计数。
 
-![DeepSeek-OCR 视觉阶段总 FLOPs 与图像 token 长度的关系。](sweep/20251127-160058/vision_crops/stagecost_flops_tflops.svg)
+![DeepSeek-OCR 视觉阶段总 FLOPs 与图像 token 长度的关系。](sweep/20251128-152354/vision_crops/stagecost_flops_tflops.svg)
+
+需要注意的是，横轴上的 “图像 token 数” 把全局视角和所有裁剪的 token 聚合在一起，但在实现层面，每个裁剪都是一张独立图像，沿 batch 维度堆叠后再送入 SAM 与 CLIP（裁剪 tile 分辨率和 CLIP 序列长度在 sweep 中基本固定），因此视觉注意力的计算量更接近于 `O(num_crops · S_tile²)`，其中 `S_tile` 在 sweep 区间内近似常数，这也解释了在图中 Vision FLOPs 随裁剪数（以及 `image_tokens_total`）呈近似线性变化，而不是对聚合 token 数表现出明显 `O(S_total²)` 的二次曲线。
+
+对应的裁剪与堆叠逻辑可在 `models/deepseek-ocr/modeling_deepseekocr.py:781-815, 897-900` 中看到：
+
+```python
+images_crop_raw, crop_ratio = dynamic_preprocess(image)
+# ...
+width_crop_num, height_crop_num = crop_ratio
+images_spatial_crop.append([width_crop_num, height_crop_num])
+if width_crop_num > 1 or height_crop_num > 1:
+    for i in range(len(images_crop_raw)):
+        images_crop_list.append(image_transform(images_crop_raw[i]).to(torch.bfloat16))
+# ...
+if images_crop_list:
+    images_crop = torch.stack(images_crop_list, dim=0)   # (num_crops, 3, 640, 640)
+else:
+    images_crop = torch.zeros((1, 3, base_size, base_size))
+```
 
 视觉阶段激活 I/O 体积（在片上内存与 HBM 之间移动的 Tb 数）随图像 token 长度变化，展示在高分辨率输入与更密集裁剪网格下流量如何增长。
 
-![DeepSeek-OCR 视觉阶段激活 I/O 与图像 token 长度的关系。](sweep/20251127-160058/vision_crops/stagecost_io_tb.svg)
+![DeepSeek-OCR 视觉阶段激活 I/O 与图像 token 长度的关系。](sweep/20251128-152354/vision_crops/stagecost_io_tb.svg)
 
 视觉阶段算术强度（FLOPs / 激活 I/O bit）随图像 token 长度变化，刻画随分辨率与裁剪网格 sweep 变化时的计算-带宽比。
 
-![DeepSeek-OCR 视觉阶段算术强度与图像 token 长度的关系。](sweep/20251127-160058/vision_crops/stagecost_arithmetic_intensity.svg)
+![DeepSeek-OCR 视觉阶段算术强度与图像 token 长度的关系。](sweep/20251128-152354/vision_crops/stagecost_arithmetic_intensity.svg)
 
 视觉阶段峰值激活内存（GB）随图像 token 长度变化，强调在输入尺寸与裁剪密度增大时激活占用如何扩张，同时视觉阶段 KV-cache 近似为零。
 
-![DeepSeek-OCR 视觉阶段激活内存与图像 token 长度的关系。](sweep/20251127-160058/vision_crops/stagecost_activations_gb.svg)
+![DeepSeek-OCR 视觉阶段激活内存与图像 token 长度的关系。](sweep/20251128-152354/vision_crops/stagecost_activations_gb.svg)
 
 视觉阶段 Tensor Core 与 CUDA core FLOPs（log 轴）随图像 token 长度变化，对比不同裁剪网格下两类算子的计算占比。
 
-![DeepSeek-OCR 视觉阶段 Tensor Core / CUDA-core FLOPs 拆分（log 轴）与图像 token 长度的关系。](sweep/20251127-160058/vision_crops/vision_flops_split_log.svg)
+![DeepSeek-OCR 视觉阶段 Tensor Core / CUDA-core FLOPs 拆分（log 轴）与图像 token 长度的关系。](sweep/20251128-152354/vision_crops/vision_flops_split_log.svg)
 
 下表给出了视觉阶段在各裁剪配置下的 FLOPs 拆分（解析路径）。
 
