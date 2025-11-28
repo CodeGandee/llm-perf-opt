@@ -1,26 +1,26 @@
 # DeepSeek-OCR 架构与性能解析总结
 
-本文基于 DeepSeek-OCR 在 ModelMeter 中的解析实现，将 DeepSeek-OCR 3B 模型的解析架构描述和逐层定义，与解析性能验证和缩放分析结合在一起进行总结。
+本文基于 DeepSeek-OCR 在 ModelMeter 中的 analytic 实现，对 DeepSeek-OCR 3B 模型的整体架构、逐层算子定义，以及对应的性能验证与缩放行为做一次系统化梳理。
 
 ## 架构概览
 
-解析模型通过一套基于 Hydra 的配置栈进行配置，该配置栈组合了：
-- DeepSeek-OCR 3B 的架构定义（隐藏维度、层数、注意力头、MoE 布局以及相关超参数）。
-- 序列长度、batch size 以及通用分析参数的运行时默认值。
-- 一个视觉塔（SAM 编码器 + 类 CLIP Transformer + projector），负责产生视觉 token。
-- 一个 DeepSeek-V2 解码器堆栈，在 prefill 与 decode 阶段分别消费视觉 token 和文本 token。
-- 一个 LM 头，将解码器的隐状态映射到词表 logits。
+解析模型由一套基于 Hydra 的配置栈驱动，核心组合了：
+- DeepSeek-OCR 3B 的架构定义（hidden size、layer 数、attention heads、MoE layout 以及相关 hyperparameters）。
+- 序列长度、batch size 以及通用分析参数的 runtime 默认配置。
+- 一个 vision tower（SAM encoder + CLIP-style transformer + projector），负责将输入图像转换为一串视觉 tokens。
+- 一个 DeepSeek-V2 decoder stack，在 prefill 与 decode 两个阶段分别消费视觉 tokens 和文本 tokens。
+- 一个 LM head，用于将 decoder 的 hidden states 投影为 vocabulary logits。
 
-在整体拓扑上，解析模型遵循官方 DeepSeek-OCR 的架构划分：
+从整体拓扑来看，这一解析模型基本对齐官方 DeepSeek-OCR 的模块划分：
 - 视觉分支
-  - 输入图像（包含全局填充视角和可选的动态裁剪）首先经过 SAM-B 风格编码器（`ImageEncoderViT`）处理，得到稠密视觉特征。
-  - 一个类 CLIP 的视觉 Transformer（由 `NoTPTransformerBlock` 与 `Attention` / `NoTPAttention` / `MLPBlock` / `NoTPFeedForward` 组成的 `VitModel`）接收 SAM 特征并输出一串语义视觉 token。
-  - `MlpProjector` 将拼接后的 SAM + CLIP token 做降维并投影到解码器嵌入空间，得到与文本解码器兼容的一维视觉 token 序列。
+  - 输入图像（包含全局 padded 视角和可选的 dynamic crops）首先经过 SAM-B 风格 encoder（`ImageEncoderViT`）处理，得到稠密视觉特征。
+  - 一个 CLIP-like 视觉 transformer（`VitModel`，由 `NoTPTransformerBlock` 与 `Attention` / `NoTPAttention` / `MLPBlock` / `NoTPFeedForward` 组成）继续消费 SAM 特征并输出一串语义化视觉 tokens。
+  - `MlpProjector` 将拼接后的 SAM + CLIP tokens 做降维并投影到 decoder embedding space，得到与文本 decoder 兼容的一维视觉 token 序列。
 - 解码分支
-  - 若干 `num_hidden_layers` 层的 `DeepseekV2DecoderLayer` 组成文本解码器堆栈，结合 LLaMA 风格注意力（FlashAttention2 + RoPE）、DeepSeek-V2 MLP 或 MoE expert 以及 RMSNorm。
-  - 解码器工作在两个阶段：prefill 阶段在完整上下文（视觉 token + prompt token）上一次性运行；decode 阶段按 token 逐步生成，并更新 KV cache。
+  - 若干 `num_hidden_layers` 层的 `DeepseekV2DecoderLayer` 组成文本 decoder stack，结合 LLaMA-style attention（FlashAttention2 + RoPE）、DeepSeek-V2 MLP 或 MoE experts 以及 RMSNorm。
+  - decoder 工作在两个阶段：prefill 阶段在完整 context（视觉 tokens + prompt tokens）上一次性运行；decode 阶段按 token 逐步生成，并更新 KV-cache。
 - 输出头
-  - LM 头 `deepseek_ocr_lm_head` 将解码器隐状态投影为词表 logits。
+  - LM head `deepseek_ocr_lm_head` 将 decoder 隐状态投影为 vocabulary logits。
 
 ```mermaid
 flowchart LR
@@ -48,11 +48,11 @@ flowchart LR
 
     PROJ -->|视觉 tokens| PREFILL
     PROMPT -->|提示 tokens| PREFILL
-    PREFILL -->|上下文 + KV cache| DECODE
+    PREFILL -->|上下文 + KV-cache| DECODE
     DECODE --> LM
 ```
 
-本节余下部分对解析层类型、功能角色以及它们如何组合成完整的 DeepSeek-OCR 解析模型做简要总结。
+本节余下内容将简要介绍各类解析层的职责，以及它们如何组合成完整的 DeepSeek-OCR analytic 模型。
 
 ## 逐层清单与定义
 
@@ -88,7 +88,7 @@ flowchart LR
 
 ### 概览与评估范围
 
-分析重点是：解析 FLOPs、I/O 和内存模型与实际厂商实现的匹配程度，以及当模型和工作负载参数变化时解析成本如何缩放。
+分析重点是：解析 FLOPs、I/O 和内存模型与实际 vendor 实现的匹配程度，以及当模型和工作负载参数变化时解析成本如何缩放。
 架构和算子级细节在前文以及独立的架构报告中已有总结；这里主要关注：
 - 逐层 sanity check（与参考实现进行 layer-wise 对齐验证）。
 - 端到端流水线验证（仅视觉路径和完整模型）。
@@ -98,7 +98,7 @@ flowchart LR
 
 ### 逐层 sanity check（layer-wise 验证）
 
-下表展示了解析层级 FLOPs 与厂商实现计数之间的对比，包括测量的 FLOPs、理论 FLOPs、相对误差以及每层验证状态。
+下表展示了解析层级 FLOPs 与 vendor 实现计数之间的对比，包括测量的 FLOPs、理论 FLOPs、相对误差以及每层验证状态。
 
 |Group|Analytic layer|Measured FLOPs (GFLOPs)|Theoretical FLOPs (GFLOPs)|Rel diff (%)|Status|
 | :---: | :---: | :---: | :---: | :---: | :---: |
@@ -124,7 +124,7 @@ flowchart LR
 |llama|LlamaFlashAttention2|6.7110e+00|6.7109e+00|0.0010%|✓|
 |llama|LlamaRotaryEmbedding|6.5536e-05|6.5536e-05|0.0000%|✓|
 
-下表给出解析层到参考实现类的映射，便于在代码中查找对应实现。
+下表给出解析层到参考实现类的映射，便于在代码中快速定位对应实现。
 
 |Group|Analytic layer|Impl class (fully qualified path)|
 | :---: | :---: | :---: |
@@ -152,21 +152,22 @@ flowchart LR
 
 ### 成本与 sweep
 
-本部分分析当模型和输入参数变化时，解析 FLOPs、I/O 与内存使用的缩放规律，使用同一套 ModelMeter 配置下的 sweep 脚本及辅助工具。
+本部分在统一的 ModelMeter 配置下，通过一系列 sweep 脚本系统性地考察解析 FLOPs、I/O 与内存占用在不同模型与输入参数设置下的缩放行为。
 
 #### 视觉输入形状 sweep
 
-这一小节探讨视觉计算随输入分辨率与裁剪配置变化的情况。
+本小节聚焦 vision 路径，观察当输入分辨率和裁剪网格变化时视觉计算成本如何随之变化。
 
-下列图表汇总了 DeepSeek-OCR 在不同候选裁剪网格上的视觉阶段解析成本 sweep，产出保存在 `reports/sweep/20251128-152354/vision_crops` 中，横轴为视觉输出 token 数（全局视角 + 各裁剪），图中点的标注为裁剪网格 `[height]x[width]`。
+下列图表汇总了 DeepSeek-OCR 在不同候选裁剪网格上的视觉阶段解析成本 sweep，结果保存在 `reports/sweep/20251128-152354/vision_crops` 中，横轴为视觉输出 tokens（global 视角 + 所有 crops），点的标注为裁剪网格 `[height]x[width]`。
 
-视觉阶段总 FLOPs（以 TFLOPs 计）随图像 token 长度变化，对比解析普通注意力、解析 flash 注意力以及厂商 FLOPs 计数。
+第一幅图展示了视觉阶段总 FLOPs（TFLOPs）随 image token 长度的变化，对比 analytic normal attention、analytic flash attention 以及 vendor FLOPs 计数。
 
 ![DeepSeek-OCR 视觉阶段总 FLOPs 与图像 token 长度的关系。](sweep/20251128-152354/vision_crops/stagecost_flops_tflops.svg)
 
-需要注意的是，横轴上的 “图像 token 数” 把全局视角和所有裁剪的 token 聚合在一起，但在实现层面，每个裁剪都是一张独立图像，沿 batch 维度堆叠后再送入 SAM 与 CLIP（裁剪 tile 分辨率和 CLIP 序列长度在 sweep 中基本固定），因此视觉注意力的计算量更接近于 `O(num_crops · S_tile²)`，其中 `S_tile` 在 sweep 区间内近似常数，这也解释了在图中 Vision FLOPs 随裁剪数（以及 `image_tokens_total`）呈近似线性变化，而不是对聚合 token 数表现出明显 `O(S_total²)` 的二次曲线。
+需要注意的是，横轴上的 “图像 token 数” 把 global 视角和所有 crops 的 tokens 聚合在一起，但在 vendor 实现里，每个裁剪都会当作一张独立图像，经由 batch 维度堆叠后再送入 SAM 与 CLIP（裁剪 tile 分辨率和 CLIP 序列长度在整个 sweep 中基本固定），因此视觉注意力的真实计算量更接近 `O(num_crops · S_tile²)`，其中 `S_tile` 在 sweep 区间内近似常数。
+这也解释了图中 Vision FLOPs 随裁剪数（以及 `image_tokens_total`）总体呈近似线性，而不是对聚合 token 数表现出明显的 `O(S_total²)` 二次曲线。
 
-对应的裁剪与堆叠逻辑可在 `models/deepseek-ocr/modeling_deepseekocr.py:781-815, 897-900` 中看到：
+对应的裁剪与堆叠逻辑可以在 `models/deepseek-ocr/modeling_deepseekocr.py:781-815, 897-900` 中看到：
 
 ```python
 images_crop_raw, crop_ratio = dynamic_preprocess(image)
@@ -183,19 +184,19 @@ else:
     images_crop = torch.zeros((1, 3, base_size, base_size))
 ```
 
-视觉阶段激活 I/O 体积（在片上内存与 HBM 之间移动的 Tb 数）随图像 token 长度变化，展示在高分辨率输入与更密集裁剪网格下流量如何增长。
+第二幅图给出了视觉阶段激活 I/O 体积（在片上内存与 HBM 之间移动的 Tb 数）随图像 token 长度的变化，用于观察在高分辨率输入与更密集裁剪网格下流量如何增长。
 
 ![DeepSeek-OCR 视觉阶段激活 I/O 与图像 token 长度的关系。](sweep/20251128-152354/vision_crops/stagecost_io_tb.svg)
 
-视觉阶段算术强度（FLOPs / 激活 I/O bit）随图像 token 长度变化，刻画随分辨率与裁剪网格 sweep 变化时的计算-带宽比。
+第三幅图展示了视觉阶段算术强度（FLOPs / 激活 I/O bit）随图像 token 长度的变化，刻画随分辨率与裁剪网格 sweep 变化时的 compute-to-memory 比例。
 
 ![DeepSeek-OCR 视觉阶段算术强度与图像 token 长度的关系。](sweep/20251128-152354/vision_crops/stagecost_arithmetic_intensity.svg)
 
-视觉阶段峰值激活内存（GB）随图像 token 长度变化，强调在输入尺寸与裁剪密度增大时激活占用如何扩张，同时视觉阶段 KV-cache 近似为零。
+第四幅图给出了视觉阶段峰值激活内存（GB）随图像 token 长度的变化，强调在输入尺寸与裁剪密度增大时激活占用如何扩张，同时视觉阶段 KV-cache 基本为零。
 
 ![DeepSeek-OCR 视觉阶段激活内存与图像 token 长度的关系。](sweep/20251128-152354/vision_crops/stagecost_activations_gb.svg)
 
-视觉阶段 Tensor Core 与 CUDA core FLOPs（log 轴）随图像 token 长度变化，对比不同裁剪网格下两类算子的计算占比。
+最后一幅图比较了视觉阶段 Tensor Core 与 CUDA core FLOPs（log 轴）随图像 token 长度的变化，对比不同裁剪网格下两类算子的计算占比。
 
 ![DeepSeek-OCR 视觉阶段 Tensor Core / CUDA-core FLOPs 拆分（log 轴）与图像 token 长度的关系。](sweep/20251128-152354/vision_crops/vision_flops_split_log.svg)
 
@@ -259,37 +260,37 @@ else:
 
 #### 序列长度与 decode sweep
 
-这一小节聚焦解码器 FLOPs 与 KV-cache 内存随 prefill 上下文长度（`S_prefill`）、decode 长度（`K` 个 token）、batch 大小（`B`）以及注意力头配置的缩放行为。
+本小节重点考察 decoder 侧 FLOPs 与 KV-cache 内存如何随 prefill context 长度（`S_prefill`）、decode 长度（`K` 个 tokens）、batch 大小（`B`）以及 attention head 配置变化而缩放。
 
-下列图表汇总了 DeepSeek-OCR 在候选裁剪网格上的 decode sweep，结果保存在 `reports/sweep/20251127-160058/e2e_decode` 中，使用固定文本 prompt 与 decode 步数，横轴同样为视觉输出 token 数（全局视角 + 各裁剪），点标注为裁剪网格 `[height]x[width]`。
+下列图表汇总了 DeepSeek-OCR 在不同裁剪网格上的 decode sweep，结果保存在 `reports/sweep/20251128-152354/e2e_decode` 中，采用固定文本 prompt 与固定 decode 步数，横轴同样为视觉输出 token 数（global 视角 + 所有 crops），点标注为裁剪网格 `[height]x[width]`。
 
-DeepSeek-OCR 解码 FLOPs 随图像 token 长度变化（解析与厂商曲线），对每个 sweep 点在固定 `K = 100` decode 步数上进行聚合。
+第一幅图展示了 DeepSeek-OCR 解码 FLOPs 随图像 token 长度的变化（解析与 vendor 曲线），对每个 sweep 点在固定 `K = 100` decode 步数上进行聚合。
 
-![DeepSeek-OCR 解码 FLOPs 与图像 token 长度的关系。](sweep/20251127-160058/e2e_decode/e2e_decode.svg)
+![DeepSeek-OCR 解码 FLOPs 与图像 token 长度的关系。](sweep/20251128-152354/e2e_decode/e2e_decode.svg)
 
-总 decode FLOPs（TFLOPs）随图像 token 长度变化，对固定 `K = 100` 步的完整 decode 序列（而非单 token）进行统计，对比解析普通注意力、解析 flash 注意力和厂商基线。
+第二幅图给出了总 decode FLOPs（TFLOPs）随图像 token 长度的变化，对固定 `K = 100` 步的完整 decode 序列（而非单 token）进行统计，对比 analytic normal attention、analytic flash attention 和 vendor baselines。
 
-![DeepSeek-OCR 解码阶段总 FLOPs 与图像 token 长度的关系。](sweep/20251127-160058/e2e_decode/e2e_decode_stagecost_flops_tflops.svg)
+![DeepSeek-OCR 解码阶段总 FLOPs 与图像 token 长度的关系。](sweep/20251128-152354/e2e_decode/e2e_decode_stagecost_flops_tflops.svg)
 
-解码阶段激活 I/O 体积（Tb）随图像 token 长度变化，强调在固定 `K = 100` decode 步数下，累积流量如何随上游视觉工作负载变化。
+第三幅图展示了解码阶段激活 I/O 体积（Tb）随图像 token 长度的变化，强调在固定 `K = 100` decode 步数下，累积流量如何随上游视觉工作负载变化。
 
-![DeepSeek-OCR 解码阶段激活 I/O 与图像 token 长度的关系。](sweep/20251127-160058/e2e_decode/e2e_decode_stagecost_io_tb.svg)
+![DeepSeek-OCR 解码阶段激活 I/O 与图像 token 长度的关系。](sweep/20251128-152354/e2e_decode/e2e_decode_stagecost_io_tb.svg)
 
-解码阶段算术强度（FLOPs / 激活 I/O bit）随图像 token 长度变化，展示随着裁剪网格变密、序列长度增加，计算-带宽比如何演化。
+第四幅图给出了 decode 阶段算术强度（FLOPs / 激活 I/O bit）随图像 token 长度的变化，展示随着裁剪网格变密、序列长度增加，compute-to-memory 比如何演化。
 
-![DeepSeek-OCR 解码阶段算术强度与图像 token 长度的关系。](sweep/20251127-160058/e2e_decode/e2e_decode_stagecost_arithmetic_intensity.svg)
+![DeepSeek-OCR 解码阶段算术强度与图像 token 长度的关系。](sweep/20251128-152354/e2e_decode/e2e_decode_stagecost_arithmetic_intensity.svg)
 
-解码阶段峰值激活内存（GB）随图像 token 长度变化，展示在完整 `K = 100` decode 过程中，解码激活占用在何处与视觉激活相当甚至超过视觉激活。
+第五幅图显示了解码阶段峰值激活内存（GB）随图像 token 长度的变化，展示在完整 `K = 100` decode 过程中，decoder activations 在何处与视觉 activations 相当甚至超过后者。
 
-![DeepSeek-OCR 解码阶段激活内存与图像 token 长度的关系。](sweep/20251127-160058/e2e_decode/e2e_decode_stagecost_activations_gb.svg)
+![DeepSeek-OCR 解码阶段激活内存与图像 token 长度的关系。](sweep/20251128-152354/e2e_decode/e2e_decode_stagecost_activations_gb.svg)
 
-解码阶段 KV-cache 内存（GB）随图像 token 长度变化，刻画在不同裁剪配置下，prefill 上下文与 `K = 100` decode token 组合对 KV 存储的影响。
+第六幅图给出了 decode 阶段 KV-cache 内存（GB）随图像 token 长度的变化，刻画在不同裁剪配置下，prefill 上下文与 `K = 100` decode tokens 组合对 KV 存储的影响。
 
-![DeepSeek-OCR 解码阶段 KV-cache 内存与图像 token 长度的关系。](sweep/20251127-160058/e2e_decode/e2e_decode_stagecost_kv_gb.svg)
+![DeepSeek-OCR 解码阶段 KV-cache 内存与图像 token 长度的关系。](sweep/20251128-152354/e2e_decode/e2e_decode_stagecost_kv_gb.svg)
 
-解码阶段 Tensor Core 与 CUDA core FLOPs（log 轴）随图像 token 长度变化，展示随着 decode 工作负载增大，两类算子在总计算中的占比变化。
+最后一幅图比较了解码阶段 Tensor Core 与 CUDA core FLOPs（log 轴）随图像 token 长度的变化，展示随着 decode 工作负载增大，两类算子在总计算中的占比变化。
 
-![DeepSeek-OCR 解码阶段 Tensor Core / CUDA-core FLOPs 拆分（log 轴）与图像 token 长度的关系。](sweep/20251127-160058/e2e_decode/e2e_decode_flops_split_log.svg)
+![DeepSeek-OCR 解码阶段 Tensor Core / CUDA-core FLOPs 拆分（log 轴）与图像 token 长度的关系。](sweep/20251128-152354/e2e_decode/e2e_decode_flops_split_log.svg)
 
 下表按裁剪配置给出解析 decode 阶段（`K = 100`）的 FLOPs 拆分。
 
@@ -351,39 +352,39 @@ DeepSeek-OCR 解码 FLOPs 随图像 token 长度变化（解析与厂商曲线�
 
 #### 组合工作负载画像
 
-这一小节关注更贴近实际的工作负载画像，将图像分辨率、上下文长度与 decode 长度组合在一起（例如不同的 OCR workload ID）。
+本小节面向更贴近真实业务的组合 workload，将图像分辨率、context 长度与 decode 长度放在一起考察（例如不同的 OCR workload IDs）。
 
-下列图表汇总了 DeepSeek-OCR 视觉+prefill 裁剪网格 sweep，结果保存在 `reports/sweep/20251127-160058/e2e_vision_prefill` 中，横轴为视觉输出 token 数（全局视角 + 裁剪），点标注为裁剪网格 `[height]x[width]`。
+下列图表汇总了 DeepSeek-OCR 视觉+prefill 裁剪网格 sweep，结果保存在 `reports/sweep/20251128-152354/e2e_vision_prefill` 中，横轴为视觉输出 token 数（global 视角 + 所有 crops），点标注为裁剪网格 `[height]x[width]`。
 
-DeepSeek-OCR 视觉+prefill FLOPs 随图像 token 长度变化（解析与厂商曲线），并以裁剪网格作为标注。
+第一幅图展示了 DeepSeek-OCR 视觉+prefill FLOPs 随图像 token 长度的变化（解析与 vendor 曲线），并以裁剪网格作为标注。
 
-![DeepSeek-OCR 视觉+Prefill FLOPs 与图像 token 长度的关系。](sweep/20251127-160058/e2e_vision_prefill/e2e_vision_prefill.svg)
+![DeepSeek-OCR 视觉+Prefill FLOPs 与图像 token 长度的关系。](sweep/20251128-152354/e2e_vision_prefill/e2e_vision_prefill.svg)
 
-这些图使用了 `modelmeter.models.common.stage_cost` 中的 `StageCost` 结构来表达各阶段的解析成本；其字段定义和解释见附录。
+这些图统一使用 `modelmeter.models.common.stage_cost` 中的 `StageCost` 结构来表达各阶段的解析成本；其字段定义和解释见附录。
 
-prefill 阶段总 FLOPs（TFLOPs）按逻辑组件（视觉、解码器、LM 头）拆分，并随图像 token 长度变化，展示在裁剪密度升高时各组件对总 prefill 计算量的贡献。
+第二幅图将 prefill 阶段总 FLOPs（TFLOPs）按逻辑组件（vision、decoder、LM head）拆分，并随图像 token 长度变化，展示在裁剪密度升高时各组件对总 prefill 计算量的贡献。
 
-![DeepSeek-OCR 视觉+Prefill 各阶段总 FLOPs 与图像 token 长度的关系。](sweep/20251127-160058/e2e_vision_prefill/e2e_vision_prefill_stagecost_flops_tflops.svg)
+![DeepSeek-OCR 视觉+Prefill 各阶段总 FLOPs 与图像 token 长度的关系。](sweep/20251128-152354/e2e_vision_prefill/e2e_vision_prefill_stagecost_flops_tflops.svg)
 
-prefill 阶段激活 I/O 体积（Tb）随图像 token 长度变化，突出不同裁剪网格下哪些阶段主导带宽需求。
+第三幅图给出了 prefill 阶段激活 I/O 体积（Tb）随图像 token 长度的变化，用于突出在不同裁剪网格下哪些阶段主导带宽需求。
 
-![DeepSeek-OCR 视觉+Prefill 激活 I/O 与图像 token 长度的关系。](sweep/20251127-160058/e2e_vision_prefill/e2e_vision_prefill_stagecost_io_tb.svg)
+![DeepSeek-OCR 视觉+Prefill 激活 I/O 与图像 token 长度的关系。](sweep/20251128-152354/e2e_vision_prefill/e2e_vision_prefill_stagecost_io_tb.svg)
 
-prefill 阶段算术强度（FLOPs / 激活 I/O bit）随图像 token 长度变化，指示不同裁剪配置下哪些阶段更偏 compute-bound，哪些更偏 bandwidth-bound。
+第四幅图展示了 prefill 阶段算术强度（FLOPs / 激活 I/O bit）随图像 token 长度的变化，指示在不同裁剪配置下哪些阶段更偏 compute-bound、哪些更偏 bandwidth-bound。
 
-![DeepSeek-OCR 视觉+Prefill 算术强度与图像 token 长度的关系。](sweep/20251127-160058/e2e_vision_prefill/e2e_vision_prefill_stagecost_arithmetic_intensity.svg)
+![DeepSeek-OCR 视觉+Prefill 算术强度与图像 token 长度的关系。](sweep/20251128-152354/e2e_vision_prefill/e2e_vision_prefill_stagecost_arithmetic_intensity.svg)
 
-prefill 阶段峰值激活内存（GB）随图像 token 长度变化，强调在大裁剪网格下激活 footprint 如何超线性增长，以及在哪些区域视觉激活开始主导整体内存占用。
+第五幅图给出了 prefill 阶段峰值激活内存（GB）随图像 token 长度的变化，强调在大裁剪网格下 activation footprint 如何超线性增长，以及从何时起 vision activations 开始主导整体内存占用。
 
-![DeepSeek-OCR 视觉+Prefill 激活内存与图像 token 长度的关系。](sweep/20251127-160058/e2e_vision_prefill/e2e_vision_prefill_stagecost_activations_gb.svg)
+![DeepSeek-OCR 视觉+Prefill 激活内存与图像 token 长度的关系。](sweep/20251128-152354/e2e_vision_prefill/e2e_vision_prefill_stagecost_activations_gb.svg)
 
-prefill 阶段 KV-cache 内存（GB）随图像 token 长度变化，记录在固定 prefill 上下文配置下，解码器部分对 KV-cache footprint 的贡献。
+第六幅图展示了 prefill 阶段 KV-cache 内存（GB）随图像 token 长度的变化，记录在固定 prefill context 配置下 decoder 部分对 KV-cache footprint 的贡献。
 
-![DeepSeek-OCR 视觉+Prefill KV-cache 内存与图像 token 长度的关系。](sweep/20251127-160058/e2e_vision_prefill/e2e_vision_prefill_stagecost_kv_gb.svg)
+![DeepSeek-OCR 视觉+Prefill KV-cache 内存与图像 token 长度的关系。](sweep/20251128-152354/e2e_vision_prefill/e2e_vision_prefill_stagecost_kv_gb.svg)
 
-视觉+prefill 组合阶段 Tensor Core 与 CUDA core FLOPs（log 轴）随图像 token 长度变化，总结端到端计算中两类算子的利用率变化趋势。
+最后一幅图比较了视觉+prefill 组合阶段 Tensor Core 与 CUDA core FLOPs（log 轴）随图像 token 长度的变化，总结端到端计算中两类算子的利用率变化趋势。
 
-![DeepSeek-OCR 视觉+Prefill Tensor Core / CUDA-core FLOPs 拆分（log 轴）与图像 token 长度的关系。](sweep/20251127-160058/e2e_vision_prefill/e2e_vision_prefill_flops_split_log.svg)
+![DeepSeek-OCR 视觉+Prefill Tensor Core / CUDA-core FLOPs 拆分（log 轴）与图像 token 长度的关系。](sweep/20251128-152354/e2e_vision_prefill/e2e_vision_prefill_flops_split_log.svg)
 
 下表给出了视觉+prefill 组合阶段在各裁剪配置下的 FLOPs 拆分（解析路径）。
 
@@ -445,20 +446,20 @@ prefill 阶段 KV-cache 内存（GB）随图像 token 长度变化，记录在�
 
 #### 显存需求：不同裁剪网格下的 VRAM
 
-在容量规划场景下，往往需要为每个裁剪网格给出一个近似的“显存包络线”。  
-与性能报告中的假设一致（视觉+prefill TTFT = 1.0 s，decode TPOT = 0.05 s，`K = 100` 步 decode），我们将每个工作负载的 VRAM 估计为：
+在容量规划（capacity planning）场景下，往往需要为每个裁剪网格给出一个近似的 VRAM envelope。
+在与性能报告一致的假设下（视觉+prefill TTFT = 1.0 s，decode TPOT = 0.05 s，`K = 100` 步 decode），我们将每个 workload 的 VRAM 估计为：
 
-- 固定的 **模型权重大小**：来自 vendor 模型的静态 torchinfo 报告（fp16/bf16 权重总计约 `6.34 GB`），加上
-- 解析模型给出的视觉+prefill 峰值激活内存（flash 注意力路径），加上
-- `K = 100` 步 decode 之后的 KV-cache 总内存。
+- 固定的 **模型权重大小**：来自 vendor 模型的静态 torchinfo 报告（fp16/bf16 权重总计约 `6.34 GB`）。
+- 解析模型给出的视觉+prefill 峰值激活内存（flash-attention 路径）。
+- `K = 100` 步 decode 完成后的 KV-cache 总内存。
 
 更具体地，对每个裁剪配置有：
 
 `VRAM needed (GB) ≈ 6.34（模型权重） + Peak activation size (GB) + KV-cache size (GB)`。
 
-由于当前解析模型中的 `weights_gb` 对 MoE 专家权重的统计存在低估，这里在计算 `VRAM needed (GB)` 时显式采用静态 torchinfo 中的权重大小作为基准。
+由于当前解析模型中的 `weights_gb` 对 MoE experts 的统计存在低估，这里在计算 `VRAM needed (GB)` 时显式采用静态 torchinfo 中的权重大小作为基准。
 
-下表复用了性能报告中的 VRAM 结果，对每个裁剪配置给出：vision+prefill 的 Tensor Core / CUDA-core FLOPs、forward 激活 I/O、KV-cache 大小、峰值激活内存以及对应的显存需求。
+下表复用了性能报告中的 VRAM 结果，对每个裁剪配置给出 vision+prefill 的 Tensor Core / CUDA-core FLOPs、forward 激活 I/O、KV-cache 大小、峰值激活内存以及对应的显存需求。
 
 |Num crops|Crop grid (H×W)|Image tokens (global + crops)|Tensor Core FLOPs (TFLOPs)|CUDA-core FLOPs (TFLOPs)|Forward I/O (GB)|KV-cache size (GB)|Peak activation size (GB)|VRAM needed (GB)|
 | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: |
@@ -512,18 +513,18 @@ prefill 阶段 KV-cache 内存（GB）随图像 token 长度变化，记录在�
 
 ## 面向目标的性能分析
 
-本节将上述解析工作负载与面向用户的响应性约束联系起来，聚焦两个目标：
+本节将上文的解析工作负载与面向用户的响应性约束联系起来，聚焦两个核心目标：
 - 视觉+prefill 阶段的首 token 延迟（TTFT, Time-to-first-token）。
-- 解码阶段的单 token 延迟（TPOT, Time-per-output-token）。
+- decode 阶段的单 token 延迟（TPOT, Time-per-output-token）。
 
 ### 首 token 延迟（TTFT）：视觉+prefill
 
 对于 TTFT，这里假设视觉+prefill 阶段的目标时间预算为 1.0 s（TTFT = 1.0 s）。
-下图展示了为满足该 TTFT 目标，在不同图像 token 长度下所需的 TFLOPs/s，其中分别给出了解析普通注意力、解析 flash 注意力以及厂商基线的曲线。
+下图展示了为满足该 TTFT 目标，在不同图像 token 长度下所需的 TFLOPs/s，并分别给出 analytic normal attention、analytic flash attention 以及 vendor baselines 的曲线。
 
-![在 TTFT 目标为 1.0 s 时，不同图像 token 长度下所需 TFLOPs/s。](sweep/20251127-160058/e2e_vision_prefill/responsive_tflops_by_ttft.svg)
+![在 TTFT 目标为 1.0 s 时，不同图像 token 长度下所需 TFLOPs/s。](sweep/20251128-152354/e2e_vision_prefill/responsive_tflops_by_ttft.svg)
 
-下表列举了其中一部分采样点，对每个裁剪网格给出视觉输出 token 总数，以及在解析 flash 注意力路径下，为满足 1.0 s TTFT 预算所需的计算吞吐（TFLOPs/s）。
+下表列举了其中一部分采样点，对每个裁剪网格给出视觉输出 token 总数，以及在 analytic flash-attention 路径下，为满足 1.0 s TTFT 预算所需的计算吞吐（TFLOPs/s）。
 
 |Num crops|Crop grid (H×W)|Image tokens (global + crops)|Required TFLOPs/s (analytic flash attention, full)|
 | :---: | :---: | :---: | :---: |
@@ -583,12 +584,12 @@ prefill 阶段 KV-cache 内存（GB）随图像 token 长度变化，记录在�
 
 ### 单 token 延迟（TPOT）：decode
 
-为刻画稳态流式输出的延迟，本节分析为满足 decode 阶段目标单 token 延迟（TPOT）所需的计算吞吐。
-在这些实验中，decode sweep 采用 50 ms 的单 token 预算（TPOT = 0.05 s），下图给出了在该约束下，不同图像 token 长度对应的所需 TFLOPs/s。
+为刻画稳态流式输出的延迟，本小节分析在 decode 阶段满足目标单 token 延迟（TPOT）所需的计算吞吐。
+在这些实验中，decode sweep 采用 50 ms 的单 token 预算（TPOT = 0.05 s），下图给出了在这一约束下，不同图像 token 长度对应的所需 TFLOPs/s。
 
-![在 TPOT 目标为 50 ms 时，不同图像 token 长度下所需 TFLOPs/s。](sweep/20251127-160058/e2e_decode/responsive_tflops_by_tpot.svg)
+![在 TPOT 目标为 50 ms 时，不同图像 token 长度下所需 TFLOPs/s。](sweep/20251128-152354/e2e_decode/responsive_tflops_by_tpot.svg)
 
-下表按裁剪网格汇总了视觉输出 token 总数、decode 步数 `K` 以及在解析 flash 注意力路径下，为满足 50 ms TPOT 目标所需的计算吞吐。
+下表按裁剪网格汇总了视觉输出 token 总数、decode 步数 `K`，以及在 analytic flash-attention 路径下，为满足 50 ms TPOT 目标所需的计算吞吐。
 
 |Num crops|Crop grid (H×W)|Image tokens (global + crops)|Decode steps (K)|Required TFLOPs/s (analytic flash attention, full)|
 | :---: | :---: | :---: | :---: | :---: |
@@ -648,18 +649,18 @@ prefill 阶段 KV-cache 内存（GB）随图像 token 长度变化，记录在�
 
 ### 附录：StageCost 字段定义
 
-ModelMeter 中的 `StageCost` 结构用于汇总本报告中视觉、解码器以及视觉+prefill 图表的逐阶段解析成本，其主要字段含义如下：
-- 总阶段 FLOPs，以 teraFLOPs（TFLOPs）表示，在建模时包含 Tensor Core 与 CUDA core 的贡献。
+ModelMeter 中的 `StageCost` 结构用于汇总并标准化表示本报告中 vision、decoder 以及 vision+prefill 图表的 per-stage analytic 成本，其主要字段含义如下：
+- 总阶段 FLOPs，以 teraFLOPs（TFLOPs）表示，建模时同时统计 Tensor Core 与 CUDA core 的贡献。
 - 激活 I/O 体积，以 terabits（Tb）计，统计该阶段在片上内存与 HBM 之间的读写总量。
-- 算术强度，定义为阶段总 FLOPs 除以激活 I/O 体积（FLOPs per bit），用于判断该阶段是更偏计算受限还是带宽受限。
+- 算术强度，定义为阶段总 FLOPs 除以激活 I/O 体积（FLOPs per bit），用于判断该阶段更偏 compute-bound 还是 bandwidth-bound。
 - 峰值激活内存占用，以 GB 表示，针对给定的 batch size 与序列长度。
-- KV-cache 内存占用，以 GB 表示，通常由解码器注意力块产生，并受上下文长度与 decode 长度驱动。
+- KV-cache 内存占用，以 GB 表示，通常由 decoder attention blocks 产生，并由 context 长度与 decode 长度共同决定。
 
-在本次 sweep 使用的 DeepSeek-OCR-3B 配置下，总参数量约为 2.17 GB，且在不同裁剪网格之间保持不变，因此我们只在此处统一报告，而不单独绘制曲线。
+在本次 sweep 使用的 DeepSeek-OCR-3B 配置下，总参数 footprint 约为 2.17 GB，且在不同裁剪网格之间保持不变，因此我们只在此处统一报告，而不单独绘制曲线。
 
 ### 附录：实现文件路径（参考）
 
-对于需要进一步阅读代码的读者，下列路径给出了本总结中各概念组件在代码中的对应位置：
+对于希望进一步阅读代码实现的读者，下列路径给出了本总结中各概念组件在代码中的对应位置：
 - DeepSeek-OCR 解析模型与 sweep：`extern/modelmeter/models/deepseek_ocr`
 - 验证与 sweep 脚本：`extern/modelmeter/models/deepseek_ocr/scripts` 与 `extern/modelmeter/models/deepseek_ocr/scripts/sweep`
 - 视觉层包：`layers/vision`（包含 `PatchEmbed`、`Attention`、`MLPBlock`、`Block`、`LayerNorm2d`、`CLIPVisionEmbeddings`、`NoTPAttention`、`NoTPFeedForward`、`NoTPTransformerBlock`、`NoTPTransformer`、`ImageEncoderViT`、`VitModel`、`MlpProjector` 以及相关辅助工具）

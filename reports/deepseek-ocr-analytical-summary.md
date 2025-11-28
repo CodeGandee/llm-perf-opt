@@ -265,35 +265,35 @@ The table below summarizes the analytic vision FLOP split at each crop configura
 
 This subsection focuses on how decoder FLOPs and KV-cache memory scale with prefill context length (`S_prefill`), decode length (`K` tokens), batch size (`B`), and attention head configuration.
 
-The following figures summarize the DeepSeek-OCR decode sweep over candidate crop grids captured under `reports/sweep/20251127-160058/e2e_decode`, with a fixed text prompt and number of decode steps and the x-axis showing vision output tokens (global + crops) annotated by crop grid `[height]x[width]`.
+The following figures summarize the DeepSeek-OCR decode sweep over candidate crop grids captured under `reports/sweep/20251128-152354/e2e_decode`, with a fixed text prompt and number of decode steps and the x-axis showing vision output tokens (global + crops) annotated by crop grid `[height]x[width]`.
 
 DeepSeek-OCR decode FLOPs vs image token length (analytic and vendor curves, aggregated over a fixed `K = 100` decode steps for all points in the sweep).
 
-![DeepSeek-OCR Decode FLOPs vs image token length.](sweep/20251127-160058/e2e_decode/e2e_decode.svg)
+![DeepSeek-OCR Decode FLOPs vs image token length.](sweep/20251128-152354/e2e_decode/e2e_decode.svg)
 
 Total decode FLOPs (in TFLOPs) over `K = 100` decode steps vs image token length, showing how full-sequence decode compute (not per-token) grows with crop density for analytic normal attention, analytic flash attention, and vendor baselines.
 
-![DeepSeek-OCR Decode total FLOPs vs image token length.](sweep/20251127-160058/e2e_decode/e2e_decode_stagecost_flops_tflops.svg)
+![DeepSeek-OCR Decode total FLOPs vs image token length.](sweep/20251128-152354/e2e_decode/e2e_decode_stagecost_flops_tflops.svg)
 
 Decoder activation I/O volume (terabits) over `K = 100` decode steps vs image token length, highlighting how cumulative traffic over the full decode varies with the upstream vision workload.
 
-![DeepSeek-OCR Decode activation I/O vs image token length.](sweep/20251127-160058/e2e_decode/e2e_decode_stagecost_io_tb.svg)
+![DeepSeek-OCR Decode activation I/O vs image token length.](sweep/20251128-152354/e2e_decode/e2e_decode_stagecost_io_tb.svg)
 
 Decoder arithmetic intensity (FLOPs per bit of activation I/O) vs image token length, indicating how compute-to-memory ratios evolve as crop grids become denser and sequence lengths increase.
 
-![DeepSeek-OCR Decode arithmetic intensity vs image token length.](sweep/20251127-160058/e2e_decode/e2e_decode_stagecost_arithmetic_intensity.svg)
+![DeepSeek-OCR Decode arithmetic intensity vs image token length.](sweep/20251128-152354/e2e_decode/e2e_decode_stagecost_arithmetic_intensity.svg)
 
 Peak decoder activation memory (GB) over `K = 100` decode steps vs image token length, showing where activation footprint over the full decode becomes comparable to or larger than vision activations.
 
-![DeepSeek-OCR Decode activation memory vs image token length.](sweep/20251127-160058/e2e_decode/e2e_decode_stagecost_activations_gb.svg)
+![DeepSeek-OCR Decode activation memory vs image token length.](sweep/20251128-152354/e2e_decode/e2e_decode_stagecost_activations_gb.svg)
 
 Decoder KV-cache memory (GB) vs image token length, capturing how KV storage scales with the combination of prefill context and `K = 100` decode tokens across different crop configurations.
 
-![DeepSeek-OCR Decode KV-cache memory vs image token length.](sweep/20251127-160058/e2e_decode/e2e_decode_stagecost_kv_gb.svg)
+![DeepSeek-OCR Decode KV-cache memory vs image token length.](sweep/20251128-152354/e2e_decode/e2e_decode_stagecost_kv_gb.svg)
 
 Tensor Core vs CUDA-core FLOPs (log-scale) vs image token length for the decode stage, highlighting the balance between Tensor Core and CUDA-core work as decode workload increases.
 
-![DeepSeek-OCR Decode FLOPs split by kernel type (log-scale) vs image token length.](sweep/20251127-160058/e2e_decode/e2e_decode_flops_split_log.svg)
+![DeepSeek-OCR Decode FLOPs split by kernel type (log-scale) vs image token length.](sweep/20251128-152354/e2e_decode/e2e_decode_flops_split_log.svg)
 
 The table below summarizes the analytic decode FLOP split (`K = 100` decode steps) for each crop grid.
 
@@ -357,37 +357,37 @@ The table below summarizes the analytic decode FLOP split (`K = 100` decode step
 
 This subsection looks at realistic workload profiles that combine image resolution, context length, and decode length (for example, different OCR workload IDs).
 
-The following figures summarize the DeepSeek-OCR vision+prefill crop-grid sweep captured under `reports/sweep/20251127-160058/e2e_vision_prefill`, where the x-axis is vision output tokens (global + crops) and point labels denote the crop grid as `[height]x[width]`.
+The following figures summarize the DeepSeek-OCR vision+prefill crop-grid sweep captured under `reports/sweep/20251128-152354/e2e_vision_prefill`, where the x-axis is vision output tokens (global + crops) and point labels denote the crop grid as `[height]x[width]`.
 
 DeepSeek-OCR vision+prefill FLOPs vs image token length (analytic and vendor curves, annotated by crop grid).
 
-![DeepSeek-OCR Vision+Prefill FLOPs vs image token length.](sweep/20251127-160058/e2e_vision_prefill/e2e_vision_prefill.svg)
+![DeepSeek-OCR Vision+Prefill FLOPs vs image token length.](sweep/20251128-152354/e2e_vision_prefill/e2e_vision_prefill.svg)
 
 These plots use the `StageCost` structure from `modelmeter.models.common.stage_cost` for per-stage analytic costs; see the appendix for field definitions and interpretation.
 
 Total prefill-stage FLOPs (in TFLOPs), broken down by logical components (vision, decoder, and LM head) vs image token length, showing how each component contributes to total prefill compute as crop density increases.
 
-![DeepSeek-OCR Vision+Prefill total FLOPs vs image token length.](sweep/20251127-160058/e2e_vision_prefill/e2e_vision_prefill_stagecost_flops_tflops.svg)
+![DeepSeek-OCR Vision+Prefill total FLOPs vs image token length.](sweep/20251128-152354/e2e_vision_prefill/e2e_vision_prefill_stagecost_flops_tflops.svg)
 
 Activation I/O volume (terabits) vs image token length, highlighting how traffic grows with crop grids and which stages dominate bandwidth requirements.
 
-![DeepSeek-OCR Vision+Prefill activation I/O vs image token length.](sweep/20251127-160058/e2e_vision_prefill/e2e_vision_prefill_stagecost_io_tb.svg)
+![DeepSeek-OCR Vision+Prefill activation I/O vs image token length.](sweep/20251128-152354/e2e_vision_prefill/e2e_vision_prefill_stagecost_io_tb.svg)
 
 Arithmetic intensity (FLOPs per bit of activation I/O) vs image token length, indicating how compute-to-memory ratios evolve for different crop configurations and which stages are more compute-bound versus bandwidth-bound.
 
-![DeepSeek-OCR Vision+Prefill arithmetic intensity vs image token length.](sweep/20251127-160058/e2e_vision_prefill/e2e_vision_prefill_stagecost_arithmetic_intensity.svg)
+![DeepSeek-OCR Vision+Prefill arithmetic intensity vs image token length.](sweep/20251128-152354/e2e_vision_prefill/e2e_vision_prefill_stagecost_arithmetic_intensity.svg)
 
 Peak activation memory (GB) vs image token length, emphasizing how activation footprint grows super-linearly with larger crop grids and where vision activations begin to dominate the memory footprint.
 
-![DeepSeek-OCR Vision+Prefill activation memory vs image token length.](sweep/20251127-160058/e2e_vision_prefill/e2e_vision_prefill_stagecost_activations_gb.svg)
+![DeepSeek-OCR Vision+Prefill activation memory vs image token length.](sweep/20251128-152354/e2e_vision_prefill/e2e_vision_prefill_stagecost_activations_gb.svg)
 
 KV-cache memory (GB) vs image token length, capturing the KV-cache contribution from the decoder portion of the vision+prefill pipeline for the fixed prefill context used in this sweep.
 
-![DeepSeek-OCR Vision+Prefill KV-cache memory vs image token length.](sweep/20251127-160058/e2e_vision_prefill/e2e_vision_prefill_stagecost_kv_gb.svg)
+![DeepSeek-OCR Vision+Prefill KV-cache memory vs image token length.](sweep/20251128-152354/e2e_vision_prefill/e2e_vision_prefill_stagecost_kv_gb.svg)
 
 Tensor Core vs CUDA-core FLOPs (log-scale) vs image token length for the combined vision+prefill stage, summarizing how much of the end-to-end compute runs on Tensor Cores versus CUDA cores.
 
-![DeepSeek-OCR Vision+Prefill FLOPs split by kernel type (log-scale) vs image token length.](sweep/20251127-160058/e2e_vision_prefill/e2e_vision_prefill_flops_split_log.svg)
+![DeepSeek-OCR Vision+Prefill FLOPs split by kernel type (log-scale) vs image token length.](sweep/20251128-152354/e2e_vision_prefill/e2e_vision_prefill_flops_split_log.svg)
 
 The table below summarizes the analytic vision+prefill FLOP split for each crop configuration.
 
@@ -524,7 +524,7 @@ This section connects the analytic workloads above to user-facing responsiveness
 For TTFT, we consider a fixed 1.0 s budget for the vision+prefill stage (TTFT = 1.0 s).
 The following figure shows the required TFLOPs/s as a function of image token length to meet this TTFT target, with separate curves for analytic normal attention, analytic flash attention, and the vendor baseline.
 
-![Required TFLOPs/s for 1.0 s TTFT vs image token length.](sweep/20251127-160058/e2e_vision_prefill/responsive_tflops_by_ttft.svg)
+![Required TFLOPs/s for 1.0 s TTFT vs image token length.](sweep/20251128-152354/e2e_vision_prefill/responsive_tflops_by_ttft.svg)
 
 The following table enumerates a subset of those points, showing for each crop grid the total vision output tokens and the compute throughput required to meet the 1.0 s TTFT budget under analytic flash attention.
 
@@ -589,7 +589,7 @@ The following table enumerates a subset of those points, showing for each crop g
 To characterize steady-state streaming latency, we also analyze the compute throughput required to hit a target time-per-output-token (TPOT) for the decode stage.
 The decode sweep for these runs is configured with a 50 ms per-token budget (TPOT = 0.05 s), and the following figure shows the required TFLOPs/s as a function of image token length under that constraint.
 
-![Required TFLOPs/s for 50 ms TPOT vs image token length.](sweep/20251127-160058/e2e_decode/responsive_tflops_by_tpot.svg)
+![Required TFLOPs/s for 50 ms TPOT vs image token length.](sweep/20251128-152354/e2e_decode/responsive_tflops_by_tpot.svg)
 
 The table below summarizes, for each crop grid, the total vision output tokens, the number of decode steps `K`, and the compute throughput required to satisfy the 50 ms TPOT requirement using the analytic flash-attention path.
 
