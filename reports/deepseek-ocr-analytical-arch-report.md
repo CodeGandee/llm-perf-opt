@@ -47,6 +47,8 @@ flowchart LR
 
 The remainder of this document summarizes the analytic layer types and their per-op FLOP/IO breakdowns.
 
+For reference, a static `torchinfo` pass over the vendor DeepSeek-OCR checkpoint (`reports/20211117-dsorc-op-analysis/static-20251118-130533/torchinfo-layers.json`, run with `base_size=1024`, `image_size=640`, `crop_mode=true`) reports `total_params = 3,170,627,840` and `param_bytes = 6,341,255,680`, which corresponds to ≈5.9 GiB (≈6.3 GB) of half-precision weights to hold the full model parameters in memory.
+
 ## 1 Layer Inventory by Subpackage (Non-core Layers)
 
 ### 1.1 Vision Layers (`layers/vision`)
