@@ -67,7 +67,7 @@ def test_llama_flash_attention_scales_with_hidden_size() -> None:
 
 
 def test_llama_flash_attention_prefill_vs_decode_modes() -> None:
-    """Stateful attention should report smaller per-token decode I/O."""
+    """Stateful attention should report smaller per-token decode costs."""
 
     layer = LlamaFlashAttention2(
         seq_len=256,
@@ -80,16 +80,44 @@ def test_llama_flash_attention_prefill_vs_decode_modes() -> None:
         layer.forward_cuda_core_flops() or 0.0
     )
     io_prefill = layer.forward_cal_io() or 0.0
+    mem_prefill = layer.forward_memory_activation() or 0.0
 
     layer.set_decode_shape(context_len=256, batch_size=1)
     flops_decode = (layer.forward_tensor_core_flops() or 0.0) + (
         layer.forward_cuda_core_flops() or 0.0
     )
     io_decode = layer.forward_cal_io() or 0.0
+    mem_decode = layer.forward_memory_activation() or 0.0
 
-    _assert_non_negative(flops_prefill, io_prefill, flops_decode, io_decode)
+    _assert_non_negative(flops_prefill, io_prefill, flops_decode, io_decode, mem_prefill, mem_decode)
     assert flops_decode <= flops_prefill
     assert io_decode <= io_prefill
+    # Activation memory in decode mode should reflect per-token
+    # activations and be no larger than the full-context prefill value.
+    assert mem_decode <= mem_prefill
+
+
+def test_llama_flash_attention_activation_scales_with_seq_len_prefill() -> None:
+    """Prefill activation memory should grow with sequence length."""
+
+    layer_small = LlamaFlashAttention2(
+        seq_len=128,
+        hidden_size=1024,
+        num_heads=16,
+        batch_size=1,
+    )
+    mem_small = layer_small.forward_memory_activation() or 0.0
+
+    layer_large = LlamaFlashAttention2(
+        seq_len=256,
+        hidden_size=1024,
+        num_heads=16,
+        batch_size=1,
+    )
+    mem_large = layer_large.forward_memory_activation() or 0.0
+
+    _assert_non_negative(mem_small, mem_large)
+    assert mem_large >= mem_small
 
 
 def _decoder_metrics(
