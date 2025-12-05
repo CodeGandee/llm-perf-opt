@@ -392,7 +392,7 @@ llm-perf-opt/
 ├── tests/              # Tests (manual/unit/integration)
 ├── docs/               # Documentation (MkDocs)
 ├── context/            # Knowledge base and development hints
-├── third_party/        # Read-only upstream references (submodules)
+├── extern/             # Read-only upstream references (submodules, snapshots)
 ├── .specify/           # Speckit constitution and templates
 └── pyproject.toml      # Pixi environments and project metadata
 ```

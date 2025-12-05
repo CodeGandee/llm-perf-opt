@@ -7,7 +7,7 @@ This document is a concise contributor guide for llm-perf-opt. Follow it for any
 - conf/: Hydra config groups (model, dataset, runtime, hardware, profiling)
 - tests/: unit/, integration/, manual/ (manual tests use manual_*.py)
 - scripts/: tooling and profiling helpers; bootstrap.sh at root for assets
-- datasets/, models/, third_party/: symlinks or local mounts; do not commit large artifacts
+- datasets/, models/, extern/: symlinks or local mounts; do not commit large artifacts
 - docs/, context/, magic-context/, specs/, tmp/: docs, knowledge, plans, and run outputs
 
 ## Build, Test, and Development Commands

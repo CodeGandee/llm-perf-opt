@@ -117,7 +117,7 @@ respect-gitignore = true
 exclude = [
   "magic-context/**",
   "context/**",
-  "third_party/**",
+  "extern/**",
 ]
 
 [tool.mypy]

@@ -78,7 +78,7 @@ Gate Evaluation (pre‑design): PASS. No violations expected. Runtime = Pixi; ty
 ├── conf/                      # Hydra config tree (present; README stubs, YAML planned)
 ├── models/                    # model weights (symlinked: deepseek-ocr -> external repo)
 ├── datasets/                  # dataset organization (present, to be expanded per guide)
-├── third_party/               # reference sources (present)
+├── extern/                    # reference sources (present)
 ├── src/
 │   └── llm_perf_opt/
 │       ├── profiling/         # profiling harness (nvtx, torch profiler, nvml)

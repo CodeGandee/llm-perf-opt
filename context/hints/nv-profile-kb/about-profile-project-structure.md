@@ -15,7 +15,7 @@ Throughout this guide, placeholder names are shown in angle brackets:
 
 ---
 
-# Complete Project Layout
+# Complete Project Layout (aligned with llm-perf-opt)
 
 ```
 <your-project>/
@@ -44,7 +44,7 @@ Throughout this guide, placeholder names are shown in angle brackets:
 │       ├── README.md              # Dataset documentation
 │       ├── metadata.yaml          # (optional) dataset facts
 │       └── <variant-name>/        # (optional) preprocessed/filtered variants
-├── third_party/                   # Reference sources (read-only; symlinks/submodules)
+├── extern/                        # Reference sources (read-only; symlinks/submodules)
 │   ├── github/
 │   └── hf/
 ├── src/
@@ -65,7 +65,7 @@ Throughout this guide, placeholder names are shown in angle brackets:
 
 * **Hydra** grouped configs under `conf/<group>/<option>.yaml` enable composable, swappable configurations with top-level `defaults` list; the templated output/run directory pattern (e.g., `runs/${experiment}/${model.name}/…`) ensures every run is self-contained and reproducible. ([Hydra][1])
 * **Pixi** can use **`pyproject.toml`** as a single manifest with **tasks** for common operations like `pixi run profile`. ([Prefix Dev][2])
-* **`third_party/`** provides a clear boundary for vendored reference code. It can
+* **`extern/`** provides a clear boundary for vendored reference code. It can
   be a collection of symlinks to local checkouts or Git submodules/subtrees; the
   key is treating it as read-only.
 * **`models/`** can be symlinks to external storage or tracked via Git submodules
@@ -525,12 +525,12 @@ This keeps your **end-to-end phases NVTX-annotated** for Nsight Systems (`--capt
 ### `scripts/snapshot_hf.py`
 
 ```python
-# Utility to snapshot HF repos into third_party/hf/ (source files only, no weights)
+# Utility to snapshot HF repos into extern/hf/ (source files only, no weights)
 from huggingface_hub import snapshot_download
 
 snapshot_download(
     repo_id="Qwen/Qwen2.5",
-    local_dir="third_party/hf/Qwen/Qwen2.5",
+    local_dir="extern/hf/Qwen/Qwen2.5",
     allow_patterns=["*.py", "LICENSE*"],  # keep only source, not big weights
     revision="main"                        # or specific commit/revision
 )
@@ -538,36 +538,36 @@ snapshot_download(
 
 # Managing External Dependencies (Reference Source Code)
 
-The `third_party/` directory houses upstream model implementations as read-only reference code. Here are four recommended approaches to manage these dependencies. Choose the approach that best fits your workflow:
+The `extern/` directory houses upstream model implementations as read-only reference code. Here are four recommended approaches to manage these dependencies. Choose the approach that best fits your workflow:
 
 ## Option 1: Git Submodules (Recommended for Pinning)
 
 **Add & pin reference repos:**
 
 ```bash
-git submodule add https://github.com/huggingface/transformers third_party/github/transformers
-git submodule add https://github.com/vllm-project/vllm      third_party/github/vllm
+git submodule add https://github.com/huggingface/transformers extern/github/transformers
+git submodule add https://github.com/vllm-project/vllm      extern/github/vllm
 git submodule update --init --recursive
 
 # Pin to a specific commit for reproducibility
-git -C third_party/github/transformers checkout <commit-sha>
-git -C third_party/github/vllm checkout <commit-sha>
-git add .gitmodules third_party/github
+git -C extern/github/transformers checkout <commit-sha>
+git -C extern/github/vllm checkout <commit-sha>
+git add .gitmodules extern/github
 git commit -m "Add reference sources as submodules"
 ```
 
 **Hide local edits in status (reference-only behavior):**
 
 ```bash
-git config -f .gitmodules submodule.third_party/github/transformers.ignore dirty
-git config -f .gitmodules submodule.third_party/github/vllm.ignore dirty
+git config -f .gitmodules submodule.extern/github/transformers.ignore dirty
+git config -f .gitmodules submodule.extern/github/vllm.ignore dirty
 git add .gitmodules && git commit -m "Ignore dirty submodule worktrees"
 ```
 
 **Shallow/fast clones for large repos:**
 
 ```bash
-git submodule update --init --depth 1 -- third_party/github/transformers
+git submodule update --init --depth 1 -- extern/github/transformers
 ```
 
 ([Git Submodules][1], [Git Documentation][3])
@@ -575,11 +575,11 @@ git submodule update --init --depth 1 -- third_party/github/transformers
 ## Option 2: Git Subtree (Normal Folder, No Submodule UX)
 
 ```bash
-git subtree add --prefix third_party/github/transformers \
+git subtree add --prefix extern/github/transformers \
   https://github.com/huggingface/transformers main --squash
 
 # Later update:
-git subtree pull --prefix third_party/github/transformers \
+git subtree pull --prefix extern/github/transformers \
   https://github.com/huggingface/transformers main --squash
 ```
 
@@ -590,8 +590,8 @@ Subtrees behave like regular directories with no `.gitmodules`, at the cost of l
 If you only need specific paths (e.g., `src/transformers/models/llama/`):
 
 ```bash
-git clone https://github.com/huggingface/transformers third_party/github/transformers
-cd third_party/github/transformers
+git clone https://github.com/huggingface/transformers extern/github/transformers
+cd extern/github/transformers
 git sparse-checkout init --cone
 git sparse-checkout set src/transformers/models/llama
 ```
@@ -601,11 +601,11 @@ This keeps your working tree tiny while the repo remains complete. ([Git Sparse-
 ## Option 0: Symlinks (Fastest Pointer)
 
 If you already have local checkouts or shared code on disk, create simple
-symlinks under `third_party/`:
+symlinks under `extern/`:
 
 ```bash
-ln -s /opt/src/transformers third_party/github/transformers
-ln -s /opt/src/vllm         third_party/github/vllm
+ln -s /opt/src/transformers extern/github/transformers
+ln -s /opt/src/vllm         extern/github/vllm
 ```
 
 Pros: no Git metadata in your repo, very quick to set up. Cons: not portable for
@@ -621,7 +621,7 @@ from huggingface_hub import snapshot_download
 
 snapshot_download(
     repo_id="Qwen/Qwen2.5",
-    local_dir="third_party/hf/Qwen/Qwen2.5",
+    local_dir="extern/hf/Qwen/Qwen2.5",
     allow_patterns=["*.py", "LICENSE*"],  # keep only source, not big weights
     revision="main"                        # or specific commit/revision
 )
@@ -631,7 +631,7 @@ This uses HF's content-addressed cache and avoids Git LFS entirely. ([Hugging Fa
 
 ## Guard Rails (Optional but Handy)
 
-* **Pre-commit**: Add hooks so contributors don't accidentally edit `third_party/**` or add new submodules without review. ([pre-commit.com][8])
+* **Pre-commit**: Add hooks so contributors don't accidentally edit `extern/**` or add new submodules without review. ([pre-commit.com][8])
 * **.gitmodules defaults**: Set `submodule.<name>.update = none` for truly frozen submodules, and `submodule.<name>.ignore = dirty` for quiet status. ([Git gitmodules][9])
 * **Licenses**: Copy upstream `LICENSE` files alongside the referenced code to keep compliance obvious.
 
@@ -702,7 +702,7 @@ These principles are **recommendations** based on common patterns. Adapt them to
 
 * **Config groups** provide composability: patterns like `profiling/{minimal,full,roofline-only}`; `hardware/{single_gpu,multi_gpu}`; `runtime/{pytorch,vllm,tensorrtllm}`; `model/*`; `dataset/*` can be mixed and matched. Hydra's defaults list enables reproducible runs and easy parameter sweeps. ([Hydra][1])
 * **Run directory templates** (via `hydra.run.dir`) can organize all artifacts—NVML CSV, `ops.csv`, TensorBoard traces, NSYS `.qdrep`, NCU reports—under structured paths like `runs/<exp>/<model>/<timestamp>`. ([Hydra][4])
-* **Reference code pinning** via `third_party/` (using submodules/subtrees/snapshots) keeps experiments reproducible and audit-friendly by tracking exact upstream versions.
+* **Reference code pinning** via `extern/` (using submodules/subtrees/snapshots) keeps experiments reproducible and audit-friendly by tracking exact upstream versions.
 * **Symlinked external assets**: Both `models/` (weights) and `datasets/` (data) use symlinks to external storage, decoupling the repo from large binary files and enabling flexible storage management.
 * **Dataset variants** provide a structured way to maintain original data alongside preprocessed versions, subsets, and transformations, with metadata tracking provenance.
 * **Optional monitoring**: For continuous node monitoring, tools like **DCGM Exporter** (Prometheus `/metrics`) complement per-run profiling artifacts with fleet-level GPU telemetry. ([NVIDIA Docs][8])
@@ -715,7 +715,7 @@ This guide presents a comprehensive reference structure for LLM profiling projec
 - **Key organizational principles**:
   - Use Hydra for composable, reproducible configurations
   - Symlink external assets (models, datasets) to decouple from large files
-  - Track reference code in `third_party/` for reproducibility
+  - Track reference code in `extern/` for reproducibility
   - Organize datasets with source data + documented variants
   - Structure runs with templated output directories
 - **Flexibility is essential**: Your project may require different tools, different structures, or different workflows—that's expected and encouraged

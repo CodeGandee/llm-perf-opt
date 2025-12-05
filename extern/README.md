@@ -1,4 +1,4 @@
-Third-Party Reference Sources
+External Reference Sources
 
 Read-only upstream sources used for reference (e.g., Transformers, vLLM).
 
