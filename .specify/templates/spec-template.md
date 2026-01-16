@@ -5,6 +5,11 @@
 **Status**: Draft  
 **Input**: User description: "$ARGUMENTS"
 
+## Constitution Constraints *(mandatory)*
+
+- The feature MUST comply with `.specify/memory/constitution.md` (Python-first usability, ruff+mypy gates, Pixi-based execution, tests + evidence, and tmp/ artifacts).
+- The spec MUST name the intended test approach (manual/unit/integration) and how success will be verified via `pixi run ...` commands.
+
 ## User Scenarios & Testing *(mandatory)*
 
 <!--

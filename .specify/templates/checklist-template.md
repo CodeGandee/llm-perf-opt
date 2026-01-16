@@ -26,6 +26,13 @@
 - [ ] CHK002 Second checklist item
 - [ ] CHK003 Third checklist item
 
+## Constitution Compliance
+
+- [ ] CHKXXX Verify compliance with `.specify/memory/constitution.md` (Python-first usability, clarity, and reproducibility)
+- [ ] CHKXXX Run quality gates: `pixi run ruff check .` and `pixi run mypy src`
+- [ ] CHKXXX Add/verify tests (manual under `tests/manual/`, plus `pytest` coverage as appropriate)
+- [ ] CHKXXX Confirm any new artifacts are under `tmp/` and no large traces/weights are committed
+
 ## [Category 2]
 
 - [ ] CHK004 Another category item

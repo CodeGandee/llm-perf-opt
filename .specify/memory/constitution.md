@@ -1,15 +1,16 @@
 <!--
 Sync Impact Report
-- Version change: N/A → 1.0.0
-- Modified principles: N/A → Pythonic Clarity & Readability; Typed, Linted, and Formatted; Object‑Oriented Design Discipline; Data Models via attrs/pydantic; Testing & Environments Discipline
-- Added sections: Performance & Profiling Standards; Development Workflow & Quality Gates
+- Version change: 1.0.0 → 1.0.1
+- Modified principles: Testing & Environments Discipline (manual test naming + artifact location clarifications)
+- Added sections: None
 - Removed sections: None
 - Templates requiring updates:
   - .specify/templates/plan-template.md → ✅ updated
   - .specify/templates/spec-template.md → ✅ updated
   - .specify/templates/tasks-template.md → ✅ updated
+  - .specify/templates/checklist-template.md → ✅ updated
   - .specify/templates/commands/*.md → N/A (directory not present)
-- Follow-up TODOs: None (initial ratification set to today as first adoption)
+- Follow-up TODOs: None
 -->
 
 # LLM Performance Optimization Constitution
@@ -74,11 +75,13 @@ schema generation without coupling business logic into data containers.
   (e.g., `pixi run`, `pixi shell`, or activated venv).
 - For major functionality, provide manual test scripts that a human can run and
   inspect; emphasize visualization/inspectable outputs.
+- Manual tests MUST live under `tests/manual/` and MUST be prefixed with
+  `manual_*.py` to avoid pytest collection.
 - If automated tests are requested or warranted, use `pytest` for unit and
   integration tests with clear directory conventions:
   - Unit: `tests/unit/<subdir>/test_<name>.py`
   - Integration: `tests/integration/<subdir>/test_<name>.py`
-  - Manual: `tests/manual/<feature_area>/test_<name>.py`
+  - Manual: `tests/manual/<feature_area>/manual_<name>.py`
 
 Rationale: Clear environments and pragmatic testing strategies ensure reliable
 reproducibility while maximizing value where automation is not yet essential.
@@ -92,6 +95,9 @@ reproducibility while maximizing value where automation is not yet essential.
   annotations where applicable for readable traces.
 - Prefer installation via Pixi/conda‑forge when possible; document exact capture
   command lines and outputs under `tmp/`.
+- Profiling/evaluation runs SHOULD write artifacts under
+  `tmp/profile-output/<run_id>/` (or a subdirectory under `tmp/`) for discoverable,
+  non-invasive results.
 - Profiling artifacts MUST be attributable to the code change (document model,
   data, and hardware context briefly in notes).
 
@@ -125,4 +131,4 @@ reproducibility while maximizing value where automation is not yet essential.
 - Compliance review: PR reviewers MUST verify constitution gates are satisfied;
   CI SHOULD enforce `mypy`/`ruff` and any declared test steps.
 
-**Version**: 1.0.0 | **Ratified**: 2025-10-28 | **Last Amended**: 2025-10-28
+**Version**: 1.0.1 | **Ratified**: 2025-10-28 | **Last Amended**: 2026-01-16

@@ -8,7 +8,7 @@ description: "Task list template for feature implementation"
 **Input**: Design documents from `/specs/[###-feature-name]/`
 **Prerequisites**: plan.md (required), spec.md (required for user stories), research.md, data-model.md, contracts/
 
-**Tests**: The examples below include test tasks. Tests are OPTIONAL - only include them if explicitly requested in the feature specification.
+**Tests**: Include test tasks by default. Major behavior MUST have a manual test under `tests/manual/` (prefixed `manual_*.py`), and critical invariants SHOULD have `pytest` coverage under `tests/unit/` and/or `tests/integration/`. If tests are out of scope, tasks.md MUST include an explicit justification.
 
 **Organization**: Tasks are grouped by user story to enable independent implementation and testing of each story.
 
@@ -20,7 +20,7 @@ description: "Task list template for feature implementation"
 
 ## Path Conventions
 
-- **Single project**: `src/`, `tests/` at repository root
+- **This repo**: implementation under `src/llm_perf_opt/`; tests under `tests/unit/`, `tests/integration/`, and `tests/manual/`; run outputs under `tmp/`
 - **Web app**: `backend/src/`, `frontend/src/`
 - **Mobile**: `api/src/`, `ios/src/` or `android/src/`
 - Paths shown below assume single project - adjust based on plan.md structure
@@ -79,12 +79,13 @@ Examples of foundational tasks (adjust based on your project):
 
 **Independent Test**: [How to verify this story works on its own]
 
-### Tests for User Story 1 (OPTIONAL - only if tests requested) ⚠️
+### Tests for User Story 1 (recommended) ⚠️
 
-> **NOTE: Write these tests FIRST, ensure they FAIL before implementation**
+> **NOTE: Write tests early; for bug fixes, add a failing test before the fix where practical**
 
-- [ ] T010 [P] [US1] Contract test for [endpoint] in tests/contract/test_[name].py
+- [ ] T010 [P] [US1] Unit test for [API] in tests/unit/test_[name].py
 - [ ] T011 [P] [US1] Integration test for [user journey] in tests/integration/test_[name].py
+- [ ] T011b [P] [US1] Manual test script in tests/manual/manual_[name].py with visible/inspectable outputs
 
 ### Implementation for User Story 1
 
@@ -105,10 +106,11 @@ Examples of foundational tasks (adjust based on your project):
 
 **Independent Test**: [How to verify this story works on its own]
 
-### Tests for User Story 2 (OPTIONAL - only if tests requested) ⚠️
+### Tests for User Story 2 (recommended) ⚠️
 
-- [ ] T018 [P] [US2] Contract test for [endpoint] in tests/contract/test_[name].py
+- [ ] T018 [P] [US2] Unit test for [API] in tests/unit/test_[name].py
 - [ ] T019 [P] [US2] Integration test for [user journey] in tests/integration/test_[name].py
+- [ ] T019b [P] [US2] Manual test script in tests/manual/manual_[name].py with visible/inspectable outputs
 
 ### Implementation for User Story 2
 
@@ -127,10 +129,11 @@ Examples of foundational tasks (adjust based on your project):
 
 **Independent Test**: [How to verify this story works on its own]
 
-### Tests for User Story 3 (OPTIONAL - only if tests requested) ⚠️
+### Tests for User Story 3 (recommended) ⚠️
 
-- [ ] T024 [P] [US3] Contract test for [endpoint] in tests/contract/test_[name].py
+- [ ] T024 [P] [US3] Unit test for [API] in tests/unit/test_[name].py
 - [ ] T025 [P] [US3] Integration test for [user journey] in tests/integration/test_[name].py
+- [ ] T025b [P] [US3] Manual test script in tests/manual/manual_[name].py with visible/inspectable outputs
 
 ### Implementation for User Story 3
 
@@ -199,7 +202,7 @@ Examples of foundational tasks (adjust based on your project):
 
 ```bash
 # Launch all tests for User Story 1 together (if tests requested):
-Task: "Contract test for [endpoint] in tests/contract/test_[name].py"
+Task: "Unit test for [API] in tests/unit/test_[name].py"
 Task: "Integration test for [user journey] in tests/integration/test_[name].py"
 
 # Launch all models for User Story 1 together:

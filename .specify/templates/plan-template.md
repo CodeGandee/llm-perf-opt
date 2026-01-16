@@ -3,7 +3,7 @@
 **Branch**: `[###-feature-name]` | **Date**: [DATE] | **Spec**: [link]
 **Input**: Feature specification from `/specs/[###-feature-name]/spec.md`
 
-**Note**: This template is filled in by the `/speckit.plan` command. See `.specify/templates/commands/plan.md` for the execution workflow.
+**Note**: This template is filled in by the `/speckit.plan` command.
 
 ## Summary
 
@@ -31,7 +31,11 @@
 
 *GATE: Must pass before Phase 0 research. Re-check after Phase 1 design.*
 
-[Gates determined based on constitution file]
+- [ ] Read `.specify/memory/constitution.md` and list any expected violations (if any) with justification.
+- [ ] Identify the Pixi environment (`default` vs `rtx5090`) and record all run commands using `pixi run` / `pixi run -e ...`.
+- [ ] Define how the change will satisfy `ruff` + `mypy` gates (`pixi run ruff check .`, `pixi run mypy src`).
+- [ ] Define the test plan: manual test under `tests/manual/` for major behavior and appropriate `pytest` coverage under `tests/unit/` and/or `tests/integration/`.
+- [ ] Confirm all new artifacts/logs/results go under `tmp/` (especially profiling runs under `tmp/profile-output/<run_id>/`).
 
 ## Project Structure
 
@@ -48,47 +52,19 @@ specs/[###-feature]/
 ```
 
 ### Source Code (repository root)
-<!--
-  ACTION REQUIRED: Replace the placeholder tree below with the concrete layout
-  for this feature. Delete unused options and expand the chosen structure with
-  real paths (e.g., apps/admin, packages/something). The delivered plan must
-  not include Option labels.
--->
+<!-- ACTION REQUIRED: Update/extend this tree with feature-specific paths only. -->
 
 ```text
-# [REMOVE IF UNUSED] Option 1: Single project (DEFAULT)
+conf/                     # Hydra config groups
+scripts/                  # Tooling + profiling helpers
+specs/                    # Speckit features (spec/plan/tasks)
 src/
-├── models/
-├── services/
-├── cli/
-└── lib/
-
+└── llm_perf_opt/          # Python package
 tests/
-├── contract/
+├── unit/
 ├── integration/
-└── unit/
-
-# [REMOVE IF UNUSED] Option 2: Web application (when "frontend" + "backend" detected)
-backend/
-├── src/
-│   ├── models/
-│   ├── services/
-│   └── api/
-└── tests/
-
-frontend/
-├── src/
-│   ├── components/
-│   ├── pages/
-│   └── services/
-└── tests/
-
-# [REMOVE IF UNUSED] Option 3: Mobile + API (when "iOS/Android" detected)
-api/
-└── [same as backend above]
-
-ios/ or android/
-└── [platform-specific structure: feature modules, UI flows, platform tests]
+└── manual/
+tmp/                      # Run outputs and scratch space (no committed artifacts)
 ```
 
 **Structure Decision**: [Document the selected structure and reference the real
