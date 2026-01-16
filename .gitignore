@@ -89,3 +89,4 @@ docs/_build/
 .DS_Store
 Thumbs.db
 models/deepseek-ocr
+tmp/
