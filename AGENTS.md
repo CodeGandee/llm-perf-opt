@@ -11,7 +11,7 @@ This document is a concise contributor guide for llm-perf-opt. Follow it for any
 - docs/, context/, magic-context/, specs/, tmp/: docs, knowledge, plans, and run outputs
 
 ## Build, Test, and Development Commands
-- Environment: install Pixi, then run `pixi install` (default CUDA 12.4 env)
+- Environment: install Pixi, then run `pixi install` (default CUDA 12.6 env)
 - Python: run scripts via `pixi run -e rtx5090 python ...` so they execute in the RTX 5090 environment
 - Lint: `pixi run ruff check .`  |  Types: `pixi run mypy src`
 - Unit tests: `pixi run pytest tests/unit/`
@@ -46,7 +46,7 @@ This document is a concise contributor guide for llm-perf-opt. Follow it for any
 ## Active Technologies
 - Python 3.11 + Hydra (omegaconf), mdutils, attrs, nvtx (runtime), Nsight Systems/Compute CLIs (nsys/ncu) (003-nvtx-ncu-profiling)
 - Filesystem artifacts under `/workspace/code/llm-perf-opt/tmp/profile-output/<run_id>/` (nsys/, ncu/, torch_profiler/, static_analysis/) (003-nvtx-ncu-profiling)
-- Python 3.11 (Pixi-managed environment, CUDA 12.4 toolchain) + PyTorch, ModelMeter (`extern/modelmeter`), Hydra/omegaconf, attrs, TorchInfo, NVIDIA Nsight (001-deepseek-ocr-modelmeter)
+- Python 3.11 (Pixi-managed environment, CUDA 12.6 toolchain) + PyTorch, ModelMeter (`extern/modelmeter`), Hydra/omegaconf, attrs, TorchInfo, NVIDIA Nsight (001-deepseek-ocr-modelmeter)
 - Filesystem-only artifacts under `reports/` and `tmp/profile-output/` (no external database or message bus) (001-deepseek-ocr-modelmeter)
 
 ## Recent Changes

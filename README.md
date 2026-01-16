@@ -22,7 +22,7 @@ This project provides tools and methodologies for:
 ### Prerequisites
 
 **System Requirements:**
-- NVIDIA GPU (CUDA 12.0+)
+- NVIDIA GPU (CUDA 12.6+)
 - Linux (tested on Ubuntu 20.04, 22.04, 24.04)
 - Python 3.11 or 3.12
 - [Pixi](https://pixi.sh/) package manager
@@ -42,7 +42,7 @@ cd llm-perf-opt
 
 2. Install dependencies with Pixi:
 ```bash
-pixi install  # Installs default environment (CUDA 12.4, sm_90)
+pixi install  # Installs default environment (CUDA 12.6, sm_90)
 ```
 
 3. Bootstrap assets (models and datasets):
@@ -83,7 +83,7 @@ This runs a quick profile with defaults:
 
 ### Available Environments
 
-1. **default** (default) - PyTorch 2.5.1 + CUDA 12.4
+1. **default** (default) - PyTorch 2.6.0 + CUDA 12.6
    - Supports up to sm_90 (Ada/Hopper architectures)
    - Includes Flash Attention 2.7.4.post1
    - Use for RTX 3090, RTX 4090, A100, H100

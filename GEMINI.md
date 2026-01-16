@@ -59,7 +59,7 @@ The project relies heavily on `pixi` for dependency management and task executio
     *Runs inference on a subset of data for validation/visualization.*
 
 ### Environments
-*   **Default:** `pixi install` (PyTorch 2.5.1, CUDA 12.4).
+*   **Default:** `pixi install` (PyTorch 2.6.0, CUDA 12.6).
 *   **RTX 5090 (Blackwell):** `pixi install -e rtx5090` (PyTorch Nightly, CUDA 12.8).
     *   Setup: `pixi run -e rtx5090 setup-rtx5090`
 

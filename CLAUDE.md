@@ -12,7 +12,7 @@ A comprehensive framework for evaluating Large Language Model (LLM) runtime perf
 
 ### Available Environments
 
-1. **default** - PyTorch 2.5.1 + CUDA 12.4 (up to sm_90)
+1. **default** - PyTorch 2.6.0 + CUDA 12.6 (up to sm_90)
 2. **rtx5090** - PyTorch nightly + CUDA 12.8 (sm_120 support for Blackwell architecture)
 
 ### RTX 5090 Setup

@@ -4,7 +4,7 @@ This guide explains how to set up and use the dedicated RTX 5090 environment for
 
 ## Background
 
-The RTX 5090 uses NVIDIA's Blackwell architecture with CUDA compute capability **sm_120**, which is not supported by stable PyTorch releases (up to v2.6.x). The default environment uses PyTorch 2.5.1 with CUDA 12.4, which only supports up to sm_90.
+The RTX 5090 uses NVIDIA's Blackwell architecture with CUDA compute capability **sm_120**, which is not supported by stable PyTorch releases (up to v2.6.x). The default environment uses PyTorch 2.6.0 with CUDA 12.6, which only supports up to sm_90.
 
 ### Requirements for RTX 5090
 
@@ -182,7 +182,7 @@ TORCH_CUDA_ARCH_LIST="12.0" pip install flash-attn --no-build-isolation --force-
 
 ## Switching Between Environments
 
-### Default Environment (CUDA 12.4, up to sm_90)
+### Default Environment (CUDA 12.6, up to sm_90)
 ```bash
 pixi run python script.py                    # Auto-selects default
 pixi shell                                    # Opens default shell

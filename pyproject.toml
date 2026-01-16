@@ -30,7 +30,7 @@ python = ">=3.11,<3.13"
 ninja = "*"
 
 [tool.pixi.system-requirements]
-cuda = "12.0"
+cuda = "12.6"
 
 # Add ncu_report module to PYTHONPATH for all Unix environments
 [tool.pixi.activation.env]
@@ -42,11 +42,11 @@ extra-index-urls = ["https://wheels.vllm.ai/nightly"]
 no-build-isolation = ["flash-attn"]
 
 # ============================================================================
-# Default Environment (CUDA 12.4, sm_90)
+# Default Environment (CUDA 12.6, sm_90)
 # ============================================================================
 [tool.pixi.feature.default-cuda.pypi-dependencies]
-torch = { version = ">=2.5.1", index = "https://download.pytorch.org/whl/cu124" }
-torchvision = { version = ">=0.20.1", index = "https://download.pytorch.org/whl/cu124" }
+torch = { version = "==2.6.0", index = "https://download.pytorch.org/whl/cu126" }
+torchvision = { version = "==0.21.0", index = "https://download.pytorch.org/whl/cu126" }
 triton-kernels = { git = "https://github.com/triton-lang/triton.git", rev = "v3.5.0", subdirectory = "python/triton_kernels" }
 flash-attn = "==2.7.4.post1"
 
@@ -89,7 +89,7 @@ verify-rtx5090 = { cmd = "python -c 'import torch; print(f\"PyTorch: {torch.__ve
 setup-rtx5090 = { depends-on = ["install-pytorch-nightly", "build-triton", "build-flash-attn", "verify-rtx5090"] }
 
 [tool.pixi.environments]
-# Default environment with PyTorch 2.5.1 + CUDA 12.4 (up to sm_90)
+# Default environment with PyTorch 2.6.0 + CUDA 12.6 (up to sm_90)
 default = { features = ["default-cuda"], solve-group = "default" }
 # RTX 5090 environment with PyTorch nightly + CUDA 12.8 (sm_120 support)
 rtx5090 = { features = ["rtx5090"], solve-group = "rtx5090" }
