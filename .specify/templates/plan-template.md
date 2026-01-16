@@ -31,20 +31,7 @@
 
 *GATE: Must pass before Phase 0 research. Re-check after Phase 1 design.*
 
-- Pythonic clarity & docstrings: All new/changed public APIs/classes include
-  NumPy‑style docstrings and illustrative examples.
-- Typed, linted, formatted: All new code is fully type‑annotated; `mypy` passes
-  with zero errors; `ruff` lint/format passes with zero errors.
-- OO discipline for functional classes: Member vars prefixed with `m_`; use
-  properties for read‑only access and `set_xxx()` for mutations; constructors
-  argument‑free with `from_xxx()` factories where needed.
-- Data models: Use `attrs` (default) with `@define(kw_only=True)` and `field`
-  metadata, or `pydantic` for web schemas; no business logic in models.
-- Runtime environment declared: Execution context specified (Pixi preferred;
-  otherwise venv). Commands in this plan use that environment explicitly.
-- Testing plan: Manual tests provided for major functionality with file paths
-  under `tests/manual/…`. Automated tests only if requested or critical; specify
-  locations under `tests/unit/…` and `tests/integration/…` if included.
+[Gates determined based on constitution file]
 
 ## Project Structure
 

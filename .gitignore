@@ -90,3 +90,4 @@ docs/_build/
 Thumbs.db
 models/deepseek-ocr
 tmp/
+.gemini/

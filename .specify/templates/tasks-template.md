@@ -8,9 +8,7 @@ description: "Task list template for feature implementation"
 **Input**: Design documents from `/specs/[###-feature-name]/`
 **Prerequisites**: plan.md (required), spec.md (required for user stories), research.md, data-model.md, contracts/
 
-**Tests**: Per the constitution, provide manual tests for major functionality
-under `tests/manual/…`. Automated tests (unit/integration) are OPTIONAL and only
-included if explicitly requested or for critical paths.
+**Tests**: The examples below include test tasks. Tests are OPTIONAL - only include them if explicitly requested in the feature specification.
 
 **Organization**: Tasks are grouped by user story to enable independent implementation and testing of each story.
 
@@ -26,9 +24,6 @@ included if explicitly requested or for critical paths.
 - **Web app**: `backend/src/`, `frontend/src/`
 - **Mobile**: `api/src/`, `ios/src/` or `android/src/`
 - Paths shown below assume single project - adjust based on plan.md structure
-
-<!-- Environment: Prefer Pixi (pixi run / pixi shell). Otherwise use an
-     activated virtualenv. Avoid system Python. -->
 
 <!-- 
   ============================================================================
