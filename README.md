@@ -536,6 +536,8 @@ Models are symlinked from external storage (`$HF_SNAPSHOTS_ROOT`). To add a new 
 3. Add model config group under `conf/model/<model_name>/`
 4. Update defaults list in `conf/config.yaml` if making it default
 
+For models that are not managed as Hugging Face snapshots, use the per-model external reference pattern under `models/<ref-name>/` (for example `models/wan2.1-t2v-14b/`) and run its `bootstrap.sh` to create `source-data`.
+
 ## Reports and Analysis
 
 Recent profiling reports and artifacts are stored in `reports/`:
