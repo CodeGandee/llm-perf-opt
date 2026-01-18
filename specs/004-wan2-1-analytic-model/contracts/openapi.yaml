@@ -1,0 +1,359 @@
+openapi: 3.1.0
+info:
+  title: Wan2.1 Analytic Modeling API
+  version: 0.1.0
+paths:
+  /analytic/wan2-1/run:
+    post:
+      summary: Build or refresh the analytic model for Wan2.1
+      description: >
+        Start an analytic modeling run for Wan2.1-T2V-14B using a specified model variant,
+        workload profile, and optional reference profiling run id.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Wan2_1AnalyticRequest'
+      responses:
+        '202':
+          description: Analytic modeling request accepted
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Wan2_1AnalyticAccepted'
+  /analytic/wan2-1/{report_id}/summary:
+    get:
+      summary: Fetch a summary of the Wan2.1 analytic model
+      parameters:
+        - in: path
+          name: report_id
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Analytic model summary
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Wan2_1AnalyticReportSummary'
+  /analytic/wan2-1/{report_id}/model:
+    get:
+      summary: Fetch the full Wan2.1 analytic model and module metrics
+      parameters:
+        - in: path
+          name: report_id
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Full analytic model payload
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Wan2_1AnalyticModel'
+
+components:
+  schemas:
+    Wan2_1AnalyticRequest:
+      type: object
+      required: [model_id, model_variant, workload_profile_id]
+      properties:
+        model_id:
+          type: string
+          description: Canonical model identifier (e.g., wan2.1-t2v-14b).
+        model_variant:
+          type: string
+          description: Internal model variant (e.g., t2v-14b).
+        workload_profile_id:
+          type: string
+          description: Workload profile id (e.g., wan2-1-ci-tiny, wan2-1-512p, wan2-1-720p).
+        overrides:
+          type: object
+          nullable: true
+          description: Optional workload overrides for ad-hoc runs.
+          properties:
+            batch_size:
+              type: integer
+              minimum: 1
+            num_frames:
+              type: integer
+              minimum: 1
+            height:
+              type: integer
+              minimum: 1
+            width:
+              type: integer
+              minimum: 1
+            num_inference_steps:
+              type: integer
+              minimum: 1
+            text_len:
+              type: integer
+              minimum: 0
+        profile_run_id:
+          type: string
+          nullable: true
+          description: Optional Stage 1/Stage 2 profiling run id used for validation.
+        force_rebuild:
+          type: boolean
+          default: false
+          description: If true, recompute analytic metrics even if a matching report already exists.
+    Wan2_1AnalyticAccepted:
+      type: object
+      required: [report_id, status]
+      properties:
+        report_id:
+          type: string
+          description: Identifier that can be used to query the analytic model.
+        status:
+          type: string
+          enum: [queued, running]
+    Wan2_1AnalyticReportSummary:
+      type: object
+      required: [report_id, model_variant, workload_profile_id, predicted_total_time_ms]
+      properties:
+        report_id:
+          type: string
+        model_variant:
+          type: string
+        workload_profile_id:
+          type: string
+        predicted_total_time_ms:
+          type: number
+          format: float
+        top_modules:
+          type: array
+          description: Top modules by predicted FLOP share.
+          items:
+            $ref: '#/components/schemas/AnalyticModuleSummary'
+        notes:
+          type: string
+    AnalyticModuleSummary:
+      type: object
+      required: [module_id, name, stage, share_of_model_flops]
+      properties:
+        module_id:
+          type: string
+        name:
+          type: string
+        stage:
+          type: string
+          enum: [diffusion, text_encoder, vae, other]
+        share_of_model_flops:
+          type: number
+          format: float
+        total_flops_tflops:
+          type: number
+          format: float
+        memory_activations_gb:
+          type: number
+          format: float
+    Wan2_1AnalyticModel:
+      type: object
+      required: [report_id, model, workload, modules, operator_categories, module_metrics]
+      properties:
+        report_id:
+          type: string
+        model:
+          $ref: '#/components/schemas/Wan2_1ModelSpec'
+        workload:
+          $ref: '#/components/schemas/Wan2_1WorkloadProfile'
+        modules:
+          type: array
+          items:
+            $ref: '#/components/schemas/AnalyticModuleNode'
+        operator_categories:
+          type: array
+          items:
+            $ref: '#/components/schemas/OperatorCategory'
+        module_metrics:
+          type: array
+          items:
+            $ref: '#/components/schemas/ModuleMetricsSnapshot'
+        profile_run_id:
+          type: string
+          nullable: true
+          description: Optional profiling run id for later runtime comparison (not required in this stage).
+    Wan2_1ModelSpec:
+      type: object
+      required:
+        - model_id
+        - model_variant
+        - config_path
+        - hidden_size
+        - num_layers
+        - num_attention_heads
+        - head_dim
+        - mlp_intermediate_size
+        - vae_downsample_factor
+        - patch_size
+        - latent_channels
+      properties:
+        model_id:
+          type: string
+        model_variant:
+          type: string
+        config_path:
+          type: string
+          description: Absolute path to the Wan2.1 model metadata source (e.g., config.json).
+        hidden_size:
+          type: integer
+        num_layers:
+          type: integer
+        num_attention_heads:
+          type: integer
+        head_dim:
+          type: integer
+        mlp_intermediate_size:
+          type: integer
+        vae_downsample_factor:
+          type: integer
+        patch_size:
+          type: integer
+        latent_channels:
+          type: integer
+        notes:
+          type: string
+    Wan2_1WorkloadProfile:
+      type: object
+      required:
+        - profile_id
+        - description
+        - batch_size
+        - num_frames
+        - height
+        - width
+        - num_inference_steps
+        - text_len
+      properties:
+        profile_id:
+          type: string
+        description:
+          type: string
+        batch_size:
+          type: integer
+          minimum: 1
+        num_frames:
+          type: integer
+          minimum: 1
+        height:
+          type: integer
+          minimum: 1
+        width:
+          type: integer
+          minimum: 1
+        num_inference_steps:
+          type: integer
+          minimum: 1
+        text_len:
+          type: integer
+          minimum: 0
+    AnalyticModuleNode:
+      type: object
+      required: [module_id, name, qualified_class_name, stage, children, repetition]
+      properties:
+        module_id:
+          type: string
+        name:
+          type: string
+        qualified_class_name:
+          type: string
+        stage:
+          type: string
+          enum: [diffusion, text_encoder, vae, other]
+        parent_id:
+          type: string
+          nullable: true
+        children:
+          type: array
+          items:
+            type: string
+        repetition:
+          type: string
+          enum: [none, for, parfor]
+        repetition_count:
+          type: integer
+          nullable: true
+        constructor_params:
+          type: object
+          additionalProperties: true
+    OperatorCategory:
+      type: object
+      required: [category_id, display_name, description, match_classes]
+      properties:
+        category_id:
+          type: string
+        display_name:
+          type: string
+        description:
+          type: string
+        match_classes:
+          type: array
+          items:
+            type: string
+    ModuleMetricsSnapshot:
+      type: object
+      required:
+        - module_id
+        - profile_id
+        - calls
+        - total_time_ms
+        - total_flops_tflops
+        - total_io_tb
+        - memory_weights_gb
+        - memory_activations_gb
+        - memory_kvcache_gb
+        - share_of_model_time
+        - operator_breakdown
+      properties:
+        module_id:
+          type: string
+        profile_id:
+          type: string
+        calls:
+          type: integer
+        total_time_ms:
+          type: number
+          format: float
+        total_flops_tflops:
+          type: number
+          format: float
+        total_io_tb:
+          type: number
+          format: float
+        memory_weights_gb:
+          type: number
+          format: float
+        memory_activations_gb:
+          type: number
+          format: float
+        memory_kvcache_gb:
+          type: number
+          format: float
+        share_of_model_time:
+          type: number
+          format: float
+        operator_breakdown:
+          type: array
+          items:
+            $ref: '#/components/schemas/OperatorMetrics'
+    OperatorMetrics:
+      type: object
+      required: [category_id, calls, flops_tflops, io_tb, share_of_module_flops]
+      properties:
+        category_id:
+          type: string
+        calls:
+          type: integer
+        flops_tflops:
+          type: number
+          format: float
+        io_tb:
+          type: number
+          format: float
+        share_of_module_flops:
+          type: number
+          format: float
