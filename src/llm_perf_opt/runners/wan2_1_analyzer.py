@@ -20,10 +20,13 @@ from hydra import compose, initialize_config_dir
 from hydra.utils import instantiate
 from omegaconf import DictConfig
 
+from modelmeter.layers.mlp import Mlp as SharedMlp
+from modelmeter.layers.self_attn import SelfAttention as SharedSelfAttention
 from modelmeter.models.wan2_1.layers.core.wan2_1_dit_model import Wan2_1DiTModel
 from modelmeter.models.wan2_1.layers.transformer.wan2_1_attention import Wan2_1Attention
 from modelmeter.models.wan2_1.layers.transformer.wan2_1_mlp import Wan2_1MLP
 from modelmeter.models.wan2_1.layers.transformer.wan2_1_transformer_block import Wan2_1TransformerBlock
+from modelmeter.models.wan2_1.layers.transformer.step_scaled_layer import Wan2_1StepScaledLayer
 
 from llm_perf_opt.data.analytic_common import AnalyticModuleNode, ModuleMetricsSnapshot, OperatorCategory, OperatorMetrics
 from llm_perf_opt.data.wan2_1_analytic import Wan2_1AnalyticModelReport, Wan2_1ModelSpec, Wan2_1WorkloadProfile
@@ -246,6 +249,25 @@ def _sum_breakdowns(breakdowns: Iterable[Mapping[str, float]]) -> dict[str, floa
 
 def _layer_breakdown_tflops(layer: object) -> dict[str, float]:
     """Return a `{category_id: TFLOPs}` breakdown for a known layer type."""
+
+    if isinstance(layer, Wan2_1StepScaledLayer):
+        inner = layer.inner
+        steps = float(layer.num_inference_steps)
+        if isinstance(inner, SharedSelfAttention):
+            proj = float(
+                (inner.q_proj.forward_tensor_core_flops() or 0.0)
+                + (inner.k_proj.forward_tensor_core_flops() or 0.0)
+                + (inner.v_proj.forward_tensor_core_flops() or 0.0)
+                + (inner.o_proj.forward_tensor_core_flops() or 0.0),
+            )
+            core = float(inner.attn.forward_tensor_core_flops() or 0.0)
+            return {"attention_proj": float(proj * steps), "attention_core": float(core * steps)}
+        if isinstance(inner, SharedMlp):
+            proj = float(
+                (inner.linear1.forward_tensor_core_flops() or 0.0)
+                + (inner.linear2.forward_tensor_core_flops() or 0.0),
+            )
+            return {"mlp_proj": float(proj * steps)}
 
     if isinstance(layer, Wan2_1Attention):
         bd = layer.forward_tensor_core_flops_breakdown()
