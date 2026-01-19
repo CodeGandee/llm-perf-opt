@@ -3,7 +3,7 @@
 **Feature Branch**: `[004-wan2-1-analytic-model]`  
 **Created**: 2026-01-16  
 **Status**: Draft  
-**Input**: User description: "we are going to implement context/plans/plan-wan2-1-analytic-model.md , read it and create the spec, make sure you understand extern/modelmeter and the pattern of extern/modelmeter/models, we will be extending that, and make sure the flop count can match actual model layer by layer, and end to end, within 5% margin of error, new branch should be named 004-<what>"
+**Input**: User description: "we are going to implement context/plans/done/plan-wan2-1-analytic-model.md , read it and create the spec, make sure you understand extern/modelmeter and the pattern of extern/modelmeter/models, we will be extending that, and make sure the flop count can match actual model layer by layer, and end to end, within 5% margin of error, new branch should be named 004-<what>"
 
 ## Constitution Constraints *(mandatory)*
 

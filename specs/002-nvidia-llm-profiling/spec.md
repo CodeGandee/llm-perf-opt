@@ -3,7 +3,7 @@
 **Feature Branch**: `002-nvidia-llm-profiling`  
 **Created**: 2025-10-29  
 **Status**: Draft  
-**Input**: User description: "in-depth profiling LLM with nvidia tools, with deepseek-ocr being our current profiling target, but the tools and framework we develop shall be able to applied to other LLMs. check context/plans/plan-deep-profile-llm.md , we already done with stage 1, now we move to stage 2, we will be using nvidia tools to inspect the runtime computational resource utilization, and identify the bottleneck of performance, in order to find out how to optimize it. Stage 1 implementation records are in context/tasks/001-profile-deepseek-ocr/, this is an iterative development, so we shall follow previous framework and add functionalities."
+**Input**: User description: "in-depth profiling LLM with nvidia tools, with deepseek-ocr being our current profiling target, but the tools and framework we develop shall be able to applied to other LLMs. check context/plans/done/plan-deep-profile-llm.md , we already done with stage 1, now we move to stage 2, we will be using nvidia tools to inspect the runtime computational resource utilization, and identify the bottleneck of performance, in order to find out how to optimize it. Stage 1 implementation records are in context/tasks/001-profile-deepseek-ocr/, this is an iterative development, so we shall follow previous framework and add functionalities."
 
 <!-- Constitution Compliance (author must ensure):
   - Public APIs/classes documented with NumPy-style docstrings and examples

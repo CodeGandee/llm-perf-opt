@@ -1,5 +1,9 @@
 # Plan – Implement Option A for DeepSeek-OCR Call Graph Grouping
 
+## HEADER
+- **Status**: Done
+- **Completed**: 2026-01-19
+
 ## Goal
 
 Turn the TorchLens-derived dynamic call graph for DeepSeek-OCR (`tmp/dsocr-torchlens-callgraph/dsocr-call-graph-torchlens.json`) into a higher-level, human-readable description that:
@@ -168,4 +172,3 @@ If we discover ambiguous patterns or noisy `parfor` groups, we’ll refine:
   - Stage-aware grouping that collapses stages into single lines (e.g., `vision_stage parfor N`).
 - Introduce support for non-indexed module families (e.g., naming patterns without numeric suffixes) using explicit lists in config.
 - If needed, integrate with a later Option B/C implementation that may supply additional metadata (e.g., explicit “crop count” or “token count”) to replace some of the heuristics while reusing the same grouping output format.
-

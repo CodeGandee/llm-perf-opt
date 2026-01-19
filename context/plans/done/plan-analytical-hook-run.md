@@ -1,5 +1,9 @@
 # Plan: Analytical Hook Run for DeepSeek‑OCR
 
+## HEADER
+- **Status**: Done
+- **Completed**: 2026-01-19
+
 **Goal**  
 Run the DeepSeek‑OCR model on real inputs while simultaneously executing the
 analytic layer stack as a *shadow model*, so we can collect accurate,
@@ -438,4 +442,3 @@ This plan reuses existing monkeypatching patterns (from `dsocr_torchlens`) and
 the analytic layer stack to provide a **hooked analytical mode** that tracks
 prefill/decode costs on real workloads without assuming decode length in
 advance.
-

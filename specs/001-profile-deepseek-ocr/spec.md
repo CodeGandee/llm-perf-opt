@@ -3,7 +3,7 @@
 **Feature Branch**: `001-profile-deepseek-ocr`  
 **Created**: 2025-10-28  
 **Status**: Draft  
-**Input**: User description: "basic profiling of deepseek ocr, see stage 1 in context/plans/plan-deep-profile-llm.md"
+**Input**: User description: "basic profiling of deepseek ocr, see stage 1 in context/plans/done/plan-deep-profile-llm.md"
 
 <!-- Constitution Compliance (author must ensure):
   - Public APIs/classes documented with NumPy-style docstrings and examples

@@ -2,8 +2,10 @@
 
 ## HEADER
 - **Purpose**: Implement a DeepSeek-OCR-style analytic model for Wan2.1 (starting with Wan2.1-T2V-14B) using ModelMeter `BaseLayer` + `StageCostMixin`, with Hydra configs and reusable analytic report data models.
-- **Status**: Draft
+- **Status**: Done
 - **Date**: 2026-01-16
+- **Last updated**: 2026-01-19
+- **Completed**: 2026-01-19
 - **Dependencies**:
   - extern/modelmeter/models/deepseek_ocr/layers/core/deepseek_ocr_model.py
   - extern/modelmeter/models/deepseek_ocr/configs/deepseek_ocr.yaml
@@ -74,22 +76,21 @@ sequenceDiagram
 
 ## 4. TODOs (Implementation Steps)
 
-- [ ] **Define Wan2.1 scope v1** decide which submodules are modeled explicitly (DiT only vs DiT+T5+VAE), and pick 1–2 representative workloads (e.g., 480p 16 frames, 720p 16 frames).
-- [ ] **Add shared analytic data models** create `src/llm_perf_opt/data/analytic_common.py` containing reusable classes currently in `deepseek_ocr_analytic.py` (nodes, categories, metrics, operator lists) and refactor DeepSeek-OCR code to use it.
-- [ ] **Create Wan model spec/workload models** add `src/llm_perf_opt/data/wan2_1_analytic.py` with `Wan2_1ModelSpec` and `Wan2_1WorkloadProfile`, reusing shared report types.
-- [ ] **Implement Wan token geometry helper** implement a single “video token count” helper (frames, H, W, patch/latent downsample assumptions) with documented defaults and unit tests for correctness and monotonicity.
-- [ ] **Implement Wan analytic layers (minimal set)** create `extern/modelmeter/models/wan2_1/layers/`:
+- [X] **Define Wan2.1 scope v1** core-only (diffusion transformer) analytic scope with workloads `wan2-1-ci-tiny`, `wan2-1-512p`, `wan2-1-720p` (see `specs/004-wan2-1-analytic-model/research.md:1` and `specs/004-wan2-1-analytic-model/quickstart.md:1`).
+- [X] **Add shared analytic data models** implemented in `src/llm_perf_opt/data/analytic_common.py:1` with DeepSeek-OCR refactor in `src/llm_perf_opt/data/deepseek_ocr_analytic.py:1`.
+- [X] **Create Wan model spec/workload models** implemented in `src/llm_perf_opt/data/wan2_1_analytic.py:1` and contract types in `src/llm_perf_opt/contracts/models.py:1`.
+- [X] **Implement Wan token geometry helper** implemented in `extern/modelmeter/models/wan2_1/layers/geometry.py:1` with tests in `tests/unit/wan2_1/test_geometry.py:1`.
+- [X] **Implement Wan analytic layers (minimal set)** implemented under `extern/modelmeter/models/wan2_1/layers/core/wan2_1_dit_model.py:1` and `extern/modelmeter/models/wan2_1/layers/transformer/wan2_1_transformer_block.py:1`.
   - Root aggregator layer (`Wan2_1T2VModel`) using `StageCostMixin` and composing sublayers.
   - Transformer block prototype layer(s) modeling per-layer attention and FFN using existing primitives (`SelfAttention`, `Linear`, `RMSNorm`, optional modulation layer).
   - Step-scaling wrapper for diffusion iterations (total cost = per-step cost × `num_inference_steps`; memory should not scale with steps).
-- [ ] **Hydra configs for Wan2.1** add `extern/modelmeter/models/wan2_1/configs/wan2_1_t2v_14b.yaml` and group files (`hf/`, `runtime/`, `transformer/`, `model/`), mirroring DeepSeek-OCR config style.
-- [ ] **Wan analyzer runner** add `src/llm_perf_opt/runners/wan2_1_analyzer.py` to instantiate the analytic model via Hydra, traverse submodules, and write `report.json` + (optional) `summary.md` under `tmp/profile-output/<run_id>/static_analysis/wan2_1/`.
-- [ ] **Verification hooks (v1)** implement internal checks:
+- [X] **Hydra configs for Wan2.1** implemented under `extern/modelmeter/models/wan2_1/configs/wan2_1_t2v_14b.yaml:1` and group dirs under `extern/modelmeter/models/wan2_1/configs/:1`.
+- [X] **Wan analyzer runner** implemented in `src/llm_perf_opt/runners/wan2_1_analyzer.py:1` (writes `report.json` + `summary.md` under `tmp/profile-output/<run_id>/static_analysis/wan2_1/`).
+- [X] **Verification hooks (v1)** implemented via invariants and tests in `tests/unit/wan2_1/test_report_invariants.py:1`, `tests/unit/wan2_1/test_hotspots.py:1`, and integration checks in `tests/integration/wan2_1/test_wan2_1_analyzer_report.py:1`.
   - Costs are non-negative and finite.
   - FLOPs and I/O scale linearly with `num_inference_steps`.
   - FLOPs scale with token count and layer count as expected.
   - KV-cache memory is 0 (or explicitly justified) for diffusion blocks.
-- [ ] **Optional reference verification** if the local Wan codebase provides an importable PyTorch module for the DiT block, add a small verify script under `extern/modelmeter/models/wan2_1/scripts/verify/` that compares analytic FLOPs against `torch.utils.flop_counter` on a tiny shape (guarded/skipped when unavailable).
-- [ ] **Unit tests** add deterministic tests under `tests/unit/` for geometry helpers, scaling invariants, and report serialization.
-- [ ] **Docs** add a brief usage note (where to set `LLM_MODELS_ROOT`, how to run the Wan analyzer, where outputs land).
-
+- [X] **Optional reference verification** implemented under `extern/modelmeter/models/wan2_1/scripts/verify/run_verify_layers.py:1` and `extern/modelmeter/models/wan2_1/scripts/verify/run_verify_end2end.py:1`.
+- [X] **Unit tests** implemented under `tests/unit/data/:1`, `tests/unit/utils/:1`, and `tests/unit/wan2_1/:1`, plus integration tests under `tests/integration/wan2_1/:1`.
+- [X] **Docs** updated in `docs/running.md:1`, `specs/004-wan2-1-analytic-model/quickstart.md:1`, and `extern/modelmeter/models/wan2_1/scripts/verify/README.md:1`.
