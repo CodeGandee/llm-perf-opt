@@ -10,7 +10,9 @@
 ## Content
 Use for feature plans, system roadmaps, and migration strategies that break work into steps.
 
+## Done
+Historical plans that have been completed live under `context/plans/done/`.
+
 ## Conventions
 - Name files by feature/system (e.g., `api-redesign-roadmap.md`, `database-migration-strategy.md`).
 - Start each document with a HEADER block.
-

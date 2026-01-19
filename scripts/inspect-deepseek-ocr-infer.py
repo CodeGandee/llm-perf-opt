@@ -14,7 +14,6 @@ from __future__ import annotations
 import argparse
 import inspect
 from pathlib import Path
-import sys
 
 import torch
 from transformers import AutoModel, AutoTokenizer  # type: ignore
@@ -104,4 +103,3 @@ def main() -> None:
 
 if __name__ == "__main__":
     main()
-

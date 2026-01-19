@@ -11,7 +11,6 @@ from typing import Any
 import torch
 import hydra
 from omegaconf import DictConfig
-from hydra.core.hydra_config import HydraConfig
 
 from llm_perf_opt.dnn_models.factory import get_model
 

@@ -1,10 +1,14 @@
 # Plan: Prefill/Decode Analytic Cost vs Sequence Length
 
+## HEADER
+- **Status**: Done
+- **Completed**: 2026-01-19
+
 **Feature**  
 Analytically estimate and validate DeepSeek‑OCR prefill/decode FLOPs/IO/memory as a function of sequence length using the ModelMeter analytic stack and Stage‑1/Stage‑2 profiling.
 
 **Location**  
-`context/plans/plan-prefill-decode-analytic.md`
+`context/plans/done/plan-prefill-decode-analytic.md`
 
 **Date**  
 2025-11-21
@@ -77,7 +81,7 @@ From existing code and docs:
 - `DeepSeekOCRSession` and Stage‑1/Stage‑2 pipelines already:
   - run DeepSeek‑OCR with NVTX segmentation (`sam`, `clip`, `projector`, `prefill`, `decode`),  
   - collect timing and, in some flows, FLOP counts using `torch.utils.flop_counter.FlopCounterMode`.
-- `docs/analyzer-mfu.md` and `context/plans/plan-per-stage-static-analysis.md` describe how to combine static/dynamic metrics into MFU estimates.
+- `docs/analyzer-mfu.md` and `context/plans/done/plan-per-stage-static-analysis.md` describe how to combine static/dynamic metrics into MFU estimates.
 
 We will re‑use this machinery to get **measured prefill/decode FLOPs and timings** at selected sequence lengths.
 

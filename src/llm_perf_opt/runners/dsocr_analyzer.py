@@ -17,7 +17,7 @@ import sys
 from dataclasses import dataclass, field
 from datetime import datetime
 from pathlib import Path
-from typing import Any, Optional
+from typing import Any, Literal, Optional
 
 import torch
 from attrs import asdict
@@ -1115,7 +1115,7 @@ class DeepseekOCRStaticAnalyzer:
         else:
             config_path = str(Path.cwd().resolve())
 
-        vision_backbone = "clip_vit_l"
+        vision_backbone: Literal["sam_vit_b", "clip_vit_l", "other"] = "clip_vit_l"
         uses_moe = False
         if cfg is not None:
             try:

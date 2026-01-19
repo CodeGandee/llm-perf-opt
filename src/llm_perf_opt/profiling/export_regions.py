@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from datetime import datetime
 from pathlib import Path
-from typing import Iterable, Sequence
+from typing import Sequence
 
 from llm_perf_opt.data.ncu_regions import NCUProfileRegionReport
 from llm_perf_opt.profiling.artifacts import sanitized_region_dir

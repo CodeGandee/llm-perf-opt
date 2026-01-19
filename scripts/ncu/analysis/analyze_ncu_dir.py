@@ -945,7 +945,6 @@ def analyze_dir(input_dir: Path, margin: float = 5.0, kernel_desc_map: Optional[
                     statsframe=stats_gf,
                 )
                 # Persist: JSON only (no pickle)
-                import json
                 try:
                     json_str = th.to_json()
                     (analysis_dir / "thicket.json").write_text(json_str)

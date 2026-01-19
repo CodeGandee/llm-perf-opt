@@ -1,5 +1,9 @@
 # Plan – Grouping DeepSeek-OCR Dynamic Call Graph into `for N` / `parfor N`
 
+## HEADER
+- **Status**: Done
+- **Completed**: 2026-01-19
+
 ## Goal
 
 Take the TorchLens-derived dynamic call graph for DeepSeek-OCR (stored in `tmp/dsocr-torchlens-callgraph/dsocr-call-graph-torchlens.{json,dot}`) and aggregate repeated module calls into higher-level constructs using *graph-structural* semantics:

@@ -1,7 +1,11 @@
 # Plan: Per-Stage Static Model Analysis with fvcore
 
+## HEADER
+- **Status**: Done
+- **Completed**: 2026-01-19
+
 **Feature**: Static computational resource usage analysis for DeepSeek-OCR
-**Location**: `/data2/huangzhe/code/llm-perf-opt/context/plans/plan-per-stage-static-analysis.md`
+**Location**: `context/plans/done/plan-per-stage-static-analysis.md`
 **Date**: 2025-10-29
 **Related**: Phase 3 Revision (MFU Accuracy), `context/tasks/001-profile-deepseek-ocr/revision-phase-3-mfu-compute.md`
 

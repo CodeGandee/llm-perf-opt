@@ -1,5 +1,9 @@
 # Plan – DeepSeek-OCR Call Graph Grouping via Runtime Monkeypatching (Option C)
 
+## HEADER
+- **Status**: Done
+- **Completed**: 2026-01-19
+
 ## Context and Goal
 
 We already have a TorchLens-derived dynamic call graph for DeepSeek-OCR written to:
@@ -294,4 +298,3 @@ This gives a robust, model-specific way to map from the raw dynamic trace to `fo
 - However, since patches live in analytical tooling and do not alter production pipelines, this is acceptable for research/profiling use.
 
 Overall complexity: **moderate but contained**, with clear, isolated patch points and minimal behavioral impact outside tracing runs.
-

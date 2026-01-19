@@ -31,4 +31,4 @@
 
 ## Notes
 
-- The plan reference is: context/plans/plan-deep-profile-llm.md (Stage 1)
+- The plan reference is: context/plans/done/plan-deep-profile-llm.md (Stage 1)

@@ -91,7 +91,6 @@ def main() -> int:
             continue
         module_id = str(snap.get("module_id", ""))
         flops_val = float(snap.get("total_flops_tflops", 0.0))
-        io_val = float(snap.get("total_io_tb", 0.0))
 
         flops = flops_val * batch_scale
         time_ms = 1000.0 * flops / peak_tflops

@@ -749,7 +749,7 @@ except Exception:
 **Internal**:
 - Phase 3 Implementation Report: `context/tasks/001-profile-deepseek-ocr/impl-phase-3-us1-report.md`
 - MFU Computation Revision: `context/tasks/001-profile-deepseek-ocr/revision-phase-3-mfu-compute.md`
-- Static Analysis Plan: `context/plans/plan-per-stage-static-analysis.md`
+- Static Analysis Plan: `context/plans/done/plan-per-stage-static-analysis.md`
 
 ---
 

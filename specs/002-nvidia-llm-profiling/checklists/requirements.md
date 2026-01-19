@@ -31,4 +31,4 @@
 
 ## Notes
 
-- Reviewed against plan context in `context/plans/plan-deep-profile-llm.md` and Stage 1 artifacts under `context/tasks/001-profile-deepseek-ocr/` to ensure continuity.
+- Reviewed against plan context in `context/plans/done/plan-deep-profile-llm.md` and Stage 1 artifacts under `context/tasks/001-profile-deepseek-ocr/` to ensure continuity.

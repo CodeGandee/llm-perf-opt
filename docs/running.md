@@ -37,6 +37,20 @@ pixi run stage-all-run                   # stage1 + nsys into same run dir
 # Vendor parity on a single image (writes result_with_boxes.jpg/result.mmd)
 pixi run python scripts/deepseek-ocr-infer-one.py \
   -i /abs/path/to/image.png -o tmp/vendor-parity
+
+# Wan2.1 static analysis (writes tmp/profile-output/<run_id>/static_analysis/wan2_1/{report.json,summary.md})
+pixi run -e rtx5090 python -m llm_perf_opt.runners.wan2_1_analyzer \
+  'hydra.run.dir=tmp/profile-output/${now:%Y%m%d-%H%M%S}' \
+  workload.profile_id=wan2-1-512p
+
+# Wan2.1 verification (synthetic reference FLOPs via FlopCounterMode on meta tensors)
+pixi run -e rtx5090 python -m modelmeter.models.wan2_1.scripts.verify.run_verify_layers --workload wan2-1-ci-tiny
+pixi run -e rtx5090 python -m modelmeter.models.wan2_1.scripts.verify.run_verify_end2end --workload wan2-1-512p
+pixi run -e rtx5090 python -m modelmeter.models.wan2_1.scripts.verify.run_verify_core --workload wan2-1-ci-tiny
+
+# Wan2.1 report tools (print top-k and optionally compare two reports)
+pixi run python -m llm_perf_opt.runners.wan2_1_report_tools \
+  --report tmp/profile-output/<run_id>/static_analysis/wan2_1/report.json
 ```
 
 Hydra overrides
@@ -77,6 +91,7 @@ Where outputs go
 - Pipeline outputs:
   - `torch_profiler/`: `report.md`, `operators.md`, `metrics.json`, `llm_profile_runner.log`
   - `static_analysis/`: `static_compute.{json,md}` (when enabled)
+  - `static_analysis/wan2_1/`: `report.json`, `summary.md` (Wan2.1 analytic model runner)
 - `nsys/`: `run.nsys-rep`, `run.sqlite`, `summary_*.csv`, `cmd.txt` (when enabled)
 - `ncu/`: `raw.csv`, `.ncu-rep`, `sections_report.txt`, `cmd*.txt` (when enabled)
 - Reproducibility at run root: `env.json`, `config.yaml`, `inputs.yaml`

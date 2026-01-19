@@ -1,5 +1,9 @@
 # Deep Profiling Plan: LLM Inference (Python‑first, NVIDIA GPU)
 
+## HEADER
+- **Status**: Done
+- **Completed**: 2026-01-19
+
 Purpose
 - Establish a consistent, Python‑first methodology to analyze LLM inference
   performance on NVIDIA GPUs, enabling clear bottleneck identification and
@@ -76,4 +80,3 @@ Outcomes
 Non‑Goals
 - No implementation details or commands here; this plan defines what to collect
   and why, not how to instrument or run tools.
-

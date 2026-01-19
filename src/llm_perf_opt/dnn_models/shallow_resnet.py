@@ -1,11 +1,11 @@
-from __future__ import annotations
-
 """A tiny residual CNN used as a dummy workload.
 
 The model is intentionally small and emits NVTX ranges inside ``forward`` so
 that NVTX‑based Nsight Compute range replay can be exercised without requiring
 large datasets or vendor models.
 """
+
+from __future__ import annotations
 
 from typing import Final
 

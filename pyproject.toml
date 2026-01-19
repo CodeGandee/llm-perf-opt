@@ -47,7 +47,6 @@ no-build-isolation = ["flash-attn"]
 [tool.pixi.feature.default-cuda.pypi-dependencies]
 torch = { version = "==2.6.0", index = "https://download.pytorch.org/whl/cu126" }
 torchvision = { version = "==0.21.0", index = "https://download.pytorch.org/whl/cu126" }
-triton-kernels = { git = "https://github.com/triton-lang/triton.git", rev = "v3.5.0", subdirectory = "python/triton_kernels" }
 flash-attn = "==2.7.4.post1"
 
 # ============================================================================
@@ -127,3 +126,8 @@ show_error_codes = true
 strict_optional = false
 ignore_missing_imports = true
 files = ["src", "extern/modelmeter/models/deepseek_ocr"]
+
+[tool.pytest.ini_options]
+markers = [
+  "integration: integration tests (may depend on local model metadata)",
+]
