@@ -28,7 +28,6 @@ Use a Hydra run directory rooted under `tmp/profile-output/`:
 ```bash
 pixi run -e rtx5090 python -m llm_perf_opt.runners.wan2_1_analyzer \
   hydra.run.dir='tmp/profile-output/${now:%Y%m%d-%H%M%S}' \
-  model=wan2_1_t2v_14b \
   workload.profile_id=wan2-1-512p
 ```
 
@@ -60,5 +59,5 @@ The analyzer writes artifacts under:
 
 - `/data1/huangzhe/code/llm-perf-opt/tmp/profile-output/<run_id>/static_analysis/wan2_1/`
   - `report.json` (machine-readable; includes per-layer metrics and totals)
-  - `summary.md` (optional; human-readable overview)
+  - `summary.md` (human-readable overview)
   - `verify/` (optional; verification outputs)

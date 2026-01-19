@@ -7,6 +7,8 @@ DeepSeek-OCR analytic modeling. These mirror OpenAPI schemas in
   ``specs/001-profile-deepseek-ocr/contracts/python-contracts.md``; and
 - ``specs/001-deepseek-ocr-modelmeter/contracts/openapi.yaml`` and
   ``specs/001-deepseek-ocr-modelmeter/contracts/python-contracts.md``.
+  ``specs/004-wan2-1-analytic-model/contracts/openapi.yaml`` and
+  ``specs/004-wan2-1-analytic-model/contracts/python-contracts.md``.
 
 Notes
 -----
@@ -23,6 +25,7 @@ from typing import Dict, Literal
 from attrs import define, field
 from attrs.validators import instance_of
 
+from llm_perf_opt.data.analytic_common import AnalyticModuleNode, ModuleMetricsSnapshot, OperatorCategory
 from llm_perf_opt.data.deepseek_ocr_analytic import AnalyticModelReport
 
 
@@ -199,3 +202,73 @@ class DeepSeekOCRAnalyticModel:
     # as-is. This keeps the web/CLI contract aligned with the domain model
     # while still allowing a dedicated type name in OpenAPI specs.
     report: AnalyticModelReport = field()
+
+
+# ---------------------------------------------------------------------------
+# Wan2.1 analytic modeling contracts
+# ---------------------------------------------------------------------------
+
+
+@define(kw_only=True)
+class Wan2_1AnalyticRequest:
+    """Request to build or refresh the Wan2.1 analytic model."""
+
+    model_id: str = field(validator=[instance_of(str)])
+    model_variant: str = field(validator=[instance_of(str)])
+    workload_profile_id: str = field(validator=[instance_of(str)])
+    overrides: dict[str, int] | None = field(default=None)
+    profile_run_id: str | None = field(default=None)
+    force_rebuild: bool = field(default=False, validator=[instance_of(bool)])
+
+
+@define(kw_only=True)
+class Wan2_1AnalyticAccepted:
+    """Acknowledgement of a Wan2.1 analytic modeling request."""
+
+    report_id: str = field(validator=[instance_of(str)])
+    status: Literal["queued", "running"] = field(validator=[instance_of(str)])
+
+
+@define(kw_only=True)
+class Wan2_1ModelSpec:
+    """Contract view of the Wan2.1 model spec."""
+
+    model_id: str = field(validator=[instance_of(str)])
+    model_variant: str = field(validator=[instance_of(str)])
+    config_path: str = field(validator=[instance_of(str), _abs_path])
+    hidden_size: int = field(validator=[instance_of(int)])
+    num_layers: int = field(validator=[instance_of(int)])
+    num_attention_heads: int = field(validator=[instance_of(int)])
+    head_dim: int = field(validator=[instance_of(int)])
+    mlp_intermediate_size: int = field(validator=[instance_of(int)])
+    vae_downsample_factor: int = field(validator=[instance_of(int)])
+    patch_size: int = field(validator=[instance_of(int)])
+    latent_channels: int = field(validator=[instance_of(int)])
+    notes: str = field(validator=[instance_of(str)])
+
+
+@define(kw_only=True)
+class Wan2_1WorkloadProfile:
+    """Contract view of a Wan2.1 workload profile."""
+
+    profile_id: str = field(validator=[instance_of(str)])
+    description: str = field(validator=[instance_of(str)])
+    batch_size: int = field(validator=[instance_of(int)])
+    num_frames: int = field(validator=[instance_of(int)])
+    height: int = field(validator=[instance_of(int)])
+    width: int = field(validator=[instance_of(int)])
+    num_inference_steps: int = field(validator=[instance_of(int)])
+    text_len: int = field(validator=[instance_of(int)])
+
+
+@define(kw_only=True)
+class Wan2_1AnalyticModel:
+    """Contract view of the Wan2.1 analytic model report."""
+
+    report_id: str = field(validator=[instance_of(str)])
+    model: Wan2_1ModelSpec = field()
+    workload: Wan2_1WorkloadProfile = field()
+    modules: list[AnalyticModuleNode] = field(factory=list)
+    operator_categories: list[OperatorCategory] = field(factory=list)
+    module_metrics: list[ModuleMetricsSnapshot] = field(factory=list)
+    profile_run_id: str | None = field(default=None)

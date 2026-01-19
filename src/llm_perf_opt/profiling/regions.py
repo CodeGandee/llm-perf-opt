@@ -12,17 +12,12 @@ Primary entry points:
 
 from __future__ import annotations
 
-from dataclasses import asdict
+from collections import defaultdict
 from datetime import datetime
 from pathlib import Path
-from typing import Iterable, Sequence
-
-from attrs import define
+from typing import Iterable, List, Sequence
 
 from llm_perf_opt.data.ncu_regions import NCUProfileRegion, NCUProfileRegionReport
-from llm_perf_opt.profiling.artifacts import sanitize_region_label
-from collections import defaultdict
-from typing import List
 
 
 def _infer_parent(label: str) -> tuple[str | None, int]:
@@ -142,6 +137,7 @@ def assemble_region_reports(rows: Iterable[dict], *, device: str = "cuda:0", pro
         region = NCUProfileRegion(name=name, parent=parent, depth=depth, device=device, process=process)
         out.append(NCUProfileRegionReport(region=region, total_ms=max(total_ms, 0.0), kernel_count=max(kernel_count, 0)))
     return out
+
 
 def write_consolidated_reports(
     reports: Sequence[NCUProfileRegionReport],

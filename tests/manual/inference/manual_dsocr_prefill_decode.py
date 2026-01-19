@@ -30,7 +30,6 @@ import json
 import math
 import os
 import re
-import sys
 from datetime import datetime
 from pathlib import Path
 from typing import List, Tuple
@@ -38,7 +37,6 @@ from typing import List, Tuple
 import torch
 from PIL import Image, ImageDraw, ImageFont, ImageOps
 from torchvision import transforms
-from torchvision.transforms.functional import InterpolationMode
 from transformers import AutoModel, AutoTokenizer
 
 from llm_perf_opt.visualize.annotations import (
@@ -299,7 +297,6 @@ def main() -> None:
 
     # Load and prepare image(s)
     pil_img = load_image(args.image).convert("RGB")
-    image_draw = pil_img.copy()
     image_transform = BasicImageTransform(mean=(0.5, 0.5, 0.5), std=(0.5, 0.5, 0.5), normalize=True)
 
     patch_size = 16

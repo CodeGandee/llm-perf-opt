@@ -29,36 +29,19 @@ TargetOperatorList
 
 from __future__ import annotations
 
-import os
-from typing import Dict, Iterable, Literal, Union
+from typing import Dict, Iterable, Literal
 
-from attrs import Attribute, define, field
+from attrs import define, field
 from attrs.validators import instance_of
 
-
-ScalarParam = Union[int, float, str, bool]
-
-
-def _validate_absolute_path(_instance: object, attribute: Attribute[str], value: str) -> None:
-    """Ensure a path field is an absolute path."""
-
-    if not os.path.isabs(value):
-        raise ValueError(f"{attribute.name} must be an absolute path, got {value!r}")
-
-
-def _validate_non_negative_float(_instance: object, attribute: Attribute[float], value: float) -> None:
-    """Ensure a float metric is non-negative."""
-
-    if value < 0.0:
-        raise ValueError(f"{attribute.name} must be non-negative, got {value!r}")
-
-
-def _validate_non_negative_int(_instance: object, attribute: Attribute[int], value: int) -> None:
-    """Ensure an integer metric is non-negative."""
-
-    if value < 0:
-        raise ValueError(f"{attribute.name} must be non-negative, got {value!r}")
-
+from llm_perf_opt.data.analytic_common import (
+    AnalyticModuleNode,
+    ModuleMetricsSnapshot,
+    OperatorCategory,
+    OperatorMetrics,
+    _validate_absolute_path,
+    _validate_non_negative_float,
+)
 
 @define(kw_only=True)
 class DeepSeekOCRModelSpec:
@@ -95,63 +78,6 @@ class OCRWorkloadProfile:
         validator=[instance_of(str)],
     )
     num_pages: int = field(validator=[instance_of(int)])
-
-
-@define(kw_only=True)
-class AnalyticModuleNode:
-    """Node in the analytic module hierarchy."""
-
-    module_id: str = field(validator=[instance_of(str)])
-    name: str = field(validator=[instance_of(str)])
-    qualified_class_name: str = field(validator=[instance_of(str)])
-    stage: Literal["vision", "projector", "prefill", "decode", "other"] = field(validator=[instance_of(str)])
-    parent_id: str | None = field(default=None)
-    children: list[str] = field(factory=list)
-    repetition: Literal["none", "for", "parfor"] = field(default="none", validator=[instance_of(str)])
-    repetition_count: int | None = field(default=None)
-    constructor_params: dict[str, ScalarParam] = field(factory=dict)
-
-
-@define(kw_only=True)
-class OperatorCategory:
-    """Logical group for operators (e.g., conv2d, attention)."""
-
-    category_id: str = field(validator=[instance_of(str)])
-    display_name: str = field(validator=[instance_of(str)])
-    description: str = field(validator=[instance_of(str)])
-    match_classes: list[str] = field(factory=list)
-
-
-@define(kw_only=True)
-class OperatorMetrics:
-    """Per-operator-category metric breakdown within a module."""
-
-    category_id: str = field(validator=[instance_of(str)])
-    calls: int = field(validator=[instance_of(int), _validate_non_negative_int])
-    flops_tflops: float = field(validator=[instance_of(float), _validate_non_negative_float])
-    io_tb: float = field(validator=[instance_of(float), _validate_non_negative_float])
-    share_of_module_flops: float = field(
-        validator=[instance_of(float), _validate_non_negative_float],
-    )
-
-
-@define(kw_only=True)
-class ModuleMetricsSnapshot:
-    """Aggregated analytic metrics for a single module under a workload."""
-
-    module_id: str = field(validator=[instance_of(str)])
-    profile_id: str = field(validator=[instance_of(str)])
-    calls: int = field(validator=[instance_of(int), _validate_non_negative_int])
-    total_time_ms: float = field(validator=[instance_of(float), _validate_non_negative_float])
-    total_flops_tflops: float = field(validator=[instance_of(float), _validate_non_negative_float])
-    total_io_tb: float = field(validator=[instance_of(float), _validate_non_negative_float])
-    memory_weights_gb: float = field(validator=[instance_of(float), _validate_non_negative_float])
-    memory_activations_gb: float = field(validator=[instance_of(float), _validate_non_negative_float])
-    memory_kvcache_gb: float = field(validator=[instance_of(float), _validate_non_negative_float])
-    share_of_model_time: float = field(
-        validator=[instance_of(float), _validate_non_negative_float],
-    )
-    operator_breakdown: list[OperatorMetrics] = field(factory=list)
 
 
 @define(kw_only=True)
@@ -306,3 +232,22 @@ def build_operator_category_index(
             if cls not in index:
                 index[cls] = category.category_id
     return index
+
+
+__all__ = [
+    "DeepSeekOCRModelSpec",
+    "OCRWorkloadProfile",
+    # Shared-schema compatibility re-exports.
+    "AnalyticModuleNode",
+    "OperatorCategory",
+    "OperatorMetrics",
+    "ModuleMetricsSnapshot",
+    # DeepSeek-OCR report wrapper and TorchInfo-derived operator metadata.
+    "AnalyticModelReport",
+    "OperatorSpec",
+    "TargetOperatorList",
+    # Operator categorization helpers.
+    "categorize_operator_class_name",
+    "build_operator_categories_from_target_list",
+    "build_operator_category_index",
+]

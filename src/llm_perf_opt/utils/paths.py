@@ -105,3 +105,62 @@ def analytic_layer_docs_dir(run_id: str) -> str:
 
     base = Path(analytic_model_dir(run_id))
     return str(base / "layers")
+
+
+def wan2_1_analytic_dir(run_id: str) -> str:
+    """
+    Return the directory for Wan2.1 analytic artifacts for a given run id.
+
+    The output path is always absolute and rooted under::
+
+        tmp/profile-output/<run_id>/static_analysis/wan2_1
+
+    Parameters
+    ----------
+    run_id : str
+        Identifier for the analytic run (typically matches Hydra run id).
+
+    Returns
+    -------
+    str
+        Absolute path to the Wan2.1 static-analysis artifact directory.
+    """
+
+    root = Path(workspace_root())
+    return str(root / "tmp" / "profile-output" / run_id / "static_analysis" / "wan2_1")
+
+
+def wan2_1_report_path(run_id: str) -> str:
+    """
+    Return the absolute path to the Wan2.1 analytic report.json.
+
+    Parameters
+    ----------
+    run_id : str
+        Identifier for the analytic run.
+
+    Returns
+    -------
+    str
+        Absolute path to `report.json`.
+    """
+
+    return str(Path(wan2_1_analytic_dir(run_id)) / "report.json")
+
+
+def wan2_1_summary_path(run_id: str) -> str:
+    """
+    Return the absolute path to the Wan2.1 analytic summary.md.
+
+    Parameters
+    ----------
+    run_id : str
+        Identifier for the analytic run.
+
+    Returns
+    -------
+    str
+        Absolute path to `summary.md`.
+    """
+
+    return str(Path(wan2_1_analytic_dir(run_id)) / "summary.md")

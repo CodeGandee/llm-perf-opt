@@ -1,5 +1,3 @@
-from __future__ import annotations
-
 """Scaling tests for DeepSeek-OCR analytic layers.
 
 These unit tests validate that selected analytic layers:
@@ -9,13 +7,15 @@ These unit tests validate that selected analytic layers:
   or hidden size increases.
 """
 
+from __future__ import annotations
+
 from modelmeter.models.deepseek_ocr.layers.decoder.deepseek_v2_decoder_layer import (
     DeepseekV2DecoderLayer,
 )
 from modelmeter.models.deepseek_ocr.layers.llama.llama_flash_attention2 import (
     LlamaFlashAttention2,
 )
-from modelmeter.models.deepseek_ocr.layers.stage_cost import SyntheticKVCache
+from modelmeter.models.common.stage_cost import SyntheticKVCache
 from modelmeter.models.deepseek_ocr.layers.vision.clip_vision_embeddings import (
     CLIPVisionEmbeddings,
 )

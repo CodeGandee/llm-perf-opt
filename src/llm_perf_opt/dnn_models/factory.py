@@ -1,8 +1,9 @@
-from __future__ import annotations
-
 """Factory helpers for dummy models used in tests and manual profiling."""
 
+from __future__ import annotations
+
 from typing import Literal
+
 import torch
 
 from llm_perf_opt.dnn_models.shallow_resnet import ShallowResNet

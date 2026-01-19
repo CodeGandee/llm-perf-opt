@@ -36,10 +36,10 @@ description: "Task list for Wan2.1 Analytic FLOP Model"
 
 **Purpose**: Initial scaffolding and local model reference validation
 
-- [ ] T001 Ensure `/data1/huangzhe/code/llm-perf-opt/models/wan2.1-t2v-14b/source-data/config.json` exists by running `/data1/huangzhe/code/llm-perf-opt/models/wan2.1-t2v-14b/bootstrap.sh` (uses `LLM_MODELS_ROOT` or `WAN21_T2V_14B_PATH`)
-- [ ] T002 [P] Create Wan2.1 ModelMeter package scaffold in `/data1/huangzhe/code/llm-perf-opt/extern/modelmeter/models/wan2_1/__init__.py` and `/data1/huangzhe/code/llm-perf-opt/extern/modelmeter/models/wan2_1/layers/__init__.py`
-- [ ] T003 [P] Create Wan2.1 Hydra config scaffold under `/data1/huangzhe/code/llm-perf-opt/extern/modelmeter/models/wan2_1/configs/wan2_1_t2v_14b.yaml` and `/data1/huangzhe/code/llm-perf-opt/extern/modelmeter/models/wan2_1/configs/README.md`
-- [ ] T004 [P] Create verification scaffold in `/data1/huangzhe/code/llm-perf-opt/extern/modelmeter/models/wan2_1/scripts/verify/README.md`
+- [X] T001 Ensure `/data1/huangzhe/code/llm-perf-opt/models/wan2.1-t2v-14b/source-data/config.json` exists by running `/data1/huangzhe/code/llm-perf-opt/models/wan2.1-t2v-14b/bootstrap.sh` (uses `LLM_MODELS_ROOT` or `WAN21_T2V_14B_PATH`)
+- [X] T002 [P] Create Wan2.1 ModelMeter package scaffold in `/data1/huangzhe/code/llm-perf-opt/extern/modelmeter/models/wan2_1/__init__.py` and `/data1/huangzhe/code/llm-perf-opt/extern/modelmeter/models/wan2_1/layers/__init__.py`
+- [X] T003 [P] Create Wan2.1 Hydra config scaffold under `/data1/huangzhe/code/llm-perf-opt/extern/modelmeter/models/wan2_1/configs/wan2_1_t2v_14b.yaml` and `/data1/huangzhe/code/llm-perf-opt/extern/modelmeter/models/wan2_1/configs/README.md`
+- [X] T004 [P] Create verification scaffold in `/data1/huangzhe/code/llm-perf-opt/extern/modelmeter/models/wan2_1/scripts/verify/README.md`
 
 ---
 
@@ -49,15 +49,15 @@ description: "Task list for Wan2.1 Analytic FLOP Model"
 
 **⚠️ CRITICAL**: No user story work can begin until this phase is complete
 
-- [ ] T005 Create shared analytic schema module in `/data1/huangzhe/code/llm-perf-opt/src/llm_perf_opt/data/analytic_common.py` (move reusable nodes/categories/metrics helpers from `/data1/huangzhe/code/llm-perf-opt/src/llm_perf_opt/data/deepseek_ocr_analytic.py` without breaking DeepSeek-OCR consumers)
-- [ ] T006 Refactor `/data1/huangzhe/code/llm-perf-opt/src/llm_perf_opt/data/deepseek_ocr_analytic.py` to import/re-export shared types from `/data1/huangzhe/code/llm-perf-opt/src/llm_perf_opt/data/analytic_common.py` (keep API compatibility for existing imports)
-- [ ] T007 [P] Update DeepSeek-OCR call sites to stay compatible with the refactor in `/data1/huangzhe/code/llm-perf-opt/src/llm_perf_opt/runners/dsocr_analyzer.py` and `/data1/huangzhe/code/llm-perf-opt/src/llm_perf_opt/contracts/models.py`
-- [ ] T008 [P] Add unit tests for shared schema validators/serialization in `/data1/huangzhe/code/llm-perf-opt/tests/unit/data/test_analytic_common.py`
-- [ ] T009 [P] Add unit tests for DeepSeek-OCR analytic schema backward-compatibility in `/data1/huangzhe/code/llm-perf-opt/tests/unit/data/test_deepseek_ocr_analytic_compat.py`
-- [ ] T010 Implement Wan domain models in `/data1/huangzhe/code/llm-perf-opt/src/llm_perf_opt/data/wan2_1_analytic.py` (Wan2.1 model spec + workload profile + report wrapper reusing shared schema types)
-- [ ] T011 [P] Implement Wan2.1 contract models in `/data1/huangzhe/code/llm-perf-opt/src/llm_perf_opt/contracts/models.py` (mirror `/data1/huangzhe/code/llm-perf-opt/specs/004-wan2-1-analytic-model/contracts/python-contracts.md`)
-- [ ] T012 Add Wan2.1 static-analysis output path helpers to `/data1/huangzhe/code/llm-perf-opt/src/llm_perf_opt/utils/paths.py` (e.g., `tmp/profile-output/<run_id>/static_analysis/wan2_1/`)
-- [ ] T013 [P] Add unit tests for Wan2.1 path helpers in `/data1/huangzhe/code/llm-perf-opt/tests/unit/utils/test_paths_wan2_1.py`
+- [X] T005 Create shared analytic schema module in `/data1/huangzhe/code/llm-perf-opt/src/llm_perf_opt/data/analytic_common.py` (move reusable nodes/categories/metrics helpers from `/data1/huangzhe/code/llm-perf-opt/src/llm_perf_opt/data/deepseek_ocr_analytic.py` without breaking DeepSeek-OCR consumers)
+- [X] T006 Refactor `/data1/huangzhe/code/llm-perf-opt/src/llm_perf_opt/data/deepseek_ocr_analytic.py` to import/re-export shared types from `/data1/huangzhe/code/llm-perf-opt/src/llm_perf_opt/data/analytic_common.py` (keep API compatibility for existing imports)
+- [X] T007 [P] Update DeepSeek-OCR call sites to stay compatible with the refactor in `/data1/huangzhe/code/llm-perf-opt/src/llm_perf_opt/runners/dsocr_analyzer.py` and `/data1/huangzhe/code/llm-perf-opt/src/llm_perf_opt/contracts/models.py`
+- [X] T008 [P] Add unit tests for shared schema validators/serialization in `/data1/huangzhe/code/llm-perf-opt/tests/unit/data/test_analytic_common.py`
+- [X] T009 [P] Add unit tests for DeepSeek-OCR analytic schema backward-compatibility in `/data1/huangzhe/code/llm-perf-opt/tests/unit/data/test_deepseek_ocr_analytic_compat.py`
+- [X] T010 Implement Wan domain models in `/data1/huangzhe/code/llm-perf-opt/src/llm_perf_opt/data/wan2_1_analytic.py` (Wan2.1 model spec + workload profile + report wrapper reusing shared schema types)
+- [X] T011 [P] Implement Wan2.1 contract models in `/data1/huangzhe/code/llm-perf-opt/src/llm_perf_opt/contracts/models.py` (mirror `/data1/huangzhe/code/llm-perf-opt/specs/004-wan2-1-analytic-model/contracts/python-contracts.md`)
+- [X] T012 Add Wan2.1 static-analysis output path helpers to `/data1/huangzhe/code/llm-perf-opt/src/llm_perf_opt/utils/paths.py` (e.g., `tmp/profile-output/<run_id>/static_analysis/wan2_1/`)
+- [X] T013 [P] Add unit tests for Wan2.1 path helpers in `/data1/huangzhe/code/llm-perf-opt/tests/unit/utils/test_paths_wan2_1.py`
 
 **Checkpoint**: Foundation ready – user story implementation can begin
 
@@ -71,22 +71,22 @@ description: "Task list for Wan2.1 Analytic FLOP Model"
 
 ### Tests for User Story 1 (recommended) ⚠️
 
-- [ ] T014 [P] [US1] Add token-geometry unit tests (frames/resolution/steps scaling invariants) in `/data1/huangzhe/code/llm-perf-opt/tests/unit/wan2_1/test_geometry.py`
-- [ ] T015 [P] [US1] Add report-invariants unit tests (totals=sum, stable ids, non-negative finite values) in `/data1/huangzhe/code/llm-perf-opt/tests/unit/wan2_1/test_report_invariants.py`
-- [ ] T016 [P] [US1] Add integration test for report generation on the CI tiny workload in `/data1/huangzhe/code/llm-perf-opt/tests/integration/wan2_1/test_wan2_1_analyzer_report.py`
-- [ ] T017 [P] [US1] Add manual test script in `/data1/huangzhe/code/llm-perf-opt/tests/manual/wan2_1/manual_wan2_1_static_analysis.py` (writes artifacts to a user-provided `tmp/profile-output/<run_id>/` directory)
+- [X] T014 [P] [US1] Add token-geometry unit tests (frames/resolution/steps scaling invariants) in `/data1/huangzhe/code/llm-perf-opt/tests/unit/wan2_1/test_geometry.py`
+- [X] T015 [P] [US1] Add report-invariants unit tests (totals=sum, stable ids, non-negative finite values) in `/data1/huangzhe/code/llm-perf-opt/tests/unit/wan2_1/test_report_invariants.py`
+- [X] T016 [P] [US1] Add integration test for report generation on the CI tiny workload in `/data1/huangzhe/code/llm-perf-opt/tests/integration/wan2_1/test_wan2_1_analyzer_report.py`
+- [X] T017 [P] [US1] Add manual test script in `/data1/huangzhe/code/llm-perf-opt/tests/manual/wan2_1/manual_wan2_1_static_analysis.py` (writes artifacts to a user-provided `tmp/profile-output/<run_id>/` directory)
 
 ### Implementation for User Story 1
 
-- [ ] T018 [P] [US1] Implement video/latent token geometry helper in `/data1/huangzhe/code/llm-perf-opt/extern/modelmeter/models/wan2_1/layers/geometry.py` (single canonical helper used by analytic layers and tests)
-- [ ] T019 [P] [US1] Implement analytic attention and MLP sublayers in `/data1/huangzhe/code/llm-perf-opt/extern/modelmeter/models/wan2_1/layers/transformer/wan2_1_attention.py` and `/data1/huangzhe/code/llm-perf-opt/extern/modelmeter/models/wan2_1/layers/transformer/wan2_1_mlp.py`
-- [ ] T020 [P] [US1] Implement Wan transformer block analytic layer with stable child/module ids in `/data1/huangzhe/code/llm-perf-opt/extern/modelmeter/models/wan2_1/layers/transformer/wan2_1_transformer_block.py`
-- [ ] T021 [P] [US1] Implement diffusion-core analytic layer (stack blocks) and step scaling in `/data1/huangzhe/code/llm-perf-opt/extern/modelmeter/models/wan2_1/layers/core/wan2_1_dit_model.py`
-- [ ] T022 [P] [US1] Add hf architecture config mirroring `/data1/huangzhe/code/llm-perf-opt/models/wan2.1-t2v-14b/source-data/config.json` to `/data1/huangzhe/code/llm-perf-opt/extern/modelmeter/models/wan2_1/configs/hf/wan2_1_t2v_14b.yaml`
-- [ ] T023 [P] [US1] Add runtime/workload and transformer config groups in `/data1/huangzhe/code/llm-perf-opt/extern/modelmeter/models/wan2_1/configs/runtime/analytic_defaults.yaml` and `/data1/huangzhe/code/llm-perf-opt/extern/modelmeter/models/wan2_1/configs/transformer/wan2_1_dit.yaml`
-- [ ] T024 [US1] Add model root config and top-level config composition in `/data1/huangzhe/code/llm-perf-opt/extern/modelmeter/models/wan2_1/configs/model/wan2_1_root.yaml` and `/data1/huangzhe/code/llm-perf-opt/extern/modelmeter/models/wan2_1/configs/wan2_1_t2v_14b.yaml`
-- [ ] T025 [US1] Implement the Wan2.1 static analyzer runner in `/data1/huangzhe/code/llm-perf-opt/src/llm_perf_opt/runners/wan2_1_analyzer.py` (compose Hydra config, build module tree, write `report.json` + optional `summary.md`)
-- [ ] T026 [P] [US1] Implement contract-oriented CLI wrapper in `/data1/huangzhe/code/llm-perf-opt/src/llm_perf_opt/runners/wan2_1_analyzer_main.py` (parse args to `Wan2_1AnalyticRequest`, call analyzer, print artifact dir)
+- [X] T018 [P] [US1] Implement video/latent token geometry helper in `/data1/huangzhe/code/llm-perf-opt/extern/modelmeter/models/wan2_1/layers/geometry.py` (single canonical helper used by analytic layers and tests)
+- [X] T019 [P] [US1] Implement analytic attention and MLP sublayers in `/data1/huangzhe/code/llm-perf-opt/extern/modelmeter/models/wan2_1/layers/transformer/wan2_1_attention.py` and `/data1/huangzhe/code/llm-perf-opt/extern/modelmeter/models/wan2_1/layers/transformer/wan2_1_mlp.py`
+- [X] T020 [P] [US1] Implement Wan transformer block analytic layer with stable child/module ids in `/data1/huangzhe/code/llm-perf-opt/extern/modelmeter/models/wan2_1/layers/transformer/wan2_1_transformer_block.py`
+- [X] T021 [P] [US1] Implement diffusion-core analytic layer (stack blocks) and step scaling in `/data1/huangzhe/code/llm-perf-opt/extern/modelmeter/models/wan2_1/layers/core/wan2_1_dit_model.py`
+- [X] T022 [P] [US1] Add hf architecture config mirroring `/data1/huangzhe/code/llm-perf-opt/models/wan2.1-t2v-14b/source-data/config.json` to `/data1/huangzhe/code/llm-perf-opt/extern/modelmeter/models/wan2_1/configs/hf/wan2_1_t2v_14b.yaml`
+- [X] T023 [P] [US1] Add runtime/workload and transformer config groups in `/data1/huangzhe/code/llm-perf-opt/extern/modelmeter/models/wan2_1/configs/runtime/analytic_defaults.yaml` and `/data1/huangzhe/code/llm-perf-opt/extern/modelmeter/models/wan2_1/configs/transformer/wan2_1_dit.yaml`
+- [X] T024 [US1] Add model root config and top-level config composition in `/data1/huangzhe/code/llm-perf-opt/extern/modelmeter/models/wan2_1/configs/model/wan2_1_root.yaml` and `/data1/huangzhe/code/llm-perf-opt/extern/modelmeter/models/wan2_1/configs/wan2_1_t2v_14b.yaml`
+- [X] T025 [US1] Implement the Wan2.1 static analyzer runner in `/data1/huangzhe/code/llm-perf-opt/src/llm_perf_opt/runners/wan2_1_analyzer.py` (compose Hydra config, build module tree, write `report.json` + optional `summary.md`)
+- [X] T026 [P] [US1] Implement contract-oriented CLI wrapper in `/data1/huangzhe/code/llm-perf-opt/src/llm_perf_opt/runners/wan2_1_analyzer_main.py` (parse args to `Wan2_1AnalyticRequest`, call analyzer, print artifact dir)
 
 **Checkpoint**: User Story 1 should be fully functional and testable independently
 
@@ -100,17 +100,17 @@ description: "Task list for Wan2.1 Analytic FLOP Model"
 
 ### Tests for User Story 2 (recommended) ⚠️
 
-- [ ] T027 [P] [US2] Add unit tests for FLOP diff computation and tolerance enforcement in `/data1/huangzhe/code/llm-perf-opt/tests/unit/wan2_1/test_verify_utils.py`
-- [ ] T028 [P] [US2] Add integration test that runs CI-tiny verification when available in `/data1/huangzhe/code/llm-perf-opt/tests/integration/wan2_1/test_verify_layers_ci_tiny.py`
+- [X] T027 [P] [US2] Add unit tests for FLOP diff computation and tolerance enforcement in `/data1/huangzhe/code/llm-perf-opt/tests/unit/wan2_1/test_verify_utils.py`
+- [X] T028 [P] [US2] Add integration test that runs CI-tiny verification when available in `/data1/huangzhe/code/llm-perf-opt/tests/integration/wan2_1/test_verify_layers_ci_tiny.py`
 
 ### Implementation for User Story 2
 
-- [ ] T029 [P] [US2] Add verification tolerances/config to `/data1/huangzhe/code/llm-perf-opt/extern/modelmeter/models/wan2_1/configs/wan2_1_t2v_14b.yaml` (device + accept_rel_diff defaults aligned to ≤5%)
-- [ ] T030 [P] [US2] Implement PyTorch reference modules for FLOP measurement in `/data1/huangzhe/code/llm-perf-opt/extern/modelmeter/models/wan2_1/scripts/verify/_reference_modules.py`
-- [ ] T031 [US2] Implement per-layer verification script in `/data1/huangzhe/code/llm-perf-opt/extern/modelmeter/models/wan2_1/scripts/verify/run_verify_layers.py` (per-block + subcomponent checks, prints per-layer % error)
-- [ ] T032 [US2] Implement end-to-end verification script in `/data1/huangzhe/code/llm-perf-opt/extern/modelmeter/models/wan2_1/scripts/verify/run_verify_end2end.py` (diffusion core across steps for the standard workload set)
-- [ ] T033 [P] [US2] Implement analytic aggregation invariant check in `/data1/huangzhe/code/llm-perf-opt/extern/modelmeter/models/wan2_1/scripts/verify/run_verify_core.py` (analytic root equals sum of sublayers)
-- [ ] T034 [P] [US2] Document verification commands and prerequisites in `/data1/huangzhe/code/llm-perf-opt/extern/modelmeter/models/wan2_1/scripts/verify/README.md`
+- [X] T029 [P] [US2] Add verification tolerances/config to `/data1/huangzhe/code/llm-perf-opt/extern/modelmeter/models/wan2_1/configs/wan2_1_t2v_14b.yaml` (device + accept_rel_diff defaults aligned to ≤5%)
+- [X] T030 [P] [US2] Implement PyTorch reference modules for FLOP measurement in `/data1/huangzhe/code/llm-perf-opt/extern/modelmeter/models/wan2_1/scripts/verify/_reference_modules.py`
+- [X] T031 [US2] Implement per-layer verification script in `/data1/huangzhe/code/llm-perf-opt/extern/modelmeter/models/wan2_1/scripts/verify/run_verify_layers.py` (per-block + subcomponent checks, prints per-layer % error)
+- [X] T032 [US2] Implement end-to-end verification script in `/data1/huangzhe/code/llm-perf-opt/extern/modelmeter/models/wan2_1/scripts/verify/run_verify_end2end.py` (diffusion core across steps for the standard workload set)
+- [X] T033 [P] [US2] Implement analytic aggregation invariant check in `/data1/huangzhe/code/llm-perf-opt/extern/modelmeter/models/wan2_1/scripts/verify/run_verify_core.py` (analytic root equals sum of sublayers)
+- [X] T034 [P] [US2] Document verification commands and prerequisites in `/data1/huangzhe/code/llm-perf-opt/extern/modelmeter/models/wan2_1/scripts/verify/README.md`
 
 **Checkpoint**: Verification scripts fail on >5% regressions and pass when aligned
 
@@ -124,13 +124,13 @@ description: "Task list for Wan2.1 Analytic FLOP Model"
 
 ### Tests for User Story 3 (recommended) ⚠️
 
-- [ ] T035 [P] [US3] Add unit tests for top-k extraction and stable ordering in `/data1/huangzhe/code/llm-perf-opt/tests/unit/wan2_1/test_hotspots.py`
-- [ ] T036 [P] [US3] Add integration test for monotonic scaling and hotspot attribution across workloads in `/data1/huangzhe/code/llm-perf-opt/tests/integration/wan2_1/test_hotspot_scaling.py`
+- [X] T035 [P] [US3] Add unit tests for top-k extraction and stable ordering in `/data1/huangzhe/code/llm-perf-opt/tests/unit/wan2_1/test_hotspots.py`
+- [X] T036 [P] [US3] Add integration test for monotonic scaling and hotspot attribution across workloads in `/data1/huangzhe/code/llm-perf-opt/tests/integration/wan2_1/test_hotspot_scaling.py`
 
 ### Implementation for User Story 3
 
-- [ ] T037 [US3] Implement summary markdown generator in `/data1/huangzhe/code/llm-perf-opt/src/llm_perf_opt/visualize/wan2_1_analytic_summary.py` and call it from `/data1/huangzhe/code/llm-perf-opt/src/llm_perf_opt/runners/wan2_1_analyzer.py`
-- [ ] T038 [P] [US3] Implement report tooling CLI (load report.json, print top-k, compare two reports) in `/data1/huangzhe/code/llm-perf-opt/src/llm_perf_opt/runners/wan2_1_report_tools.py`
+- [X] T037 [US3] Implement summary markdown generator in `/data1/huangzhe/code/llm-perf-opt/src/llm_perf_opt/visualize/wan2_1_analytic_summary.py` and call it from `/data1/huangzhe/code/llm-perf-opt/src/llm_perf_opt/runners/wan2_1_analyzer.py`
+- [X] T038 [P] [US3] Implement report tooling CLI (load report.json, print top-k, compare two reports) in `/data1/huangzhe/code/llm-perf-opt/src/llm_perf_opt/runners/wan2_1_report_tools.py`
 
 **Checkpoint**: Hotspot summaries are generated and usable for side-by-side workload comparison
 
@@ -140,12 +140,12 @@ description: "Task list for Wan2.1 Analytic FLOP Model"
 
 **Purpose**: Documentation, gates, and end-to-end validation across all stories
 
-- [ ] T039 [P] Update repo docs to reference Wan2.1 static analysis and verification in `/data1/huangzhe/code/llm-perf-opt/docs/running.md`
-- [ ] T040 Ensure all new public APIs have NumPy-style docstrings and type hints in `/data1/huangzhe/code/llm-perf-opt/src/llm_perf_opt/` and `/data1/huangzhe/code/llm-perf-opt/extern/modelmeter/models/wan2_1/`
-- [ ] T041 Run lint gate `pixi run ruff check .` and fix any issues in changed files under `/data1/huangzhe/code/llm-perf-opt/pyproject.toml`
-- [ ] T042 Run type gate `pixi run mypy src` and fix any issues in `/data1/huangzhe/code/llm-perf-opt/src/llm_perf_opt/`
-- [ ] T043 Run tests `pixi run pytest tests/unit/` and `pixi run pytest tests/integration/` and fix failures in `/data1/huangzhe/code/llm-perf-opt/tests/`
-- [ ] T044 Validate `/data1/huangzhe/code/llm-perf-opt/specs/004-wan2-1-analytic-model/quickstart.md` commands and update the document if behavior/paths change
+- [X] T039 [P] Update repo docs to reference Wan2.1 static analysis and verification in `/data1/huangzhe/code/llm-perf-opt/docs/running.md`
+- [X] T040 Ensure all new public APIs have NumPy-style docstrings and type hints in `/data1/huangzhe/code/llm-perf-opt/src/llm_perf_opt/` and `/data1/huangzhe/code/llm-perf-opt/extern/modelmeter/models/wan2_1/`
+- [X] T041 Run lint gate `pixi run ruff check .` and fix any issues in changed files under `/data1/huangzhe/code/llm-perf-opt/pyproject.toml`
+- [X] T042 Run type gate `pixi run mypy src` and fix any issues in `/data1/huangzhe/code/llm-perf-opt/src/llm_perf_opt/`
+- [X] T043 Run tests `pixi run pytest tests/unit/` and `pixi run pytest tests/integration/` and fix failures in `/data1/huangzhe/code/llm-perf-opt/tests/`
+- [X] T044 Validate `/data1/huangzhe/code/llm-perf-opt/specs/004-wan2-1-analytic-model/quickstart.md` commands and update the document if behavior/paths change
 
 ---
 

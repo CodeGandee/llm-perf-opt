@@ -1,11 +1,11 @@
-from __future__ import annotations
-
 """Round-trip serialization tests for AnalyticModelReport.
 
 These tests ensure that AnalyticModelReport instances can be converted to
 JSON/YAML and back without losing key structural information. This mirrors
 the export format written by the DeepSeek-OCR analytic runner.
 """
+
+from __future__ import annotations
 
 import json
 from pathlib import Path

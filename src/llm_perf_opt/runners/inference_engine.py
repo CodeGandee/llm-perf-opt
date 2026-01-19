@@ -11,11 +11,11 @@ from dataclasses import dataclass
 import json
 import logging
 from pathlib import Path
-from typing import Any, Iterable, Iterator, Optional
+from typing import Any, Iterable, Optional
 import random
 from contextlib import nullcontext
 
-from omegaconf import DictConfig, OmegaConf  # type: ignore[import-untyped]
+from omegaconf import DictConfig  # type: ignore[import-untyped]
 
 from llm_perf_opt.profiling.aggregate import mean_std
 from llm_perf_opt.profiling.hw import get_device_name, get_peak_tflops
@@ -320,7 +320,8 @@ def run_stage_dataset(
     vis_dirname = vis_cfg.get("save_dir", None) or "viz"
 
     strip_special = bool(getattr(extra_dsocr, "prediction", {}).get("strip_special_tokens", False))
-    max_images = getattr(getattr(extra_dsocr, "visualization", {}), "max_images", 16)
+    max_images_raw = vis_cfg.get("max_images", 16)
+    max_images_gallery: int | None = None if max_images_raw in (None, "null") else int(max_images_raw)
 
     # Sampling config
     sam = getattr(getattr(cfg, "dataset", {}), "sampling", {})
@@ -442,7 +443,7 @@ def run_stage_dataset(
             vis_dir,
             preds_for_outputs,
             make_gallery=bool(vis_enable),
-            max_images=(None if getattr(getattr(out_cfg, "visualization", {}), "max_images", 16) in (None, "null") else int(getattr(getattr(out_cfg, "visualization", {}), "max_images", 16))),
+            max_images=max_images_gallery,
         )
 
     return runs, preds_for_outputs, summary
