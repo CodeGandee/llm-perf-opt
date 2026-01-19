@@ -1,3 +1,5 @@
+"""Integration test: Wan2.1 analyzer writes `report.json` artifacts."""
+
 from __future__ import annotations
 
 from pathlib import Path
@@ -10,12 +12,16 @@ from llm_perf_opt.utils.paths import wan2_1_report_path, workspace_root
 
 
 def _has_local_wan2_1_metadata() -> bool:
+    """Return True when local Wan2.1 model metadata is available."""
+
     cfg = Path(workspace_root()) / "models" / "wan2.1-t2v-14b" / "source-data" / "config.json"
     return cfg.is_file()
 
 
 @pytest.mark.integration
 def test_wan2_1_analyzer_writes_report_json() -> None:
+    """Analyzer emits a structured report and persists `report.json`."""
+
     if not _has_local_wan2_1_metadata():
         pytest.skip("Wan2.1 local model metadata not available (run models/wan2.1-t2v-14b/bootstrap.sh).")
 

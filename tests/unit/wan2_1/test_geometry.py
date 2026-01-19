@@ -1,3 +1,5 @@
+"""Unit tests for Wan2.1 token geometry and FLOP scaling invariants."""
+
 from __future__ import annotations
 
 import pytest
@@ -7,6 +9,8 @@ from modelmeter.models.wan2_1.layers.geometry import build_token_geometry
 
 
 def test_build_token_geometry_monotonic_with_frames() -> None:
+    """Token sequence length scales linearly with frames when resolution is fixed."""
+
     g1 = build_token_geometry(
         batch_size=1,
         num_frames=4,
@@ -29,6 +33,8 @@ def test_build_token_geometry_monotonic_with_frames() -> None:
 
 
 def test_build_token_geometry_monotonic_with_resolution() -> None:
+    """Token sequence length increases with spatial resolution when frames are fixed."""
+
     g1 = build_token_geometry(
         batch_size=1,
         num_frames=4,
@@ -52,6 +58,8 @@ def test_build_token_geometry_monotonic_with_resolution() -> None:
 
 
 def test_dit_flops_scale_linearly_with_steps() -> None:
+    """DiT FLOPs scale linearly with the diffusion step count."""
+
     model_1 = Wan2_1DiTModel.from_config(
         batch_size=1,
         num_frames=4,

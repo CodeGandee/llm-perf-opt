@@ -20,22 +20,26 @@ from hydra import compose, initialize_config_dir
 from hydra.utils import instantiate
 from omegaconf import DictConfig
 
-from llm_perf_opt.data.analytic_common import AnalyticModuleNode, ModuleMetricsSnapshot, OperatorCategory, OperatorMetrics
-from llm_perf_opt.data.wan2_1_analytic import Wan2_1AnalyticModelReport, Wan2_1ModelSpec, Wan2_1WorkloadProfile
-from llm_perf_opt.utils.paths import wan2_1_analytic_dir, wan2_1_report_path, wan2_1_summary_path
-from llm_perf_opt.visualize.wan2_1_analytic_summary import render_wan2_1_summary_md
-
 from modelmeter.models.wan2_1.layers.core.wan2_1_dit_model import Wan2_1DiTModel
 from modelmeter.models.wan2_1.layers.transformer.wan2_1_attention import Wan2_1Attention
 from modelmeter.models.wan2_1.layers.transformer.wan2_1_mlp import Wan2_1MLP
 from modelmeter.models.wan2_1.layers.transformer.wan2_1_transformer_block import Wan2_1TransformerBlock
 
+from llm_perf_opt.data.analytic_common import AnalyticModuleNode, ModuleMetricsSnapshot, OperatorCategory, OperatorMetrics
+from llm_perf_opt.data.wan2_1_analytic import Wan2_1AnalyticModelReport, Wan2_1ModelSpec, Wan2_1WorkloadProfile
+from llm_perf_opt.utils.paths import wan2_1_analytic_dir, wan2_1_report_path, wan2_1_summary_path
+from llm_perf_opt.visualize.wan2_1_analytic_summary import render_wan2_1_summary_md
+
 
 def _workspace_root() -> Path:
+    """Return the workspace root directory (repo root)."""
+
     return Path(__file__).resolve().parents[3]
 
 
 def _default_config_json_path() -> Path:
+    """Return the default local Wan2.1 `config.json` path (absolute)."""
+
     return (
         _workspace_root()
         / "models"
@@ -87,11 +91,15 @@ def _apply_workload_profile(cfg: DictConfig) -> None:
 
 
 def _qualified_name(obj: object) -> str:
+    """Return a stable qualified name for an object's class."""
+
     cls = obj.__class__
     return f"{cls.__module__}.{cls.__qualname__}"
 
 
 def _safe_float(value: float) -> float:
+    """Validate a float metric value is finite, then return it."""
+
     if value != value:  # NaN
         raise ValueError("metric value must be finite (got NaN)")
     if value == float("inf") or value == float("-inf"):
@@ -100,6 +108,8 @@ def _safe_float(value: float) -> float:
 
 
 def _operator_categories() -> list[OperatorCategory]:
+    """Return the operator category list used for Wan2.1 reports."""
+
     return [
         OperatorCategory(
             category_id="attention_proj",
@@ -129,10 +139,14 @@ def _operator_categories() -> list[OperatorCategory]:
 
 
 def _block_id(root_id: str, idx: int) -> str:
+    """Return a stable module_id for a diffusion transformer block."""
+
     return f"{root_id}/block_{idx:02d}"
 
 
 def _build_modules(model: Wan2_1DiTModel) -> tuple[list[AnalyticModuleNode], dict[str, object]]:
+    """Build a hierarchical module tree and a module_id→layer mapping."""
+
     root_id = "diffusion/dit"
     geom = model.token_geometry
     modules: list[AnalyticModuleNode] = []
@@ -221,6 +235,8 @@ def _build_modules(model: Wan2_1DiTModel) -> tuple[list[AnalyticModuleNode], dic
 
 
 def _sum_breakdowns(breakdowns: Iterable[Mapping[str, float]]) -> dict[str, float]:
+    """Sum multiple `{category_id: flops}` breakdown dicts."""
+
     out: dict[str, float] = {}
     for bd in breakdowns:
         for k, v in bd.items():
@@ -229,6 +245,8 @@ def _sum_breakdowns(breakdowns: Iterable[Mapping[str, float]]) -> dict[str, floa
 
 
 def _layer_breakdown_tflops(layer: object) -> dict[str, float]:
+    """Return a `{category_id: TFLOPs}` breakdown for a known layer type."""
+
     if isinstance(layer, Wan2_1Attention):
         bd = layer.forward_tensor_core_flops_breakdown()
         return {"attention_proj": float(bd.proj_tflops), "attention_core": float(bd.core_tflops)}
@@ -254,6 +272,8 @@ def _build_metrics(
     layer_by_id: dict[str, object],
     num_inference_steps: int,
 ) -> list[ModuleMetricsSnapshot]:
+    """Compute module-level metric snapshots for report generation."""
+
     root_id = "diffusion/dit"
     root_layer = layer_by_id[root_id]
     root_breakdown = _layer_breakdown_tflops(root_layer)
@@ -405,6 +425,8 @@ class Wan2_1StaticAnalyzer:
 
 
 def main(argv: List[str] | None = None) -> int:
+    """Hydra entrypoint: generate report artifacts for the configured workload."""
+
     argv = list(sys.argv[1:] if argv is None else argv)
     cfg = _load_cfg(argv)
     _apply_workload_profile(cfg)

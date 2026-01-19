@@ -1,3 +1,8 @@
+"""Manual run: generate Wan2.1 static analysis artifacts under tmp/profile-output/.
+
+This script is a convenience wrapper around the Wan2.1 analyzer runner for ad-hoc inspection.
+"""
+
 from __future__ import annotations
 
 import argparse
@@ -9,6 +14,8 @@ from llm_perf_opt.utils.paths import wan2_1_analytic_dir, wan2_1_report_path
 
 
 def _parse_args() -> argparse.Namespace:
+    """Parse CLI args for the manual static analysis script."""
+
     parser = argparse.ArgumentParser(description="Manual Wan2.1 static analysis (writes report artifacts under tmp/profile-output/).")
     parser.add_argument("--run-id", type=str, default=None, help="Run id used for tmp/profile-output/<run_id>/.")
     parser.add_argument("--workload", type=str, default="wan2-1-512p", help="Workload profile id (e.g., wan2-1-ci-tiny, wan2-1-512p).")
@@ -16,6 +23,8 @@ def _parse_args() -> argparse.Namespace:
 
 
 def main() -> int:
+    """Run the analyzer and print output artifact paths."""
+
     args = _parse_args()
     run_id = args.run_id or datetime.now().strftime("wan2-1-manual-%Y%m%d-%H%M%S")
 

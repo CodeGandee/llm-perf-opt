@@ -20,6 +20,8 @@ from llm_perf_opt.data.analytic_common import (
 
 
 def _validate_positive_int(_instance: object, attribute: Attribute[int], value: int) -> None:
+    """Ensure an integer field is positive."""
+
     if value <= 0:
         raise ValueError(f"{attribute.name} must be positive, got {value!r}")
 

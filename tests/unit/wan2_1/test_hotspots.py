@@ -1,3 +1,5 @@
+"""Unit tests for Wan2.1 hotspot extraction and aggregation helpers."""
+
 from __future__ import annotations
 
 from llm_perf_opt.data.analytic_common import AnalyticModuleNode, ModuleMetricsSnapshot, OperatorCategory, OperatorMetrics
@@ -6,6 +8,8 @@ from llm_perf_opt.visualize.wan2_1_analytic_summary import aggregate_category_fl
 
 
 def _make_report() -> Wan2_1AnalyticModelReport:
+    """Create a small synthetic report fixture for hotspot tests."""
+
     root = AnalyticModuleNode(
         module_id="diffusion/dit",
         name="root",
@@ -130,12 +134,16 @@ def _make_report() -> Wan2_1AnalyticModelReport:
 
 
 def test_top_k_layers_stable_ordering_on_ties() -> None:
+    """Top-k layer selection is stable and deterministic under ties."""
+
     report = _make_report()
     rows = top_k_layers_by_flops(report, k=2, leaf_only=True)
     assert [m.module_id for m, _s in rows] == ["a", "b"]
 
 
 def test_top_k_categories_stable_ordering_on_ties() -> None:
+    """Top-k category selection is stable and deterministic under ties."""
+
     report = _make_report()
     rows = top_k_categories_by_flops(report, k=2, leaf_only=True)
     assert rows[0][1] == rows[1][1]  # tie on flops
@@ -143,6 +151,8 @@ def test_top_k_categories_stable_ordering_on_ties() -> None:
 
 
 def test_leaf_only_category_aggregation_avoids_double_counting() -> None:
+    """Leaf-only aggregation avoids double counting when parent snapshots exist."""
+
     report = _make_report()
     totals = aggregate_category_flops(report, leaf_only=True)
     assert totals == {"x": 2.0, "y": 2.0}

@@ -1,3 +1,5 @@
+"""Unit tests for shared analytic report schema types."""
+
 from __future__ import annotations
 
 import json
@@ -18,11 +20,15 @@ from llm_perf_opt.data.analytic_common import (
 
 
 def test_validate_absolute_path_rejects_relative() -> None:
+    """Absolute-path validator rejects relative paths."""
+
     with pytest.raises(ValueError, match="must be an absolute path"):
         _validate_absolute_path(object(), type("A", (), {"name": "path"})(), "relative/path.json")  # type: ignore[arg-type]
 
 
 def test_module_metrics_snapshot_rejects_negative_flops() -> None:
+    """Metric validators reject negative FLOP values."""
+
     with pytest.raises(ValueError, match="must be non-negative"):
         _ = ModuleMetricsSnapshot(
             module_id="m",
@@ -40,6 +46,8 @@ def test_module_metrics_snapshot_rejects_negative_flops() -> None:
 
 
 def test_cattrs_roundtrip(tmp_path: Path) -> None:
+    """Shared schema objects can be round-tripped via cattrs."""
+
     node = AnalyticModuleNode(
         module_id="root",
         name="Root",

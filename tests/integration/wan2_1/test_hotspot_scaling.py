@@ -1,3 +1,5 @@
+"""Integration test: Wan2.1 report totals scale monotonically across workloads."""
+
 from __future__ import annotations
 
 from pathlib import Path
@@ -11,12 +13,16 @@ from llm_perf_opt.visualize.wan2_1_analytic_summary import aggregate_category_fl
 
 
 def _has_local_wan2_1_metadata() -> bool:
+    """Return True when local Wan2.1 model metadata is available."""
+
     cfg = Path(workspace_root()) / "models" / "wan2.1-t2v-14b" / "source-data" / "config.json"
     return cfg.is_file()
 
 
 @pytest.mark.integration
 def test_hotspots_monotonic_scaling_across_workloads() -> None:
+    """Larger workload produces larger total FLOPs and higher attention-core share."""
+
     if not _has_local_wan2_1_metadata():
         pytest.skip("Wan2.1 local model metadata not available (run models/wan2.1-t2v-14b/bootstrap.sh).")
 

@@ -19,6 +19,8 @@ from llm_perf_opt.visualize.wan2_1_analytic_summary import (
 
 
 def _build_converter() -> Converter:
+    """Build a cattrs Converter that supports `ScalarParam`."""
+
     conv = Converter()
     conv.register_structure_hook(ScalarParam, lambda v, _: v)
     return conv
@@ -33,6 +35,8 @@ def load_report(path: str) -> Wan2_1AnalyticModelReport:
 
 
 def _print_top_layers(report: Wan2_1AnalyticModelReport, *, k: int) -> None:
+    """Print a top-k table of leaf modules by FLOPs."""
+
     total = total_flops_tflops(report)
     rows = top_k_layers_by_flops(report, k=k, leaf_only=True)
     print(f"Top {k} layers by FLOPs (leaf modules):")
@@ -42,6 +46,8 @@ def _print_top_layers(report: Wan2_1AnalyticModelReport, *, k: int) -> None:
 
 
 def _print_top_categories(report: Wan2_1AnalyticModelReport, *, k: int) -> None:
+    """Print a top-k table of operator categories by FLOPs."""
+
     total = total_flops_tflops(report)
     totals = aggregate_category_flops(report, leaf_only=True)
     rows = sorted(totals.items(), key=lambda kv: (-float(kv[1]), kv[0]))[:k]
@@ -52,6 +58,8 @@ def _print_top_categories(report: Wan2_1AnalyticModelReport, *, k: int) -> None:
 
 
 def main() -> int:
+    """Entry point for CLI report inspection and comparison."""
+
     parser = argparse.ArgumentParser(description="Wan2.1 analytic report tools.")
     parser.add_argument("--report", type=str, required=True, help="Path to report.json")
     parser.add_argument("--compare", type=str, default=None, help="Optional second report.json to diff against")

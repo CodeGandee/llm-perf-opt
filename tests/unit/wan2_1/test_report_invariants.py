@@ -1,3 +1,5 @@
+"""Unit tests for Wan2.1 analytic report structural invariants."""
+
 from __future__ import annotations
 
 import math
@@ -7,11 +9,15 @@ from llm_perf_opt.data.wan2_1_analytic import Wan2_1AnalyticModelReport, Wan2_1M
 
 
 def _assert_finite_non_negative(value: float) -> None:
+    """Assert that a float is finite and non-negative."""
+
     assert math.isfinite(value)
     assert value >= 0.0
 
 
 def _validate_report_invariants(report: Wan2_1AnalyticModelReport) -> None:
+    """Validate basic invariants on the analytic report structure."""
+
     modules_by_id = {m.module_id: m for m in report.modules}
     assert len(modules_by_id) == len(report.modules)
 
@@ -41,6 +47,8 @@ def _validate_report_invariants(report: Wan2_1AnalyticModelReport) -> None:
 
 
 def test_report_invariants_for_minimal_tree() -> None:
+    """A minimal hierarchical report satisfies invariants used by tooling."""
+
     root_id = "diffusion/dit"
     block_id = f"{root_id}/block_00"
     attn_id = f"{block_id}/attn"

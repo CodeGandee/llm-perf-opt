@@ -9,14 +9,20 @@ from llm_perf_opt.data.wan2_1_analytic import Wan2_1AnalyticModelReport
 
 
 def _index_modules(report: Wan2_1AnalyticModelReport) -> dict[str, AnalyticModuleNode]:
+    """Index module nodes by module_id."""
+
     return {m.module_id: m for m in report.modules}
 
 
 def _index_metrics(report: Wan2_1AnalyticModelReport) -> dict[str, ModuleMetricsSnapshot]:
+    """Index module metric snapshots by module_id."""
+
     return {m.module_id: m for m in report.module_metrics}
 
 
 def _is_leaf(module: AnalyticModuleNode) -> bool:
+    """Return True when a module has no children."""
+
     return not module.children
 
 

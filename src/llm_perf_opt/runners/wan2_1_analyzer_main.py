@@ -17,6 +17,8 @@ from llm_perf_opt.utils.paths import wan2_1_analytic_dir
 
 
 def _parse_overrides(values: list[str] | None) -> dict[str, int] | None:
+    """Parse repeated `--override key=value` arguments into a dict."""
+
     if not values:
         return None
     out: dict[str, int] = {}
@@ -29,6 +31,8 @@ def _parse_overrides(values: list[str] | None) -> dict[str, int] | None:
 
 
 def _parse_args() -> argparse.Namespace:
+    """Parse CLI args for the Wan2.1 contract wrapper."""
+
     parser = argparse.ArgumentParser(description="Wan2.1 analytic modeling (contract-oriented wrapper).")
     parser.add_argument("--model-id", type=str, default="wan2.1-t2v-14b")
     parser.add_argument("--model-variant", type=str, default="t2v-14b")
@@ -46,6 +50,8 @@ def _parse_args() -> argparse.Namespace:
 
 
 def main() -> int:
+    """Run the contract-oriented wrapper CLI."""
+
     args = _parse_args()
     overrides_dict = _parse_overrides(args.override)
 
