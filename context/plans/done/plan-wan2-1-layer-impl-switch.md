@@ -2,8 +2,10 @@
 
 ## HEADER
 - **Purpose**: Add a safe, config-driven switch for Wan2.1 analytic sublayer implementations so the model can use maintained shared primitives in `extern/modelmeter/layers/` by default while preserving the existing per-model wrappers as an option.
-- **Status**: Draft
+- **Status**: Done
 - **Date**: 2026-01-19
+- **Last updated**: 2026-01-19
+- **Completed**: 2026-01-19
 - **Dependencies**:
   - extern/modelmeter/models/wan2_1/layers/transformer/wan2_1_attention.py
   - extern/modelmeter/models/wan2_1/layers/transformer/wan2_1_mlp.py
