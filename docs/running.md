@@ -43,6 +43,11 @@ pixi run -e rtx5090 python -m llm_perf_opt.runners.wan2_1_analyzer \
   'hydra.run.dir=tmp/profile-output/${now:%Y%m%d-%H%M%S}' \
   workload.profile_id=wan2-1-512p
 
+# Wan2.1 full-pipeline static analysis (text encoder + diffusion core + VAE decode)
+pixi run -e rtx5090 python -m llm_perf_opt.runners.wan2_1_analyzer --pipeline \
+  'hydra.run.dir=tmp/profile-output/${now:%Y%m%d-%H%M%S}' \
+  workload.profile_id=wan2-1-512p
+
 # Wan2.1 verification (synthetic reference FLOPs via FlopCounterMode on meta tensors)
 pixi run -e rtx5090 python -m modelmeter.models.wan2_1.scripts.verify.run_verify_layers --workload wan2-1-ci-tiny
 pixi run -e rtx5090 python -m modelmeter.models.wan2_1.scripts.verify.run_verify_end2end --workload wan2-1-512p

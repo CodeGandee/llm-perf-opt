@@ -34,6 +34,17 @@ def _parse_args() -> argparse.Namespace:
     """Parse CLI args for the Wan2.1 contract wrapper."""
 
     parser = argparse.ArgumentParser(description="Wan2.1 analytic modeling (contract-oriented wrapper).")
+    parser.add_argument(
+        "--pipeline",
+        action="store_true",
+        help="Use full-pipeline ModelMeter config (wan2_1_t2v_14b_pipeline) instead of diffusion-core-only.",
+    )
+    parser.add_argument(
+        "--config-name",
+        type=str,
+        default="wan2_1_t2v_14b",
+        help="ModelMeter config name (default: wan2_1_t2v_14b).",
+    )
     parser.add_argument("--model-id", type=str, default="wan2.1-t2v-14b")
     parser.add_argument("--model-variant", type=str, default="t2v-14b")
     parser.add_argument("--workload-profile-id", type=str, default="wan2-1-512p")
@@ -54,6 +65,7 @@ def main() -> int:
 
     args = _parse_args()
     overrides_dict = _parse_overrides(args.override)
+    config_name = "wan2_1_t2v_14b_pipeline" if bool(args.pipeline) else str(args.config_name)
 
     _ = Wan2_1AnalyticRequest(
         model_id=args.model_id,
@@ -73,7 +85,7 @@ def main() -> int:
     analyzer = Wan2_1StaticAnalyzer()
     try:
         report = analyzer.run(
-            cfg=Wan2_1AnalyzerConfig(workload_profile_id=args.workload_profile_id, run_id=run_id),
+            cfg=Wan2_1AnalyzerConfig(workload_profile_id=args.workload_profile_id, run_id=run_id, modelmeter_config_name=config_name),
             overrides=overrides,
         )
     except Exception as exc:  # noqa: BLE001

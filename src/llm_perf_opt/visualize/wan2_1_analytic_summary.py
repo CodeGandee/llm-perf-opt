@@ -37,10 +37,13 @@ def iter_leaf_metrics(report: Wan2_1AnalyticModelReport) -> list[ModuleMetricsSn
 def total_flops_tflops(report: Wan2_1AnalyticModelReport) -> float:
     """Return total FLOPs (TFLOPs) for the report workload."""
 
+    modules = _index_modules(report)
     metrics = _index_metrics(report)
-    root = metrics.get("diffusion/dit")
-    if root is not None:
-        return float(root.total_flops_tflops)
+    roots = [m.module_id for m in modules.values() if m.parent_id is None]
+    if len(roots) == 1:
+        root = metrics.get(str(roots[0]))
+        if root is not None:
+            return float(root.total_flops_tflops)
     # Fallback: sum leaf metrics (avoids double counting for hierarchical snapshots).
     return float(sum(m.total_flops_tflops for m in iter_leaf_metrics(report)))
 
