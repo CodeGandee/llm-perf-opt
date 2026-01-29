@@ -2,6 +2,7 @@
 __pycache__/
 *.py[cod]
 *$py.class
+.git/
 
 # C extensions
 *.so
@@ -70,6 +71,9 @@ pixi.lock
 # AI assistants
 .codex/
 .claude/
+
+# Local external clones (do not commit)
+extern/github/*/
 
 # Temporary files
 tmp/
