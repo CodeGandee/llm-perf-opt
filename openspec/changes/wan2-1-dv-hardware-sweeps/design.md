@@ -176,6 +176,157 @@ The consolidated stakeholder report should:
 - show where throughput saturates with DP batch growth
 - quantify how far each device is from the 1-second SLA requirement
 
+### Consolidated stakeholder report template
+
+The final DV stakeholder report should be one Markdown document at:
+- `extern/modelmeter/models/wan2_1/reports/hardware_sweeps/comparisons/<comparison_run_id>/stakeholder-report.en.md`
+
+It should keep the same stakeholder-facing tone and information density as the current NGU report, but restructure the narrative so chip-independent context and model-demand metrics appear once while each DV chip gets its own device-dependent serving analysis section.
+
+Proposed template:
+
+```md
+# DV hardware bottlenecks for Wan2.1-T2V-14B (analytic sizing)
+
+## HEADER
+- **Purpose**: Stakeholder-facing summary of predicted hardware bottlenecks when serving Wan2.1-T2V-14B on DV-class hardware under concurrent requests (DP across requests).
+- **Date**: <report date>
+- **Data sources (sweeps)**:
+  - `models/wan2_1/reports/hardware_sweeps/dv100/<run_id>/results.csv`
+  - `models/wan2_1/reports/hardware_sweeps/dv200/<run_id>/results.csv`
+  - `models/wan2_1/reports/hardware_sweeps/dv300/<run_id>/results.csv`
+- **Model**: ModelMeter analytic Wan2.1 full pipeline (`UMT5 text encoding + DiT diffusion + VAE decode`)
+- **Precision assumptions**: `<precision summary>`
+- **Parallelism modeled**: Data-parallel replication across concurrent requests (no intra-request sharding); effective GPUs = `min(batch_size, device_num)`
+- **Scope note**: This is a first-order analytic model using a peak-device bottleneck timing model; treat absolute numbers as sizing guidance and validate with real profiling.
+
+## 1) Executive summary
+- One short bullet for the overall bottleneck pattern across `DV100`, `DV200`, and `DV300`.
+- One short bullet for which chip is closest to the 1-second target for the most demanding supported input.
+- One short bullet for how throughput scales up to `batch_size = 8` and what saturates first.
+- One short bullet quantifying the 1-second SLA gap in hardware terms for each DV tier, for example required aggregate MemIO and the multiple over the 8-GPU peak.
+
+### 1.1 At-a-glance comparison table
+|Device|Primary bottleneck|Latency at batch=1 (s)|Peak throughput at 8 GPUs (videos/s)|Required MemIO for 1s (TB/s)|Gap vs 8-GPU peak|Saturation point|
+|:---:|:---:|:---:|:---:|:---:|:---:|:---:|
+|DV100|<...>|<...>|<...>|<...>|<...>|<...>|
+|DV200|<...>|<...>|<...>|<...>|<...>|<...>|
+|DV300|<...>|<...>|<...>|<...>|<...>|<...>|
+
+## 2) Shared model, workload, and methodology
+This section should appear once and should not be repeated inside the chip-specific sections.
+
+### 2.1 What is Wan2.1 and what runs during inference?
+- Reuse the same explanatory text and execution-flow framing as the NGU report.
+
+### 2.2 Diffusion module architecture (high level)
+- Include the same DiT architecture image used by the NGU report.
+- Preserve the external source attribution for the image and model architecture reference.
+
+### 2.3 Most demanding input structure used for comparison
+- **Resolution**: <...>
+- **Frames**: <...>
+- **Diffusion steps**: <...>
+- **Text length**: <...>
+
+### 2.4 Modeling assumptions
+- State the precision, device count range, batch sweep range, and the “effective GPUs = min(batch_size, device_num)” rule once.
+- Keep the caveat that this is an analytic sizing model rather than measured serving performance.
+
+### 2.5 Shared single-request breakdown (full pipeline)
+- Include the same per-video stage totals table once because the workload demand is chip-independent for a fixed input and precision.
+- Keep the explanatory note that `Diffusion (all steps)` aggregates the denoising loop across all inference steps, while `Diffusion (single step)` is shown for intuition.
+- Preserve the same columns as the NGU report:
+  `Stage`, `Tensor compute (TFLOPs)`, `MemIO (TB)`, `Tensor share (%)`, `MemIO share (%)`
+
+### 2.6 Shared execution flow (single request)
+- Include the same Mermaid sequence diagram once because the serving flow is the same across `DV100`, `DV200`, and `DV300`.
+
+## 3) DV100 analysis
+### 3.1 Device peaks used for hardware limit lines
+- **Per GPU**: Tensor peak = <...>, MemIO peak = <...>, P2P = <...>
+- **8 GPUs aggregate**: Tensor peak = <...>, MemIO peak = <...>
+
+### 3.2 8×DV100 DP serving: batch size sweep
+- Brief interpretation paragraph.
+- Figure: `figures/dv100_full_pipeline_8gpu_throughput.svg`
+- Figure: `figures/dv100_full_pipeline_8gpu_used_rates.svg`
+- Figure: `figures/dv100_full_pipeline_1s_sla_sizing.svg`
+
+### 3.3 Stakeholder conclusions for DV100
+- Primary bottleneck.
+- Scaling behavior.
+- Concrete 1-second SLA gap statement in hardware terms, for example required aggregate MemIO and the multiple over the 8-GPU DV100 peak.
+- Practical implication for this chip.
+
+### Appendix A) DV100 batch sweep table
+- Full table for `device_num=8` and the selected workload slice.
+- Preserve the explicit filter line before the table.
+- Preserve the same columns as the NGU report:
+  `Batch size`, `Effective GPUs`, `Latency (s)`, `Throughput (videos/s)`, `Used Tensor (TFLOP/s)`, `Used MemIO (TB/s)`, `Compute-Max MemIO (TB/s)`, `MemIO-Max Compute (TFLOP/s)`
+
+## 4) DV200 analysis
+### 4.1 Device peaks used for hardware limit lines
+- **Per GPU**: Tensor peak = <...>, MemIO peak = <...>, P2P = <...>
+- **8 GPUs aggregate**: Tensor peak = <...>, MemIO peak = <...>
+
+### 4.2 8×DV200 DP serving: batch size sweep
+- Brief interpretation paragraph.
+- Figure: `figures/dv200_full_pipeline_8gpu_throughput.svg`
+- Figure: `figures/dv200_full_pipeline_8gpu_used_rates.svg`
+- Figure: `figures/dv200_full_pipeline_1s_sla_sizing.svg`
+
+### 4.3 Stakeholder conclusions for DV200
+- Primary bottleneck.
+- Scaling behavior.
+- Concrete 1-second SLA gap statement in hardware terms, for example required aggregate MemIO and the multiple over the 8-GPU DV200 peak.
+- Practical implication for this chip.
+
+### Appendix B) DV200 batch sweep table
+- Full table for `device_num=8` and the selected workload slice.
+- Preserve the explicit filter line before the table.
+- Preserve the same columns as the NGU report:
+  `Batch size`, `Effective GPUs`, `Latency (s)`, `Throughput (videos/s)`, `Used Tensor (TFLOP/s)`, `Used MemIO (TB/s)`, `Compute-Max MemIO (TB/s)`, `MemIO-Max Compute (TFLOP/s)`
+
+## 5) DV300 analysis
+### 5.1 Device peaks used for hardware limit lines
+- **Per GPU**: Tensor peak = <...>, MemIO peak = <...>, P2P = <...>
+- **8 GPUs aggregate**: Tensor peak = <...>, MemIO peak = <...>
+
+### 5.2 8×DV300 DP serving: batch size sweep
+- Brief interpretation paragraph.
+- Figure: `figures/dv300_full_pipeline_8gpu_throughput.svg`
+- Figure: `figures/dv300_full_pipeline_8gpu_used_rates.svg`
+- Figure: `figures/dv300_full_pipeline_1s_sla_sizing.svg`
+
+### 5.3 Stakeholder conclusions for DV300
+- Primary bottleneck.
+- Scaling behavior.
+- Concrete 1-second SLA gap statement in hardware terms, for example required aggregate MemIO and the multiple over the 8-GPU DV300 peak.
+- Practical implication for this chip.
+
+### Appendix C) DV300 batch sweep table
+- Full table for `device_num=8` and the selected workload slice.
+- Preserve the explicit filter line before the table.
+- Preserve the same columns as the NGU report:
+  `Batch size`, `Effective GPUs`, `Latency (s)`, `Throughput (videos/s)`, `Used Tensor (TFLOP/s)`, `Used MemIO (TB/s)`, `Compute-Max MemIO (TB/s)`, `MemIO-Max Compute (TFLOP/s)`
+
+## 6) Cross-device conclusions
+- Which chip remains MemIO-bound and which one moves closest to compute or mixed limits.
+- How much each chip improves over the previous DV tier.
+- Which chip is the most practical candidate for the target SLA under the current analytic assumptions.
+
+### 6.1 Cross-device comparison figures
+- Figure: `figures/full_pipeline_8gpu_throughput_compare.svg`
+- Figure: `figures/full_pipeline_8gpu_used_rates_compare.svg`
+- Figure: `figures/full_pipeline_1s_sla_gap_compare.svg`
+```
+
+Template rationale:
+- Shared sections remove duplicated Wan2.1 explanation text, architecture references, execution flow, and chip-independent stage-demand metrics that would otherwise appear three times.
+- Per-device sections remain parallel on the device-dependent parts of the current NGU report, so each chip can be read independently without repeating the same model description.
+- The opening comparison table and closing cross-device conclusions let stakeholders scan the whole DV family quickly without digging through all appendices.
+
 Alternatives considered:
 - Write separate hand-authored stakeholder reports per device.
   Rejected because consistency would be difficult to maintain and stakeholders specifically want one report that covers the whole DV family.

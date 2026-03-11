@@ -12,7 +12,8 @@ This document is a concise contributor guide for llm-perf-opt. Follow it for any
 
 ## Build, Test, and Development Commands
 - Environment: install Pixi, then run `pixi install` (default CUDA 12.6 env)
-- Python: by default run scripts via `pixi run python ...` (default env), and only use `pixi run -e <env> ...` when required by the specific hardware/tooling context or when the user explicitly asks
+- Python: use the Pixi-managed interpreter by default via `pixi run python ...` (default env); avoid `python`/`python3` from the system environment for repo work
+- Python environments: only use `pixi run -e <env> ...` when required by the specific hardware/tooling context or when the user explicitly asks
 - Lint: `pixi run ruff check .`  |  Types: `pixi run mypy src`
 - Unit tests: `pixi run pytest tests/unit/`
 - Integration tests: `pixi run pytest tests/integration/`
