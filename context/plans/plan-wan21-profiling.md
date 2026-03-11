@@ -1,11 +1,11 @@
 # Plan: Wan2.1 Runtime Profiling Harness
 
 ## HEADER
-- Purpose: Implement a reproducible runtime profiling harness for Wan2.1-T2V-14B (FP16) that profiles diffusion-only performance for 10 steps, and extrapolates an estimated 50-step diffusion time per the requirements in `context/tasks/req-wan21-profiling.md`.
+- Purpose: Implement a reproducible runtime profiling harness for Wan2.1-T2V-14B (FP16) that profiles diffusion-only performance for 10 steps, and extrapolates an estimated 50-step diffusion time per the requirements in `context/tasks/working/task-wan21-profiling-requirements.md`.
 - Status: In progress (diffusion-only timing + extrapolation implemented; extending FLOP-derived TFLOP/s and stage coverage)
 - Date: 2026-01-29
 - Dependencies:
-  - `context/tasks/req-wan21-profiling.md`
+  - `context/tasks/working/task-wan21-profiling-requirements.md`
   - `models/wan2.1-t2v-14b/source-data/README.md`
   - `.env`
   - `extern/github/README.md`
@@ -16,7 +16,7 @@
 ---
 
 ## 1. Purpose and Outcome
-This plan implements an in-repo way to profile Wan2.1-T2V-14B runtime performance for the specific workload constraints defined in `context/tasks/req-wan21-profiling.md` (1280x720, 81 frames, prompt >= 200 words) by running diffusion-only for 10 steps (FP16), timing each step, and extrapolating an estimated 50-step diffusion time.
+This plan implements an in-repo way to profile Wan2.1-T2V-14B runtime performance for the specific workload constraints defined in `context/tasks/working/task-wan21-profiling-requirements.md` (1280x720, 81 frames, prompt >= 200 words) by running diffusion-only for 10 steps (FP16), timing each step, and extrapolating an estimated 50-step diffusion time.
 Success looks like a single command that creates a timestamped experiment directory under `tmp/wan21-profiling-<time>-fp16/` and produces machine-readable metrics (JSON) plus a short human summary (Markdown) without including disk IO in the timed regions.
 Additionally, we capture stage-level FLOP-derived throughput (TFLOP/s) for text encoder, diffusion, VAE decode, and end-to-end (reporting TFLOP/s only, not raw FLOP counts).
 
@@ -78,7 +78,7 @@ S->>S: write metrics.json<br/>and summary.md
 ```
 
 ## 3. Files to Modify or Add
-- `context/tasks/req-wan21-profiling.md` add any missing measurement clarifications discovered during implementation (only when needed).
+- `context/tasks/working/task-wan21-profiling-requirements.md` add any missing measurement clarifications discovered during implementation (only when needed).
 - `context/plans/plan-wan21-profiling.md` this plan.
 - `extern/github/wan2.1/` upstream Wan2.1 inference code (currently a local clone; decide submodule vs symlink; do not commit weights into git).
 - `scripts/wan2_1/wan21_profile.py` main entrypoint that creates `tmp/wan21-profiling-<time>-fp16/` (recommended via `--out-dir`) and runs warmup + measured diffusion-only runs + extrapolation.

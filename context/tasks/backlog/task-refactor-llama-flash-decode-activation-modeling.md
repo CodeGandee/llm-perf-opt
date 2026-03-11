@@ -115,7 +115,7 @@ Update the relevant docs to reflect the new behavior:
   - Update or remove the bullet that says `LlamaFlashAttention2.forward_cal_io()` and `forward_memory_activation()` are not query/context aware.
 - `extern/modelmeter/models/deepseek_ocr/LAYER_IO_ESTIMATION_GUIDE.md`:
   - Document how `LlamaFlashAttention2` handles `S_q` and `S_kv` in FLOPs, I/O, activations, and KV cache for prefill vs decode.
-- Any open TODOs in `context/tasks/refactor/task-refactor-dsocr-analytic-prefill-decode-apis.md` that refer to the old single `seq_len` behavior should be updated to mark this aspect as completed.
+- Any open TODOs in `context/tasks/backlog/task-refactor-dsocr-analytic-prefill-decode-apis.md` that refer to the old single `seq_len` behavior should be updated to mark this aspect as completed.
 
 ### 5) Adjust sweep and reporting scripts if needed
 Most sweep code consumes `StageCost` as an opaque structure and will automatically benefit from the corrected Flash decode modeling, but we should review:
@@ -193,11 +193,10 @@ These tests should avoid hard coding exact numeric values and instead check mono
   - `extern/modelmeter/models/deepseek_ocr/HOLISTIC_ANALYSIS.md`
   - `extern/modelmeter/models/deepseek_ocr/LAYER_IO_ESTIMATION_GUIDE.md`
   - `extern/modelmeter/models/deepseek_ocr/LAYER_IMPL_GUIDE.md`
-  - `context/tasks/refactor/task-refactor-dsocr-analytic-prefill-decode-apis.md`
+  - `context/tasks/backlog/task-refactor-dsocr-analytic-prefill-decode-apis.md`
 - Tests:
   - `tests/unit/deepseek_ocr/test_analytic_layers_scaling.py`
   - `tests/unit/deepseek_ocr/test_vision_flash_attention_variants.py`
 - Third party libraries (Context7 IDs):
   - `/pytorch/pytorch`
   - `/huggingface/transformers`
-

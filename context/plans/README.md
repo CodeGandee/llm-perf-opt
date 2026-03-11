@@ -10,8 +10,8 @@
 ## Content
 Use for feature plans, system roadmaps, and migration strategies that break work into steps.
 
-## Done
-Historical plans that have been completed live under `context/plans/done/`.
+## Archive
+Historical plans that have been completed or superseded live under `context/plans/_archive/`.
 
 ## Conventions
 - Name files by feature/system (e.g., `api-redesign-roadmap.md`, `database-migration-strategy.md`).

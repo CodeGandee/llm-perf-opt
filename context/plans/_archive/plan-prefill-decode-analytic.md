@@ -8,7 +8,7 @@
 Analytically estimate and validate DeepSeek‑OCR prefill/decode FLOPs/IO/memory as a function of sequence length using the ModelMeter analytic stack and Stage‑1/Stage‑2 profiling.
 
 **Location**  
-`context/plans/done/plan-prefill-decode-analytic.md`
+`context/plans/_archive/plan-prefill-decode-analytic.md`
 
 **Date**  
 2025-11-21
@@ -16,7 +16,7 @@ Analytically estimate and validate DeepSeek‑OCR prefill/decode FLOPs/IO/memory
 **Related**  
 - `context/tasks/task-anything.md` (high‑level task: estimate prefill/decode cost vs seq_len, verify against measurements)  
 - `extern/modelmeter/models/deepseek_ocr/HOLISTIC_ANALYSIS.md` (stateful analytic usage)  
-- `context/tasks/refactor/task-refactor-dsocr-stateful-analytic-layers.md` (design for stateful analytic root + KV cache)  
+- `context/tasks/backlog/task-refactor-dsocr-stateful-analytic-layers.md` (design for stateful analytic root + KV cache)
 - `src/llm_perf_opt/runners/dsocr_analyzer.py` (static analytic report generator)  
 
 ---
@@ -81,7 +81,7 @@ From existing code and docs:
 - `DeepSeekOCRSession` and Stage‑1/Stage‑2 pipelines already:
   - run DeepSeek‑OCR with NVTX segmentation (`sam`, `clip`, `projector`, `prefill`, `decode`),  
   - collect timing and, in some flows, FLOP counts using `torch.utils.flop_counter.FlopCounterMode`.
-- `docs/analyzer-mfu.md` and `context/plans/done/plan-per-stage-static-analysis.md` describe how to combine static/dynamic metrics into MFU estimates.
+- `docs/analyzer-mfu.md` and `context/plans/_archive/plan-per-stage-static-analysis.md` describe how to combine static/dynamic metrics into MFU estimates.
 
 We will re‑use this machinery to get **measured prefill/decode FLOPs and timings** at selected sequence lengths.
 

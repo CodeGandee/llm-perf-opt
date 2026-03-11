@@ -13,13 +13,15 @@ This `context/` directory organizes project knowledge to make AI collaboration e
 - `design/` — Technical specs and architecture docs
 - `hints/` — How-to guides and troubleshooting tips
 - `instructions/` — Reusable prompt snippets and command templates
+- `issues/` — Feature requests, known issues, and resolved issues
 - `logs/` — Session records with outcomes and lessons learned
 - `plans/` — Implementation strategies and roadmaps
 - `refcode/` — Reference implementations and examples
 - `roles/` — Role-specific prompts and memory
+- `rules/` — Task-specific constraints and local operating rules
+- `skills/` — Reusable AI workflows and skill packages
 - `summaries/` — Analysis and consolidated knowledge
 - `tasks/` — Work items organized by status
 - `tools/` — Custom scripts and utilities
 
 See individual subdirectory READMEs for conventions and examples.
-
