@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import csv
 import json
 import pytest
 from mdutils.mdutils import MdUtils
@@ -11,7 +12,7 @@ from modelmeter.models.wan2_1.scripts.reporting.run_make_dv_stakeholder_report i
 from modelmeter.models.wan2_1.scripts.reporting.run_make_dv_stakeholder_report import _utilization_percent_text
 from modelmeter.models.wan2_1.scripts.reporting.run_make_dv_stakeholder_report import _validate_comparable_runs
 from modelmeter.models.wan2_1.scripts.reporting.run_make_dv_stakeholder_report import _write_stakeholder_reports
-from modelmeter.models.wan2_1.scripts.reporting.run_make_dv_precision_summary_report import _write_precision_summary_bundle
+from modelmeter.models.wan2_1.scripts.reporting.run_make_comparative_stakeholder_summary import _write_comparative_summary_bundle
 
 
 def _metadata(
@@ -309,6 +310,10 @@ def test_write_stakeholder_reports_generates_english_and_chinese_variants(tmp_pa
     assert "MemIO" in chinese_text
     assert "batch size" in chinese_text
     assert "Data-parallel replication" in chinese_text
+    assert "Avg time per video (s/video)" in english_text
+    assert "单视频平均耗时 (s/video)" in chinese_text
+    assert "Throughput (videos/s)" not in english_text
+    assert "吞吐量 (videos/s)" not in chinese_text
     assert "\n\n![](figures/dv100_full_pipeline_8gpu_throughput.svg)\n\n" in english_text
     assert "\n\n![](figures/dv100_full_pipeline_8gpu_throughput.svg)\n\n" in chinese_text
 
@@ -396,6 +401,11 @@ def _write_detailed_bundle_fixture(
     )
 
 
+def _read_csv(path) -> list[dict[str, str]]:
+    with path.open(newline="") as handle:
+        return [dict(row) for row in csv.DictReader(handle)]
+
+
 def test_validate_comparable_runs_rejects_precision_mismatch() -> None:
     input_struct = ("1280*720", 81, 50, 256)
     metadata_fp8 = _metadata(selector="dv100", display_name="DV100", fp8_tflops=2000.0, fp4_tflops=4000.0, cuda_tflops=1.0, io_tb_s=2.0)
@@ -475,7 +485,7 @@ def test_validate_comparable_runs_rejects_precision_mismatch() -> None:
         _validate_comparable_runs(payloads_by_device=payloads_by_device, summaries_by_device=summaries_by_device)
 
 
-def test_write_precision_summary_bundle_generates_bilingual_reports(tmp_path) -> None:
+def test_write_comparative_summary_bundle_generates_bilingual_reports(tmp_path) -> None:
     input_struct = ("1280*720", 81, 50, 256)
     run_ids = {"dv100": "dv100-run", "dv200": "dv200-run", "dv300": "dv300-run"}
     fp8_summaries = {
@@ -527,7 +537,7 @@ def test_write_precision_summary_bundle_generates_bilingual_reports(tmp_path) ->
 
     fp8_dir = tmp_path / "fp8-detailed"
     fp4_dir = tmp_path / "fp4-detailed"
-    summary_dir = tmp_path / "fp8-vs-fp4"
+    summary_dir = tmp_path / "comparative-summary"
     _write_detailed_bundle_fixture(
         bundle_dir=fp8_dir,
         precision_name="fp8",
@@ -547,29 +557,57 @@ def test_write_precision_summary_bundle_generates_bilingual_reports(tmp_path) ->
         input_struct=input_struct,
     )
 
-    report_texts = _write_precision_summary_bundle(
-        fp8_comparison_dir=fp8_dir,
-        fp4_comparison_dir=fp4_dir,
+    report_texts = _write_comparative_summary_bundle(
+        comparison_dirs=[fp8_dir, fp4_dir],
         summary_dir=summary_dir,
     )
 
     assert set(report_texts.keys()) == {"en", "cn"}
     assert (summary_dir / "bundle-metadata.json").exists()
     assert (summary_dir / "comparison-table.csv").exists()
-    assert (summary_dir / "stakeholder-report.en.md").exists()
-    assert (summary_dir / "stakeholder-report.cn.md").exists()
-    assert (summary_dir / "figures" / "precision_batch1_latency_compare.svg").exists()
-    assert (summary_dir / "figures" / "precision_peak_throughput_compare.svg").exists()
+    assert (summary_dir / "stakeholder-summary.en.md").exists()
+    assert (summary_dir / "stakeholder-summary.cn.md").exists()
+    assert (summary_dir / "figures" / "comparative_batch1_latency.svg").exists()
+    assert (summary_dir / "figures" / "comparative_avg_time_per_video.svg").exists()
 
-    english_text = (summary_dir / "stakeholder-report.en.md").read_text()
-    chinese_text = (summary_dir / "stakeholder-report.cn.md").read_text()
-    assert "DV fp8 vs fp4 for Wan2.1-T2V-14B" in english_text
-    assert "DV 系列 Wan2.1-T2V-14B：fp8 vs fp4 对比" in chinese_text
-    assert "Latency speedup (FP8/FP4)" in english_text
-    assert "吞吐提升倍数 (FP4/FP8)" in chinese_text
+    english_text = (summary_dir / "stakeholder-summary.en.md").read_text()
+    chinese_text = (summary_dir / "stakeholder-summary.cn.md").read_text()
+    assert "Wan2.1-T2V-14B hardware comparative summary" in english_text
+    assert "Wan2.1-T2V-14B 硬件对比摘要" in chinese_text
+    assert "At-a-glance scenario table" in english_text
+    assert "场景一览表" in chinese_text
+    assert "How to read these columns, by intuition" in english_text
+    assert "这些列可以这样读" in chinese_text
+    assert "Avg time per video at peak 8-GPU load (s/video)" in english_text
+    assert "8-GPU 满载时单视频平均耗时 (s/video)" in chinese_text
+    assert "best full-node operating point" in english_text
+    assert "整机表现最好的那个运行点" in chinese_text
+    assert "Used/peak MemIO per GPU" in english_text
+    assert "Used/peak compute per GPU" in english_text
+    assert "每卡 Used/peak MemIO" in chinese_text
+    assert "每卡 Used/peak compute" in chinese_text
+    assert _utilization_percent_text(float(fp8_summaries["dv100"]["used_memio_vs_peak_per_gpu_at_peak_throughput"])) in english_text
+    assert _utilization_percent_text(float(fp8_summaries["dv100"]["used_tensor_vs_peak_per_gpu_at_peak_throughput"])) in english_text
+
+    metadata = json.loads((summary_dir / "bundle-metadata.json").read_text())
+    assert metadata["bundle_kind"] == "comparative-summary"
+    assert metadata["scenario_ids"] == [
+        "dv100-fp8",
+        "dv100-fp4",
+        "dv200-fp8",
+        "dv200-fp4",
+        "dv300-fp8",
+        "dv300-fp4",
+    ]
+
+    comparison_rows = _read_csv(summary_dir / "comparison-table.csv")
+    assert [row["scenario_id"] for row in comparison_rows] == metadata["scenario_ids"]
+    assert comparison_rows[0]["scenario_label"] == "DV100 fp8"
+    assert comparison_rows[1]["scenario_label"] == "DV100 fp4"
+    assert comparison_rows[-1]["source_comparison_run_id"] == "fp4-detailed"
 
 
-def test_write_precision_summary_bundle_rejects_mismatched_context(tmp_path) -> None:
+def test_write_comparative_summary_bundle_rejects_mismatched_context(tmp_path) -> None:
     input_struct_fp8 = ("1280*720", 81, 50, 256)
     input_struct_fp4 = ("832*480", 81, 50, 256)
     run_ids = {"dv100": "dv100-run", "dv200": "dv200-run", "dv300": "dv300-run"}
@@ -642,9 +680,8 @@ def test_write_precision_summary_bundle_rejects_mismatched_context(tmp_path) -> 
         input_struct=input_struct_fp4,
     )
 
-    with pytest.raises(ValueError, match="Incompatible fp8/fp4 DV comparison bundles"):
-        _write_precision_summary_bundle(
-            fp8_comparison_dir=fp8_dir,
-            fp4_comparison_dir=fp4_dir,
+    with pytest.raises(ValueError, match="Incompatible comparative summary inputs"):
+        _write_comparative_summary_bundle(
+            comparison_dirs=[fp8_dir, fp4_dir],
             summary_dir=tmp_path / "summary",
         )
