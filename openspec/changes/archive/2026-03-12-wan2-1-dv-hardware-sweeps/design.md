@@ -2,11 +2,11 @@
 
 Wan2.1 analytic sizing currently has a narrow pipeline:
 
-- [run_ngu800p_concurrency_sweep.py](/data1/huangzhe/code/llm-perf-opt/extern/modelmeter/models/wan2_1/scripts/sizing/run_ngu800p_concurrency_sweep.py) imports `NGU800P` directly, hard-codes NGU-specific output paths, and writes metadata with `device.name = "NGU800P"`.
-- [run_make_ngu800p_sweep_figures.py](/data1/huangzhe/code/llm-perf-opt/extern/modelmeter/models/wan2_1/scripts/reporting/run_make_ngu800p_sweep_figures.py) assumes NGU naming, NGU plot titles, and the fixed 8-GPU DP story.
+- [run_ngu800p_concurrency_sweep.py](extern/modelmeter/models/wan2_1/scripts/sizing/run_ngu800p_concurrency_sweep.py) imports `NGU800P` directly, hard-codes NGU-specific output paths, and writes metadata with `device.name = "NGU800P"`.
+- [run_make_ngu800p_sweep_figures.py](extern/modelmeter/models/wan2_1/scripts/reporting/run_make_ngu800p_sweep_figures.py) assumes NGU naming, NGU plot titles, and the fixed 8-GPU DP story.
 - The current stakeholder report is hand-authored against one `results.csv` under `reports/ngu800p_sweeps/`.
 
-At the same time, [extern/modelmeter/devices/gpu.py](/data1/huangzhe/code/llm-perf-opt/extern/modelmeter/devices/gpu.py) already exposes the shared aliases `DV100`, `DV200`, and `DV300`, along with both `p2p_bandwidth` and a dummy `cuda_tflops` for interface compatibility. That removes most of the earlier compatibility concern. The remaining work is mainly to select the device cleanly, shape metadata consistently, and fill any still-missing reporting-only fields locally when needed.
+At the same time, [extern/modelmeter/devices/gpu.py](extern/modelmeter/devices/gpu.py) already exposes the shared aliases `DV100`, `DV200`, and `DV300`, along with both `p2p_bandwidth` and a dummy `cuda_tflops` for interface compatibility. That removes most of the earlier compatibility concern. The remaining work is mainly to select the device cleanly, shape metadata consistently, and fill any still-missing reporting-only fields locally when needed.
 
 This change has an additional boundary constraint: implementation must remain inside `extern/modelmeter/models/`. Shared modules outside that subtree, including `modelmeter.devices.gpu`, are treated as read-only dependencies for this change.
 
@@ -171,7 +171,7 @@ Chosen approach:
 
 The consolidated stakeholder report should:
 - use separate sections for `DV100`, `DV200`, and `DV300`
-- include the same kinds of information as [stakeholder-report.en.md](/data1/huangzhe/code/llm-perf-opt/extern/modelmeter/models/wan2_1/reports/ngu800p_sweeps/stakeholder-report.en.md)
+- include the same kinds of information as [stakeholder-report.en.md](extern/modelmeter/models/wan2_1/reports/ngu800p_sweeps/stakeholder-report.en.md)
 - identify which bottleneck dominates per device
 - show where throughput saturates with DP batch growth
 - quantify how far each device is from the 1-second SLA requirement

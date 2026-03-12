@@ -1,6 +1,6 @@
 ## Why
 
-The current DV stakeholder reporting flow only generates [stakeholder-report.en.md](/data1/huangzhe/code/llm-perf-opt/extern/modelmeter/models/wan2_1/reports/hardware_sweeps/comparisons/20260311-dv-comparison/stakeholder-report.en.md), but the immediate stakeholder need now includes a Chinese version for the same DV comparison bundle. Wan2.1 already has a legacy Chinese stakeholder-report precedent at [stakeholder-report.cn.md](/data1/huangzhe/code/llm-perf-opt/extern/modelmeter/models/wan2_1/reports/ngu800p_sweeps/stakeholder-report.cn.md), so the DV reporting path should provide the same deliverable without requiring manual translation after every regeneration.
+The current DV stakeholder reporting flow only generates [stakeholder-report.en.md](extern/modelmeter/models/wan2_1/reports/hardware_sweeps/comparisons/20260311-dv-comparison/stakeholder-report.en.md), but the immediate stakeholder need now includes a Chinese version for the same DV comparison bundle. Wan2.1 already has a legacy Chinese stakeholder-report precedent at [stakeholder-report.cn.md](extern/modelmeter/models/wan2_1/reports/ngu800p_sweeps/stakeholder-report.cn.md), so the DV reporting path should provide the same deliverable without requiring manual translation after every regeneration.
 
 ## What Changes
 
@@ -21,6 +21,6 @@ The current DV stakeholder reporting flow only generates [stakeholder-report.en.
 
 ## Impact
 
-- Affected code: [run_make_dv_stakeholder_report.py](/data1/huangzhe/code/llm-perf-opt/extern/modelmeter/models/wan2_1/scripts/reporting/run_make_dv_stakeholder_report.py) and adjacent Wan2.1 reporting docs/readmes.
+- Affected code: [run_make_dv_stakeholder_report.py](extern/modelmeter/models/wan2_1/scripts/reporting/run_make_dv_stakeholder_report.py) and adjacent Wan2.1 reporting docs/readmes.
 - Affected outputs: `extern/modelmeter/models/wan2_1/reports/hardware_sweeps/comparisons/<comparison_run_id>/stakeholder-report.cn.md` in addition to the existing English report and shared figures/CSV.
 - Scope boundary: this change localizes markdown reporting only; it does not require Chinese-localized figure titles or a second figure-generation pipeline.
