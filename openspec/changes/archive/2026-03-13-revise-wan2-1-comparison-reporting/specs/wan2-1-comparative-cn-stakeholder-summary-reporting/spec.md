@@ -1,3 +1,5 @@
+## MODIFIED Requirements
+
 ### Requirement: Chinese comparative stakeholder summary is generated with the bundle
 The system SHALL generate a Chinese comparative stakeholder summary markdown scaffold alongside the English comparative stakeholder summary scaffold whenever comparative summary reporting succeeds on a selected set of compatible Wan2.1 source scenarios.
 
@@ -21,6 +23,8 @@ The system SHALL localize the generated factual text and placeholder instruction
 - **WHEN** the Chinese comparative stakeholder summary scaffold is generated
 - **THEN** the generated factual sections and placeholder instructions read as natural Chinese for a technical stakeholder audience
 - **AND** key technical terms such as hardware labels, precision labels, bottleneck names, or model-stage names MAY remain in English when that wording is clearer than forced Chinese equivalents
+
+## ADDED Requirements
 
 ### Requirement: Chinese comparative summary scaffold preserves editable boundaries
 The Chinese comparative stakeholder summary scaffold SHALL preserve the same generated-region and editable-placeholder boundaries as the English scaffold so users can apply the same manual LLM-editing workflow in either locale.

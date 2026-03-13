@@ -1,3 +1,5 @@
+## MODIFIED Requirements
+
 ### Requirement: Comparative stakeholder summary bundle
 The system SHALL generate one English comparative stakeholder summary markdown scaffold from an explicit selection of compatible Wan2.1 sweep scenarios that share one analytic comparison context, without requiring those scenarios to be preassembled into detailed subgroup comparison bundles.
 
@@ -32,6 +34,8 @@ The system SHALL validate that selected source scenarios are analytically compar
 - **WHEN** a user attempts to generate a comparative summary from selected scenarios that differ in workload structure, model mode, utilization profile, or device-count semantics
 - **THEN** the system refuses to generate the comparative summary
 - **AND** the system reports which shared-context dimensions are incompatible
+
+## ADDED Requirements
 
 ### Requirement: Comparative summary orders scenarios predictably
 The system SHALL order comparative summary scenarios deterministically so the `DV` series appears before non-`DV` scenarios, and scenarios for the same device remain grouped together in tables and headline figures.
