@@ -5,13 +5,17 @@ import json
 import pytest
 from mdutils.mdutils import MdUtils
 
+from modelmeter.models.wan2_1.hardware_sweep import device_run_dir
 from modelmeter.models.wan2_1.hardware_sweep import write_results_csv
 from modelmeter.models.wan2_1.hardware_sweep import stage_breakdown_key
 from modelmeter.models.wan2_1.hardware_sweep_reporting import compute_device_summary
+from modelmeter.models.wan2_1.scripts.reporting import run_make_dv_stakeholder_report
 from modelmeter.models.wan2_1.scripts.reporting.run_make_dv_stakeholder_report import _add_image
 from modelmeter.models.wan2_1.scripts.reporting.run_make_dv_stakeholder_report import _utilization_percent_text
 from modelmeter.models.wan2_1.scripts.reporting.run_make_dv_stakeholder_report import _validate_comparable_runs
+from modelmeter.models.wan2_1.scripts.reporting.run_make_dv_stakeholder_report import _write_detailed_bundle
 from modelmeter.models.wan2_1.scripts.reporting.run_make_dv_stakeholder_report import _write_stakeholder_reports
+from modelmeter.models.wan2_1.scripts.reporting.run_make_dv_stakeholder_report import DeviceRunSpec
 from modelmeter.models.wan2_1.scripts.reporting.run_make_comparative_stakeholder_summary import _write_comparative_summary_bundle
 
 
@@ -27,6 +31,7 @@ def _metadata(
     precision_name: str = "fp8",
     compute_precision: str = "fp8",
     storage_bits: int = 8,
+    family: str | None = None,
 ) -> dict[str, object]:
     return {
         "precision": {
@@ -42,6 +47,7 @@ def _metadata(
             "cuda_tflops": cuda_tflops,
             "io_tb_s": io_tb_s,
             "p2p_gb_s": p2p_gb_s,
+            "family": family,
         },
     }
 
@@ -303,9 +309,9 @@ def test_write_stakeholder_reports_generates_english_and_chinese_variants(tmp_pa
 
     english_text = english_report.read_text()
     chinese_text = chinese_report.read_text()
-    assert "DV hardware bottlenecks for Wan2.1-T2V-14B" in english_text
+    assert "Hardware bottlenecks for Wan2.1-T2V-14B" in english_text
     assert "analytic sizing, fp8" in english_text
-    assert "DV 系列 Wan2.1-T2V-14B 的硬件瓶颈" in chinese_text
+    assert "Wan2.1-T2V-14B 的硬件瓶颈" in chinese_text
     assert "stakeholder-report.cn.md" not in chinese_text
     assert "MemIO" in chinese_text
     assert "batch size" in chinese_text
@@ -316,6 +322,186 @@ def test_write_stakeholder_reports_generates_english_and_chinese_variants(tmp_pa
     assert "吞吐量 (videos/s)" not in chinese_text
     assert "\n\n![](figures/dv100_full_pipeline_8gpu_throughput.svg)\n\n" in english_text
     assert "\n\n![](figures/dv100_full_pipeline_8gpu_throughput.svg)\n\n" in chinese_text
+
+
+def _payload_for_rows(
+    *,
+    metadata: dict[str, object],
+    rows: list[dict[str, object]],
+    input_struct: tuple[str, int, int, int] = ("1280*720", 81, 50, 256),
+) -> dict[str, object]:
+    enriched_metadata = {
+        **metadata,
+        "workloads": [
+            {
+                "size": input_struct[0],
+                "frame_num": input_struct[1],
+                "steps": input_struct[2],
+                "text_len": input_struct[3],
+            },
+        ],
+        "batch_sizes": sorted({int(row["batch_size"]) for row in rows}),
+        "device_nums": sorted({int(row["device_num"]) for row in rows}),
+    }
+    return {
+        "metadata": enriched_metadata,
+        "stage_breakdown_by_input_struct": {
+            stage_breakdown_key(input_struct): {
+                "text_encoder": {"tensor_tflops": 2.39659, "memio_tb": 0.00486469},
+                "diffusion_core": {"tensor_tflops": 308617.0, "memio_tb": 848.724},
+                "vae_decode": {"tensor_tflops": 660.444, "memio_tb": 0.185534},
+            },
+        },
+        "rows": rows,
+    }
+
+
+def test_write_detailed_bundle_generates_generic_nvidia_bundle(tmp_path) -> None:
+    wan2_1_dir = tmp_path / "wan2_1"
+    comparison_dir = wan2_1_dir / "reports" / "hardware_sweeps" / "comparisons" / "nvidia-detailed"
+    input_struct = ("1280*720", 81, 50, 256)
+    h20_rows = [
+        _row(
+            batch_size=1,
+            device_num=1,
+            effective_gpus=1,
+            total_cost_s=61.0,
+            throughput_videos_per_s=1.0 / 61.0,
+            tensor_cost_s=61.0,
+            io_cost_s=14.0,
+            model_tensor_tflops=18000.0,
+            model_io_tb=850.0,
+        ),
+        _row(
+            batch_size=8,
+            device_num=8,
+            effective_gpus=8,
+            total_cost_s=61.0,
+            throughput_videos_per_s=8.0 / 61.0,
+            tensor_cost_s=61.0,
+            io_cost_s=14.0,
+            model_tensor_tflops=18000.0,
+            model_io_tb=850.0,
+        ),
+    ]
+    b200_rows = [
+        _row(
+            batch_size=1,
+            device_num=1,
+            effective_gpus=1,
+            total_cost_s=6.0,
+            throughput_videos_per_s=1.0 / 6.0,
+            tensor_cost_s=6.0,
+            io_cost_s=2.0,
+            model_tensor_tflops=18000.0,
+            model_io_tb=850.0,
+        ),
+        _row(
+            batch_size=8,
+            device_num=8,
+            effective_gpus=8,
+            total_cost_s=6.0,
+            throughput_videos_per_s=8.0 / 6.0,
+            tensor_cost_s=6.0,
+            io_cost_s=2.0,
+            model_tensor_tflops=18000.0,
+            model_io_tb=850.0,
+        ),
+    ]
+    payload_by_selector = {
+        "h20": _payload_for_rows(
+            metadata=_metadata(
+                selector="h20",
+                display_name="H20",
+                fp8_tflops=296.0,
+                cuda_tflops=1.0,
+                io_tb_s=4.0,
+                p2p_gb_s=300.0,
+                family="nvidia",
+            ),
+            rows=h20_rows,
+            input_struct=input_struct,
+        ),
+        "b200": _payload_for_rows(
+            metadata=_metadata(
+                selector="b200",
+                display_name="B200",
+                fp8_tflops=32000.0,
+                cuda_tflops=1.0,
+                io_tb_s=7.7,
+                p2p_gb_s=14.4 * 1024.0,
+                family="nvidia",
+            ),
+            rows=b200_rows,
+            input_struct=input_struct,
+        ),
+    }
+    for selector, run_id in (("h20", "run-h20"), ("b200", "run-b200")):
+        run_dir = device_run_dir(wan2_1_dir=wan2_1_dir, device_selector=selector, run_id=run_id)
+        run_dir.mkdir(parents=True, exist_ok=True)
+        (run_dir / "results.json").write_text(json.dumps(payload_by_selector[selector], indent=2) + "\n")
+
+    _write_detailed_bundle(
+        comparison_dir=comparison_dir,
+        wan2_1_dir=wan2_1_dir,
+        device_runs=(
+            DeviceRunSpec("h20", "run-h20"),
+            DeviceRunSpec("b200", "run-b200"),
+        ),
+    )
+
+    english_text = (comparison_dir / "stakeholder-report.en.md").read_text()
+    chinese_text = (comparison_dir / "stakeholder-report.cn.md").read_text()
+    metadata = json.loads((comparison_dir / "bundle-metadata.json").read_text())
+
+    assert metadata["devices"] == ["b200", "h20"]
+    assert "B200 and H20" in english_text
+    assert "B200 和 H20" in chinese_text
+    assert "first-pass analytic assumptions pending external validation" in english_text
+    assert "5) Cross-device conclusions" in english_text
+    assert "5) 跨设备结论" in chinese_text
+    assert "DV hardware bottlenecks" not in english_text
+    assert (comparison_dir / "figures" / "h20_full_pipeline_8gpu_throughput.svg").exists()
+    assert (comparison_dir / "figures" / "b200_full_pipeline_8gpu_throughput.svg").exists()
+    assert (comparison_dir / "figures" / "full_pipeline_8gpu_throughput_compare.svg").exists()
+    compare_svg_text = (comparison_dir / "figures" / "full_pipeline_8gpu_throughput_compare.svg").read_text()
+    assert "NVIDIA devices" in compare_svg_text
+
+
+def test_dv_main_keeps_wrapper_behavior(monkeypatch, tmp_path) -> None:
+    captured: dict[str, object] = {}
+
+    def fake_write_detailed_bundle(*, comparison_dir, wan2_1_dir, device_runs):
+        captured["comparison_dir"] = comparison_dir
+        captured["wan2_1_dir"] = wan2_1_dir
+        captured["device_runs"] = device_runs
+        return {"en": "ok", "cn": "ok"}
+
+    monkeypatch.setattr(
+        run_make_dv_stakeholder_report,
+        "_parse_args",
+        lambda: type(
+            "Args",
+            (),
+            {
+                "comparison_run_id": "bundle-run",
+                "dv100_run_id": "dv100-run",
+                "dv200_run_id": "dv200-run",
+                "dv300_run_id": "dv300-run",
+            },
+        )(),
+    )
+    monkeypatch.setattr(run_make_dv_stakeholder_report, "_write_detailed_bundle", fake_write_detailed_bundle)
+    monkeypatch.setattr(run_make_dv_stakeholder_report.Path, "resolve", lambda self: tmp_path / "scripts" / "reporting" / "run_make_dv_stakeholder_report.py")
+
+    assert run_make_dv_stakeholder_report.main() == 0
+    assert captured["comparison_dir"] == tmp_path / "reports" / "hardware_sweeps" / "comparisons" / "bundle-run"
+    assert captured["wan2_1_dir"] == tmp_path
+    assert captured["device_runs"] == (
+        DeviceRunSpec("dv100", "dv100-run"),
+        DeviceRunSpec("dv200", "dv200-run"),
+        DeviceRunSpec("dv300", "dv300-run"),
+    )
 
 
 def _comparison_row(summary: dict[str, object], *, run_id: str) -> dict[str, object]:
@@ -368,17 +554,19 @@ def _write_detailed_bundle_fixture(
     summaries_by_selector: dict[str, dict[str, object]],
     run_ids: dict[str, str],
     input_struct: tuple[str, int, int, int],
+    device_selectors: tuple[str, ...] | None = None,
 ) -> None:
     bundle_dir.mkdir(parents=True, exist_ok=True)
+    ordered_selectors = device_selectors or tuple(summaries_by_selector.keys())
     write_results_csv(
         bundle_dir / "comparison-table.csv",
-        [_comparison_row(summaries_by_selector[selector], run_id=run_ids[selector]) for selector in ("dv100", "dv200", "dv300")],
+        [_comparison_row(summaries_by_selector[selector], run_id=run_ids[selector]) for selector in ordered_selectors],
     )
     (bundle_dir / "bundle-metadata.json").write_text(
         json.dumps(
             {
                 "bundle_kind": "detailed",
-                "devices": ["dv100", "dv200", "dv300"],
+                "devices": list(ordered_selectors),
                 "precision": {
                     "name": precision_name,
                     "compute_precision": compute_precision,
@@ -605,6 +793,58 @@ def test_write_comparative_summary_bundle_generates_bilingual_reports(tmp_path) 
     assert comparison_rows[0]["scenario_label"] == "DV100 fp8"
     assert comparison_rows[1]["scenario_label"] == "DV100 fp4"
     assert comparison_rows[-1]["source_comparison_run_id"] == "fp4-detailed"
+
+
+def test_write_comparative_summary_bundle_lists_dv_series_before_other_devices(tmp_path) -> None:
+    input_struct = ("1280*720", 81, 50, 256)
+    dv_summary = compute_device_summary(
+        _metadata(selector="dv200", display_name="DV200", fp8_tflops=4000.0, fp4_tflops=12000.0, cuda_tflops=1.0, io_tb_s=10.0),
+        [
+            _row(batch_size=1, device_num=1, effective_gpus=1, total_cost_s=80.0, throughput_videos_per_s=0.0125, tensor_cost_s=40.0, io_cost_s=80.0, model_tensor_tflops=300000.0, model_io_tb=800.0),
+            _row(batch_size=8, device_num=8, effective_gpus=8, total_cost_s=80.0, throughput_videos_per_s=0.1, tensor_cost_s=40.0, io_cost_s=80.0, model_tensor_tflops=300000.0, model_io_tb=800.0),
+        ],
+    )
+    b200_summary = compute_device_summary(
+        _metadata(selector="b200", display_name="B200", fp8_tflops=32000.0, cuda_tflops=1.0, io_tb_s=7.7, family="nvidia"),
+        [
+            _row(batch_size=1, device_num=1, effective_gpus=1, total_cost_s=12.0, throughput_videos_per_s=1.0 / 12.0, tensor_cost_s=4.0, io_cost_s=12.0, model_tensor_tflops=300000.0, model_io_tb=800.0),
+            _row(batch_size=8, device_num=8, effective_gpus=8, total_cost_s=12.0, throughput_videos_per_s=8.0 / 12.0, tensor_cost_s=4.0, io_cost_s=12.0, model_tensor_tflops=300000.0, model_io_tb=800.0),
+        ],
+    )
+
+    dv_dir = tmp_path / "dv-detailed"
+    nvidia_dir = tmp_path / "nvidia-detailed"
+    _write_detailed_bundle_fixture(
+        bundle_dir=dv_dir,
+        precision_name="fp8",
+        compute_precision="fp8",
+        storage_bits=8,
+        summaries_by_selector={"dv200": dv_summary},
+        run_ids={"dv200": "dv200-run"},
+        input_struct=input_struct,
+        device_selectors=("dv200",),
+    )
+    _write_detailed_bundle_fixture(
+        bundle_dir=nvidia_dir,
+        precision_name="fp8",
+        compute_precision="fp8",
+        storage_bits=8,
+        summaries_by_selector={"b200": b200_summary},
+        run_ids={"b200": "b200-run"},
+        input_struct=input_struct,
+        device_selectors=("b200",),
+    )
+
+    summary_dir = tmp_path / "mixed-summary"
+    _write_comparative_summary_bundle(
+        comparison_dirs=[nvidia_dir, dv_dir],
+        summary_dir=summary_dir,
+    )
+
+    comparison_rows = _read_csv(summary_dir / "comparison-table.csv")
+    assert [row["scenario_label"] for row in comparison_rows] == ["DV200 fp8", "B200 fp8"]
+    english_text = (summary_dir / "stakeholder-summary.en.md").read_text()
+    assert "Compared scenarios: `DV200 fp8`, `B200 fp8`." in english_text
 
 
 def test_write_comparative_summary_bundle_rejects_mismatched_context(tmp_path) -> None:
